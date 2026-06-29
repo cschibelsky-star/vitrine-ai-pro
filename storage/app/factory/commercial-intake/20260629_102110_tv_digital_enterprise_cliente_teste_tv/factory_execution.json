@@ -1,0 +1,6 @@
+{
+    "command": "factory:build-and-install --dry-run",
+    "exit_code": 0,
+    "status": "passed",
+    "output": ""
+}

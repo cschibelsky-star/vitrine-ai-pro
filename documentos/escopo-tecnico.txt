@@ -1,0 +1,29 @@
+ESCOPO TÉCNICO — VITRINE AI PRO
+
+Objeto técnico: implantação e licenciamento de plataforma digital para comunicação, gestão de conteúdo, vídeos, propostas e operação institucional ou editorial.
+
+Módulos-base:
+- Portal público responsivo.
+- Gestão de notícias e conteúdos.
+- Gestão de vídeos, transmissões e acervo.
+- Área administrativa protegida.
+- Diagnóstico estratégico e captação de leads.
+- Solicitação institucional para propostas.
+- Central de documentos.
+- Páginas de segurança, LGPD, infraestrutura e SLA.
+- Suporte e evolução contínua conforme contrato.
+
+Módulos por frente:
+Governo Digital: comunicação oficial, transparência, agenda pública, notícias institucionais, vídeos, documentos e canais com o cidadão.
+Comunicação e Mídia: portal jornalístico, editorias, vídeos, banners, publicidade, monetização, rotina editorial e apoio à produção.
+TV Digital: programação, transmissões, acervo audiovisual, podcasts, entrevistas, eventos e canais institucionais.
+
+Itens que devem ser definidos por proposta:
+- Identidade visual.
+- Quantidade de páginas/módulos.
+- Hospedagem.
+- Suporte.
+- Treinamento.
+- Prazos.
+- SLA.
+- Valor de implantação e licença.

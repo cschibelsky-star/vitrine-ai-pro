@@ -1,0 +1,9 @@
+{
+    "command": "factory:make-system",
+    "arguments": {
+        "slug": "crie_uma_tv_digital_enterprise_com_portal_de"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Sistema gerado com sucesso em modo seguro.\nSistema: Crie Uma Tv Digital Enterprise Com Portal De\n+------------+-----------+----------------------------------------------------------------------+\n| Módulo     | Model     | Local                                                                |\n+------------+-----------+----------------------------------------------------------------------+\n| registros  | Registro  | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/registros  |\n| categorias | Categoria | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/categorias |\n| documentos | Documento | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/documentos |\n+------------+-----------+----------------------------------------------------------------------+\n"
+}

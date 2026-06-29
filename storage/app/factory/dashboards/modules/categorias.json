@@ -1,0 +1,50 @@
+{
+    "module": "categorias",
+    "title": "Categorias",
+    "source_manifest": {
+        "system": "crie_uma_tv_digital_enterprise_com_portal_de",
+        "module": "categorias",
+        "model": "Categoria",
+        "relationships": [],
+        "dashboard_metrics": [
+            "total"
+        ],
+        "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+    },
+    "cards": [
+        {
+            "key": "total",
+            "label": "Total de registros",
+            "type": "count",
+            "icon": "heroicon-o-chart-bar"
+        },
+        {
+            "key": "ativos",
+            "label": "Registros ativos",
+            "type": "status_count",
+            "status": "active",
+            "icon": "heroicon-o-check-circle"
+        },
+        {
+            "key": "inativos",
+            "label": "Registros inativos",
+            "type": "status_count",
+            "status": "inactive",
+            "icon": "heroicon-o-x-circle"
+        },
+        {
+            "key": "novos_mes",
+            "label": "Novos este mês",
+            "type": "monthly_count",
+            "icon": "heroicon-o-calendar-days"
+        }
+    ],
+    "tables": [
+        {
+            "key": "ultimos",
+            "label": "Últimos registros",
+            "limit": 5
+        }
+    ],
+    "generated_at": "2026-06-29T15:29:20.341174Z"
+}

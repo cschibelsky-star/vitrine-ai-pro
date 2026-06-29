@@ -1,0 +1,22 @@
+LICENCIAMENTO SAAS — VITRINE AI PRO
+
+A Vitrine AI Pro é disponibilizada por licença de uso. A contratação não transfere código-fonte, marca, metodologia, estrutura comercial ou propriedade intelectual da plataforma.
+
+A licença pode incluir, conforme proposta:
+- Direito de uso da plataforma.
+- Implantação inicial.
+- Configuração visual.
+- Treinamento de usuários.
+- Suporte técnico.
+- Atualizações contínuas.
+- Hospedagem ou orientação de hospedagem.
+- Manutenção operacional.
+- Backup conforme plano contratado.
+
+Responsabilidades gerais:
+- A Vitrine AI Pro mantém a propriedade intelectual da plataforma.
+- O cliente mantém responsabilidade pelo conteúdo, documentos, imagens, vídeos e dados publicados.
+- Dados inseridos pelo contratante pertencem ao contratante, observadas as responsabilidades contratuais e legais.
+- Customizações específicas devem constar em proposta e contrato.
+
+O modelo de licenciamento permite evolução contínua sem necessidade de nova contratação para cada melhoria geral da plataforma, respeitados os limites do plano contratado.

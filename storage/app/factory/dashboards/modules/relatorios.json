@@ -1,0 +1,57 @@
+{
+    "module": "relatorios",
+    "title": "Relatorios",
+    "source_manifest": {
+        "system": "gov360",
+        "module": "relatorios",
+        "model": "Relatorio",
+        "relationships": [
+            {
+                "field": "cliente_id",
+                "type": "belongsTo",
+                "related_model": "Cliente"
+            }
+        ],
+        "dashboard_metrics": [
+            "total",
+            "emitidos"
+        ],
+        "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+    },
+    "cards": [
+        {
+            "key": "total",
+            "label": "Total de registros",
+            "type": "count",
+            "icon": "heroicon-o-chart-bar"
+        },
+        {
+            "key": "ativos",
+            "label": "Registros ativos",
+            "type": "status_count",
+            "status": "active",
+            "icon": "heroicon-o-check-circle"
+        },
+        {
+            "key": "inativos",
+            "label": "Registros inativos",
+            "type": "status_count",
+            "status": "inactive",
+            "icon": "heroicon-o-x-circle"
+        },
+        {
+            "key": "novos_mes",
+            "label": "Novos este mês",
+            "type": "monthly_count",
+            "icon": "heroicon-o-calendar-days"
+        }
+    ],
+    "tables": [
+        {
+            "key": "ultimos",
+            "label": "Últimos registros",
+            "limit": 5
+        }
+    ],
+    "generated_at": "2026-06-28T23:57:08.867491Z"
+}

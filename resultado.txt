@@ -1,0 +1,3 @@
+app/Models/AiProvider.php:        'api_key',
+app/Services/Ai/AiExecutionService.php:        $apiKey = $provider->api_key ?? null;
+app/Filament/Resources/AiProviderResource.php:                Forms\Components\TextInput::make('api_key')->label('API Key')->password()->revealable()->columnSpanFull(),

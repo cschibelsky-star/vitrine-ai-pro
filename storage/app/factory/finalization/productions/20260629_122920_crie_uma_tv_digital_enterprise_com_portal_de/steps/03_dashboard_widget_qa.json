@@ -1,0 +1,98 @@
+{
+    "registros": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "registros"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: registros\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/registros.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "registros"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: registros\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/registros.json\n+--------------------+------------+----------------------------------------------------------------+\n| Widget             | Tipo       | Motivo                                                         |\n+--------------------+------------+----------------------------------------------------------------+\n| Últimos registros  | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal | line_chart | Permite acompanhar evolução do módulo.                         |\n+--------------------+------------+----------------------------------------------------------------+\n"
+        },
+        "qa": {
+            "command": "factory:smart-qa",
+            "arguments": {
+                "slug": "registros"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Smart QA\nMódulo: registros\nStatus: passed\n+--------+-----------------------------+----------------------------------------------------------------------------------+\n| Status | Check                       | Mensagem                                                                         |\n+--------+-----------------------------+----------------------------------------------------------------------------------+\n| passed | module_exists               | Módulo existe em storage/app/factory/builds.                                     |\n| passed | manifest_exists             | Arquivo module.json encontrado.                                                  |\n| passed | has_model                   | Model gerado.                                                                    |\n| passed | has_policy                  | Policy gerada.                                                                   |\n| passed | has_migration               | Migration gerada.                                                                |\n| passed | has_resource                | Filament Resource gerado.                                                        |\n| passed | has_pages                   | Pages Filament geradas.                                                          |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/RegistroResource.php                      |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/RegistroResource/Pages/CreateRegistro.php |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/RegistroResource/Pages/EditRegistro.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/RegistroResource/Pages/ListRegistros.php  |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/RegistroResource/Pages/ViewRegistro.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Models/Registro.php                                          |\n| passed | php_lint                    | Sintaxe PHP OK: app/Policies/RegistroPolicy.php                                  |\n| passed | php_lint                    | Sintaxe PHP OK: database/migrations/2026_06_29_122920_create_registros_table.php |\n| passed | php_lint                    | Sintaxe PHP OK: database/seeders/RegistroSeeder.php                              |\n| passed | filament_no_schema_api      | Não usa API Filament Schemas incompatível.                                       |\n| passed | filament_no_record_actions  | Não usa recordActions incompatível.                                              |\n| passed | filament_no_toolbar_actions | Não usa toolbarActions incompatível.                                             |\n| passed | filament_tables_actions     | Usa actions compatíveis com tabela.                                              |\n+--------+-----------------------------+----------------------------------------------------------------------------------+\n"
+        }
+    },
+    "categorias": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "categorias"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: categorias\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/categorias.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "categorias"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: categorias\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/categorias.json\n+----------------------------+-------------+----------------------------------------------------------------+\n| Widget                     | Tipo        | Motivo                                                         |\n+----------------------------+-------------+----------------------------------------------------------------+\n| Últimos registros          | table       | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal         | line_chart  | Permite acompanhar evolução do módulo.                         |\n| Distribuição por categoria | donut_chart | Relacionamento com categoria detectado.                        |\n+----------------------------+-------------+----------------------------------------------------------------+\n"
+        },
+        "qa": {
+            "command": "factory:smart-qa",
+            "arguments": {
+                "slug": "categorias"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Smart QA\nMódulo: categorias\nStatus: passed\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n| Status | Check                       | Mensagem                                                                           |\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n| passed | module_exists               | Módulo existe em storage/app/factory/builds.                                       |\n| passed | manifest_exists             | Arquivo module.json encontrado.                                                    |\n| passed | has_model                   | Model gerado.                                                                      |\n| passed | has_policy                  | Policy gerada.                                                                     |\n| passed | has_migration               | Migration gerada.                                                                  |\n| passed | has_resource                | Filament Resource gerado.                                                          |\n| passed | has_pages                   | Pages Filament geradas.                                                            |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/CategoriaResource.php                       |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/CategoriaResource/Pages/CreateCategoria.php |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/CategoriaResource/Pages/EditCategoria.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/CategoriaResource/Pages/ListCategorias.php  |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/CategoriaResource/Pages/ViewCategoria.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Models/Categoria.php                                           |\n| passed | php_lint                    | Sintaxe PHP OK: app/Policies/CategoriaPolicy.php                                   |\n| passed | php_lint                    | Sintaxe PHP OK: database/migrations/2026_06_29_122920_create_categorias_table.php  |\n| passed | php_lint                    | Sintaxe PHP OK: database/seeders/CategoriaSeeder.php                               |\n| passed | filament_no_schema_api      | Não usa API Filament Schemas incompatível.                                         |\n| passed | filament_no_record_actions  | Não usa recordActions incompatível.                                                |\n| passed | filament_no_toolbar_actions | Não usa toolbarActions incompatível.                                               |\n| passed | filament_tables_actions     | Usa actions compatíveis com tabela.                                                |\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n"
+        }
+    },
+    "documentos": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "documentos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: documentos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/documentos.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "documentos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: documentos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/documentos.json\n+----------------------+------------+----------------------------------------------------------------+\n| Widget               | Tipo       | Motivo                                                         |\n+----------------------+------------+----------------------------------------------------------------+\n| Últimos registros    | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal   | line_chart | Permite acompanhar evolução do módulo.                         |\n| Documentos pendentes | alert_card | Padrão de documentos detectado.                                |\n+----------------------+------------+----------------------------------------------------------------+\n"
+        },
+        "qa": {
+            "command": "factory:smart-qa",
+            "arguments": {
+                "slug": "documentos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Smart QA\nMódulo: documentos\nStatus: passed\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n| Status | Check                       | Mensagem                                                                           |\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n| passed | module_exists               | Módulo existe em storage/app/factory/builds.                                       |\n| passed | manifest_exists             | Arquivo module.json encontrado.                                                    |\n| passed | has_model                   | Model gerado.                                                                      |\n| passed | has_policy                  | Policy gerada.                                                                     |\n| passed | has_migration               | Migration gerada.                                                                  |\n| passed | has_resource                | Filament Resource gerado.                                                          |\n| passed | has_pages                   | Pages Filament geradas.                                                            |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/DocumentoResource.php                       |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/DocumentoResource/Pages/CreateDocumento.php |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/DocumentoResource/Pages/EditDocumento.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/DocumentoResource/Pages/ListDocumentos.php  |\n| passed | php_lint                    | Sintaxe PHP OK: app/Filament/Resources/DocumentoResource/Pages/ViewDocumento.php   |\n| passed | php_lint                    | Sintaxe PHP OK: app/Models/Documento.php                                           |\n| passed | php_lint                    | Sintaxe PHP OK: app/Policies/DocumentoPolicy.php                                   |\n| passed | php_lint                    | Sintaxe PHP OK: database/migrations/2026_06_29_122920_create_documentos_table.php  |\n| passed | php_lint                    | Sintaxe PHP OK: database/seeders/DocumentoSeeder.php                               |\n| passed | filament_no_schema_api      | Não usa API Filament Schemas incompatível.                                         |\n| passed | filament_no_record_actions  | Não usa recordActions incompatível.                                                |\n| passed | filament_no_toolbar_actions | Não usa toolbarActions incompatível.                                               |\n| passed | filament_tables_actions     | Usa actions compatíveis com tabela.                                                |\n+--------+-----------------------------+------------------------------------------------------------------------------------+\n"
+        }
+    },
+    "executive": {
+        "command": "factory:executive-dashboard",
+        "arguments": {
+            "slug": "crie_uma_tv_digital_enterprise_com_portal_de"
+        },
+        "exit_code": 0,
+        "status": "passed",
+        "output": "Dashboard executivo gerado.\nSistema: crie_uma_tv_digital_enterprise_com_portal_de\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/systems/crie_uma_tv_digital_enterprise_com_portal_de.json\nCards: 7\nCharts: 3\nAlertas: 0\n"
+    }
+}

@@ -1,0 +1,6 @@
+<?php require_once __DIR__.'/functions.php'; if(session_status() !== PHP_SESSION_ACTIVE){ session_start(); } ?>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title><?= page_title($title ?? '') ?></title><meta name="description" content="<?= e($description ?? cfg('tagline')) ?>">
+<link rel="icon" type="image/png" href="/assets/img/favicon.png">
+<link rel="stylesheet" href="/assets/css/style.css"><script defer src="/assets/js/main.js"></script></head>
+<body><header class="topbar"><a class="brand officialBrand" href="/" aria-label="Vitrine AI Pro"><img class="brandLogo" src="/assets/img/logo-vitrine-ai-pro-header.png" alt="Vitrine AI Pro"><small>Governo Digital • Comunicação e Mídia • TV Digital</small></a><button class="menuBtn" data-menu>☰</button><nav class="nav" id="nav"><a href="/index.php">Início</a><a href="/governo.php">Governo Digital</a><a href="/news.php">Comunicação e Mídia</a><a href="/tv-digital.php">TV Digital</a><a href="/demonstracoes.php">Casos de Aplicação</a><a href="/contratacao-publica.php">Contratação Pública</a><a href="/documentos-publicos.php">Documentos</a><a href="/diagnostico.php">Diagnóstico</a><a class="btn small" href="/solicitacao-institucional.php">Solicitar proposta</a></nav></header><main>

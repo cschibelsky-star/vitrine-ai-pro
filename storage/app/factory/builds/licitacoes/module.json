@@ -1,0 +1,13 @@
+{
+    "system": "gestao_licitacoes_publicas",
+    "module": "licitacoes",
+    "model": "Licitaco",
+    "relationships": [],
+    "dashboard_metrics": [
+        "total",
+        "abertas",
+        "em_andamento",
+        "finalizadas"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

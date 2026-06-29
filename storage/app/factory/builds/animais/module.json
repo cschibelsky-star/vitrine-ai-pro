@@ -1,0 +1,17 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "animais",
+    "model": "Animai",
+    "relationships": [
+        {
+            "field": "cliente_id",
+            "type": "belongsTo",
+            "related_model": "Cliente"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "ativos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

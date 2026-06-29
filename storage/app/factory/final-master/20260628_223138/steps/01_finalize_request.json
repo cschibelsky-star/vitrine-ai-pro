@@ -1,0 +1,11 @@
+{
+    "command": "factory:finalize-request",
+    "arguments": {
+        "request": [
+            "Quero um sistema para clínicas veterinárias com agenda, clientes, prontuários, vacinas e financeiro"
+        ]
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": ""
+}

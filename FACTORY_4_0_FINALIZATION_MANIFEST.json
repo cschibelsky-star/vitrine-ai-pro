@@ -1,0 +1,12 @@
+{
+    "name": "Factory 4.0 Finalization Pack",
+    "version": "4.0.0",
+    "status": "finalization",
+    "main_commands": [
+        "factory:finalize-request",
+        "factory:architect-request",
+        "factory:install-final"
+    ],
+    "goal": "pedido livre -> arquitetura -> blueprint -> módulos -> dashboards -> docs -> QA -> instalação segura",
+    "generated_at": "2026-06-29T00:32:10.559268+00:00"
+}

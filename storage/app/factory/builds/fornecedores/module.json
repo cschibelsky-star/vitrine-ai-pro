@@ -1,0 +1,18 @@
+{
+    "system": "gestao_licitacoes_publicas",
+    "module": "fornecedores",
+    "model": "Fornecedor",
+    "relationships": [
+        {
+            "field": "categoria_id",
+            "type": "belongsTo",
+            "related_model": "Categoria"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "ativos",
+        "inativos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

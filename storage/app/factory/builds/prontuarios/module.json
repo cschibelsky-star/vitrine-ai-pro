@@ -1,0 +1,16 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "prontuarios",
+    "model": "Prontuario",
+    "relationships": [
+        {
+            "field": "animal_id",
+            "type": "belongsTo",
+            "related_model": "Animal"
+        }
+    ],
+    "dashboard_metrics": [
+        "total"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

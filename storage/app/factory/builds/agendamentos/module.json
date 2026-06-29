@@ -1,0 +1,18 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "agendamentos",
+    "model": "Agendamento",
+    "relationships": [
+        {
+            "field": "animal_id",
+            "type": "belongsTo",
+            "related_model": "Animal"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "hoje",
+        "pendentes"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

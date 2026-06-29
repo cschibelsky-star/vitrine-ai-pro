@@ -1,0 +1,320 @@
+{
+    "name": "Arquitetura — Turismo / Guia Digital da Cidade",
+    "slug": "arquitetura_turismo_guia_digital",
+    "prompt": "Crie um sistema para gestão de eventos municipais integrado ao Guia Digital da CidadeDomain Knowledge Engine",
+    "domain": {
+        "input": "Crie um sistema para gestão de eventos municipais integrado ao Guia Digital da CidadeDomain Knowledge Engine",
+        "domain": "turismo_guia_digital",
+        "label": "Turismo / Guia Digital da Cidade",
+        "modules": [
+            "cidades",
+            "atrativos",
+            "eventos",
+            "categorias",
+            "roteiros",
+            "galerias",
+            "comercios",
+            "hospedagens",
+            "gastronomia",
+            "agenda"
+        ],
+        "typical_relationships": [
+            "atrativo belongsTo cidade",
+            "evento belongsTo cidade",
+            "roteiro belongsTo cidade",
+            "comercio belongsTo cidade",
+            "galeria belongsTo atrativo"
+        ],
+        "recommended_dashboards": [
+            "atrativos ativos",
+            "eventos próximos",
+            "cidades atendidas",
+            "roteiros publicados"
+        ],
+        "detected_at": "2026-06-28T19:01:14.657805Z"
+    },
+    "components": [
+        {
+            "key": "audit_log",
+            "label": "Auditoria",
+            "type": "core"
+        },
+        {
+            "key": "timeline",
+            "label": "Timeline",
+            "type": "core"
+        },
+        {
+            "key": "comments",
+            "label": "Comentários",
+            "type": "collaboration"
+        },
+        {
+            "key": "dashboard",
+            "label": "Dashboard",
+            "type": "analytics"
+        },
+        {
+            "key": "rest_api",
+            "label": "API REST",
+            "type": "integration"
+        },
+        {
+            "key": "gallery",
+            "label": "Galeria de Imagens",
+            "type": "media"
+        },
+        {
+            "key": "map_points",
+            "label": "Mapa de Pontos",
+            "type": "geo"
+        },
+        {
+            "key": "event_calendar",
+            "label": "Calendário de Eventos",
+            "type": "calendar"
+        },
+        {
+            "key": "public_landing",
+            "label": "Landing Pública",
+            "type": "frontend"
+        }
+    ],
+    "modules": [
+        {
+            "slug": "cidades",
+            "label": "Cidades",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "atrativos",
+            "label": "Atrativos",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "eventos",
+            "label": "Eventos",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                },
+                {
+                    "key": "event_calendar",
+                    "label": "Calendário de Eventos",
+                    "type": "calendar"
+                }
+            ]
+        },
+        {
+            "slug": "categorias",
+            "label": "Categorias",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "roteiros",
+            "label": "Roteiros",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "galerias",
+            "label": "Galerias",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "comercios",
+            "label": "Comercios",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "hospedagens",
+            "label": "Hospedagens",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "gastronomia",
+            "label": "Gastronomia",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        },
+        {
+            "slug": "agenda",
+            "label": "Agenda",
+            "recommended_components": [
+                {
+                    "key": "audit_log",
+                    "label": "Auditoria",
+                    "type": "core"
+                },
+                {
+                    "key": "timeline",
+                    "label": "Timeline",
+                    "type": "core"
+                },
+                {
+                    "key": "dashboard",
+                    "label": "Dashboard",
+                    "type": "analytics"
+                }
+            ]
+        }
+    ],
+    "apis": [
+        "REST API por módulo",
+        "Endpoints de listagem, criação, edição, exclusão",
+        "Autenticação por token em fase futura"
+    ],
+    "dashboards": [
+        "atrativos ativos",
+        "eventos próximos",
+        "cidades atendidas",
+        "roteiros publicados"
+    ],
+    "roadmap": [
+        "1. Gerar blueprint do domínio",
+        "2. Gerar módulos e relacionamentos",
+        "3. Executar Smart QA",
+        "4. Gerar dashboards e widgets",
+        "5. Instalar em ambiente seguro",
+        "6. Validar no painel Filament"
+    ],
+    "designed_at": "2026-06-28T19:01:14.658120Z"
+}

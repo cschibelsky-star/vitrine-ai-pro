@@ -1,0 +1,11 @@
+{
+    "client_name": "Cliente Teste TV",
+    "product_key": "tv_digital_enterprise",
+    "product_name": "TV Digital Enterprise",
+    "plan": "enterprise",
+    "price": 1500,
+    "domain": "cliente.tv.br",
+    "status": "ready_for_homologation",
+    "workspace": "Projetos > tv_digital_enterprise_cliente_teste_tv",
+    "created_at": "2026-06-29T13:21:11.848344Z"
+}

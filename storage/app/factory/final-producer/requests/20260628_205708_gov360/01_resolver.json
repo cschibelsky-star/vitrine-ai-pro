@@ -1,0 +1,13 @@
+{
+    "request": "Quero um sistema para pequenas empresas venderem para o governo",
+    "resolved_product": "gov360",
+    "confidence_score": 6,
+    "scores": {
+        "gov360": 6,
+        "guia_digital": 0,
+        "portal_news": 0,
+        "tv_digital": 0,
+        "sismed": 0
+    },
+    "resolved_at": "2026-06-28T23:57:08.843923Z"
+}

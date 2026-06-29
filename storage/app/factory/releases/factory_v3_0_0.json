@@ -1,0 +1,21 @@
+{
+    "release": "Autonomous Software Factory",
+    "version": "3.0.0",
+    "macro_pack": "FACTORY_MACRO_PACK_01",
+    "status": "active",
+    "engines": [
+        "core",
+        "ai",
+        "architecture",
+        "decision",
+        "workflow",
+        "products",
+        "documentation",
+        "qa",
+        "deploy",
+        "learning",
+        "dashboard",
+        "studio"
+    ],
+    "checked_at": "2026-06-28T19:47:13.190913Z"
+}

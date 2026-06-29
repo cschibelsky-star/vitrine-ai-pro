@@ -1,0 +1,11 @@
+{
+    "command": "factory:decision",
+    "arguments": {
+        "prompt": [
+            "Crie um sistema GOV360 para pequenas empresas venderem para o governo com clientes, diagnósticos, documentos, planos e relatórios."
+        ]
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Decision Engine\nDomínio: governo_digital\nQA: strict\nInstalação: safe\n+---------------+\n| Módulos       |\n+---------------+\n| diagnosticos  |\n| documentos    |\n| recomendacoes |\n| planos_acao   |\n| relatorios    |\n+---------------+\n+--------------------+\n| Componentes        |\n+--------------------+\n| dashboard          |\n| audit_log          |\n| timeline           |\n| smart_qa           |\n| ai_recommendations |\n| document_upload    |\n| pdf_export         |\n| workflow           |\n+--------------------+\n"
+}

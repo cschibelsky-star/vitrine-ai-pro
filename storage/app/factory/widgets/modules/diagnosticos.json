@@ -1,0 +1,18 @@
+{
+    "module": "diagnosticos",
+    "widgets": [
+        {
+            "key": "latest_records",
+            "label": "Últimos registros",
+            "type": "table",
+            "reason": "Todo módulo precisa de uma visão rápida dos últimos cadastros."
+        },
+        {
+            "key": "monthly_growth",
+            "label": "Crescimento mensal",
+            "type": "line_chart",
+            "reason": "Permite acompanhar evolução do módulo."
+        }
+    ],
+    "generated_at": "2026-06-28T23:57:08.864986Z"
+}

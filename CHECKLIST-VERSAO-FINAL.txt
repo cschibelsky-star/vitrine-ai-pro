@@ -1,0 +1,20 @@
+VITRINE AI PRO — PRODUÇÃO FINAL PREMIUM
+
+Status de escopo:
+✓ Foco comercial definido: Governo Digital, Comunicação e Mídia, TV Digital.
+✓ Turismo, Enterprise e soluções corporativas genéricas removidos do escopo comercial.
+✓ Linguagem de protótipo, piloto, MVP e experimento removida das páginas públicas.
+✓ Fluxo comercial ajustado para solicitação institucional e proposta formal.
+✓ Contratação pública tratada como análise do ente contratante, sem promessa automática de modalidade.
+✓ Central de documentos incluída.
+✓ Diagnóstico estratégico incluído.
+✓ Páginas de Segurança, Infraestrutura, LGPD e SLA incluídas.
+✓ Login administrativo protegido por senha hash.
+✓ CSRF e sanitização básica aplicados nos formulários.
+
+Antes de publicar:
+1. Trocar senha padrão do admin no config.php.
+2. Configurar domínio com HTTPS.
+3. Revisar e-mails/WhatsApp reais.
+4. Validar documentos institucionais com jurídico/contábil/comercial.
+5. Configurar rotina de backup da hospedagem.

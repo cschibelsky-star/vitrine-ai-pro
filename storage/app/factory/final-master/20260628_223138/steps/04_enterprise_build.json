@@ -1,0 +1,9 @@
+{
+    "command": "factory:enterprise-build",
+    "arguments": {
+        "blueprint": "clinicas_veterinarias"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Enterprise Build gerado.\nBlueprint: clinicas_veterinarias\nArquivos: 37\nRelatório: /home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/clinicas_veterinarias/ENTERPRISE_BUILD_REPORT.json\n"
+}

@@ -1,0 +1,21 @@
+MODELO DE MAPA DE RISCOS
+
+Risco: indisponibilidade da operação digital.
+Mitigação: infraestrutura adequada, HTTPS, backup, suporte e monitoramento conforme plano contratado.
+
+Risco: atraso na implantação.
+Mitigação: cronograma, responsável técnico, ponto focal do cliente e validação por etapas.
+
+Risco: falha de comunicação entre equipes.
+Mitigação: reuniões de alinhamento, registro de decisões e definição clara de responsáveis.
+
+Risco: tratamento inadequado de dados pessoais.
+Mitigação: minimização de dados, finalidade definida, controle de acesso e política de privacidade.
+
+Risco: publicação incorreta de conteúdo pelo cliente.
+Mitigação: treinamento, níveis de permissão, revisão editorial e responsabilidade contratual sobre conteúdos publicados.
+
+Risco: demanda fora do escopo contratado.
+Mitigação: proposta complementar, controle de mudanças e aprovação formal antes da execução.
+
+Este modelo deve ser complementado conforme o caso concreto.

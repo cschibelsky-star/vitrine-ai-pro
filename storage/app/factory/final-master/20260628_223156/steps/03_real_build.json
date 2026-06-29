@@ -1,0 +1,9 @@
+{
+    "command": "factory:real-build",
+    "arguments": {
+        "blueprint": "clinicas_veterinarias"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Real Build gerado.\nBlueprint: clinicas_veterinarias\nArquivos: 54\nRelatório: /home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/REAL_BUILD_REPORT.json\n"
+}

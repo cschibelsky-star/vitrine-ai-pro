@@ -1,0 +1,11 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "clientes",
+    "model": "Cliente",
+    "relationships": [],
+    "dashboard_metrics": [
+        "total",
+        "ativos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

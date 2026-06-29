@@ -1,0 +1,20 @@
+{
+    "request": "Quero um sistema para clínicas veterinárias com agenda, clientes, prontuários, vacinas e financeiro",
+    "status": "finished",
+    "mode": "install",
+    "force": true,
+    "migrate": false,
+    "blueprint": "clinicas_veterinarias",
+    "steps": {
+        "01_finalize_request": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/01_finalize_request.json",
+        "02_detect_blueprint": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/02_detect_blueprint.json",
+        "03_real_build": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/03_real_build.json",
+        "04_enterprise_build": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/04_enterprise_build.json",
+        "05_real_install": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/05_real_install.json",
+        "06_enterprise_install": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/06_enterprise_install.json",
+        "07_composer_dump_autoload": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/07_composer_dump_autoload.json",
+        "08_optimize_clear": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-master/20260628_224759/steps/08_optimize_clear.json"
+    },
+    "final_note": "Instalação executada. Verifique painel, migrations e logs.",
+    "created_at": "2026-06-29T01:48:02.474096Z"
+}

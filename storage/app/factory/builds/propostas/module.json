@@ -1,0 +1,23 @@
+{
+    "system": "gestao_licitacoes_publicas",
+    "module": "propostas",
+    "model": "Proposta",
+    "relationships": [
+        {
+            "field": "licitacao_id",
+            "type": "belongsTo",
+            "related_model": "Licitacao"
+        },
+        {
+            "field": "fornecedor_id",
+            "type": "belongsTo",
+            "related_model": "Fornecedor"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "vencedoras",
+        "em_analise"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

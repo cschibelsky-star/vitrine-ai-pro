@@ -1,0 +1,166 @@
+{
+    "system": "clinicas_veterinarias",
+    "title": "Dashboard Executivo — Sistema para Clínicas Veterinárias",
+    "cards": [
+        {
+            "key": "total_clientes",
+            "label": "Total de Clientes",
+            "module": "clientes",
+            "type": "count"
+        },
+        {
+            "key": "clientes_total",
+            "label": "Total - Clientes",
+            "module": "clientes",
+            "type": "metric"
+        },
+        {
+            "key": "clientes_ativos",
+            "label": "Ativos - Clientes",
+            "module": "clientes",
+            "type": "metric"
+        },
+        {
+            "key": "total_animais",
+            "label": "Total de Animais",
+            "module": "animais",
+            "type": "count"
+        },
+        {
+            "key": "animais_total",
+            "label": "Total - Animais",
+            "module": "animais",
+            "type": "metric"
+        },
+        {
+            "key": "animais_ativos",
+            "label": "Ativos - Animais",
+            "module": "animais",
+            "type": "metric"
+        },
+        {
+            "key": "total_agendamentos",
+            "label": "Total de Agendamentos",
+            "module": "agendamentos",
+            "type": "count"
+        },
+        {
+            "key": "agendamentos_total",
+            "label": "Total - Agendamentos",
+            "module": "agendamentos",
+            "type": "metric"
+        },
+        {
+            "key": "agendamentos_hoje",
+            "label": "Hoje - Agendamentos",
+            "module": "agendamentos",
+            "type": "metric"
+        },
+        {
+            "key": "agendamentos_pendentes",
+            "label": "Pendentes - Agendamentos",
+            "module": "agendamentos",
+            "type": "metric"
+        },
+        {
+            "key": "total_prontuarios",
+            "label": "Total de Prontuários",
+            "module": "prontuarios",
+            "type": "count"
+        },
+        {
+            "key": "prontuarios_total",
+            "label": "Total - Prontuários",
+            "module": "prontuarios",
+            "type": "metric"
+        },
+        {
+            "key": "total_vacinas",
+            "label": "Total de Vacinas",
+            "module": "vacinas",
+            "type": "count"
+        },
+        {
+            "key": "vacinas_total",
+            "label": "Total - Vacinas",
+            "module": "vacinas",
+            "type": "metric"
+        },
+        {
+            "key": "vacinas_vencendo",
+            "label": "Vencendo - Vacinas",
+            "module": "vacinas",
+            "type": "metric"
+        },
+        {
+            "key": "total_financeiro",
+            "label": "Total de Financeiro",
+            "module": "financeiro",
+            "type": "count"
+        },
+        {
+            "key": "financeiro_total",
+            "label": "Total - Financeiro",
+            "module": "financeiro",
+            "type": "metric"
+        },
+        {
+            "key": "financeiro_valor_total",
+            "label": "Valor total - Financeiro",
+            "module": "financeiro",
+            "type": "metric"
+        },
+        {
+            "key": "financeiro_pendentes",
+            "label": "Pendentes - Financeiro",
+            "module": "financeiro",
+            "type": "metric"
+        },
+        {
+            "key": "financeiro_valor_total",
+            "label": "Valor total - Financeiro",
+            "module": "financeiro",
+            "type": "currency_sum"
+        }
+    ],
+    "charts": [
+        {
+            "key": "clientes_status",
+            "label": "Clientes por status",
+            "module": "clientes",
+            "type": "donut"
+        },
+        {
+            "key": "animais_status",
+            "label": "Animais por status",
+            "module": "animais",
+            "type": "donut"
+        },
+        {
+            "key": "agendamentos_status",
+            "label": "Agendamentos por status",
+            "module": "agendamentos",
+            "type": "donut"
+        },
+        {
+            "key": "prontuarios_status",
+            "label": "Prontuários por status",
+            "module": "prontuarios",
+            "type": "donut"
+        },
+        {
+            "key": "vacinas_status",
+            "label": "Vacinas por status",
+            "module": "vacinas",
+            "type": "donut"
+        },
+        {
+            "key": "financeiro_status",
+            "label": "Financeiro por status",
+            "module": "financeiro",
+            "type": "donut"
+        }
+    ],
+    "alerts": [],
+    "generated_at": "2026-06-29T01:48:01.228803Z"
+}

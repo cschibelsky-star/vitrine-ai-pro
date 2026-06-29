@@ -1,0 +1,20 @@
+MASTER 1.3 — CENTRO DE IA — BUILD 01
+
+[ ] Backup realizado antes da aplicação
+[ ] Arquivos copiados para a raiz do projeto
+[ ] php artisan migrate executado sem erro
+[ ] AiProviderSeeder executado sem erro
+[ ] AiAgentSeeder executado sem erro
+[ ] php artisan optimize:clear executado
+[ ] Login no Filament funcionando
+[ ] Menu Centro de IA visível
+[ ] Dashboard IA carregando
+[ ] Agentes IA listando 8 registros oficiais
+[ ] Provedores listando Gemini, OpenAI e HeyGen
+[ ] CRUD Filas abrindo
+[ ] CRUD Consumo abrindo
+[ ] CRUD Alertas abrindo
+[ ] CRUD Memória abrindo
+[ ] CRUD Logs abrindo
+[ ] Nenhum erro 500 no painel
+[ ] Build 01 homologada

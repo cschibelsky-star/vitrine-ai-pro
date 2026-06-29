@@ -1,0 +1,23 @@
+{
+    "system": "gestao_licitacoes_publicas",
+    "module": "contratos",
+    "model": "Contrato",
+    "relationships": [
+        {
+            "field": "fornecedor_id",
+            "type": "belongsTo",
+            "related_model": "Fornecedor"
+        },
+        {
+            "field": "licitacao_id",
+            "type": "belongsTo",
+            "related_model": "Licitacao"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "ativos",
+        "valor_total"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

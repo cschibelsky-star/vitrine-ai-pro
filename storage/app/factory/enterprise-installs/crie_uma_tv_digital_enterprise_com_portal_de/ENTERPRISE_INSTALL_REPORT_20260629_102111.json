@@ -1,0 +1,124 @@
+{
+    "blueprint": "crie_uma_tv_digital_enterprise_com_portal_de",
+    "mode": "dry_run",
+    "force": false,
+    "files": 19,
+    "results": [
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Controllers/Api/CategoriaApiController.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Controllers/Api/CategoriaApiController.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Controllers/Api/DocumentoApiController.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Controllers/Api/DocumentoApiController.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Controllers/Api/RegistroApiController.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Controllers/Api/RegistroApiController.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/StoreCategoriaRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/StoreCategoriaRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/StoreDocumentoRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/StoreDocumentoRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/StoreRegistroRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/StoreRegistroRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/UpdateCategoriaRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/UpdateCategoriaRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/UpdateDocumentoRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/UpdateDocumentoRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Http/Requests/UpdateRegistroRequest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Http/Requests/UpdateRegistroRequest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Repositories/CategoriaRepository.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Repositories/CategoriaRepository.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Repositories/DocumentoRepository.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Repositories/DocumentoRepository.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Repositories/RegistroRepository.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Repositories/RegistroRepository.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Services/CategoriaService.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Services/CategoriaService.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Services/DocumentoService.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Services/DocumentoService.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/app/Services/RegistroService.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Services/RegistroService.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/routes/api_factory_crie_uma_tv_digital_enterprise_com_portal_de.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/routes/api_factory_crie_uma_tv_digital_enterprise_com_portal_de.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/tests/Feature/CategoriaApiTest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/tests/Feature/CategoriaApiTest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/tests/Feature/DocumentoApiTest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/tests/Feature/DocumentoApiTest.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/tests/Feature/RegistroApiTest.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/tests/Feature/RegistroApiTest.php",
+            "exists": false,
+            "status": "would_copy"
+        }
+    ],
+    "backup_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/backups/enterprise-install/20260629_102111_crie_uma_tv_digital_enterprise_com_portal_de",
+    "created_at": "2026-06-29T13:21:11.845158Z"
+}

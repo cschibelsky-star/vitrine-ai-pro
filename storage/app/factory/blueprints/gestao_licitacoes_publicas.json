@@ -1,0 +1,272 @@
+{
+    "name": "Gestão de Licitações Públicas",
+    "slug": "gestao_licitacoes_publicas",
+    "description": "Crie um sistema para controlar licitações públicas",
+    "modules": [
+        {
+            "name": "Categorias",
+            "slug": "categorias",
+            "label": "Categorias",
+            "fields": [
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "descricao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos"
+            ]
+        },
+        {
+            "name": "Fornecedores",
+            "slug": "fornecedores",
+            "label": "Fornecedores",
+            "fields": [
+                {
+                    "name": "categoria_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Categoria"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "documento",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "telefone",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "cidade",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "inativos"
+            ]
+        },
+        {
+            "name": "Licitações",
+            "slug": "licitacoes",
+            "label": "Licitações",
+            "fields": [
+                {
+                    "name": "numero",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "objeto",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "modalidade",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "data_abertura",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "valor_estimado",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "abertas",
+                "em_andamento",
+                "finalizadas"
+            ]
+        },
+        {
+            "name": "Propostas",
+            "slug": "propostas",
+            "label": "Propostas",
+            "fields": [
+                {
+                    "name": "licitacao_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Licitacao"
+                },
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "valor",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "observacoes",
+                    "type": "text",
+                    "nullable": true
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "vencedoras",
+                "em_analise"
+            ]
+        },
+        {
+            "name": "Contratos",
+            "slug": "contratos",
+            "label": "Contratos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "licitacao_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Licitacao"
+                },
+                {
+                    "name": "numero",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "objeto",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "valor",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "data_inicio",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "data_fim",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "valor_total"
+            ]
+        },
+        {
+            "name": "Documentos",
+            "slug": "documentos",
+            "label": "Documentos",
+            "fields": [
+                {
+                    "name": "licitacao_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Licitacao"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "tipo",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "arquivo",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "pendentes",
+                "aprovados"
+            ]
+        }
+    ],
+    "architecture": {
+        "domain": "licitacoes",
+        "entities_count": 6,
+        "relationships_count": 6,
+        "recommended_stack": {
+            "backend": "Laravel",
+            "admin": "Filament",
+            "database": "MySQL"
+        },
+        "qa_required": true
+    }
+}

@@ -1,0 +1,24 @@
+MINUTA CONTRATUAL — BASE INICIAL
+
+Objeto: licenciamento de uso da plataforma Vitrine AI Pro, incluindo implantação, suporte, atualizações, manutenção e serviços correlatos, conforme proposta técnica e comercial.
+
+Cláusulas recomendadas:
+1. Objeto da contratação.
+2. Escopo contratado.
+3. Vigência.
+4. Valor, implantação e licença recorrente.
+5. Licença de uso e limites.
+6. Propriedade intelectual.
+7. Obrigações da contratante.
+8. Obrigações da contratada.
+9. Suporte e SLA.
+10. Segurança e proteção de dados.
+11. Hospedagem e infraestrutura.
+12. Conteúdo publicado pelo cliente.
+13. Treinamento e aceite.
+14. Atualizações e melhorias.
+15. Rescisão.
+16. Exportação ou entrega de dados do cliente.
+17. Foro ou regras administrativas aplicáveis.
+
+Esta minuta é base inicial e deve ser revisada pela assessoria jurídica das partes antes de uso.

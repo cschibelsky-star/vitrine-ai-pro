@@ -1,0 +1,9 @@
+{
+    "command": "factory:enterprise-build",
+    "arguments": {
+        "blueprint": "crie_uma_tv_digital_enterprise_com_portal_de"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Enterprise Build gerado.\nBlueprint: crie_uma_tv_digital_enterprise_com_portal_de\nArquivos: 19\nRelatório: /home1/cris1649/vitrine-ai-pro/storage/app/factory/enterprise-builds/crie_uma_tv_digital_enterprise_com_portal_de/ENTERPRISE_BUILD_REPORT.json\n"
+}

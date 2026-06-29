@@ -1,0 +1,8 @@
+{
+    "name": "Factory Final Master",
+    "version": "1.0.0",
+    "status": "final",
+    "main_command": "factory:build-and-install",
+    "goal": "pedido livre -> arquitetura -> produção -> código real -> enterprise -> instalação segura -> relatório final",
+    "generated_at": "2026-06-29T01:28:03.043966+00:00"
+}

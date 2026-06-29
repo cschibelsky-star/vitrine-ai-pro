@@ -1,0 +1,238 @@
+{
+    "request": "Quero um sistema para clínicas veterinárias com agenda, clientes, prontuários, vacinas e financeiro",
+    "domain": "veterinaria",
+    "blueprint": {
+        "name": "Sistema para Clínicas Veterinárias",
+        "slug": "clinicas_veterinarias",
+        "description": "Quero um sistema para clínicas veterinárias com agenda, clientes, prontuários, vacinas e financeiro",
+        "domain": "veterinaria",
+        "modules": [
+            {
+                "name": "Clientes",
+                "slug": "clientes",
+                "label": "Clientes",
+                "fields": [
+                    {
+                        "name": "nome",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    {
+                        "name": "documento",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "telefone",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "email",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total",
+                    "ativos"
+                ]
+            },
+            {
+                "name": "Animais",
+                "slug": "animais",
+                "label": "Animais",
+                "fields": [
+                    {
+                        "name": "cliente_id",
+                        "type": "foreignId",
+                        "nullable": false,
+                        "relationship": "belongsTo",
+                        "related_model": "Cliente"
+                    },
+                    {
+                        "name": "nome",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    {
+                        "name": "especie",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "raca",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total",
+                    "ativos"
+                ]
+            },
+            {
+                "name": "Agendamentos",
+                "slug": "agendamentos",
+                "label": "Agendamentos",
+                "fields": [
+                    {
+                        "name": "animal_id",
+                        "type": "foreignId",
+                        "nullable": false,
+                        "relationship": "belongsTo",
+                        "related_model": "Animal"
+                    },
+                    {
+                        "name": "data_agendamento",
+                        "type": "date",
+                        "nullable": true
+                    },
+                    {
+                        "name": "tipo",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    {
+                        "name": "observacoes",
+                        "type": "text",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total",
+                    "hoje",
+                    "pendentes"
+                ]
+            },
+            {
+                "name": "Prontuários",
+                "slug": "prontuarios",
+                "label": "Prontuários",
+                "fields": [
+                    {
+                        "name": "animal_id",
+                        "type": "foreignId",
+                        "nullable": false,
+                        "relationship": "belongsTo",
+                        "related_model": "Animal"
+                    },
+                    {
+                        "name": "descricao",
+                        "type": "text",
+                        "nullable": true
+                    },
+                    {
+                        "name": "diagnostico",
+                        "type": "text",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total"
+                ]
+            },
+            {
+                "name": "Vacinas",
+                "slug": "vacinas",
+                "label": "Vacinas",
+                "fields": [
+                    {
+                        "name": "animal_id",
+                        "type": "foreignId",
+                        "nullable": false,
+                        "relationship": "belongsTo",
+                        "related_model": "Animal"
+                    },
+                    {
+                        "name": "nome",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    {
+                        "name": "data_aplicacao",
+                        "type": "date",
+                        "nullable": true
+                    },
+                    {
+                        "name": "proxima_dose",
+                        "type": "date",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total",
+                    "vencendo"
+                ]
+            },
+            {
+                "name": "Financeiro",
+                "slug": "financeiro",
+                "label": "Financeiro",
+                "fields": [
+                    {
+                        "name": "cliente_id",
+                        "type": "foreignId",
+                        "nullable": false,
+                        "relationship": "belongsTo",
+                        "related_model": "Cliente"
+                    },
+                    {
+                        "name": "descricao",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    {
+                        "name": "valor",
+                        "type": "decimal",
+                        "nullable": true
+                    },
+                    {
+                        "name": "vencimento",
+                        "type": "date",
+                        "nullable": true
+                    },
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "nullable": false
+                    }
+                ],
+                "dashboard_metrics": [
+                    "total",
+                    "valor_total",
+                    "pendentes"
+                ]
+            }
+        ],
+        "generated_by": "FACTORY_4_0_FINALIZATION_PACK",
+        "generated_at": "2026-06-29T01:31:38.427855Z"
+    },
+    "blueprint_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/blueprints/clinicas_veterinarias.json",
+    "architecture_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/architectures/20260628_223138_clinicas_veterinarias.json"
+}

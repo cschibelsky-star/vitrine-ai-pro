@@ -1,0 +1,24 @@
+{
+    "key": "gov360",
+    "name": "Consultor AI GOV360",
+    "domain": "governo_digital",
+    "modules": [
+        "clientes_publicos",
+        "diagnosticos",
+        "documentos",
+        "recomendacoes",
+        "planos_acao",
+        "relatorios"
+    ],
+    "components": [
+        "dashboard",
+        "workflow",
+        "audit_log",
+        "document_upload",
+        "ai_recommendations",
+        "pdf_export"
+    ],
+    "status": "planned",
+    "generated_by": "FACTORY_MACRO_PACK_01_v3.0",
+    "generated_at": "2026-06-28T23:57:08.869139Z"
+}

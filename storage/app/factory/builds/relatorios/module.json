@@ -1,0 +1,17 @@
+{
+    "system": "gov360",
+    "module": "relatorios",
+    "model": "Relatorio",
+    "relationships": [
+        {
+            "field": "cliente_id",
+            "type": "belongsTo",
+            "related_model": "Cliente"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "emitidos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

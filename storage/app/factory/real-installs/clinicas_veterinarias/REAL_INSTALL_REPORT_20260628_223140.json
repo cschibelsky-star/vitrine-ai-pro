@@ -1,0 +1,406 @@
+{
+    "blueprint": "clinicas_veterinarias",
+    "mode": "dry_run",
+    "force": false,
+    "files": 66,
+    "results": [
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AgendamentoResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AgendamentoResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AgendamentoResource/Pages/CreateAgendamento.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AgendamentoResource/Pages/CreateAgendamento.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AgendamentoResource/Pages/EditAgendamento.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AgendamentoResource/Pages/EditAgendamento.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AgendamentoResource/Pages/ListAgendamentos.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AgendamentoResource/Pages/ListAgendamentos.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AgendamentoResource/Pages/ViewAgendamento.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AgendamentoResource/Pages/ViewAgendamento.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AnimalResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AnimalResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AnimalResource/Pages/CreateAnimal.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AnimalResource/Pages/CreateAnimal.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AnimalResource/Pages/EditAnimal.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AnimalResource/Pages/EditAnimal.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AnimalResource/Pages/ListAnimais.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AnimalResource/Pages/ListAnimais.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/AnimalResource/Pages/ViewAnimal.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/AnimalResource/Pages/ViewAnimal.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ClienteResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ClienteResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ClienteResource/Pages/CreateCliente.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ClienteResource/Pages/CreateCliente.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ClienteResource/Pages/EditCliente.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ClienteResource/Pages/EditCliente.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ClienteResource/Pages/ListClientes.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ClienteResource/Pages/ListClientes.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ClienteResource/Pages/ViewCliente.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ClienteResource/Pages/ViewCliente.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/FinanceiroResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/FinanceiroResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/FinanceiroResource/Pages/CreateFinanceiro.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/FinanceiroResource/Pages/CreateFinanceiro.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/FinanceiroResource/Pages/EditFinanceiro.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/FinanceiroResource/Pages/EditFinanceiro.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/FinanceiroResource/Pages/ListFinanceiro.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/FinanceiroResource/Pages/ListFinanceiro.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/FinanceiroResource/Pages/ViewFinanceiro.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/FinanceiroResource/Pages/ViewFinanceiro.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ProntuarioResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ProntuarioResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ProntuarioResource/Pages/CreateProntuario.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ProntuarioResource/Pages/CreateProntuario.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ProntuarioResource/Pages/EditProntuario.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ProntuarioResource/Pages/EditProntuario.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ProntuarioResource/Pages/ListProntuarios.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ProntuarioResource/Pages/ListProntuarios.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/ProntuarioResource/Pages/ViewProntuario.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/ProntuarioResource/Pages/ViewProntuario.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/VacinaResource.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/VacinaResource.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/VacinaResource/Pages/CreateVacina.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/VacinaResource/Pages/CreateVacina.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/VacinaResource/Pages/EditVacina.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/VacinaResource/Pages/EditVacina.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/VacinaResource/Pages/ListVacinas.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/VacinaResource/Pages/ListVacinas.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Filament/Resources/VacinaResource/Pages/ViewVacina.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Filament/Resources/VacinaResource/Pages/ViewVacina.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Agendamento.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Agendamento.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Animal.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Animal.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Cliente.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Cliente.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Financeiro.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Financeiro.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Prontuario.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Prontuario.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Models/Vacina.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Models/Vacina.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/AgendamentoPolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/AgendamentoPolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/AnimalPolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/AnimalPolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/ClientePolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/ClientePolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/FinanceiroPolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/FinanceiroPolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/ProntuarioPolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/ProntuarioPolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/app/Policies/VacinaPolicy.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/app/Policies/VacinaPolicy.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220441_create_clientes_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220441_create_clientes_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220442_create_animais_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220442_create_animais_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220443_create_agendamentos_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220443_create_agendamentos_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220444_create_prontuarios_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220444_create_prontuarios_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220445_create_vacinas_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220445_create_vacinas_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220446_create_financeiro_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220446_create_financeiro_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220457_create_clientes_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220457_create_clientes_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220458_create_animais_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220458_create_animais_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220459_create_agendamentos_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220459_create_agendamentos_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220500_create_prontuarios_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220500_create_prontuarios_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220501_create_vacinas_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220501_create_vacinas_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_220502_create_financeiro_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_220502_create_financeiro_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223140_create_clientes_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223140_create_clientes_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223141_create_animais_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223141_create_animais_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223142_create_agendamentos_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223142_create_agendamentos_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223143_create_prontuarios_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223143_create_prontuarios_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223144_create_vacinas_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223144_create_vacinas_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/migrations/2026_06_28_223145_create_financeiro_table.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/migrations/2026_06_28_223145_create_financeiro_table.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/AgendamentoSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/AgendamentoSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/AnimalSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/AnimalSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/ClienteSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/ClienteSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/FinanceiroSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/FinanceiroSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/ProntuarioSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/ProntuarioSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        },
+        {
+            "source": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/real-builds/clinicas_veterinarias/database/seeders/VacinaSeeder.php",
+            "destination": "/home1/cris1649/vitrine-ai-pro/database/seeders/VacinaSeeder.php",
+            "exists": false,
+            "status": "would_copy"
+        }
+    ],
+    "backup_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/backups/real-install/20260628_223140_clinicas_veterinarias",
+    "created_at": "2026-06-29T01:31:40.275525Z"
+}

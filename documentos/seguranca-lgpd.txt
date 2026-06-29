@@ -1,0 +1,24 @@
+SEGURANÇA E LGPD — DIRETRIZES
+
+A Vitrine AI Pro deve ser implantada com controles compatíveis com o porte do cliente, a criticidade da operação e o tipo de dado tratado.
+
+Diretrizes recomendadas:
+- Uso obrigatório de HTTPS em produção.
+- Controle de acesso administrativo.
+- Senhas protegidas por hash.
+- Proteção CSRF nos formulários.
+- Sanitização de dados recebidos.
+- Separação entre área pública e área interna.
+- Rotina de backup.
+- Restrição de permissões de arquivos.
+- Política de atualização do ambiente.
+- Definição de responsáveis pela operação.
+
+LGPD:
+- Coletar apenas dados necessários.
+- Informar finalidade da coleta.
+- Definir prazo de retenção.
+- Registrar responsabilidades de controlador e operador quando aplicável.
+- Prever canal de atendimento para solicitações relacionadas a dados pessoais.
+
+Este documento deve ser adaptado conforme infraestrutura, contrato, legislação aplicável e política interna do cliente.

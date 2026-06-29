@@ -1,0 +1,111 @@
+{
+    "clientes": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "clientes"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: clientes\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/clientes.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "clientes"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: clientes\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/clientes.json\n+--------------------+------------+----------------------------------------------------------------+\n| Widget             | Tipo       | Motivo                                                         |\n+--------------------+------------+----------------------------------------------------------------+\n| Últimos registros  | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal | line_chart | Permite acompanhar evolução do módulo.                         |\n+--------------------+------------+----------------------------------------------------------------+\n"
+        }
+    },
+    "diagnosticos": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "diagnosticos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: diagnosticos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/diagnosticos.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "diagnosticos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: diagnosticos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/diagnosticos.json\n+--------------------+------------+----------------------------------------------------------------+\n| Widget             | Tipo       | Motivo                                                         |\n+--------------------+------------+----------------------------------------------------------------+\n| Últimos registros  | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal | line_chart | Permite acompanhar evolução do módulo.                         |\n+--------------------+------------+----------------------------------------------------------------+\n"
+        }
+    },
+    "documentos": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "documentos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: documentos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/documentos.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "documentos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: documentos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/documentos.json\n+----------------------+------------+----------------------------------------------------------------+\n| Widget               | Tipo       | Motivo                                                         |\n+----------------------+------------+----------------------------------------------------------------+\n| Últimos registros    | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal   | line_chart | Permite acompanhar evolução do módulo.                         |\n| Documentos pendentes | alert_card | Padrão de documentos detectado.                                |\n+----------------------+------------+----------------------------------------------------------------+\n"
+        }
+    },
+    "planos": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "planos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: planos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/planos.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "planos"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: planos\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/planos.json\n+--------------------+------------+----------------------------------------------------------------+\n| Widget             | Tipo       | Motivo                                                         |\n+--------------------+------------+----------------------------------------------------------------+\n| Últimos registros  | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal | line_chart | Permite acompanhar evolução do módulo.                         |\n+--------------------+------------+----------------------------------------------------------------+\n"
+        }
+    },
+    "relatorios": {
+        "dashboard": {
+            "command": "factory:dashboard-module",
+            "arguments": {
+                "slug": "relatorios"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Dashboard do módulo gerado.\nMódulo: relatorios\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/modules/relatorios.json\nCards: 4\n"
+        },
+        "widgets": {
+            "command": "factory:widgets-module",
+            "arguments": {
+                "slug": "relatorios"
+            },
+            "exit_code": 0,
+            "status": "passed",
+            "output": "Widgets inteligentes gerados.\nMódulo: relatorios\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/widgets/modules/relatorios.json\n+--------------------+------------+----------------------------------------------------------------+\n| Widget             | Tipo       | Motivo                                                         |\n+--------------------+------------+----------------------------------------------------------------+\n| Últimos registros  | table      | Todo módulo precisa de uma visão rápida dos últimos cadastros. |\n| Crescimento mensal | line_chart | Permite acompanhar evolução do módulo.                         |\n+--------------------+------------+----------------------------------------------------------------+\n"
+        }
+    },
+    "executive": {
+        "command": "factory:executive-dashboard",
+        "arguments": {
+            "slug": "gov360"
+        },
+        "exit_code": 0,
+        "status": "passed",
+        "output": "Dashboard executivo gerado.\nSistema: gov360\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/dashboards/systems/gov360.json\nCards: 19\nCharts: 5\nAlertas: 1\n"
+    }
+}

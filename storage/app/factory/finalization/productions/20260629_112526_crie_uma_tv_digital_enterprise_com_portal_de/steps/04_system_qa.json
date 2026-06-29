@@ -1,0 +1,7 @@
+{
+    "command": "factory:smart-qa2",
+    "arguments": [],
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Smart QA 2.0\nStatus: passed\n+--------+-------------------+-------------------------------------+\n| Status | Check             | Mensagem                            |\n+--------+-------------------+-------------------------------------+\n| passed | release_config    | Configuração de release existe.     |\n| passed | products_config   | Catálogo de produtos existe.        |\n| passed | factory_bootstrap | Bootstrap de release existe.        |\n| passed | factory_core      | Factory está instalada.             |\n| passed | storage_releases  | Storage de releases disponível.     |\n| passed | storage_products  | Storage de produtos disponível.     |\n| passed | storage_docs      | Storage de documentação disponível. |\n| passed | storage_history   | Storage de histórico disponível.    |\n+--------+-------------------+-------------------------------------+\n"
+}

@@ -1,0 +1,9 @@
+{
+    "command": "factory:history",
+    "arguments": {
+        "--record": "full_release_production_gov360"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Evento registrado: /home1/cris1649/vitrine-ai-pro/storage/app/factory/history/20260628_205710_full_release_production_gov360.json\n"
+}

@@ -1,0 +1,9 @@
+{
+    "command": "factory:make-system",
+    "arguments": {
+        "slug": "clinicas_veterinarias"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Sistema gerado com sucesso em modo seguro.\nSistema: Sistema para Clínicas Veterinárias\n+--------------+-------------+------------------------------------------------------------------------+\n| Módulo       | Model       | Local                                                                  |\n+--------------+-------------+------------------------------------------------------------------------+\n| clientes     | Cliente     | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/clientes     |\n| animais      | Animai      | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/animais      |\n| agendamentos | Agendamento | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/agendamentos |\n| prontuarios  | Prontuario  | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/prontuarios  |\n| vacinas      | Vacina      | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/vacinas      |\n| financeiro   | Financeiro  | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/financeiro   |\n+--------------+-------------+------------------------------------------------------------------------+\n"
+}

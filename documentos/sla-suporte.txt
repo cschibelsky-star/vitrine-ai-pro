@@ -1,0 +1,28 @@
+SLA E SUPORTE — MODELO INICIAL
+
+O suporte da Vitrine AI Pro deve ser definido conforme plano contratado, horário de atendimento, criticidade e ambiente de hospedagem.
+
+Categorias de atendimento:
+- Atendimento comercial.
+- Suporte técnico.
+- Orientação operacional.
+- Atualizações programadas.
+- Incidentes críticos.
+- Correções evolutivas.
+
+Classificação sugerida:
+Crítico: indisponibilidade total da operação contratada.
+Alto: falha relevante em módulo essencial.
+Médio: falha parcial ou comportamento inesperado.
+Baixo: dúvida operacional, orientação, ajuste simples ou solicitação de melhoria.
+
+Itens recomendados em contrato:
+- Canais de atendimento.
+- Horário de suporte.
+- Tempo de primeira resposta.
+- Tempo estimado de resolução.
+- Responsabilidades do cliente.
+- Limites de escopo.
+- Procedimento para demandas fora do contrato.
+
+Os prazos devem ser definidos na proposta comercial e no contrato final.

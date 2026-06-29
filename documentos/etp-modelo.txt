@@ -1,0 +1,24 @@
+MODELO DE ETP — ESTUDO TÉCNICO PRELIMINAR
+
+1. Descrição da necessidade.
+2. Área requisitante.
+3. Situação atual.
+4. Requisitos funcionais.
+5. Requisitos não funcionais.
+6. Alternativas avaliadas.
+7. Justificativa técnica.
+8. Resultados pretendidos.
+9. Estimativa de custos.
+10. Riscos identificados.
+11. Modelo de implantação.
+12. Suporte e continuidade.
+13. Conclusão pela viabilidade.
+
+Pontos de análise sugeridos:
+- Necessidade de canal próprio.
+- Continuidade da comunicação pública ou editorial.
+- Organização de vídeos e documentos.
+- Suporte e atualização contínua.
+- Proteção de dados e controle de acesso.
+
+Este documento deve ser adaptado pelo órgão contratante conforme o caso concreto.

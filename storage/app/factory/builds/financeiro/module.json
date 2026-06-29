@@ -1,0 +1,18 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "financeiro",
+    "model": "Financeiro",
+    "relationships": [
+        {
+            "field": "cliente_id",
+            "type": "belongsTo",
+            "related_model": "Cliente"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "valor_total",
+        "pendentes"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

@@ -1,0 +1,12 @@
+{
+    "name": "Factory Full Release",
+    "version": "1.0.0",
+    "status": "production_ready",
+    "main_command": "php artisan factory:produce gov360",
+    "validated_result": "enterprise_safe_production",
+    "generated_at": "2026-06-28T22:42:20.605721+00:00",
+    "products": [
+        "gov360"
+    ],
+    "purpose": "Consolidar a Factory em um pacote único funcional e produtor."
+}

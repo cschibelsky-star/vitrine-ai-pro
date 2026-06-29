@@ -1,0 +1,17 @@
+{
+    "system": "clinicas_veterinarias",
+    "module": "vacinas",
+    "model": "Vacina",
+    "relationships": [
+        {
+            "field": "animal_id",
+            "type": "belongsTo",
+            "related_model": "Animal"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "vencendo"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

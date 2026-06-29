@@ -1,0 +1,3 @@
+<?php $title='Área do Cliente'; require __DIR__.'/../includes/header.php'; ?>
+<section class="section"><h1>Área do Cliente</h1><p class="lead">Ambiente reservado para contratos, chamados, treinamentos, atualizações e documentos. Módulo estrutural pronto para ativação após o primeiro contrato.</p><div class="grid"><div class="card"><h3>Contratos</h3><p>Licenças e documentos.</p></div><div class="card"><h3>Chamados</h3><p>Suporte técnico e solicitações.</p></div><div class="card"><h3>Treinamentos</h3><p>Materiais de uso da plataforma.</p></div></div></section>
+<?php require __DIR__.'/../includes/footer.php'; ?>

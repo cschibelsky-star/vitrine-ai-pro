@@ -1,0 +1,215 @@
+{
+    "system": "gestao_licitacoes_publicas",
+    "title": "Dashboard Executivo — Gestão de Licitações Públicas",
+    "cards": [
+        {
+            "key": "total_categorias",
+            "label": "Total de Categorias",
+            "module": "categorias",
+            "type": "count"
+        },
+        {
+            "key": "categorias_total",
+            "label": "Total - Categorias",
+            "module": "categorias",
+            "type": "metric"
+        },
+        {
+            "key": "categorias_ativos",
+            "label": "Ativos - Categorias",
+            "module": "categorias",
+            "type": "metric"
+        },
+        {
+            "key": "total_fornecedores",
+            "label": "Total de Fornecedores",
+            "module": "fornecedores",
+            "type": "count"
+        },
+        {
+            "key": "fornecedores_total",
+            "label": "Total - Fornecedores",
+            "module": "fornecedores",
+            "type": "metric"
+        },
+        {
+            "key": "fornecedores_ativos",
+            "label": "Ativos - Fornecedores",
+            "module": "fornecedores",
+            "type": "metric"
+        },
+        {
+            "key": "fornecedores_inativos",
+            "label": "Inativos - Fornecedores",
+            "module": "fornecedores",
+            "type": "metric"
+        },
+        {
+            "key": "total_licitacoes",
+            "label": "Total de Licitações",
+            "module": "licitacoes",
+            "type": "count"
+        },
+        {
+            "key": "licitacoes_total",
+            "label": "Total - Licitações",
+            "module": "licitacoes",
+            "type": "metric"
+        },
+        {
+            "key": "licitacoes_abertas",
+            "label": "Abertas - Licitações",
+            "module": "licitacoes",
+            "type": "metric"
+        },
+        {
+            "key": "licitacoes_em_andamento",
+            "label": "Em andamento - Licitações",
+            "module": "licitacoes",
+            "type": "metric"
+        },
+        {
+            "key": "licitacoes_finalizadas",
+            "label": "Finalizadas - Licitações",
+            "module": "licitacoes",
+            "type": "metric"
+        },
+        {
+            "key": "licitacoes_valor_total",
+            "label": "Valor total - Licitações",
+            "module": "licitacoes",
+            "type": "currency_sum"
+        },
+        {
+            "key": "total_propostas",
+            "label": "Total de Propostas",
+            "module": "propostas",
+            "type": "count"
+        },
+        {
+            "key": "propostas_total",
+            "label": "Total - Propostas",
+            "module": "propostas",
+            "type": "metric"
+        },
+        {
+            "key": "propostas_vencedoras",
+            "label": "Vencedoras - Propostas",
+            "module": "propostas",
+            "type": "metric"
+        },
+        {
+            "key": "propostas_em_analise",
+            "label": "Em analise - Propostas",
+            "module": "propostas",
+            "type": "metric"
+        },
+        {
+            "key": "propostas_valor_total",
+            "label": "Valor total - Propostas",
+            "module": "propostas",
+            "type": "currency_sum"
+        },
+        {
+            "key": "total_contratos",
+            "label": "Total de Contratos",
+            "module": "contratos",
+            "type": "count"
+        },
+        {
+            "key": "contratos_total",
+            "label": "Total - Contratos",
+            "module": "contratos",
+            "type": "metric"
+        },
+        {
+            "key": "contratos_ativos",
+            "label": "Ativos - Contratos",
+            "module": "contratos",
+            "type": "metric"
+        },
+        {
+            "key": "contratos_valor_total",
+            "label": "Valor total - Contratos",
+            "module": "contratos",
+            "type": "metric"
+        },
+        {
+            "key": "contratos_valor_total",
+            "label": "Valor total - Contratos",
+            "module": "contratos",
+            "type": "currency_sum"
+        },
+        {
+            "key": "total_documentos",
+            "label": "Total de Documentos",
+            "module": "documentos",
+            "type": "count"
+        },
+        {
+            "key": "documentos_total",
+            "label": "Total - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        },
+        {
+            "key": "documentos_pendentes",
+            "label": "Pendentes - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        },
+        {
+            "key": "documentos_aprovados",
+            "label": "Aprovados - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        }
+    ],
+    "charts": [
+        {
+            "key": "categorias_status",
+            "label": "Categorias por status",
+            "module": "categorias",
+            "type": "donut"
+        },
+        {
+            "key": "fornecedores_status",
+            "label": "Fornecedores por status",
+            "module": "fornecedores",
+            "type": "donut"
+        },
+        {
+            "key": "licitacoes_status",
+            "label": "Licitações por status",
+            "module": "licitacoes",
+            "type": "donut"
+        },
+        {
+            "key": "propostas_status",
+            "label": "Propostas por status",
+            "module": "propostas",
+            "type": "donut"
+        },
+        {
+            "key": "contratos_status",
+            "label": "Contratos por status",
+            "module": "contratos",
+            "type": "donut"
+        },
+        {
+            "key": "documentos_status",
+            "label": "Documentos por status",
+            "module": "documentos",
+            "type": "donut"
+        }
+    ],
+    "alerts": [
+        {
+            "key": "contratos_vencimentos",
+            "label": "Contratos com vencimento próximo",
+            "module": "contratos",
+            "type": "expiration_alert"
+        }
+    ],
+    "generated_at": "2026-06-28T18:24:31.251198Z"
+}

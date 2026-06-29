@@ -1,0 +1,4 @@
+<?php
+declare(strict_types=1);
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { if (Schema::hasTable('factory_execution_logs')) return; Schema::create('factory_execution_logs', function (Blueprint $table): void { $table->id(); $table->uuid('uuid')->unique(); $table->foreignId('factory_execution_id')->nullable()->constrained('factory_executions')->cascadeOnDelete(); $table->string('level')->default('info')->index(); $table->string('event')->nullable()->index(); $table->text('message'); $table->json('payload')->nullable(); $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete(); $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete(); $table->timestamps();  }); } public function down(): void { Schema::dropIfExists('factory_execution_logs'); } };

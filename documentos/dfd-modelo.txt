@@ -1,0 +1,18 @@
+MODELO DE DFD — DOCUMENTO DE FORMALIZAÇÃO DE DEMANDA
+
+1. Unidade demandante.
+2. Responsável pela demanda.
+3. Problema público ou operacional a ser resolvido.
+4. Objetivo da contratação.
+5. Público atendido.
+6. Resultados esperados.
+7. Justificativa da necessidade.
+8. Situação atual dos canais digitais.
+9. Solução pretendida.
+10. Prazo desejado.
+11. Requisitos preliminares.
+12. Observações.
+
+Exemplo de necessidade: estruturar comunicação oficial, transparência, vídeos, notícias e relacionamento digital com o cidadão em ambiente único e administrável.
+
+Este modelo deve ser adaptado pelo órgão contratante conforme o caso concreto.

@@ -1,0 +1,21 @@
+{
+    "request": "Crie uma TV Digital Enterprise com portal de notícias, vídeos, RSS, transmissão ao vivo, banners, comercial, Repórter IA, editorial por IA, categorias, cidades, colunas e área administrativa. Diretriz: projeto isolado em Aplicações Geradas, sem poluir o Centro Operacional.\n\nCliente: Cliente Site Teste\nPlano: Enterprise\nDomínio: cliente-site.tv.br",
+    "status": "finished",
+    "domain": "generic",
+    "blueprint_slug": "crie_uma_tv_digital_enterprise_com_portal_de",
+    "blueprint_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/blueprints/crie_uma_tv_digital_enterprise_com_portal_de.json",
+    "modules": [
+        "registros",
+        "categorias",
+        "documentos"
+    ],
+    "production_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260629_122920_crie_uma_tv_digital_enterprise_com_portal_de",
+    "steps": {
+        "01_architecture": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260629_122920_crie_uma_tv_digital_enterprise_com_portal_de/steps/01_architecture.json",
+        "02_make_system": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260629_122920_crie_uma_tv_digital_enterprise_com_portal_de/steps/02_make_system.json",
+        "03_dashboard_widget_qa": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260629_122920_crie_uma_tv_digital_enterprise_com_portal_de/steps/03_dashboard_widget_qa.json",
+        "04_system_qa": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260629_122920_crie_uma_tv_digital_enterprise_com_portal_de/steps/04_system_qa.json"
+    },
+    "next_command": "php artisan factory:install-final crie_uma_tv_digital_enterprise_com_portal_de --dry-run",
+    "produced_at": "2026-06-29T15:29:20.956998Z"
+}

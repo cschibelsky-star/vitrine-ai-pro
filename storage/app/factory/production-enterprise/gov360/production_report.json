@@ -1,0 +1,28 @@
+{
+    "product_key": "gov360",
+    "product_name": "Consultor AI GOV360",
+    "status": "finished",
+    "mode": "enterprise_safe_production",
+    "release": "FACTORY_FULL_RELEASE_1.0",
+    "modules": [
+        "clientes",
+        "diagnosticos",
+        "documentos",
+        "planos",
+        "relatorios"
+    ],
+    "production_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360",
+    "builds_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/builds",
+    "steps": {
+        "01_blueprint": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/01_blueprint.json",
+        "02_decision": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/02_decision.json",
+        "03_make_system": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/03_make_system.json",
+        "04_dashboards_widgets": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/04_dashboards_widgets.json",
+        "05_product_manifest": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/05_product_manifest.json",
+        "06_documentation": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/06_documentation.json",
+        "07_qa": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/07_qa.json",
+        "08_history": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/steps/08_history.json"
+    },
+    "install_note": "Produção em modo seguro. Instale módulos somente após validar o QA.",
+    "produced_at": "2026-06-28T23:57:10.490127Z"
+}

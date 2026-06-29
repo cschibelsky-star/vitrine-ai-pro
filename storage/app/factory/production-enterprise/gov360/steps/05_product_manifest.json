@@ -1,0 +1,9 @@
+{
+    "command": "factory:product",
+    "arguments": {
+        "key": "gov360"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Product Generator\nProduto: Consultor AI GOV360\nDomínio: governo_digital\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/products/gov360/product_manifest.json\n+-------------------+\n| Módulo            |\n+-------------------+\n| clientes_publicos |\n| diagnosticos      |\n| documentos        |\n| recomendacoes     |\n| planos_acao       |\n| relatorios        |\n+-------------------+\n+--------------------+\n| Componente         |\n+--------------------+\n| dashboard          |\n| workflow           |\n| audit_log          |\n| document_upload    |\n| ai_recommendations |\n| pdf_export         |\n+--------------------+\n"
+}

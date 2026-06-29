@@ -1,0 +1,9 @@
+{
+    "command": "factory:docs",
+    "arguments": {
+        "product_key": "gov360"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Documentation Engine\nProduto: gov360\nArquivo: /home1/cris1649/vitrine-ai-pro/storage/app/factory/docs/gov360/DOCUMENTACAO_TECNICA.md\n"
+}

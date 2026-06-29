@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace App\Factory\Models;
+use Illuminate\Database\Eloquent\Factories\HasFactory; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\Relations\BelongsTo; use Illuminate\Database\Eloquent\Relations\HasMany; use Illuminate\Database\Eloquent\SoftDeletes;
+class FactoryBlueprint extends Model { use HasFactory, SoftDeletes; protected $table='factory_blueprints'; protected $fillable=['uuid','factory_project_id','factory_capability_id','name','slug','code','description','status','version','schema','instructions','metadata','created_by','updated_by']; protected $casts=['schema'=>'array','instructions'=>'array','metadata'=>'array','version'=>'integer']; public function project(): BelongsTo { return $this->belongsTo(FactoryProject::class,'factory_project_id'); } public function capability(): BelongsTo { return $this->belongsTo(FactoryCapability::class,'factory_capability_id'); } public function executions(): HasMany { return $this->hasMany(FactoryExecution::class,'factory_blueprint_id'); } }

@@ -1,0 +1,18 @@
+{
+    "module": "animais",
+    "widgets": [
+        {
+            "key": "latest_records",
+            "label": "Últimos registros",
+            "type": "table",
+            "reason": "Todo módulo precisa de uma visão rápida dos últimos cadastros."
+        },
+        {
+            "key": "monthly_growth",
+            "label": "Crescimento mensal",
+            "type": "line_chart",
+            "reason": "Permite acompanhar evolução do módulo."
+        }
+    ],
+    "generated_at": "2026-06-29T01:47:59.556701Z"
+}

@@ -1,0 +1,9 @@
+{
+    "command": "factory:make-system",
+    "arguments": {
+        "slug": "gov360"
+    },
+    "exit_code": 0,
+    "status": "passed",
+    "output": "Sistema gerado com sucesso em modo seguro.\nSistema: Consultor AI GOV360\n+--------------+-------------+------------------------------------------------------------------------+\n| Módulo       | Model       | Local                                                                  |\n+--------------+-------------+------------------------------------------------------------------------+\n| clientes     | Cliente     | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/clientes     |\n| diagnosticos | Diagnostico | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/diagnosticos |\n| documentos   | Documento   | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/documentos   |\n| planos       | Plano       | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/planos       |\n| relatorios   | Relatorio   | /home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/relatorios   |\n+--------------+-------------+------------------------------------------------------------------------+\n"
+}

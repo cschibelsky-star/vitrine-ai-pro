@@ -1,0 +1,177 @@
+{
+    "name": "Gestão de Fornecedores, Contratos e Documentos",
+    "slug": "gestao_fornecedores_contratos_documentos",
+    "description": "Crie um sistema para prefeitura controlar fornecedores, contratos e documentos",
+    "modules": [
+        {
+            "name": "Categorias",
+            "slug": "categorias",
+            "label": "Categorias",
+            "fields": [
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "descricao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "inativos"
+            ]
+        },
+        {
+            "name": "Fornecedores",
+            "slug": "fornecedores",
+            "label": "Fornecedores",
+            "fields": [
+                {
+                    "name": "categoria_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Categoria"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "documento",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "telefone",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "cidade",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "inativos",
+                "ultimos"
+            ]
+        },
+        {
+            "name": "Contratos",
+            "slug": "contratos",
+            "label": "Contratos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "numero",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "objeto",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "valor",
+                    "type": "decimal",
+                    "nullable": true
+                },
+                {
+                    "name": "data_inicio",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "data_fim",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "valor_total"
+            ]
+        },
+        {
+            "name": "Documentos",
+            "slug": "documentos",
+            "label": "Documentos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "tipo",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "arquivo",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "validade",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "pendentes",
+                "aprovados"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (Schema::hasTable('prontuarios')) {
+            return;
+        }
+
+        Schema::create('prontuarios', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('animal_id')->constrained('animals')->cascadeOnDelete();
+            $table->text('descricao')->nullable();
+            $table->text('diagnostico')->nullable();
+            $table->string('status');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('prontuarios');
+    }
+};

@@ -1,0 +1,24 @@
+{
+    "request": "Quero um sistema para clínicas veterinárias com agenda, clientes, prontuários, vacinas e financeiro",
+    "status": "finished",
+    "domain": "veterinaria",
+    "blueprint_slug": "clinicas_veterinarias",
+    "blueprint_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/blueprints/clinicas_veterinarias.json",
+    "modules": [
+        "clientes",
+        "animais",
+        "agendamentos",
+        "prontuarios",
+        "vacinas",
+        "financeiro"
+    ],
+    "production_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260628_220455_clinicas_veterinarias",
+    "steps": {
+        "01_architecture": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260628_220455_clinicas_veterinarias/steps/01_architecture.json",
+        "02_make_system": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260628_220455_clinicas_veterinarias/steps/02_make_system.json",
+        "03_dashboard_widget_qa": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260628_220455_clinicas_veterinarias/steps/03_dashboard_widget_qa.json",
+        "04_system_qa": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/finalization/productions/20260628_220455_clinicas_veterinarias/steps/04_system_qa.json"
+    },
+    "next_command": "php artisan factory:install-final clinicas_veterinarias --dry-run",
+    "produced_at": "2026-06-29T01:04:57.628246Z"
+}

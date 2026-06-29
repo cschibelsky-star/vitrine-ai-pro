@@ -1,0 +1,36 @@
+VITRINE AI PRO MASTER ENTERPRISE 2.0
+Pacote de atualização visual e reorganização inicial do Centro Operacional / Factory.
+
+OBJETIVO
+- Iniciar a refatoração visual do Vitrine AI Pro Master.
+- Criar Dashboard Executivo mais moderno.
+- Criar Factory Dashboard unificado.
+- Criar Marketplace Enterprise com produtos estratégicos.
+- Adicionar tema visual próprio para reduzir aparência padrão do Filament.
+
+IMPORTANTE
+Este pacote não apaga suas tabelas e não altera banco de dados.
+Ele adiciona páginas, views e CSS.
+
+ARQUIVOS PRINCIPAIS
+- app/Filament/Pages/DashboardExecutivo.php
+- app/Filament/Pages/FactoryDashboard.php
+- app/Filament/Pages/MarketplaceEnterprise.php
+- resources/views/filament/pages/dashboard-executivo.blade.php
+- resources/views/filament/pages/factory-dashboard.blade.php
+- resources/views/filament/pages/marketplace-enterprise.blade.php
+- resources/css/filament/admin/theme.css
+- config/vitrine-master.php
+
+PASSOS RECOMENDADOS
+1. Subir os arquivos para a raiz do projeto Laravel.
+2. Copiar as pastas para os diretórios correspondentes.
+3. Rodar:
+   php artisan optimize:clear
+   php artisan view:clear
+   php artisan route:clear
+   php artisan config:clear
+
+OBSERVAÇÃO
+Para aplicar 100% o CSS, confirme se o painel Filament está carregando o arquivo resources/css/filament/admin/theme.css.
+Se ainda não estiver, será necessário registrar o tema no PanelProvider do Filament.

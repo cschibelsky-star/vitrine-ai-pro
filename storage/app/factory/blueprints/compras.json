@@ -1,0 +1,249 @@
+{
+    "name": "Sistema de Compras",
+    "slug": "compras",
+    "description": "Sistema base com fornecedores, categorias, contratos, documentos e histórico.",
+    "modules": [
+        {
+            "name": "Categorias",
+            "slug": "categorias",
+            "label": "Categorias",
+            "fields": [
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "descricao",
+                    "type": "text",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "inativos"
+            ]
+        },
+        {
+            "name": "Fornecedores",
+            "slug": "fornecedores",
+            "label": "Fornecedores",
+            "fields": [
+                {
+                    "name": "categoria_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Categoria"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "documento",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "telefone",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "cidade",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "inativos",
+                "ultimos"
+            ]
+        },
+        {
+            "name": "Contratos",
+            "slug": "contratos",
+            "label": "Contratos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "numero",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "objeto",
+                    "type": "text",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "valor",
+                    "type": "decimal",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "data_inicio",
+                    "type": "date",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "data_fim",
+                    "type": "date",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos",
+                "valor_total"
+            ]
+        },
+        {
+            "name": "Documentos",
+            "slug": "documentos",
+            "label": "Documentos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "tipo",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "arquivo",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "pendentes",
+                "aprovados"
+            ]
+        },
+        {
+            "name": "Historicos",
+            "slug": "historicos",
+            "label": "Históricos",
+            "fields": [
+                {
+                    "name": "fornecedor_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Fornecedor"
+                },
+                {
+                    "name": "descricao",
+                    "type": "text",
+                    "nullable": false,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "tipo",
+                    "type": "string",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                },
+                {
+                    "name": "data_registro",
+                    "type": "date",
+                    "nullable": true,
+                    "relationship": null,
+                    "related_model": null
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ultimos"
+            ]
+        }
+    ]
+}

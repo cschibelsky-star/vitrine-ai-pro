@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace App\Factory\Services;
+use App\Factory\Models\FactoryBlueprint; use App\Factory\Models\FactoryCapability; use App\Factory\Models\FactoryProject; use Illuminate\Support\Str;
+class FactorySyncService { public function syncCoreDefaults(): array { $project=FactoryProject::firstOrCreate(['slug'=>'vitrine-ai-pro-master'],['uuid'=>(string)Str::uuid(),'name'=>config('factory.project_name'),'code'=>'VITRINE_AI_PRO_MASTER','description'=>'Projeto principal integrado ao Factory Core.','status'=>'active']); $cap=FactoryCapability::firstOrCreate(['factory_project_id'=>$project->id,'slug'=>'content-generation'],['uuid'=>(string)Str::uuid(),'name'=>'Content Generation','code'=>'CONTENT_GENERATION','type'=>'ai','status'=>'active']); $bp=FactoryBlueprint::firstOrCreate(['factory_project_id'=>$project->id,'slug'=>'default-content-blueprint'],['uuid'=>(string)Str::uuid(),'factory_capability_id'=>$cap->id,'name'=>'Default Content Blueprint','code'=>'DEFAULT_CONTENT_BLUEPRINT','status'=>'active','version'=>1]); return ['project_id'=>$project->id,'capability_id'=>$cap->id,'blueprint_id'=>$bp->id,'synced_at'=>now()->toISOString()]; } }

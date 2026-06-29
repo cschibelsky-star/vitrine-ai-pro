@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use Filament\Pages\Dashboard as BaseDashboard;
+
+class Dashboard extends BaseDashboard
+{
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
+    protected static ?string $navigationLabel = 'Dashboard Executivo';
+    protected static ?string $title = 'Centro Operacional Master';
+    protected static ?string $slug = 'dashboard';
+
+    public function getColumns(): int | array
+    {
+        return [
+            'default' => 1,
+            'md' => 2,
+            'xl' => 4,
+        ];
+    }
+
+    public function getWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\MasterWelcomeWidget::class,
+            \App\Filament\Widgets\ExecutiveStatsWidget::class,
+            \App\Filament\Widgets\FinancialStatsWidget::class,
+            \App\Filament\Widgets\PipelineStatusWidget::class,
+            \App\Filament\Widgets\ProductInterestWidget::class,
+            \App\Filament\Widgets\OperationalAlertsWidget::class,
+            \App\Filament\Widgets\RecentLeadsWidget::class,
+            \App\Filament\Widgets\RecentPaymentsWidget::class,
+        ];
+    }
+}

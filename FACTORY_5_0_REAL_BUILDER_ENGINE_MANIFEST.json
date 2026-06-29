@@ -1,0 +1,12 @@
+{
+    "name": "Factory 5.0 Real Builder Engine",
+    "version": "5.0.0",
+    "status": "finalization",
+    "goal": "blueprint -> código Laravel/Filament real -> instalação segura",
+    "commands": [
+        "factory:real-build",
+        "factory:real-install",
+        "factory:finish-project"
+    ],
+    "generated_at": "2026-06-29T01:00:33.626730+00:00"
+}

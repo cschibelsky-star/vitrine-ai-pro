@@ -1,0 +1,11 @@
+{
+    "system": "crie_uma_tv_digital_enterprise_com_portal_de",
+    "module": "registros",
+    "model": "Registro",
+    "relationships": [],
+    "dashboard_metrics": [
+        "total",
+        "ativos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

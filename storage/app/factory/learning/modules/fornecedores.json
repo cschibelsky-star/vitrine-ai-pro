@@ -1,0 +1,42 @@
+{
+    "slug": "fornecedores",
+    "module_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/builds/fornecedores",
+    "manifest": {
+        "system": "gestao_licitacoes_publicas",
+        "module": "fornecedores",
+        "model": "Fornecedor",
+        "relationships": [
+            {
+                "field": "categoria_id",
+                "type": "belongsTo",
+                "related_model": "Categoria"
+            }
+        ],
+        "dashboard_metrics": [
+            "total",
+            "ativos",
+            "inativos"
+        ],
+        "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+    },
+    "files": [
+        "app/Filament/Resources/FornecedorResource.php",
+        "app/Filament/Resources/FornecedorResource/Pages/CreateFornecedor.php",
+        "app/Filament/Resources/FornecedorResource/Pages/EditFornecedor.php",
+        "app/Filament/Resources/FornecedorResource/Pages/ListFornecedores.php",
+        "app/Filament/Resources/FornecedorResource/Pages/ViewFornecedor.php",
+        "app/Models/Fornecedor.php",
+        "app/Policies/FornecedorPolicy.php",
+        "database/migrations/2026_06_28_144706_create_fornecedores_table.php",
+        "database/seeders/FornecedorSeeder.php",
+        "module.json"
+    ],
+    "learned_at": "2026-06-28T17:57:02.732423Z",
+    "summary": {
+        "has_model": true,
+        "has_policy": true,
+        "has_migration": true,
+        "has_resource": true,
+        "has_pages": true
+    }
+}

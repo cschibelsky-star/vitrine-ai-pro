@@ -1,0 +1,24 @@
+MODELO DE TERMO DE REFERÊNCIA
+
+1. Objeto.
+2. Justificativa.
+3. Descrição da solução.
+4. Escopo dos módulos.
+5. Requisitos funcionais.
+6. Requisitos não funcionais.
+7. Implantação.
+8. Treinamento.
+9. Suporte.
+10. SLA.
+11. Segurança.
+12. LGPD.
+13. Obrigações da contratante.
+14. Obrigações da contratada.
+15. Critérios de aceite.
+16. Vigência.
+17. Condições de pagamento.
+18. Valor estimado.
+19. Gestão e fiscalização.
+20. Disposições gerais.
+
+Este modelo é apenas apoio inicial e deve ser revisado pelo órgão contratante antes de qualquer uso formal.

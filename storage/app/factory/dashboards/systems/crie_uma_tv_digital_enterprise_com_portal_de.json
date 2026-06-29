@@ -1,0 +1,70 @@
+{
+    "system": "crie_uma_tv_digital_enterprise_com_portal_de",
+    "title": "Dashboard Executivo — Crie Uma Tv Digital Enterprise Com Portal De",
+    "cards": [
+        {
+            "key": "total_registros",
+            "label": "Total de Registros",
+            "module": "registros",
+            "type": "count"
+        },
+        {
+            "key": "registros_total",
+            "label": "Total - Registros",
+            "module": "registros",
+            "type": "metric"
+        },
+        {
+            "key": "registros_ativos",
+            "label": "Ativos - Registros",
+            "module": "registros",
+            "type": "metric"
+        },
+        {
+            "key": "total_categorias",
+            "label": "Total de Categorias",
+            "module": "categorias",
+            "type": "count"
+        },
+        {
+            "key": "categorias_total",
+            "label": "Total - Categorias",
+            "module": "categorias",
+            "type": "metric"
+        },
+        {
+            "key": "total_documentos",
+            "label": "Total de Documentos",
+            "module": "documentos",
+            "type": "count"
+        },
+        {
+            "key": "documentos_total",
+            "label": "Total - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        }
+    ],
+    "charts": [
+        {
+            "key": "registros_status",
+            "label": "Registros por status",
+            "module": "registros",
+            "type": "donut"
+        },
+        {
+            "key": "categorias_status",
+            "label": "Categorias por status",
+            "module": "categorias",
+            "type": "donut"
+        },
+        {
+            "key": "documentos_status",
+            "label": "Documentos por status",
+            "module": "documentos",
+            "type": "donut"
+        }
+    ],
+    "alerts": [],
+    "generated_at": "2026-06-29T15:29:20.954369Z"
+}

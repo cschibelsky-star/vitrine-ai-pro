@@ -1,0 +1,17 @@
+{
+    "system": "compras",
+    "module": "historicos",
+    "model": "Historico",
+    "relationships": [
+        {
+            "field": "fornecedor_id",
+            "type": "belongsTo",
+            "related_model": "Fornecedor"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "ultimos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Factory Enterprise Maturity Pack",
+    "version": "5.1.0",
+    "status": "enterprise_maturity",
+    "goal": "Elevar o código gerado para padrão comercial: Services, Repositories, Requests, API, Tests e Relation Managers.",
+    "commands": [
+        "factory:enterprise-build",
+        "factory:enterprise-install"
+    ],
+    "generated_at": "2026-06-29T01:09:44.764796+00:00"
+}

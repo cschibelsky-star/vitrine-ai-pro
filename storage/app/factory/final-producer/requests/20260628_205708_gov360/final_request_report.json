@@ -1,0 +1,10 @@
+{
+    "request": "Quero um sistema para pequenas empresas venderem para o governo",
+    "resolved_product": "gov360",
+    "status": "finished",
+    "resolver_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-producer/requests/20260628_205708_gov360/01_resolver.json",
+    "production_step_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/final-producer/requests/20260628_205708_gov360/02_production.json",
+    "production_report_path": "/home1/cris1649/vitrine-ai-pro/storage/app/factory/production-enterprise/gov360/production_report.json",
+    "next_command": "php artisan factory:install-system gov360 --dry-run",
+    "created_at": "2026-06-28T23:57:10.491689Z"
+}

@@ -1,0 +1,7 @@
+{
+    "client": "Cliente Site Teste",
+    "product": "TV Digital Enterprise",
+    "plan": "enterprise",
+    "project_slug": "tv_digital_enterprise_cliente_site_teste",
+    "prompt": "Crie uma TV Digital Enterprise com portal de notícias, vídeos, RSS, transmissão ao vivo, banners, comercial, Repórter IA, editorial por IA, categorias, cidades, colunas e área administrativa. Diretriz: projeto isolado em Aplicações Geradas, sem poluir o Centro Operacional.\n\nCliente: Cliente Site Teste\nPlano: Enterprise\nDomínio: cliente-site.tv.br"
+}

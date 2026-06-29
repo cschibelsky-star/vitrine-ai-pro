@@ -1,0 +1,161 @@
+{
+    "system": "gov360",
+    "title": "Dashboard Executivo — Consultor AI GOV360",
+    "cards": [
+        {
+            "key": "total_clientes",
+            "label": "Total de Clientes",
+            "module": "clientes",
+            "type": "count"
+        },
+        {
+            "key": "clientes_total",
+            "label": "Total - Clientes",
+            "module": "clientes",
+            "type": "metric"
+        },
+        {
+            "key": "clientes_ativos",
+            "label": "Ativos - Clientes",
+            "module": "clientes",
+            "type": "metric"
+        },
+        {
+            "key": "clientes_inativos",
+            "label": "Inativos - Clientes",
+            "module": "clientes",
+            "type": "metric"
+        },
+        {
+            "key": "total_diagnosticos",
+            "label": "Total de Diagnósticos",
+            "module": "diagnosticos",
+            "type": "count"
+        },
+        {
+            "key": "diagnosticos_total",
+            "label": "Total - Diagnósticos",
+            "module": "diagnosticos",
+            "type": "metric"
+        },
+        {
+            "key": "diagnosticos_abertos",
+            "label": "Abertos - Diagnósticos",
+            "module": "diagnosticos",
+            "type": "metric"
+        },
+        {
+            "key": "diagnosticos_concluidos",
+            "label": "Concluidos - Diagnósticos",
+            "module": "diagnosticos",
+            "type": "metric"
+        },
+        {
+            "key": "total_documentos",
+            "label": "Total de Documentos",
+            "module": "documentos",
+            "type": "count"
+        },
+        {
+            "key": "documentos_total",
+            "label": "Total - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        },
+        {
+            "key": "documentos_pendentes",
+            "label": "Pendentes - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        },
+        {
+            "key": "documentos_aprovados",
+            "label": "Aprovados - Documentos",
+            "module": "documentos",
+            "type": "metric"
+        },
+        {
+            "key": "total_planos",
+            "label": "Total de Planos",
+            "module": "planos",
+            "type": "count"
+        },
+        {
+            "key": "planos_total",
+            "label": "Total - Planos",
+            "module": "planos",
+            "type": "metric"
+        },
+        {
+            "key": "planos_em_andamento",
+            "label": "Em andamento - Planos",
+            "module": "planos",
+            "type": "metric"
+        },
+        {
+            "key": "planos_concluidos",
+            "label": "Concluidos - Planos",
+            "module": "planos",
+            "type": "metric"
+        },
+        {
+            "key": "total_relatorios",
+            "label": "Total de Relatórios",
+            "module": "relatorios",
+            "type": "count"
+        },
+        {
+            "key": "relatorios_total",
+            "label": "Total - Relatórios",
+            "module": "relatorios",
+            "type": "metric"
+        },
+        {
+            "key": "relatorios_emitidos",
+            "label": "Emitidos - Relatórios",
+            "module": "relatorios",
+            "type": "metric"
+        }
+    ],
+    "charts": [
+        {
+            "key": "clientes_status",
+            "label": "Clientes por status",
+            "module": "clientes",
+            "type": "donut"
+        },
+        {
+            "key": "diagnosticos_status",
+            "label": "Diagnósticos por status",
+            "module": "diagnosticos",
+            "type": "donut"
+        },
+        {
+            "key": "documentos_status",
+            "label": "Documentos por status",
+            "module": "documentos",
+            "type": "donut"
+        },
+        {
+            "key": "planos_status",
+            "label": "Planos por status",
+            "module": "planos",
+            "type": "donut"
+        },
+        {
+            "key": "relatorios_status",
+            "label": "Relatórios por status",
+            "module": "relatorios",
+            "type": "donut"
+        }
+    ],
+    "alerts": [
+        {
+            "key": "documentos_vencimentos",
+            "label": "Documentos com vencimento próximo",
+            "module": "documentos",
+            "type": "expiration_alert"
+        }
+    ],
+    "generated_at": "2026-06-28T23:57:08.868575Z"
+}

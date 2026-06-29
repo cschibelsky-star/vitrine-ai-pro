@@ -1,0 +1,18 @@
+{
+    "system": "gov360",
+    "module": "planos",
+    "model": "Plano",
+    "relationships": [
+        {
+            "field": "cliente_id",
+            "type": "belongsTo",
+            "related_model": "Cliente"
+        }
+    ],
+    "dashboard_metrics": [
+        "total",
+        "em_andamento",
+        "concluidos"
+    ],
+    "generated_by": "Factory BUILD 004.2 Blueprint Engine"
+}

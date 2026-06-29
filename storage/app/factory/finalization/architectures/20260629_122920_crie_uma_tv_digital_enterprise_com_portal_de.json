@@ -1,0 +1,88 @@
+{
+    "name": "Crie Uma Tv Digital Enterprise Com Portal De",
+    "slug": "crie_uma_tv_digital_enterprise_com_portal_de",
+    "description": "Crie uma TV Digital Enterprise com portal de notícias, vídeos, RSS, transmissão ao vivo, banners, comercial, Repórter IA, editorial por IA, categorias, cidades, colunas e área administrativa. Diretriz: projeto isolado em Aplicações Geradas, sem poluir o Centro Operacional.\n\nCliente: Cliente Site Teste\nPlano: Enterprise\nDomínio: cliente-site.tv.br",
+    "domain": "generic",
+    "modules": [
+        {
+            "name": "Registros",
+            "slug": "registros",
+            "label": "Registros",
+            "fields": [
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "descricao",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total",
+                "ativos"
+            ]
+        },
+        {
+            "name": "Categorias",
+            "slug": "categorias",
+            "label": "Categorias",
+            "fields": [
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total"
+            ]
+        },
+        {
+            "name": "Documentos",
+            "slug": "documentos",
+            "label": "Documentos",
+            "fields": [
+                {
+                    "name": "registro_id",
+                    "type": "foreignId",
+                    "nullable": false,
+                    "relationship": "belongsTo",
+                    "related_model": "Registro"
+                },
+                {
+                    "name": "nome",
+                    "type": "string",
+                    "nullable": false
+                },
+                {
+                    "name": "arquivo",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "nullable": false
+                }
+            ],
+            "dashboard_metrics": [
+                "total"
+            ]
+        }
+    ],
+    "generated_by": "FACTORY_4_0_FINALIZATION_PACK",
+    "generated_at": "2026-06-29T15:29:20.008703Z"
+}
