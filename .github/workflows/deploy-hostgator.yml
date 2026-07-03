@@ -19,6 +19,42 @@ jobs:
           key: ${{ secrets.HOSTGATOR_SSH_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
+
+            mkdir -p ~/deploy-backups/vitrine-ai-pro
+
+            tar -czf ~/deploy-backups/vitrine-ai-pro/backup-$(date +%Y%m%d-%H%M%S).tar.gz \
+              --exclude=vendor \
+              --exclude=node_modules \
+              --exclude=storage/logs \
+              .
+
+            git pull origin main
+
+            composer install --no-dev --optimize-autoloader
+
+            php artisan migrate --force
+            php artisan optimize:clear
+            php artisan optimizename: Deploy HostGator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTGATOR_HOST }}
+          username: ${{ secrets.HOSTGATOR_USER }}
+          port: ${{ secrets.HOSTGATOR_PORT }}
+          key: ${{ secrets.HOSTGATOR_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
             git pull origin main
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
