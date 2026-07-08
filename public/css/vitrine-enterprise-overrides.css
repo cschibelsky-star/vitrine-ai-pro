@@ -1,0 +1,149 @@
+/* Enterprise UI 10.0 - ajustes de responsividade e leitura */
+
+.fi-main-ctn,
+.fi-page,
+.fi-page-content,
+.fi-main {
+    overflow-x: hidden !important;
+}
+
+.vai-enterprise-shell {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: clamp(1rem, 2vw, 1.5rem) !important;
+}
+
+.vai-topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+}
+
+.vai-topbar h1 {
+    font-size: clamp(2rem, 3vw, 3.1rem) !important;
+}
+
+.vai-topbar-actions {
+    min-width: 260px !important;
+}
+
+.vai-search {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 360px !important;
+}
+
+.vai-metrics-grid {
+    grid-template-columns: repeat(4, minmax(150px, 1fr)) !important;
+}
+
+.vai-metric-card {
+    min-height: 132px !important;
+    padding: 1rem !important;
+}
+
+.vai-metric-card strong {
+    font-size: 1.65rem !important;
+}
+
+.vai-main-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .8fr) !important;
+    align-items: stretch !important;
+}
+
+.vai-main-grid > .vai-panel:nth-child(3) {
+    grid-column: 1 / -1 !important;
+}
+
+.vai-bottom-grid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
+}
+
+.vai-panel {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.vai-panel-large {
+    min-height: 360px !important;
+}
+
+.vai-ecosystem {
+    grid-template-columns: minmax(180px, 230px) minmax(0, 1fr) !important;
+}
+
+.vai-donut {
+    width: clamp(170px, 18vw, 210px) !important;
+    height: clamp(170px, 18vw, 210px) !important;
+}
+
+.vai-rings {
+    grid-template-columns: repeat(4, minmax(78px, 1fr)) !important;
+}
+
+.vai-quick-list {
+    grid-template-columns: repeat(4, minmax(160px, 1fr)) !important;
+}
+
+.vai-quick-list a {
+    min-height: 54px !important;
+    align-items: center !important;
+}
+
+.fi-ta-ctn,
+.fi-ta-content,
+.fi-ta-table {
+    border-radius: 1rem !important;
+}
+
+.fi-ta-table {
+    min-width: 100% !important;
+}
+
+.fi-ta-row,
+.fi-ta-header-cell {
+    background: rgba(8, 15, 30, .58) !important;
+}
+
+@media (max-width: 1500px) {
+    .vai-metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .vai-main-grid,
+    .vai-bottom-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .vai-main-grid > .vai-panel:nth-child(3) {
+        grid-column: auto !important;
+    }
+
+    .vai-quick-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .vai-topbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .vai-topbar-actions {
+        min-width: 0 !important;
+        width: 100% !important;
+        justify-content: stretch !important;
+    }
+
+    .vai-metrics-grid,
+    .vai-main-grid,
+    .vai-bottom-grid,
+    .vai-ecosystem,
+    .vai-quick-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    .vai-rings {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
