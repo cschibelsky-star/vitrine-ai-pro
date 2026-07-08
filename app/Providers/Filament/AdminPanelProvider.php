@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Vitrine IA Pro Enterprise')
             ->renderHook(
                 'panels::head.end',
-                fn (): string => '<link rel="stylesheet" href="' . asset('css/vitrine-enterprise-ui.css') . '?v=10.0.2">'
+                fn (): string => '<link rel="stylesheet" href="' . asset('css/vitrine-enterprise-ui.css') . '?v=10.0.2"><link rel="stylesheet" href="' . asset('css/vitrine-enterprise-overrides.css') . '?v=10.0.3">'
             )
             ->navigationGroups([
                 NavigationGroup::make('01 · Centro Operacional'),
@@ -71,16 +71,6 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Sky,
             ])
-
-            /*
-            |--------------------------------------------------------------------------
-            | Navegação Enterprise limpa
-            |--------------------------------------------------------------------------
-            | Não usamos discoverPages/discoverResources aqui.
-            | O discover automático estava carregando páginas antigas, duplicadas e
-            | módulos gerados pela Factory no menu principal.
-            */
-
             ->pages([
                 Dashboard::class,
                 FactoryStudioEnterprise::class,
@@ -89,7 +79,6 @@ class AdminPanelProvider extends PanelProvider
                 ClientPortalEnterprise::class,
                 AiCenterEnterprise::class,
             ])
-
             ->resources([
                 CompanyResource::class,
                 ProductResource::class,
@@ -106,7 +95,6 @@ class AdminPanelProvider extends PanelProvider
                 UserResource::class,
                 SettingResource::class,
             ])
-
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 StatsOverviewWidget::class,
