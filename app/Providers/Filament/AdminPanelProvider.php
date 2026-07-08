@@ -50,7 +50,11 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Vitrine AI Pro Enterprise')
+            ->brandName('Vitrine IA Pro Enterprise')
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => '<link rel="stylesheet" href="' . asset('css/vitrine-enterprise-ui.css') . '?v=10.0.1">'
+            )
             ->navigationGroups([
                 NavigationGroup::make('01 · Centro Operacional'),
                 NavigationGroup::make('02 · Operação'),
