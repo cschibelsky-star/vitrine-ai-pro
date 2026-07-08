@@ -7,6 +7,50 @@
     overflow-x: hidden !important;
 }
 
+/* Menu lateral: cor fixa, sem mudança brusca no hover */
+.fi-sidebar-item a,
+.fi-sidebar-item-button,
+.fi-sidebar-item.fi-active a,
+.fi-sidebar-item a:hover,
+.fi-sidebar-item a:focus,
+.fi-sidebar-item a:focus-visible {
+    background: rgba(15, 23, 42, .32) !important;
+    color: #e5e7eb !important;
+    border: 1px solid transparent !important;
+    border-radius: 1rem !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.fi-sidebar-item a:hover,
+.fi-sidebar-item a:focus,
+.fi-sidebar-item a:focus-visible {
+    background: rgba(15, 23, 42, .32) !important;
+    color: #e5e7eb !important;
+}
+
+.fi-sidebar-item.fi-active a {
+    background: linear-gradient(90deg, rgba(37, 99, 235, .52), rgba(124, 58, 237, .42)) !important;
+    border-color: rgba(125, 211, 252, .20) !important;
+    color: #ffffff !important;
+    box-shadow: inset 3px 0 0 #38bdf8, 0 14px 30px rgba(37, 99, 235, .20) !important;
+}
+
+.fi-sidebar-item.fi-active a:hover {
+    background: linear-gradient(90deg, rgba(37, 99, 235, .52), rgba(124, 58, 237, .42)) !important;
+}
+
+.fi-sidebar-item-icon,
+.fi-sidebar-item-label {
+    color: inherit !important;
+}
+
+.fi-sidebar-group-label {
+    color: #38bdf8 !important;
+    letter-spacing: .18em !important;
+    font-weight: 950 !important;
+}
+
 .vai-enterprise-shell {
     max-width: 100% !important;
     overflow-x: hidden !important;
