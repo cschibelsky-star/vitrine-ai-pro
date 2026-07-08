@@ -1,112 +1,181 @@
 <x-filament-panels::page>
-    <style>
-        .vip-hero {
-            background:
-                radial-gradient(circle at top right, rgba(59, 130, 246, .38), transparent 36%),
-                radial-gradient(circle at bottom left, rgba(14, 165, 233, .28), transparent 34%),
-                linear-gradient(135deg, #020617 0%, #0f172a 52%, #111827 100%);
-        }
-        .vip-card { transition: all .2s ease; }
-        .vip-card:hover { transform: translateY(-2px); }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/vitrine-enterprise-ui.css') }}">
 
-    <div class="space-y-8">
-        <section class="vip-hero relative overflow-hidden rounded-[2rem] p-8 text-white shadow-2xl ring-1 ring-white/10">
-            <div class="relative z-10 grid gap-10 lg:grid-cols-[1.3fr_.7fr] lg:items-center">
-                <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-sky-200">
-                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                        Vitrine AI Pro Enterprise 6.0 RC3
-                    </div>
+    <div class="vai-enterprise-shell vai-grid-glow">
+        <section class="vai-topbar">
+            <div>
+                <div class="vai-eyebrow">Factory Enterprise 10.0 · Centro Operacional SaaS</div>
+                <h1>Vitrine IA Pro<br>Command Center</h1>
+                <p>
+                    Painel executivo para operar clientes, licenças, produtos, agentes de IA, entregas SaaS,
+                    Factory Studio e implantação dos módulos do ecossistema em uma única plataforma.
+                </p>
+            </div>
 
-                    <h1 class="mt-6 max-w-4xl text-4xl font-black tracking-tight md:text-5xl">
-                        Centro Operacional Inteligente
-                    </h1>
-
-                    <p class="mt-5 max-w-3xl text-base leading-7 text-slate-300">
-                        Cockpit executivo para operar a Vitrine AI Pro: clientes, produtos, licenças,
-                        comercial, Factory Studio, projetos, marketplace e entrega SaaS.
-                    </p>
-
-                    <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="/admin/factory-studio-enterprise" class="rounded-2xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400">Abrir Factory Studio</a>
-                        <a href="/admin/generated-projects" class="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Projetos Gerados</a>
-                        <a href="/admin/marketplace-enterprise" class="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Marketplace</a>
-                    </div>
-                </div>
-
-                <div class="rounded-[1.5rem] border border-white/10 bg-white/10 p-5 shadow-xl">
-                    <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">Pipeline Enterprise</div>
-                    <div class="mt-5 space-y-3">
-                        @foreach (['Pedido', 'Cliente', 'Licença', 'Factory', 'Projeto', 'Homologação', 'Publicação'] as $step)
-                            <div class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                                <span class="text-sm font-semibold text-slate-100">{{ $step }}</span>
-                                <span class="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-200">ativo</span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
+            <div class="vai-topbar-actions">
+                <div class="vai-search">Buscar clientes, licenças, módulos e execuções...</div>
+                <div class="vai-chip vai-chip-success">● VPS ativa</div>
+                <a class="vai-button" href="/admin/factory-studio-enterprise">Abrir Factory Studio</a>
             </div>
         </section>
 
-        <section class="grid gap-5 md:grid-cols-4">
+        <section class="vai-metrics-grid">
             @foreach ([
-                ['label' => 'Produtos Oficiais', 'value' => '4', 'desc' => 'SaaS comercial'],
-                ['label' => 'Projetos Factory', 'value' => $this->countProjects(), 'desc' => 'Blueprints gerados'],
-                ['label' => 'Pedidos Comerciais', 'value' => $this->countCommercialIntakes(), 'desc' => 'Comercial → Factory'],
-                ['label' => 'Release', 'value' => 'RC3', 'desc' => 'Enterprise 6.0'],
+                ['label' => 'Produtos oficiais', 'value' => '4', 'trend' => 'Guia, TV, GovTech e SISMED', 'icon' => '◈', 'tone' => ''],
+                ['label' => 'Projetos Factory', 'value' => $this->countProjects(), 'trend' => 'Blueprints prontos para produção', 'icon' => '⚙', 'tone' => 'vai-tone-purple'],
+                ['label' => 'Pedidos comerciais', 'value' => $this->countCommercialIntakes(), 'trend' => 'Comercial conectado à entrega', 'icon' => '↗', 'tone' => 'vai-tone-green'],
+                ['label' => 'Release operacional', 'value' => '10.0', 'trend' => 'Enterprise UI Pack RC1', 'icon' => '✦', 'tone' => 'vai-tone-orange'],
             ] as $card)
-                <div class="vip-card rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ $card['label'] }}</div>
-                    <div class="mt-3 text-4xl font-black tracking-tight text-slate-950 dark:text-white">{{ $card['value'] }}</div>
-                    <div class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ $card['desc'] }}</div>
+                <div class="vai-metric-card {{ $card['tone'] }}">
+                    <div class="vai-metric-head">
+                        <span>{{ $card['label'] }}</span>
+                        <span class="vai-metric-icon">{{ $card['icon'] }}</span>
+                    </div>
+                    <strong>{{ $card['value'] }}</strong>
+                    <small>{{ $card['trend'] }}</small>
+                    <div class="vai-sparkline"><span></span></div>
                 </div>
             @endforeach
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-3">
-            <div class="xl:col-span-2 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div class="flex items-center justify-between gap-4">
+        <section class="vai-main-grid">
+            <div class="vai-panel vai-panel-large">
+                <div class="vai-panel-head">
                     <div>
-                        <h2 class="text-2xl font-black tracking-tight text-slate-950 dark:text-white">Produtos Estratégicos</h2>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Catálogo comercial conectado ao fluxo de produção da Factory.</p>
+                        <h2>Mapa do Ecossistema</h2>
+                        <p>Status operacional dos produtos que compõem a Vitrine IA Pro.</p>
                     </div>
-                    <span class="rounded-full bg-sky-500/10 px-4 py-2 text-xs font-bold text-sky-600">Marketplace-ready</span>
+                    <a href="/admin/products">Gerenciar produtos</a>
                 </div>
 
-                <div class="mt-6 grid gap-4 md:grid-cols-2">
-                    @foreach ($this->getProducts() as $product)
-                        <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-xs font-bold uppercase tracking-[0.18em] text-sky-600">{{ $product['tag'] }}</div>
-                                    <h3 class="mt-2 text-lg font-black text-slate-950 dark:text-white">{{ $product['name'] }}</h3>
-                                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{{ $product['desc'] }}</p>
-                                </div>
-                                <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">{{ $product['status'] }}</span>
+                <div class="vai-ecosystem">
+                    <div class="vai-donut">
+                        <div>
+                            <strong>86%</strong>
+                            <span>base operacional</span>
+                        </div>
+                    </div>
+
+                    <div class="vai-legend">
+                        @foreach ($this->getProducts() as $product)
+                            <div>
+                                <span>{{ $product['name'] }}</span>
+                                <strong>{{ $product['status'] }}</strong>
                             </div>
+                            <div class="vai-progress"><span style="width: {{ $product['progress'] }}%"></span></div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="vai-rings">
+                    <div><span>Core</span><small>Licenças</small></div>
+                    <div><span>IA</span><small>Agentes</small></div>
+                    <div><span>SaaS</span><small>Produtos</small></div>
+                    <div><span>Ops</span><small>Deploy</small></div>
+                </div>
+            </div>
+
+            <div class="vai-panel">
+                <div class="vai-panel-head">
+                    <div>
+                        <h2>Pipeline Enterprise</h2>
+                        <p>Da venda à publicação.</p>
+                    </div>
+                </div>
+
+                <div class="vai-activity-list">
+                    @foreach ([
+                        ['icon' => '01', 'title' => 'Lead comercial', 'desc' => 'Entrada pelo site ou atendimento'],
+                        ['icon' => '02', 'title' => 'Cliente e licença', 'desc' => 'Plano, produto e valor vinculados'],
+                        ['icon' => '03', 'title' => 'Factory Studio', 'desc' => 'Blueprint, módulos e instalação'],
+                        ['icon' => '04', 'title' => 'Homologação', 'desc' => 'Teste, ajuste e publicação'],
+                    ] as $item)
+                        <div class="vai-activity">
+                            <div class="vai-activity-icon">{{ $item['icon'] }}</div>
+                            <div>
+                                <strong>{{ $item['title'] }}</strong>
+                                <span>{{ $item['desc'] }}</span>
+                            </div>
+                            <small>ativo</small>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-xl font-black text-slate-950 dark:text-white">IA Center</h2>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Agentes especializados do ecossistema.</p>
-                    <div class="mt-5 space-y-3">
-                        @foreach (['IA Comercial', 'IA Arquiteta', 'IA Desenvolvedora', 'IA QA', 'IA Deploy'] as $agent)
-                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-950">
-                                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $agent }}</span>
-                                <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-                            </div>
-                        @endforeach
+            <div class="vai-panel">
+                <div class="vai-panel-head">
+                    <div>
+                        <h2>Ações rápidas</h2>
+                        <p>Atalhos da operação.</p>
                     </div>
                 </div>
 
-                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-xl font-black text-slate-950 dark:text-white">Próxima Entrega</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Conectar formulário/checkout do site comercial ao intake automático da Factory.</p>
+                <div class="vai-quick-list">
+                    <a href="/admin/companies">Clientes <span>→</span></a>
+                    <a href="/admin/licenses">Licenças <span>→</span></a>
+                    <a href="/admin/leads">Comercial <span>→</span></a>
+                    <a href="/admin/ai-center-enterprise">IA Center <span>→</span></a>
+                    <a href="/admin/generated-projects">Projetos <span>→</span></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="vai-bottom-grid">
+            <div class="vai-panel">
+                <div class="vai-panel-head">
+                    <div>
+                        <h2>IA Operacional</h2>
+                        <p>Agentes especializados.</p>
+                    </div>
+                </div>
+                <div class="vai-ranking">
+                    @foreach (['IA Comercial', 'IA Arquiteta', 'IA Desenvolvedora', 'IA QA', 'IA Deploy'] as $index => $agent)
+                        <div><span>{{ $index + 1 }}</span><strong>{{ $agent }}</strong><small>online</small></div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="vai-panel">
+                <div class="vai-panel-head">
+                    <div>
+                        <h2>Saúde da Plataforma</h2>
+                        <p>Infraestrutura e execução.</p>
+                    </div>
+                </div>
+                @foreach ([
+                    ['label' => 'Docker / PHP 8.3', 'value' => '100%'],
+                    ['label' => 'MariaDB / Redis', 'value' => '100%'],
+                    ['label' => 'GitHub Deploy', 'value' => '80%'],
+                    ['label' => 'Backups automáticos', 'value' => '65%'],
+                ] as $row)
+                    <div class="vai-status-row"><span>{{ $row['label'] }}</span><div class="vai-progress"><span style="width: {{ $row['value'] }}"></span></div></div>
+                @endforeach
+            </div>
+
+            <div class="vai-panel">
+                <div class="vai-panel-head">
+                    <div>
+                        <h2>Próxima entrega</h2>
+                        <p>Factory Enterprise 10.1</p>
+                    </div>
+                </div>
+                <div class="vai-activity-list">
+                    <div class="vai-activity">
+                        <div class="vai-activity-icon">UI</div>
+                        <div>
+                            <strong>Padronização visual</strong>
+                            <span>Aplicar o tema Enterprise em páginas, recursos e portal do cliente.</span>
+                        </div>
+                        <small>em construção</small>
+                    </div>
+                    <div class="vai-activity">
+                        <div class="vai-activity-icon">DB</div>
+                        <div>
+                            <strong>Migrations consolidadas</strong>
+                            <span>Eliminar duplicidades e estabilizar instalação limpa.</span>
+                        </div>
+                        <small>próximo</small>
+                    </div>
                 </div>
             </div>
         </section>
