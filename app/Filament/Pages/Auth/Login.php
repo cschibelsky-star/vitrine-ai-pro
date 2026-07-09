@@ -16,7 +16,7 @@ class Login extends BaseLogin
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('email')
-            ->label('Usuário ou e-mail')
+            ->label('')
             ->hiddenLabel()
             ->placeholder('Usuário ou e-mail')
             ->email()
@@ -29,11 +29,11 @@ class Login extends BaseLogin
     protected function getPasswordFormComponent(): Component
     {
         return TextInput::make('password')
-            ->label('Sua senha')
+            ->label('')
             ->hiddenLabel()
             ->placeholder('Sua senha')
             ->password()
-            ->revealable()
+            ->revealable(false)
             ->required()
             ->autocomplete('current-password')
             ->extraInputAttributes(['tabindex' => 2]);
