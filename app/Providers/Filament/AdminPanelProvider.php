@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\AiCenterEnterprise;
+use App\Filament\Pages\Auth\Login as AtlasLogin;
 use App\Filament\Pages\ClientPortalEnterprise;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FactoryStudioEnterprise;
@@ -49,7 +50,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(AtlasLogin::class)
+            ->passwordReset()
             ->brandName('Vitrine IA Pro Enterprise')
             ->renderHook(
                 'panels::head.end',
