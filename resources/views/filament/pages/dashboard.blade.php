@@ -1,30 +1,32 @@
 <x-filament-panels::page>
     <link rel="stylesheet" href="{{ asset('css/vitrine-enterprise-ui.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/vitrine-enterprise-overrides.css') }}">
 
     <div class="vai-enterprise-shell vai-grid-glow">
         <section class="vai-topbar">
             <div>
-                <div class="vai-eyebrow">Factory Enterprise 10.0 · Centro Operacional SaaS</div>
-                <h1>Vitrine IA Pro<br>Command Center</h1>
+                <div class="vai-eyebrow">Centro Operacional Inteligente · Vitrine IA Pro Enterprise</div>
+                <h1>Central de<br>Comando</h1>
                 <p>
-                    Painel executivo para operar clientes, licenças, produtos, agentes de IA, entregas SaaS,
-                    Factory Studio e implantação dos módulos do ecossistema em uma única plataforma.
+                    Bom dia, Cristian. Sua operação está funcionando normalmente. Há licenças para acompanhar,
+                    projetos em evolução e agentes de IA em operação dentro do ecossistema.
                 </p>
             </div>
 
             <div class="vai-topbar-actions">
-                <div class="vai-search">Buscar clientes, licenças, módulos e execuções...</div>
-                <div class="vai-chip vai-chip-success">● VPS ativa</div>
-                <a class="vai-button" href="/admin/factory-studio-enterprise">Abrir Factory Studio</a>
+                <div class="vai-search">Pesquisar clientes, licenças, produtos, cobranças e projetos...</div>
+                <div class="vai-chip vai-chip-success">● Operação saudável</div>
+                <a class="vai-button" href="/admin/factory-studio-enterprise">+ Novo Projeto</a>
             </div>
         </section>
 
-        <section class="vai-metrics-grid">
+        <section class="vai-metrics-grid vai-metrics-grid-compact">
             @foreach ([
-                ['label' => 'Produtos oficiais', 'value' => '4', 'trend' => 'Guia, TV, GovTech e SISMED', 'icon' => '◈', 'tone' => ''],
-                ['label' => 'Projetos Factory', 'value' => $this->countProjects(), 'trend' => 'Blueprints prontos para produção', 'icon' => '⚙', 'tone' => 'vai-tone-purple'],
-                ['label' => 'Pedidos comerciais', 'value' => $this->countCommercialIntakes(), 'trend' => 'Comercial conectado à entrega', 'icon' => '↗', 'tone' => 'vai-tone-green'],
-                ['label' => 'Release operacional', 'value' => '10.0', 'trend' => 'Enterprise UI Pack RC1', 'icon' => '✦', 'tone' => 'vai-tone-orange'],
+                ['label' => 'Clientes ativos', 'value' => '148', 'trend' => '+8 este mês', 'icon' => '👥', 'tone' => 'vai-tone-cyan'],
+                ['label' => 'Licenças', 'value' => '186', 'trend' => '3 vencem em 7 dias', 'icon' => '◈', 'tone' => ''],
+                ['label' => 'Receita mensal', 'value' => 'R$ 52k', 'trend' => '+12% previsto', 'icon' => '↗', 'tone' => 'vai-tone-green'],
+                ['label' => 'Agentes IA', 'value' => '12', 'trend' => 'em operação', 'icon' => '🤖', 'tone' => 'vai-tone-purple'],
+                ['label' => 'Projetos Factory', 'value' => $this->countProjects(), 'trend' => '2 em homologação', 'icon' => '⚙', 'tone' => 'vai-tone-orange'],
             ] as $card)
                 <div class="vai-metric-card {{ $card['tone'] }}">
                     <div class="vai-metric-head">
@@ -38,21 +40,21 @@
             @endforeach
         </section>
 
-        <section class="vai-main-grid">
+        <section class="vai-main-grid vai-main-grid-atlas">
             <div class="vai-panel vai-panel-large">
                 <div class="vai-panel-head">
                     <div>
                         <h2>Mapa do Ecossistema</h2>
-                        <p>Status operacional dos produtos que compõem a Vitrine IA Pro.</p>
+                        <p>Produtos ativos, implantação e maturidade operacional.</p>
                     </div>
-                    <a href="/admin/products">Gerenciar produtos</a>
+                    <a href="/admin/products">Ver produtos</a>
                 </div>
 
                 <div class="vai-ecosystem">
                     <div class="vai-donut">
                         <div>
                             <strong>86%</strong>
-                            <span>base operacional</span>
+                            <span>base ativa</span>
                         </div>
                     </div>
 
@@ -60,7 +62,7 @@
                         @foreach ($this->getProducts() as $product)
                             <div>
                                 <span>{{ $product['name'] }}</span>
-                                <strong>{{ $product['status'] }}</strong>
+                                <strong>{{ $product['progress'] }}%</strong>
                             </div>
                             <div class="vai-progress"><span style="width: {{ $product['progress'] }}%"></span></div>
                         @endforeach
@@ -78,7 +80,7 @@
             <div class="vai-panel">
                 <div class="vai-panel-head">
                     <div>
-                        <h2>Pipeline Enterprise</h2>
+                        <h2>Fluxo Operacional</h2>
                         <p>Da venda à publicação.</p>
                     </div>
                 </div>
@@ -87,7 +89,7 @@
                     @foreach ([
                         ['icon' => '01', 'title' => 'Lead comercial', 'desc' => 'Entrada pelo site ou atendimento'],
                         ['icon' => '02', 'title' => 'Cliente e licença', 'desc' => 'Plano, produto e valor vinculados'],
-                        ['icon' => '03', 'title' => 'Factory Studio', 'desc' => 'Blueprint, módulos e instalação'],
+                        ['icon' => '03', 'title' => 'Fábrica IA', 'desc' => 'Projeto base, módulos e instalação'],
                         ['icon' => '04', 'title' => 'Homologação', 'desc' => 'Teste, ajuste e publicação'],
                     ] as $item)
                         <div class="vai-activity">
@@ -101,36 +103,19 @@
                     @endforeach
                 </div>
             </div>
-
-            <div class="vai-panel">
-                <div class="vai-panel-head">
-                    <div>
-                        <h2>Ações rápidas</h2>
-                        <p>Atalhos da operação.</p>
-                    </div>
-                </div>
-
-                <div class="vai-quick-list">
-                    <a href="/admin/companies">Clientes <span>→</span></a>
-                    <a href="/admin/licenses">Licenças <span>→</span></a>
-                    <a href="/admin/leads">Comercial <span>→</span></a>
-                    <a href="/admin/ai-center-enterprise">IA Center <span>→</span></a>
-                    <a href="/admin/generated-projects">Projetos <span>→</span></a>
-                </div>
-            </div>
         </section>
 
         <section class="vai-bottom-grid">
             <div class="vai-panel">
                 <div class="vai-panel-head">
                     <div>
-                        <h2>IA Operacional</h2>
-                        <p>Agentes especializados.</p>
+                        <h2>Agentes de IA</h2>
+                        <p>Controle operacional dos agentes.</p>
                     </div>
                 </div>
-                <div class="vai-ranking">
-                    @foreach (['IA Comercial', 'IA Arquiteta', 'IA Desenvolvedora', 'IA QA', 'IA Deploy'] as $index => $agent)
-                        <div><span>{{ $index + 1 }}</span><strong>{{ $agent }}</strong><small>online</small></div>
+                <div class="vai-quick-list vai-mini-grid">
+                    @foreach (['IA Comercial' => '42 conversas', 'IA Factory' => '3 builds', 'IA QA' => '2 revisões', 'IA Suporte' => '5 chamados'] as $agent => $info)
+                        <a href="/admin/ai-center-enterprise"><strong>{{ $agent }}</strong><span>{{ $info }}</span></a>
                     @endforeach
                 </div>
             </div>
@@ -139,14 +124,13 @@
                 <div class="vai-panel-head">
                     <div>
                         <h2>Saúde da Plataforma</h2>
-                        <p>Infraestrutura e execução.</p>
+                        <p>Serviços principais.</p>
                     </div>
                 </div>
                 @foreach ([
-                    ['label' => 'Docker / PHP 8.3', 'value' => '100%'],
+                    ['label' => 'Docker / PHP', 'value' => '100%'],
                     ['label' => 'MariaDB / Redis', 'value' => '100%'],
                     ['label' => 'GitHub Deploy', 'value' => '80%'],
-                    ['label' => 'Backups automáticos', 'value' => '65%'],
                 ] as $row)
                     <div class="vai-status-row"><span>{{ $row['label'] }}</span><div class="vai-progress"><span style="width: {{ $row['value'] }}"></span></div></div>
                 @endforeach
@@ -155,26 +139,26 @@
             <div class="vai-panel">
                 <div class="vai-panel-head">
                     <div>
-                        <h2>Próxima entrega</h2>
-                        <p>Factory Enterprise 10.1</p>
+                        <h2>Próximas ações</h2>
+                        <p>Orientação executiva.</p>
                     </div>
                 </div>
                 <div class="vai-activity-list">
                     <div class="vai-activity">
-                        <div class="vai-activity-icon">UI</div>
+                        <div class="vai-activity-icon">!</div>
                         <div>
-                            <strong>Padronização visual</strong>
-                            <span>Aplicar o tema Enterprise em páginas, recursos e portal do cliente.</span>
+                            <strong>Renovar 2 licenças</strong>
+                            <span>Vencimento nos próximos 7 dias</span>
                         </div>
-                        <small>em construção</small>
+                        <small>prioridade</small>
                     </div>
                     <div class="vai-activity">
-                        <div class="vai-activity-icon">DB</div>
+                        <div class="vai-activity-icon">$</div>
                         <div>
-                            <strong>Migrations consolidadas</strong>
-                            <span>Eliminar duplicidades e estabilizar instalação limpa.</span>
+                            <strong>Enviar 3 propostas</strong>
+                            <span>Leads aguardando retorno</span>
                         </div>
-                        <small>próximo</small>
+                        <small>comercial</small>
                     </div>
                 </div>
             </div>
