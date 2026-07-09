@@ -1,4 +1,4 @@
-/* Enterprise UI 10.0 - ajustes de responsividade e leitura */
+/* Enterprise UI 10.1 - Atlas Foundation */
 
 .fi-main-ctn,
 .fi-page,
@@ -29,21 +29,16 @@
     color: #e5e7eb !important;
 }
 
-.fi-sidebar-item.fi-active a {
+.fi-sidebar-item.fi-active a,
+.fi-sidebar-item.fi-active a:hover {
     background: linear-gradient(90deg, rgba(37, 99, 235, .52), rgba(124, 58, 237, .42)) !important;
     border-color: rgba(125, 211, 252, .20) !important;
     color: #ffffff !important;
     box-shadow: inset 3px 0 0 #38bdf8, 0 14px 30px rgba(37, 99, 235, .20) !important;
 }
 
-.fi-sidebar-item.fi-active a:hover {
-    background: linear-gradient(90deg, rgba(37, 99, 235, .52), rgba(124, 58, 237, .42)) !important;
-}
-
 .fi-sidebar-item-icon,
-.fi-sidebar-item-label {
-    color: inherit !important;
-}
+.fi-sidebar-item-label { color: inherit !important; }
 
 .fi-sidebar-group-label {
     color: #38bdf8 !important;
@@ -61,133 +56,147 @@
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     align-items: start !important;
+    margin-bottom: 1rem !important;
 }
 
 .vai-topbar h1 {
-    font-size: clamp(2rem, 3vw, 3.1rem) !important;
+    font-size: clamp(2.1rem, 3vw, 3.15rem) !important;
 }
 
-.vai-topbar-actions {
-    min-width: 260px !important;
-}
+.vai-topbar-actions { min-width: 270px !important; }
 
 .vai-search {
     min-width: 0 !important;
     width: 100% !important;
-    max-width: 360px !important;
+    max-width: 380px !important;
 }
 
-.vai-metrics-grid {
-    grid-template-columns: repeat(4, minmax(150px, 1fr)) !important;
+.vai-metrics-grid,
+.vai-metrics-grid-compact {
+    grid-template-columns: repeat(5, minmax(145px, 1fr)) !important;
+    gap: .75rem !important;
 }
 
 .vai-metric-card {
-    min-height: 132px !important;
-    padding: 1rem !important;
+    min-height: 112px !important;
+    padding: .9rem !important;
+    border-radius: 1.1rem !important;
 }
 
 .vai-metric-card strong {
-    font-size: 1.65rem !important;
+    font-size: 1.55rem !important;
 }
 
-.vai-main-grid {
-    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .8fr) !important;
+.vai-metric-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: .8rem !important;
+    font-size: 1rem !important;
+}
+
+.vai-sparkline {
+    height: 18px !important;
+    margin-top: .55rem !important;
+}
+
+.vai-tone-cyan:after { background: #38bdf8 !important; }
+
+.vai-main-grid,
+.vai-main-grid-atlas {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr) !important;
     align-items: stretch !important;
+    gap: .9rem !important;
 }
 
-.vai-main-grid > .vai-panel:nth-child(3) {
-    grid-column: 1 / -1 !important;
-}
+.vai-main-grid > .vai-panel:nth-child(3) { grid-column: 1 / -1 !important; }
 
 .vai-bottom-grid {
     grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
+    gap: .9rem !important;
 }
 
 .vai-panel {
     min-width: 0 !important;
     overflow: hidden !important;
+    border-radius: 1.25rem !important;
 }
 
-.vai-panel-large {
-    min-height: 360px !important;
-}
+.vai-panel-large { min-height: 350px !important; }
 
 .vai-ecosystem {
-    grid-template-columns: minmax(180px, 230px) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(170px, 210px) minmax(0, 1fr) !important;
 }
 
 .vai-donut {
-    width: clamp(170px, 18vw, 210px) !important;
-    height: clamp(170px, 18vw, 210px) !important;
+    width: clamp(160px, 17vw, 195px) !important;
+    height: clamp(160px, 17vw, 195px) !important;
+}
+
+.vai-donut > div {
+    width: 104px !important;
+    height: 104px !important;
 }
 
 .vai-rings {
-    grid-template-columns: repeat(4, minmax(78px, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(72px, 1fr)) !important;
+    gap: .55rem !important;
 }
 
 .vai-quick-list {
-    grid-template-columns: repeat(4, minmax(160px, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
 
 .vai-quick-list a {
-    min-height: 54px !important;
+    min-height: 50px !important;
     align-items: center !important;
+    font-size: .78rem !important;
+}
+
+.vai-mini-grid a {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: .2rem !important;
+}
+
+.vai-mini-grid span {
+    color: #94a3b8 !important;
+    font-size: .72rem !important;
 }
 
 .fi-ta-ctn,
 .fi-ta-content,
-.fi-ta-table {
-    border-radius: 1rem !important;
-}
-
-.fi-ta-table {
-    min-width: 100% !important;
-}
-
+.fi-ta-table { border-radius: 1rem !important; }
+.fi-ta-table { min-width: 100% !important; }
 .fi-ta-row,
-.fi-ta-header-cell {
-    background: rgba(8, 15, 30, .58) !important;
+.fi-ta-header-cell { background: rgba(8, 15, 30, .58) !important; }
+
+@media (max-width: 1600px) {
+    .vai-metrics-grid,
+    .vai-metrics-grid-compact { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 }
 
-@media (max-width: 1500px) {
-    .vai-metrics-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
+@media (max-width: 1300px) {
+    .vai-metrics-grid,
+    .vai-metrics-grid-compact { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
     .vai-main-grid,
-    .vai-bottom-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .vai-main-grid > .vai-panel:nth-child(3) {
-        grid-column: auto !important;
-    }
-
-    .vai-quick-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
+    .vai-main-grid-atlas,
+    .vai-bottom-grid { grid-template-columns: 1fr !important; }
+    .vai-main-grid > .vai-panel:nth-child(3) { grid-column: auto !important; }
 }
 
 @media (max-width: 900px) {
-    .vai-topbar {
-        grid-template-columns: 1fr !important;
-    }
-
+    .vai-topbar { grid-template-columns: 1fr !important; }
     .vai-topbar-actions {
         min-width: 0 !important;
         width: 100% !important;
         justify-content: stretch !important;
     }
-
     .vai-metrics-grid,
+    .vai-metrics-grid-compact,
     .vai-main-grid,
+    .vai-main-grid-atlas,
     .vai-bottom-grid,
     .vai-ecosystem,
-    .vai-quick-list {
-        grid-template-columns: 1fr !important;
-    }
-
-    .vai-rings {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
+    .vai-quick-list { grid-template-columns: 1fr !important; }
+    .vai-rings { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
