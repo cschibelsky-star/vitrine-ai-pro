@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\FlowEventCallbackController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\VitrineFlowProvisionController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,12 @@ Route::prefix('vitrine-flow')->group(function () {
     Route::post('/provision/callback', [VitrineFlowProvisionController::class, 'callback'])
         ->middleware('throttle:120,1')
         ->name('vitrine-flow.provision.callback');
+});
+
+Route::prefix('flow')->group(function () {
+    Route::post('/events/callback', FlowEventCallbackController::class)
+        ->middleware('throttle:240,1')
+        ->name('flow.events.callback');
 });
 
 require __DIR__.'/site_factory_api.php';
