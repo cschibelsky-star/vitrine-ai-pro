@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\FlowEventCallbackController;
+use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\VitrineFlowProvisionController;
@@ -33,6 +34,14 @@ Route::prefix('flow')->group(function () {
         ->middleware('throttle:240,1')
         ->whereUuid('uuid')
         ->name('flow.workflows.resolve');
+
+    Route::post('/locks/acquire', [FlowLockController::class, 'acquire'])
+        ->middleware('throttle:240,1')
+        ->name('flow.locks.acquire');
+
+    Route::post('/locks/release', [FlowLockController::class, 'release'])
+        ->middleware('throttle:240,1')
+        ->name('flow.locks.release');
 });
 
 require __DIR__.'/site_factory_api.php';
