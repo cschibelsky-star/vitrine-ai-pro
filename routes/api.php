@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\FlowFeatureFlagController;
 use App\Http\Controllers\Api\FlowGovernanceController;
 use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowObservabilityController;
+use App\Http\Controllers\Api\FlowRuntimeController;
 use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
@@ -38,6 +39,15 @@ Route::prefix('flow')->group(function () {
         ->middleware('throttle:240,1')
         ->whereUuid('uuid')
         ->name('flow.workflows.resolve');
+
+    Route::post('/runtime/start', [FlowRuntimeController::class, 'start'])
+        ->middleware('throttle:240,1')
+        ->name('flow.runtime.start');
+
+    Route::get('/runtime/executions/{uuid}', [FlowRuntimeController::class, 'show'])
+        ->middleware('throttle:600,1')
+        ->whereUuid('uuid')
+        ->name('flow.runtime.executions.show');
 
     Route::post('/locks/acquire', [FlowLockController::class, 'acquire'])
         ->middleware('throttle:240,1')
