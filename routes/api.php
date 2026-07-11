@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\FlowEventCallbackController;
+use App\Http\Controllers\Api\FlowFeatureFlagController;
 use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowObservabilityController;
 use App\Http\Controllers\Api\FlowUsageController;
@@ -64,6 +65,14 @@ Route::prefix('flow')->group(function () {
     Route::post('/dlq', [FlowObservabilityController::class, 'dlq'])
         ->middleware('throttle:240,1')
         ->name('flow.dlq.store');
+
+    Route::post('/feature-flags/upsert', [FlowFeatureFlagController::class, 'upsert'])
+        ->middleware('throttle:120,1')
+        ->name('flow.feature-flags.upsert');
+
+    Route::post('/feature-flags/check', [FlowFeatureFlagController::class, 'check'])
+        ->middleware('throttle:600,1')
+        ->name('flow.feature-flags.check');
 });
 
 require __DIR__.'/site_factory_api.php';
