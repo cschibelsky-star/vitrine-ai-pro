@@ -11,6 +11,9 @@ class Lead extends Model
     protected $casts = [
         'data_proxima_acao' => 'date',
         'valor_estimado' => 'decimal:2',
+        'consentimento_lgpd' => 'boolean',
+        'capturado_em' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public static function origemOptions(): array
