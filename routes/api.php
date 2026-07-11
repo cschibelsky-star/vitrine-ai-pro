@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\FlowEventCallbackController;
 use App\Http\Controllers\Api\FlowLockController;
+use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\VitrineFlowProvisionController;
@@ -42,6 +43,18 @@ Route::prefix('flow')->group(function () {
     Route::post('/locks/release', [FlowLockController::class, 'release'])
         ->middleware('throttle:240,1')
         ->name('flow.locks.release');
+
+    Route::post('/quota/check', [FlowUsageController::class, 'check'])
+        ->middleware('throttle:240,1')
+        ->name('flow.quota.check');
+
+    Route::post('/usage/reserve', [FlowUsageController::class, 'reserve'])
+        ->middleware('throttle:240,1')
+        ->name('flow.usage.reserve');
+
+    Route::post('/usage/commit', [FlowUsageController::class, 'commit'])
+        ->middleware('throttle:240,1')
+        ->name('flow.usage.commit');
 });
 
 require __DIR__.'/site_factory_api.php';
