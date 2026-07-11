@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\FlowEventCallbackController;
 use App\Http\Controllers\Api\FlowLockController;
+use App\Http\Controllers\Api\FlowObservabilityController;
 use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
@@ -55,6 +56,14 @@ Route::prefix('flow')->group(function () {
     Route::post('/usage/commit', [FlowUsageController::class, 'commit'])
         ->middleware('throttle:240,1')
         ->name('flow.usage.commit');
+
+    Route::post('/telemetry', [FlowObservabilityController::class, 'telemetry'])
+        ->middleware('throttle:600,1')
+        ->name('flow.telemetry.store');
+
+    Route::post('/dlq', [FlowObservabilityController::class, 'dlq'])
+        ->middleware('throttle:240,1')
+        ->name('flow.dlq.store');
 });
 
 require __DIR__.'/site_factory_api.php';
