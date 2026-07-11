@@ -21,6 +21,13 @@ class Lead extends Model
         return [
             'WhatsApp' => 'WhatsApp',
             'Site' => 'Site',
+            'Conheça Sumaré' => 'Conheça Sumaré',
+            'Conheça Sua Cidade' => 'Conheça Sua Cidade',
+            'Vitrine AI Pro' => 'Vitrine AI Pro',
+            'TV Digital Enterprise' => 'TV Digital Enterprise',
+            'Vitrine AI Pro News' => 'Vitrine AI Pro News',
+            'Cristian Autismo' => 'Cristian Autismo',
+            'RT Bem Viver' => 'RT Bem Viver',
             'Indicação' => 'Indicação',
             'Instagram' => 'Instagram',
             'Facebook' => 'Facebook',
