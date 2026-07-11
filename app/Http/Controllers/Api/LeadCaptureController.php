@@ -14,18 +14,47 @@ class LeadCaptureController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        $configuredKey = (string) config('lead_capture.key', '');
+        $providedKey = (string) ($request->header('X-Vitrine-Lead-Key') ?: $request->bearerToken() ?: '');
+
+        if ($configuredKey === '') {
+            Log::critical('LEAD_CAPTURE_KEY não configurada. A API pública de leads foi bloqueada.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Captação temporariamente indisponível.',
+            ], 503);
+        }
+
+        if ($providedKey === '' || ! hash_equals($configuredKey, $providedKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não autorizado.',
+            ], 401);
+        }
+
+        $consentRules = config('lead_capture.require_consent', true)
+            ? ['required', 'accepted']
+            : ['nullable', 'boolean'];
+
         $validator = Validator::make($request->all(), [
+            'external_id' => ['nullable', 'string', 'max:191'],
             'empresa' => ['nullable', 'string', 'max:255'],
             'contato' => ['required', 'string', 'max:255'],
             'telefone' => ['required', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
             'cidade' => ['nullable', 'string', 'max:255'],
-            'estado' => ['nullable', 'string', 'max:2'],
+            'estado' => ['nullable', 'string', 'size:2'],
             'produto_interesse' => ['required', 'string', 'max:255'],
             'plano_sugerido' => ['nullable', 'string', 'max:255'],
             'valor_estimado' => ['nullable', 'numeric'],
             'origem_lead' => ['nullable', 'string', 'max:255'],
-            'observacoes' => ['nullable', 'string'],
+            'pagina_origem' => ['required', 'string', 'max:255'],
+            'campanha' => ['nullable', 'string', 'max:255'],
+            'consentimento_lgpd' => $consentRules,
+            'capturado_em' => ['nullable', 'date'],
+            'observacoes' => ['nullable', 'string', 'max:5000'],
+            'metadata' => ['nullable', 'array', 'max:50'],
         ]);
 
         if ($validator->fails()) {
@@ -58,26 +87,51 @@ class LeadCaptureController extends Controller
                 'observacoes' => $data['observacoes'] ?? null,
             ];
 
-            $tabelaLeads = (new Lead())->getTable();
+            $table = (new Lead())->getTable();
 
-            if (Schema::hasColumn($tabelaLeads, 'cidade') && isset($data['cidade'])) {
-                $payload['cidade'] = $data['cidade'];
+            $optionalColumns = [
+                'cidade',
+                'estado',
+                'pagina_origem',
+                'campanha',
+                'consentimento_lgpd',
+                'capturado_em',
+                'metadata',
+            ];
+
+            foreach ($optionalColumns as $column) {
+                if (Schema::hasColumn($table, $column) && array_key_exists($column, $data)) {
+                    $payload[$column] = $data[$column];
+                }
             }
 
-            if (Schema::hasColumn($tabelaLeads, 'estado') && isset($data['estado'])) {
-                $payload['estado'] = $data['estado'];
+            $externalId = $data['external_id'] ?? null;
+            $supportsExternalId = Schema::hasColumn($table, 'external_id');
+
+            if ($externalId && $supportsExternalId) {
+                $lead = Lead::updateOrCreate(
+                    ['external_id' => $externalId],
+                    $payload,
+                );
+            } else {
+                $lead = Lead::create($payload);
             }
 
-            $lead = Lead::create($payload);
+            $created = $lead->wasRecentlyCreated;
 
             return response()->json([
                 'success' => true,
-                'message' => 'Lead recebido com sucesso.',
+                'message' => $created ? 'Lead recebido com sucesso.' : 'Lead já recebido anteriormente.',
                 'lead_id' => $lead->id,
-            ], 201);
+                'external_id' => $supportsExternalId ? $lead->external_id : null,
+                'duplicate' => ! $created,
+            ], $created ? 201 : 200);
         } catch (\Throwable $e) {
-            Log::error('Erro ao capturar lead da API: '.$e->getMessage(), [
-                'request' => $request->except(['password', 'token']),
+            Log::error('Erro ao capturar lead da API.', [
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+                'external_id' => $data['external_id'] ?? null,
+                'pagina_origem' => $data['pagina_origem'] ?? null,
             ]);
 
             return response()->json([
