@@ -29,6 +29,7 @@ class LeadResource extends Resource
         return [
             'TV Digital Enterprise' => 'TV Digital Enterprise',
             'Portal News AI' => 'Portal News AI',
+            'Guia Digital da Cidade' => 'Guia Digital da Cidade',
             'Visite Cidade' => 'Visite Cidade',
             'SISMED' => 'SISMED',
             'Município Digital IA' => 'Município Digital IA',
@@ -55,7 +56,7 @@ class LeadResource extends Resource
                 'Enterprise' => 'Enterprise — R$ 1.500,00',
                 'Sob proposta' => 'Sob proposta',
             ],
-            'Visite Cidade' => [
+            'Guia Digital da Cidade', 'Visite Cidade' => [
                 'Beta' => 'Beta — R$ 0,00',
                 'Start' => 'Start — R$ 497,00',
                 'Pro' => 'Pro — R$ 997,00',
@@ -157,6 +158,39 @@ class LeadResource extends Resource
                         ->options(Lead::origemOptions())
                         ->searchable()
                         ->native(false),
+                ]),
+
+            Forms\Components\Section::make('Rastreabilidade da captação')
+                ->description('Informações registradas automaticamente pelo formulário de origem.')
+                ->columns(2)
+                ->collapsed()
+                ->visible(fn () => Schema::hasColumn('leads', 'pagina_origem'))
+                ->schema([
+                    Forms\Components\TextInput::make('external_id')
+                        ->label('Identificador externo')
+                        ->disabled(),
+
+                    Forms\Components\TextInput::make('pagina_origem')
+                        ->label('Página de origem')
+                        ->disabled(),
+
+                    Forms\Components\TextInput::make('campanha')
+                        ->label('Campanha')
+                        ->disabled(),
+
+                    Forms\Components\Toggle::make('consentimento_lgpd')
+                        ->label('Consentimento LGPD')
+                        ->disabled(),
+
+                    Forms\Components\DateTimePicker::make('capturado_em')
+                        ->label('Capturado em')
+                        ->seconds(false)
+                        ->disabled(),
+
+                    Forms\Components\KeyValue::make('metadata')
+                        ->label('Metadados técnicos')
+                        ->disabled()
+                        ->columnSpanFull(),
                 ]),
 
             Forms\Components\Section::make('Qualificação Comercial')
@@ -272,6 +306,37 @@ class LeadResource extends Resource
                         default => 'gray',
                     }),
 
+                Tables\Columns\TextColumn::make('origem_lead')
+                    ->label('Origem')
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('pagina_origem')
+                    ->label('Página')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => Schema::hasColumn('leads', 'pagina_origem')),
+
+                Tables\Columns\TextColumn::make('campanha')
+                    ->label('Campanha')
+                    ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => Schema::hasColumn('leads', 'campanha')),
+
+                Tables\Columns\IconColumn::make('consentimento_lgpd')
+                    ->label('LGPD')
+                    ->boolean()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => Schema::hasColumn('leads', 'consentimento_lgpd')),
+
+                Tables\Columns\TextColumn::make('capturado_em')
+                    ->label('Capturado em')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => Schema::hasColumn('leads', 'capturado_em')),
+
                 Tables\Columns\TextColumn::make('proxima_acao')
                     ->label('Próxima ação')
                     ->toggleable(),
@@ -283,12 +348,6 @@ class LeadResource extends Resource
 
                 Tables\Columns\TextColumn::make('responsavel_comercial')
                     ->label('Responsável')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('origem_lead')
-                    ->label('Origem')
-                    ->badge()
-                    ->color('gray')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
@@ -323,6 +382,18 @@ class LeadResource extends Resource
                 Tables\Filters\SelectFilter::make('origem_lead')
                     ->label('Origem do lead')
                     ->options(Lead::origemOptions()),
+
+                Tables\Filters\SelectFilter::make('pagina_origem')
+                    ->label('Página de origem')
+                    ->options(fn () => Schema::hasColumn('leads', 'pagina_origem')
+                        ? Lead::query()
+                            ->whereNotNull('pagina_origem')
+                            ->distinct()
+                            ->orderBy('pagina_origem')
+                            ->pluck('pagina_origem', 'pagina_origem')
+                            ->toArray()
+                        : [])
+                    ->visible(fn () => Schema::hasColumn('leads', 'pagina_origem')),
 
                 Tables\Filters\SelectFilter::make('responsavel_comercial')
                     ->label('Responsável comercial')
