@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\FlowEventCallbackController;
 use App\Http\Controllers\Api\FlowFeatureFlagController;
+use App\Http\Controllers\Api\FlowGovernanceController;
 use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowObservabilityController;
 use App\Http\Controllers\Api\FlowUsageController;
@@ -73,6 +74,24 @@ Route::prefix('flow')->group(function () {
     Route::post('/feature-flags/check', [FlowFeatureFlagController::class, 'check'])
         ->middleware('throttle:600,1')
         ->name('flow.feature-flags.check');
+
+    Route::post('/audit', [FlowGovernanceController::class, 'audit'])
+        ->middleware('throttle:600,1')
+        ->name('flow.audit.store');
+
+    Route::post('/compliance/requests', [FlowGovernanceController::class, 'createComplianceRequest'])
+        ->middleware('throttle:120,1')
+        ->name('flow.compliance.requests.create');
+
+    Route::get('/compliance/requests/{uuid}', [FlowGovernanceController::class, 'showComplianceRequest'])
+        ->middleware('throttle:240,1')
+        ->whereUuid('uuid')
+        ->name('flow.compliance.requests.show');
+
+    Route::patch('/compliance/requests/{uuid}', [FlowGovernanceController::class, 'updateComplianceRequest'])
+        ->middleware('throttle:120,1')
+        ->whereUuid('uuid')
+        ->name('flow.compliance.requests.update');
 });
 
 require __DIR__.'/site_factory_api.php';
