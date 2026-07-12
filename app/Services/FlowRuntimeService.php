@@ -12,6 +12,11 @@ use RuntimeException;
 
 class FlowRuntimeService
 {
+    public function __construct(
+        private readonly FlowRuntimeGuardService $guards,
+    ) {
+    }
+
     public function start(FlowWorkflow $workflow, array $input, array $options = []): FlowExecution
     {
         if (! $workflow->is_active || $workflow->status !== 'active') {
@@ -24,9 +29,12 @@ class FlowRuntimeService
             throw new RuntimeException('Workflow não pertence à empresa informada.');
         }
 
-        $execution = DB::transaction(function () use ($workflow, $input, $options, $companyId): FlowExecution {
+        $executionUuid = (string) Str::uuid();
+        $guardContext = $this->guards->prepare($workflow, $companyId, $executionUuid, $options);
+
+        $execution = DB::transaction(function () use ($workflow, $input, $options, $companyId, $executionUuid, $guardContext): FlowExecution {
             return FlowExecution::create([
-                'uuid' => (string) Str::uuid(),
+                'uuid' => $executionUuid,
                 'company_id' => $companyId,
                 'flow_workflow_id' => $workflow->getKey(),
                 'workflow_uuid' => $workflow->uuid,
@@ -36,12 +44,18 @@ class FlowRuntimeService
                 'queue' => $options['queue'] ?? $workflow->queue ?? 'default',
                 'priority' => $options['priority'] ?? $workflow->priority ?? 100,
                 'provider' => $options['provider'] ?? $workflow->default_provider,
+                'lock_owner' => $guardContext['lock']['owner'],
+                'usage_reservation_uuid' => $guardContext['reservation']?->reservation_uuid,
                 'input' => $input,
                 'context' => [
                     'workflow_key' => $workflow->workflow_key,
                     'workflow_version' => $workflow->version,
                     'n8n_workflow_id' => $workflow->n8n_workflow_id,
                     'feature_flags' => $workflow->feature_flags ?? [],
+                    'resolved_feature' => $guardContext['feature'],
+                    'runtime_lock_name' => $guardContext['lock']['name'],
+                    'usage_metric' => $options['usage_metric'] ?? null,
+                    'usage_quantity' => $options['usage_quantity'] ?? null,
                     'metadata' => $options['metadata'] ?? [],
                 ],
                 'queued_at' => now(),
@@ -63,10 +77,13 @@ class FlowRuntimeService
                     'provider' => $execution->provider,
                     'input' => $execution->input,
                     'context' => $execution->context,
+                    'usage_reservation_uuid' => $execution->usage_reservation_uuid,
                 ],
                 'callback_url' => url('/api/flow/events/callback'),
                 'telemetry_url' => url('/api/flow/telemetry'),
                 'dlq_url' => url('/api/flow/dlq'),
+                'usage_commit_url' => url('/api/flow/usage/commit'),
+                'lock_release_url' => url('/api/flow/locks/release'),
             ]);
 
             if ($response->failed()) {
@@ -79,6 +96,9 @@ class FlowRuntimeService
                 'attempts' => 1,
             ]);
         } catch (\Throwable $exception) {
+            $context = $execution->context ?? [];
+            $this->guards->release($context['runtime_lock_name'] ?? null, $execution->lock_owner);
+
             $execution->update([
                 'status' => 'dispatch_failed',
                 'failure_reason' => $exception->getMessage(),
