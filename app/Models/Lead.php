@@ -11,6 +11,9 @@ class Lead extends Model
     protected $casts = [
         'data_proxima_acao' => 'date',
         'valor_estimado' => 'decimal:2',
+        'consentimento_lgpd' => 'boolean',
+        'capturado_em' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public static function origemOptions(): array
@@ -18,6 +21,13 @@ class Lead extends Model
         return [
             'WhatsApp' => 'WhatsApp',
             'Site' => 'Site',
+            'Conheça Sumaré' => 'Conheça Sumaré',
+            'Conheça Sua Cidade' => 'Conheça Sua Cidade',
+            'Vitrine AI Pro' => 'Vitrine AI Pro',
+            'TV Digital Enterprise' => 'TV Digital Enterprise',
+            'Vitrine AI Pro News' => 'Vitrine AI Pro News',
+            'Cristian Autismo' => 'Cristian Autismo',
+            'RT Bem Viver' => 'RT Bem Viver',
             'Indicação' => 'Indicação',
             'Instagram' => 'Instagram',
             'Facebook' => 'Facebook',
