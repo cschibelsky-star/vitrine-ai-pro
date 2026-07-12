@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FlowRuntimeController;
 use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
+use App\Http\Controllers\Api\MissionControlController;
 use App\Http\Controllers\Api\VitrineFlowProvisionController;
 use Illuminate\Support\Facades\Route;
 
@@ -102,6 +103,16 @@ Route::prefix('flow')->group(function () {
         ->middleware('throttle:120,1')
         ->whereUuid('uuid')
         ->name('flow.compliance.requests.update');
+});
+
+Route::prefix('mission')->middleware('throttle:600,1')->group(function () {
+    Route::get('/overview', [MissionControlController::class, 'overview'])->name('mission.overview');
+    Route::get('/executions', [MissionControlController::class, 'executions'])->name('mission.executions');
+    Route::get('/workflows', [MissionControlController::class, 'workflows'])->name('mission.workflows');
+    Route::get('/queues', [MissionControlController::class, 'queues'])->name('mission.queues');
+    Route::get('/costs', [MissionControlController::class, 'costs'])->name('mission.costs');
+    Route::get('/health', [MissionControlController::class, 'health'])->name('mission.health');
+    Route::get('/dlq', [MissionControlController::class, 'dlq'])->name('mission.dlq');
 });
 
 require __DIR__.'/site_factory_api.php';
