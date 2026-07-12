@@ -27,6 +27,13 @@ class FlowRuntimeController extends Controller
             'queue' => ['nullable', 'string', 'max:100'],
             'priority' => ['nullable', 'integer', 'between:1,1000'],
             'provider' => ['nullable', 'string', 'max:100'],
+            'feature_key' => ['nullable', 'string', 'max:120'],
+            'feature_subject' => ['nullable', 'string', 'max:190'],
+            'lock_ttl' => ['nullable', 'integer', 'between:1,86400'],
+            'usage_metric' => ['nullable', 'string', 'max:100', 'required_with:usage_quantity'],
+            'usage_quantity' => ['nullable', 'numeric', 'min:0.000001', 'required_with:usage_metric'],
+            'usage_ttl' => ['nullable', 'integer', 'between:60,86400'],
+            'estimated_cost' => ['nullable', 'numeric', 'min:0'],
             'metadata' => ['nullable', 'array'],
         ]);
 
