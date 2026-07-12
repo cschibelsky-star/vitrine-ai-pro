@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\FlowGovernanceController;
 use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowObservabilityController;
 use App\Http\Controllers\Api\FlowRuntimeController;
+use App\Http\Controllers\Api\FlowSchedulerController;
 use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
@@ -49,6 +50,18 @@ Route::prefix('flow')->group(function () {
         ->middleware('throttle:600,1')
         ->whereUuid('uuid')
         ->name('flow.runtime.executions.show');
+
+    Route::post('/scheduler/upsert', [FlowSchedulerController::class, 'upsert'])
+        ->middleware('throttle:120,1')
+        ->name('flow.scheduler.upsert');
+
+    Route::get('/scheduler/due', [FlowSchedulerController::class, 'due'])
+        ->middleware('throttle:600,1')
+        ->name('flow.scheduler.due');
+
+    Route::post('/scheduler/dispatch-due', [FlowSchedulerController::class, 'dispatchDue'])
+        ->middleware('throttle:120,1')
+        ->name('flow.scheduler.dispatch-due');
 
     Route::post('/locks/acquire', [FlowLockController::class, 'acquire'])
         ->middleware('throttle:240,1')
