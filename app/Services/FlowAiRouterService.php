@@ -2,9 +2,7 @@
 
 namespace App\Services;
 
-use App\Factory\Engine\DTO\ProviderResponse;
 use App\Factory\Engine\Services\ProviderManager;
-use App\Models\AiProvider;
 use Throwable;
 
 class FlowAiRouterService
@@ -55,26 +53,24 @@ class FlowAiRouterService
 
     private function resolveProviderOrder(array $options): array
     {
-        $requested = array_values(array_filter(array_unique(array_map(
-            static fn ($value) => strtolower(trim((string) $value)),
-            $options['providers'] ?? [],
-        ))));
+        $requested = $this->normalize($options['providers'] ?? []);
 
         if ($requested !== []) {
             return $requested;
         }
 
-        $configured = AiProvider::query()
-            ->where('status', 'active')
-            ->orderBy('priority')
-            ->pluck('name')
-            ->filter()
-            ->map(static fn ($name) => strtolower((string) $name))
-            ->values()
-            ->all();
+        $configured = $this->normalize(config('vitrine_flow.ai_provider_order', []));
 
         return $configured !== []
             ? $configured
             : ['gemini', 'openai', 'claude', 'internal'];
+    }
+
+    private function normalize(array $providers): array
+    {
+        return array_values(array_filter(array_unique(array_map(
+            static fn ($value) => strtolower(trim((string) $value)),
+            $providers,
+        ))));
     }
 }
