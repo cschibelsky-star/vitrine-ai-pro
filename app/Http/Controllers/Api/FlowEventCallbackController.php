@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FlowEvent;
 use App\Models\FlowExecution;
+use App\Services\FlowRuntimeFinalizerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 class FlowEventCallbackController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, FlowRuntimeFinalizerService $finalizer): JsonResponse
     {
         $expectedToken = (string) config('vitrine_flow.callback_token');
         $receivedToken = (string) $request->bearerToken();
@@ -60,11 +61,20 @@ class FlowEventCallbackController extends Controller
             return [$event, $execution];
         });
 
+        if ($execution) {
+            $execution = $finalizer->finalize(
+                $execution,
+                (string) $payload['event_type'],
+                $payload['data'] ?? [],
+            );
+        }
+
         return response()->json([
             'ok' => true,
             'event_id' => $event->event_id,
             'execution_uuid' => $execution?->uuid,
             'execution_status' => $execution?->status,
+            'runtime_finalized' => ! empty($execution?->context['runtime_finalized_at']),
             'stored_at' => $event->updated_at?->toIso8601String(),
         ]);
     }
