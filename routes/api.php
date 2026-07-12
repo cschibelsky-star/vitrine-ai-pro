@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\FlowAiRouterController;
 use App\Http\Controllers\Api\FlowEventCallbackController;
 use App\Http\Controllers\Api\FlowFeatureFlagController;
 use App\Http\Controllers\Api\FlowGovernanceController;
@@ -62,6 +63,10 @@ Route::prefix('flow')->group(function () {
     Route::post('/scheduler/dispatch-due', [FlowSchedulerController::class, 'dispatchDue'])
         ->middleware('throttle:120,1')
         ->name('flow.scheduler.dispatch-due');
+
+    Route::post('/ai/route', [FlowAiRouterController::class, 'route'])
+        ->middleware('throttle:240,1')
+        ->name('flow.ai.route');
 
     Route::post('/locks/acquire', [FlowLockController::class, 'acquire'])
         ->middleware('throttle:240,1')
