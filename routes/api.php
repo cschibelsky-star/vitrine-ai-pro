@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\FlowFeatureFlagController;
 use App\Http\Controllers\Api\FlowGovernanceController;
 use App\Http\Controllers\Api\FlowLockController;
 use App\Http\Controllers\Api\FlowObservabilityController;
+use App\Http\Controllers\Api\FlowPlatformServicesController;
 use App\Http\Controllers\Api\FlowRuntimeController;
 use App\Http\Controllers\Api\FlowSchedulerController;
 use App\Http\Controllers\Api\FlowUsageController;
@@ -67,6 +68,28 @@ Route::prefix('flow')->group(function () {
     Route::post('/ai/route', [FlowAiRouterController::class, 'route'])
         ->middleware('throttle:240,1')
         ->name('flow.ai.route');
+
+    Route::post('/secrets/upsert', [FlowPlatformServicesController::class, 'putSecret'])
+        ->middleware('throttle:120,1')
+        ->name('flow.secrets.upsert');
+
+    Route::post('/secrets/resolve', [FlowPlatformServicesController::class, 'resolveSecret'])
+        ->middleware('throttle:240,1')
+        ->name('flow.secrets.resolve');
+
+    Route::post('/storage/objects', [FlowPlatformServicesController::class, 'putStorage'])
+        ->middleware('throttle:120,1')
+        ->name('flow.storage.objects.put');
+
+    Route::get('/storage/objects/{uuid}', [FlowPlatformServicesController::class, 'showStorage'])
+        ->middleware('throttle:600,1')
+        ->whereUuid('uuid')
+        ->name('flow.storage.objects.show');
+
+    Route::delete('/storage/objects/{uuid}', [FlowPlatformServicesController::class, 'deleteStorage'])
+        ->middleware('throttle:120,1')
+        ->whereUuid('uuid')
+        ->name('flow.storage.objects.delete');
 
     Route::post('/locks/acquire', [FlowLockController::class, 'acquire'])
         ->middleware('throttle:240,1')
