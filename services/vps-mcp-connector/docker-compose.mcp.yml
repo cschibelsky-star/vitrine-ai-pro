@@ -19,7 +19,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks: [vitrine_mcp_internal]
-    read_only: true
     tmpfs: [/run, /tmp]
     security_opt: [no-new-privileges:true]
 
