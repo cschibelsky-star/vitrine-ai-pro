@@ -74,8 +74,20 @@ def audit(action: str, payload: dict[str, Any], result: dict[str, Any]) -> None:
 
 
 def run(command: list[str], cwd: Path | None = None) -> dict[str, Any]:
-    proc = subprocess.run(command, cwd=str(cwd or APP_ROOT), text=True, capture_output=True, timeout=TIMEOUT, check=False)
-    return {"exit_code": proc.returncode, "stdout": proc.stdout[-50000:], "stderr": proc.stderr[-20000:]}
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=str(cwd or APP_ROOT),
+            text=True,
+            capture_output=True,
+            timeout=TIMEOUT,
+            check=False,
+        )
+        return {"exit_code": proc.returncode, "stdout": proc.stdout[-50000:], "stderr": proc.stderr[-20000:]}
+    except subprocess.TimeoutExpired as exc:
+        return {"exit_code": 124, "stdout": exc.stdout or "", "stderr": "timeout"}
+    except Exception as exc:
+        return {"exit_code": 1, "stdout": "", "stderr": str(exc)}
 
 
 def require_confirm(value: str) -> None:
@@ -96,6 +108,44 @@ def workflow_catalog() -> dict[str, dict[str, Any]]:
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {"ok": True, "mode": "controlled-write", "n8n_catalog_count": len(workflow_catalog())}
+
+
+@app.get("/inventory/artisan", dependencies=[Depends(auth)])
+def inventory_artisan() -> dict[str, Any]:
+    result = run(["docker", "exec", LARAVEL_CONTAINER, "php", "artisan", "list", "--raw"], Path("/"))
+    commands = [
+        line.strip().split()[0]
+        for line in result.get("stdout", "").splitlines()
+        if line.strip()
+    ] if result.get("exit_code") == 0 else []
+    response = {
+        "ok": result.get("exit_code") == 0,
+        "container": LARAVEL_CONTAINER,
+        "commands": commands,
+        "command_count": len(commands),
+        "diagnostic": result,
+    }
+    audit("inventory_artisan", {}, {"ok": response["ok"], "command_count": response["command_count"]})
+    return response
+
+
+@app.get("/inventory/containers", dependencies=[Depends(auth)])
+def inventory_containers() -> dict[str, Any]:
+    result = run(["docker", "ps", "-a", "--format", "{{.Names}}|{{.Image}}|{{.Status}}"], Path("/"))
+    containers: list[dict[str, str]] = []
+    if result.get("exit_code") == 0:
+        for line in result.get("stdout", "").splitlines():
+            parts = line.split("|", 2)
+            if len(parts) == 3:
+                containers.append({"name": parts[0], "image": parts[1], "status": parts[2]})
+    response = {
+        "ok": result.get("exit_code") == 0,
+        "containers": containers,
+        "container_count": len(containers),
+        "diagnostic": result,
+    }
+    audit("inventory_containers", {}, {"ok": response["ok"], "container_count": response["container_count"]})
+    return response
 
 
 @app.post("/artisan", dependencies=[Depends(auth)])
