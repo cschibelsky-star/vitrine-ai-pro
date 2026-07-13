@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import httpx
+
 from server import APP_ROOT, _run, mcp
 
-RUNTIME_ROOT = Path("/app")
+BROKER_URL = os.getenv("OPS_BROKER_URL", "http://ops_broker:8770").rstrip("/")
+BROKER_TOKEN = os.getenv("OPS_BROKER_TOKEN", "")
+BROKER_TIMEOUT = float(os.getenv("OPS_REQUEST_TIMEOUT", "1200"))
 
 KNOWN_COMPONENTS: dict[str, dict[str, Any]] = {
     "factory_engine": {
@@ -36,45 +41,72 @@ KNOWN_COMPONENTS: dict[str, dict[str, Any]] = {
     },
     "supervisor": {
         "purpose": "Orquestração operacional da VPS, Factory e n8n",
-        "paths": ["runtime:supervisor.py"],
+        "absolute_paths": ["/app/supervisor.py"],
+        "paths": [],
         "command_prefixes": [],
     },
     "n8n_catalog": {
         "purpose": "Catálogo controlado de workflows n8n",
-        "paths": ["runtime:workflow_catalog.py"],
+        "absolute_paths": ["/app/workflow_catalog.py"],
+        "paths": [],
         "command_prefixes": [],
     },
     "factory_kernel": {
-        "purpose": "Descoberta, inventário e decisão antes de construir",
-        "paths": ["runtime:factory_kernel.py"],
+        "purpose": "Inventário e decisão discovery-first da Factory",
+        "absolute_paths": ["/app/factory_kernel.py"],
+        "paths": [],
         "command_prefixes": [],
     },
 }
 
 
-def _artisan_commands() -> list[str]:
-    result = _run(["docker", "exec", "vitrine_app", "php", "artisan", "list", "--raw"], cwd=Path("/"))
-    if result.get("exit_code") != 0:
-        return []
-    return [line.strip().split()[0] for line in result.get("stdout", "").splitlines() if line.strip()]
+def _broker_get(path: str) -> dict[str, Any]:
+    headers = {"Authorization": f"Bearer {BROKER_TOKEN}"}
+    try:
+        with httpx.Client(timeout=BROKER_TIMEOUT) as client:
+            response = client.get(f"{BROKER_URL}{path}", headers=headers)
+        try:
+            body = response.json()
+        except Exception:
+            body = {"raw": response.text}
+        return {
+            "ok": response.is_success,
+            "status_code": response.status_code,
+            "body": body,
+        }
+    except Exception as exc:
+        return {"ok": False, "status_code": 0, "body": {"error": str(exc)}}
 
 
-def _resolve_path(reference: str) -> tuple[Path, str]:
-    if reference.startswith("runtime:"):
-        relative = reference.removeprefix("runtime:")
-        return (RUNTIME_ROOT / relative).resolve(), reference
-    candidate = Path(reference)
-    if candidate.is_absolute():
-        return candidate.resolve(), reference
-    return (APP_ROOT / reference).resolve(), reference
+def _artisan_inventory() -> dict[str, Any]:
+    response = _broker_get("/inventory/artisan")
+    body = response.get("body", {}) if isinstance(response.get("body"), dict) else {}
+    return {
+        "ok": bool(response.get("ok") and body.get("ok")),
+        "commands": body.get("commands", []) if isinstance(body.get("commands"), list) else [],
+        "diagnostic": {
+            "broker_status": response.get("status_code"),
+            "detail": body.get("diagnostic", body),
+        },
+    }
 
 
-def _path_state(reference: str) -> dict[str, Any]:
-    path, label = _resolve_path(reference)
+def _path_state(relative: str) -> dict[str, Any]:
+    path = (APP_ROOT / relative).resolve()
     exists = path.exists()
     return {
-        "path_reference": label,
-        "resolved_path": str(path),
+        "relative_path": relative,
+        "exists": exists,
+        "kind": "directory" if path.is_dir() else "file" if path.is_file() else "missing",
+        "entries": len(list(path.iterdir())) if path.is_dir() else None,
+    }
+
+
+def _absolute_path_state(raw_path: str) -> dict[str, Any]:
+    path = Path(raw_path)
+    exists = path.exists()
+    return {
+        "absolute_path": raw_path,
         "exists": exists,
         "kind": "directory" if path.is_dir() else "file" if path.is_file() else "missing",
         "entries": len(list(path.iterdir())) if path.is_dir() else None,
@@ -82,18 +114,20 @@ def _path_state(reference: str) -> dict[str, Any]:
 
 
 def _component_state(name: str, definition: dict[str, Any], commands: list[str]) -> dict[str, Any]:
-    paths = [_path_state(item) for item in definition["paths"]]
+    paths = [_path_state(item) for item in definition.get("paths", [])]
+    absolute_paths = [_absolute_path_state(item) for item in definition.get("absolute_paths", [])]
     matched_commands = sorted(
         command
         for command in commands
-        if any(command.startswith(prefix) for prefix in definition["command_prefixes"])
+        if any(command.startswith(prefix) for prefix in definition.get("command_prefixes", []))
     )
-    exists = any(item["exists"] for item in paths) or bool(matched_commands)
+    exists = any(item["exists"] for item in paths + absolute_paths) or bool(matched_commands)
     return {
         "name": name,
         "purpose": definition["purpose"],
         "exists": exists,
         "paths": paths,
+        "absolute_paths": absolute_paths,
         "commands": matched_commands,
         "decision": "reuse_or_evolve" if exists else "eligible_to_build",
     }
@@ -123,17 +157,18 @@ def _repository_inventory() -> list[dict[str, Any]]:
     return repositories
 
 
-def _container_inventory() -> list[dict[str, Any]]:
-    result = _run(
-        ["docker", "ps", "-a", "--format", "{{.Names}}|{{.Image}}|{{.Status}}"],
-        cwd=Path("/"),
-    )
-    containers: list[dict[str, Any]] = []
-    for line in result.get("stdout", "").splitlines():
-        parts = line.split("|", 2)
-        if len(parts) == 3:
-            containers.append({"name": parts[0], "image": parts[1], "status": parts[2]})
-    return containers
+def _container_inventory() -> dict[str, Any]:
+    response = _broker_get("/inventory/containers")
+    body = response.get("body", {}) if isinstance(response.get("body"), dict) else {}
+    containers = body.get("containers", []) if isinstance(body.get("containers"), list) else []
+    return {
+        "ok": bool(response.get("ok") and body.get("ok")),
+        "containers": containers,
+        "diagnostic": {
+            "broker_status": response.get("status_code"),
+            "detail": body.get("diagnostic", body),
+        },
+    }
 
 
 def _duplicate_signals(repositories: list[dict[str, Any]], containers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -147,7 +182,7 @@ def _duplicate_signals(repositories: list[dict[str, Any]], containers: list[dict
         if len(paths) > 1:
             signals.append({"type": "duplicate_repository_origin", "origin": origin, "paths": paths})
 
-    factory_like = [item["name"] for item in containers if "factory" in item["name"].lower()]
+    factory_like = [item.get("name", "") for item in containers if "factory" in item.get("name", "").lower()]
     if len(factory_like) > 1:
         signals.append({"type": "multiple_factory_containers", "containers": factory_like})
     return signals
@@ -155,23 +190,30 @@ def _duplicate_signals(repositories: list[dict[str, Any]], containers: list[dict
 
 def factory_kernel_inventory_impl() -> dict[str, Any]:
     """Implementação interna chamável diretamente e também pelo wrapper MCP."""
-    commands = _artisan_commands()
+    artisan = _artisan_inventory()
+    commands = artisan["commands"]
     components = {
         name: _component_state(name, definition, commands)
         for name, definition in KNOWN_COMPONENTS.items()
     }
     repositories = _repository_inventory()
-    containers = _container_inventory()
+    docker_inventory = _container_inventory()
+    containers = docker_inventory["containers"]
     duplicate_signals = _duplicate_signals(repositories, containers)
     return {
         "checked_at": datetime.now(timezone.utc).isoformat(),
-        "kernel_version": "1.1.2",
+        "kernel_version": "1.2.0",
         "policy": "Construir somente se não existir; caso exista, reutilizar, centralizar ou evoluir.",
         "components": components,
         "artisan_command_count": len(commands),
+        "artisan_commands": commands,
         "repositories": repositories,
         "containers": containers,
         "duplicate_signals": duplicate_signals,
+        "diagnostics": {
+            "artisan": artisan["diagnostic"],
+            "containers": docker_inventory["diagnostic"],
+        },
     }
 
 
@@ -231,6 +273,8 @@ def factory_kernel_manifest() -> dict[str, Any]:
         "policy": inventory["policy"],
         "existing": [name for name, item in inventory["components"].items() if item["exists"]],
         "missing": [name for name, item in inventory["components"].items() if not item["exists"]],
+        "artisan_command_count": inventory["artisan_command_count"],
+        "container_count": len(inventory["containers"]),
         "duplicate_signals": inventory["duplicate_signals"],
         "inventory": inventory["components"],
     }
