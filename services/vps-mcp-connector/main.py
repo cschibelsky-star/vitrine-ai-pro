@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from server import mcp
+import supervisor  # noqa: F401  # registra ferramentas do Supervisor IA
 
 BROKER_URL = os.getenv("OPS_BROKER_URL", "http://ops_broker:8770")
 BROKER_TOKEN = os.getenv("OPS_BROKER_TOKEN", "")
