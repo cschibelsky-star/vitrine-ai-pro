@@ -10,10 +10,9 @@ RUN apt-get update \
 WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY server.py ./
+COPY server.py main.py ops_broker.py ./
 
 RUN useradd --create-home --uid 10001 connector
-USER connector
 
-EXPOSE 8765
-CMD ["python", "server.py"]
+EXPOSE 8765 8770
+CMD ["python", "main.py"]
