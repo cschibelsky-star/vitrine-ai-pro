@@ -6,6 +6,8 @@ from typing import Any
 
 from server import APP_ROOT, _run, mcp
 
+RUNTIME_ROOT = Path("/app")
+
 KNOWN_COMPONENTS: dict[str, dict[str, Any]] = {
     "factory_engine": {
         "purpose": "Produção, instalação e finalização de sistemas",
@@ -34,12 +36,17 @@ KNOWN_COMPONENTS: dict[str, dict[str, Any]] = {
     },
     "supervisor": {
         "purpose": "Orquestração operacional da VPS, Factory e n8n",
-        "paths": ["services/vps-mcp-connector/supervisor.py"],
+        "paths": ["runtime:supervisor.py"],
         "command_prefixes": [],
     },
     "n8n_catalog": {
         "purpose": "Catálogo controlado de workflows n8n",
-        "paths": ["services/vps-mcp-connector/workflow_catalog.py"],
+        "paths": ["runtime:workflow_catalog.py"],
+        "command_prefixes": [],
+    },
+    "factory_kernel": {
+        "purpose": "Descoberta, inventário e decisão antes de construir",
+        "paths": ["runtime:factory_kernel.py"],
         "command_prefixes": [],
     },
 }
@@ -52,11 +59,22 @@ def _artisan_commands() -> list[str]:
     return [line.strip().split()[0] for line in result.get("stdout", "").splitlines() if line.strip()]
 
 
-def _path_state(relative: str) -> dict[str, Any]:
-    path = (APP_ROOT / relative).resolve()
+def _resolve_path(reference: str) -> tuple[Path, str]:
+    if reference.startswith("runtime:"):
+        relative = reference.removeprefix("runtime:")
+        return (RUNTIME_ROOT / relative).resolve(), reference
+    candidate = Path(reference)
+    if candidate.is_absolute():
+        return candidate.resolve(), reference
+    return (APP_ROOT / reference).resolve(), reference
+
+
+def _path_state(reference: str) -> dict[str, Any]:
+    path, label = _resolve_path(reference)
     exists = path.exists()
     return {
-        "relative_path": relative,
+        "path_reference": label,
+        "resolved_path": str(path),
         "exists": exists,
         "kind": "directory" if path.is_dir() else "file" if path.is_file() else "missing",
         "entries": len(list(path.iterdir())) if path.is_dir() else None,
@@ -147,7 +165,7 @@ def factory_kernel_inventory_impl() -> dict[str, Any]:
     duplicate_signals = _duplicate_signals(repositories, containers)
     return {
         "checked_at": datetime.now(timezone.utc).isoformat(),
-        "kernel_version": "1.1.1",
+        "kernel_version": "1.1.2",
         "policy": "Construir somente se não existir; caso exista, reutilizar, centralizar ou evoluir.",
         "components": components,
         "artisan_command_count": len(commands),
