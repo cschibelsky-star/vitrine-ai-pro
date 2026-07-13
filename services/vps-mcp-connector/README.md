@@ -1,12 +1,50 @@
-# Vitrine IA Pro — VPS MCP Connector
+# Vitrine IA Pro — VPS MCP Operations Connector
 
-Conector MCP remoto para permitir auditoria operacional da VPS pela IA.
+Conector MCP operacional para a VPS da Vitrine IA Pro.
 
-## Estado atual
+## Leitura
 
-Primeira versão em **modo somente leitura**. Não possui ferramentas de deploy, edição, reinício, exclusão, migração ou execução arbitrária de shell.
+- saúde da VPS;
+- Docker;
+- Git;
+- Laravel;
+- filas e scheduler;
+- logs;
+- inventário da Factory.
 
-## Ferramentas expostas
+## Operações controladas
+
+- comandos Factory e Comercial presentes em allowlist;
+- testes Laravel;
+- limpeza de cache;
+- reinício de containers autorizados;
+- deploy de branch com backup, fast-forward, Composer, migrations e optimize.
+
+## Segurança
+
+- não existe shell arbitrário;
+- não existe exclusão de arquivos ou banco;
+- toda operação exige `confirm="EXECUTAR"`;
+- deploy é recusado quando a árvore Git está suja;
+- broker operacional fica apenas na rede interna Docker;
+- todas as ações são registradas em JSONL;
+- o MCP permanece local em `127.0.0.1:8765` até a publicação autenticada.
+
+## Instalação ou atualização
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/feature/vps-mcp-connector-readonly/services/vps-mcp-connector/install.sh | bash
+```
+
+## Serviços
+
+- `vitrine_vps_mcp_connector` — endpoint MCP;
+- `vitrine_mcp_ops_broker` — execução controlada;
+- `vitrine_mcp_docker_proxy` — leitura Docker.
+
+## Ferramentas MCP
+
+### Diagnóstico
 
 - `system_health`
 - `docker_status`
@@ -17,62 +55,20 @@ Primeira versão em **modo somente leitura**. Não possui ferramentas de deploy,
 - `factory_inventory`
 - `audit_snapshot`
 
-## Regra de segurança
+### Operação
 
-**Não publicar diretamente na internet ainda.**
+- `run_factory_command`
+- `run_laravel_tests`
+- `clear_laravel_cache`
+- `restart_application_container`
+- `deploy_git_branch`
 
-Antes da conexão com o ChatGPT, o serviço precisa receber:
-
-1. autenticação OAuth compatível com MCP/ChatGPT;
-2. proxy HTTPS dedicado;
-3. rate limiting;
-4. auditoria de chamadas;
-5. política de IP e bloqueio por origem;
-6. revisão do acesso ao Docker socket.
-
-O socket Docker concede poder elevado no host mesmo quando o código só declara operações de leitura. A versão de produção deverá usar um broker de comandos com allowlist, em vez de entregar o socket diretamente ao serviço público.
-
-## Arquitetura aprovada
+## Auditoria
 
 ```text
-ChatGPT
-  ↓ OAuth + HTTPS
-mcp.vitrineiapro.com.br
-  ↓
-MCP Gateway
-  ↓ allowlist somente leitura
-VPS Operations Broker
-  ├── sistema
-  ├── Docker
-  ├── Git
-  ├── Laravel
-  ├── filas
-  ├── scheduler
-  └── logs permitidos
+/srv/connectors/vitrine-vps-mcp/audit/audit.jsonl
 ```
 
-## Fases
+## Limitação atual
 
-### Fase 1 — Auditoria somente leitura
-
-Consulta de estado e diagnóstico. Nenhuma alteração permitida.
-
-### Fase 2 — Ações controladas
-
-Ações como limpar cache, reiniciar worker ou executar deploy deverão exigir confirmação explícita, trilha de auditoria e rollback.
-
-### Fase 3 — Operação assistida
-
-Deploy, homologação e rollback integrados à Factory, sempre com escopos e aprovações.
-
-## Execução local de desenvolvimento
-
-```bash
-cd services/vps-mcp-connector
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python server.py
-```
-
-O endpoint SSE ficará disponível em `http://127.0.0.1:8765/sse/` quando o host for limitado a localhost.
+A instalação na VPS não conecta automaticamente este ChatGPT. Ainda é necessário disponibilizar o endpoint por HTTPS autenticado ou túnel MCP compatível e adicioná-lo como conector no ChatGPT.
