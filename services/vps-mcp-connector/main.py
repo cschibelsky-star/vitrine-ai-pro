@@ -8,6 +8,7 @@ import httpx
 from server import mcp
 import supervisor  # noqa: F401  # registra ferramentas do Supervisor IA
 import workflow_catalog  # noqa: F401  # registra catálogo n8n
+import factory_kernel  # noqa: F401  # registra Kernel discovery-first
 
 BROKER_URL = os.getenv("OPS_BROKER_URL", "http://ops_broker:8770")
 BROKER_TOKEN = os.getenv("OPS_BROKER_TOKEN", "")
