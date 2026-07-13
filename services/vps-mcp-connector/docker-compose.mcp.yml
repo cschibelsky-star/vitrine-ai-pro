@@ -35,6 +35,9 @@ services:
       OPS_BROKER_TOKEN: ${OPS_BROKER_TOKEN}
       OPS_AUDIT_LOG: /var/log/vitrine-ops/audit.jsonl
       OPS_TIMEOUT: 1200
+      N8N_BASE_URL: ${N8N_BASE_URL:-http://n8n:5678}
+      N8N_WEBHOOK_TOKEN: ${N8N_WEBHOOK_TOKEN:-}
+      N8N_WORKFLOW_CATALOG_JSON: '${N8N_WORKFLOW_CATALOG_JSON:-{}}'
     volumes:
       - /srv/factory/vitrine-ai-pro:/srv/factory/vitrine-ai-pro:rw
       - /var/run/docker.sock:/var/run/docker.sock
@@ -67,6 +70,9 @@ services:
       OPS_BROKER_URL: http://ops_broker:8770
       OPS_BROKER_TOKEN: ${OPS_BROKER_TOKEN}
       OPS_REQUEST_TIMEOUT: 1200
+      N8N_BASE_URL: ${N8N_BASE_URL:-http://n8n:5678}
+      N8N_TIMEOUT: ${N8N_TIMEOUT:-10}
+      N8N_WORKFLOW_CATALOG_JSON: '${N8N_WORKFLOW_CATALOG_JSON:-{}}'
     depends_on:
       docker_socket_proxy:
         condition: service_started

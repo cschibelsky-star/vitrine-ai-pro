@@ -6,6 +6,9 @@ from typing import Any
 import httpx
 
 from server import mcp
+import supervisor  # noqa: F401  # registra ferramentas do Supervisor IA
+import workflow_catalog  # noqa: F401  # registra catálogo n8n
+import factory_kernel  # noqa: F401  # registra Kernel discovery-first
 
 BROKER_URL = os.getenv("OPS_BROKER_URL", "http://ops_broker:8770")
 BROKER_TOKEN = os.getenv("OPS_BROKER_TOKEN", "")
@@ -51,6 +54,12 @@ def restart_application_container(container: str, confirm: str = "") -> dict[str
 def deploy_git_branch(branch: str, confirm: str = "") -> dict[str, Any]:
     """Implanta branch com backup, fast-forward, Composer, migrations e optimize. Recusa árvore Git suja. Use confirm='EXECUTAR'."""
     return _post("/deploy-branch", {"branch": branch, "confirm": confirm})
+
+
+@mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": True})
+def run_n8n_workflow(alias: str, payload: dict[str, Any] | None = None, confirm: str = "") -> dict[str, Any]:
+    """Dispara somente webhook n8n cadastrado, habilitado e permitido. Use confirm='EXECUTAR'."""
+    return _post("/n8n/workflow", {"alias": alias, "payload": payload or {}, "confirm": confirm})
 
 
 if __name__ == "__main__":
