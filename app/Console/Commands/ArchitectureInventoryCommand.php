@@ -89,6 +89,7 @@ class ArchitectureInventoryCommand extends Command
         $normalized = strtolower($path);
 
         return match (true) {
+            str_contains($normalized, 'shared/') || str_contains($normalized, 'shared\\') => 'Shared',
             str_contains($normalized, 'commercial') || str_contains($normalized, 'lead') => 'Commercial',
             str_contains($normalized, 'factory') || str_contains($normalized, 'build') || str_contains($normalized, 'provision') => 'Factory',
             str_contains($normalized, 'animal'), str_contains($normalized, 'vacina'), str_contains($normalized, 'prontuario') => 'Legacy',
