@@ -96,7 +96,15 @@ class ArchitectureInventoryCommand extends Command
             str_contains($normalized, 'commercial') || str_contains($normalized, 'lead') => 'Commercial',
             str_contains($normalized, 'factory') || str_contains($normalized, 'build') || str_contains($normalized, 'provision') => 'Factory',
             str_contains($normalized, 'animal'), str_contains($normalized, 'vacina'), str_contains($normalized, 'prontuario') => 'Legacy',
-            str_contains($normalized, 'company'), str_contains($normalized, 'product'), str_contains($normalized, 'plan'), str_contains($normalized, 'license'), str_contains($normalized, 'contract'), str_contains($normalized, 'payment'), str_contains($normalized, 'user') => 'Core',
+            str_contains($normalized, 'core/'),
+            str_contains($normalized, 'company'),
+            str_contains($normalized, 'product'),
+            str_contains($normalized, 'plan'),
+            str_contains($normalized, 'license'),
+            str_contains($normalized, 'contract'),
+            str_contains($normalized, 'payment'),
+            str_contains($normalized, 'user'),
+            in_array($class, ['setting', 'subscription', 'supportticket', 'module'], true) => 'Core',
             default => 'Unclassified',
         };
     }

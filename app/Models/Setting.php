@@ -2,12 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Setting extends Model
+/**
+ * @deprecated Use App\Core\Settings\Models\Setting.
+ */
+class Setting extends \App\Core\Settings\Models\Setting
 {
-    use HasFactory;
-
-    protected $fillable = ['empresa', 'logo', 'telefone', 'email', 'endereco'];
 }
