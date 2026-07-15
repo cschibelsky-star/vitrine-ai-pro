@@ -1,0 +1,51 @@
+name: Architecture Inventory
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, dom, curl, zip, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Prepare filesystem and environment
+        run: |
+          cp .env.example .env
+          mkdir -p database storage/app/audits storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+          touch database/database.sqlite
+
+      - name: Install dependencies without application scripts
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Bootstrap Laravel
+        run: |
+          composer dump-autoload --no-interaction
+          php artisan key:generate
+          php artisan package:discover --ansi
+
+      - name: Generate inventory
+        run: php artisan architecture:inventory --json > architecture-inventory-output.json
+
+      - name: Validate PHP syntax
+        run: find app -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Upload inventory artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-inventory
+          path: |
+            storage/app/audits/architecture-inventory.json
+            architecture-inventory-output.json
+          if-no-files-found: error

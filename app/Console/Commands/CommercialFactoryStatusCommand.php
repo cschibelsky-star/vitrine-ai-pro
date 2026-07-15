@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\CommercialFactory\Services\CommercialFactoryStatusService;
+use App\Commercial\Factory\Services\CommercialFactoryStatusService;
 use Illuminate\Console\Command;
 
 class CommercialFactoryStatusCommand extends Command

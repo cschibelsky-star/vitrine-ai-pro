@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\CommercialFactory\Services\CommercialFactoryIntakeService;
+use App\Commercial\Factory\Services\CommercialFactoryIntakeService;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -25,11 +25,13 @@ class CommercialFactoryIntakeCommand extends Command
             $this->error($e->getMessage());
             return self::FAILURE;
         }
+
         $this->info('Commercial → Factory Pipeline finalizado.');
-        $this->line('Status: ' . $report['status']);
-        $this->line('Projeto: ' . $report['project_slug']);
-        $this->line('Status comercial: ' . $report['commercial_status']);
-        $this->line('Relatório: ' . $report['path']);
-        return $report['status'] === 'finished' ? self::SUCCESS : self::FAILURE;
+        $this->line('Status: '.$report['status']);
+        $this->line('Projeto: '.$report['project_slug']);
+        $this->line('Status comercial: '.$report['commercial_status']);
+        $this->line('Relatório: '.$report['path']);
+
+        return $report['status'] === 'success' ? self::SUCCESS : self::FAILURE;
     }
 }
