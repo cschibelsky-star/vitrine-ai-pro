@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-07-15T14:48:23.020823Z",
+  "summary": {
+    "models": 32,
+    "services": 34,
+    "filament_resources": 124,
+    "filament_pages": 9,
+    "console_commands": 4
+  },
+  "layers": {
+    "models": {"Core": 9, "Commercial": 1, "Legacy": 3, "Unclassified": 19},
+    "services": {"Factory": 23, "Commercial": 2, "Core": 1, "Legacy": 3, "Unclassified": 5},
+    "filament_resources": {"Core": 36, "Commercial": 4, "Legacy": 15, "Unclassified": 69},
+    "filament_pages": {"Factory": 2, "Unclassified": 7},
+    "console_commands": {"Commercial": 2, "Factory": 1, "Unclassified": 1}
+  },
+  "artifact": {
+    "workflow_run_id": 29425179683,
+    "artifact_id": 8346957581,
+    "digest": "sha256:fe187068d10272b3736c2859016aedfd5565b2c067e7554b209f74b1d741aa2c"
+  }
+}
