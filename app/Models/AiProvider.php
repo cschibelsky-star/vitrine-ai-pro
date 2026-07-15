@@ -1,27 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class AiProvider extends Model
+/**
+ * @deprecated Use \App\Shared\AI\Models\AiProvider.
+ */
+class AiProvider extends \App\Shared\AI\Models\AiProvider
 {
-    use HasFactory;
-
-    protected $guarded = [];
-
-    protected $casts = [
-        'config' => 'array',
-    ];
-
-    protected $hidden = [
-        'api_key',
-    ];
-
-    public function agents(): HasMany
-    {
-        return $this->hasMany(AiAgent::class, 'ai_provider_id');
-    }
 }
