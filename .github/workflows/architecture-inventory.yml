@@ -17,18 +17,23 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_sqlite, sqlite3
+          extensions: mbstring, intl, dom, curl, zip, bcmath, pdo_sqlite, sqlite3
           coverage: none
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Prepare application
+      - name: Prepare filesystem and environment
         run: |
           cp .env.example .env
-          mkdir -p database storage/app/audits
+          mkdir -p database storage/app/audits storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
           touch database/database.sqlite
+
+      - name: Install dependencies without application scripts
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Bootstrap Laravel
+        run: |
+          composer dump-autoload --no-interaction
           php artisan key:generate
+          php artisan package:discover --ansi
 
       - name: Generate inventory
         run: php artisan architecture:inventory --json > architecture-inventory-output.json
