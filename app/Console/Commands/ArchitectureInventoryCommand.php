@@ -86,10 +86,13 @@ class ArchitectureInventoryCommand extends Command
 
     private function classifyLayer(string $path): string
     {
-        $normalized = strtolower($path);
+        $normalized = strtolower(str_replace('\\', '/', $path));
+        $class = strtolower(pathinfo($normalized, PATHINFO_FILENAME));
 
         return match (true) {
-            str_contains($normalized, 'shared/') || str_contains($normalized, 'shared\\') => 'Shared',
+            str_contains($normalized, 'shared/'),
+            str_starts_with($class, 'ai'),
+            str_contains($class, 'heygen') => 'Shared',
             str_contains($normalized, 'commercial') || str_contains($normalized, 'lead') => 'Commercial',
             str_contains($normalized, 'factory') || str_contains($normalized, 'build') || str_contains($normalized, 'provision') => 'Factory',
             str_contains($normalized, 'animal'), str_contains($normalized, 'vacina'), str_contains($normalized, 'prontuario') => 'Legacy',
