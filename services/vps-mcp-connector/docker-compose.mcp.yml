@@ -1,0 +1,95 @@
+services:
+  docker_socket_proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    container_name: vitrine_mcp_docker_proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      INFO: 1
+      SYSTEM: 1
+      IMAGES: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      POST: 0
+      AUTH: 0
+      SECRETS: 0
+      SERVICES: 0
+      TASKS: 0
+      SWARM: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [vitrine_mcp_internal]
+    tmpfs: [/run, /tmp]
+    security_opt: [no-new-privileges:true]
+
+  ops_broker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vitrine_mcp_ops_broker
+    restart: unless-stopped
+    command: ["uvicorn", "ops_broker:app", "--host", "0.0.0.0", "--port", "8770"]
+    environment:
+      VITRINE_APP_ROOT: /srv/factory/vitrine-ai-pro
+      LARAVEL_CONTAINER: vitrine_app
+      OPS_BROKER_TOKEN: ${OPS_BROKER_TOKEN}
+      OPS_AUDIT_LOG: /var/log/vitrine-ops/audit.jsonl
+      OPS_TIMEOUT: 1200
+    volumes:
+      - /srv/factory/vitrine-ai-pro:/srv/factory/vitrine-ai-pro:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./audit:/var/log/vitrine-ops
+    networks: [vitrine_mcp_internal]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8770/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  vps_mcp_connector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vitrine_vps_mcp_connector
+    restart: unless-stopped
+    command: ["python", "main.py"]
+    environment:
+      VITRINE_APP_ROOT: /srv/factory/vitrine-ai-pro
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8765
+      MCP_MAX_OUTPUT: 30000
+      MCP_COMMAND_TIMEOUT: 20
+      LARAVEL_CONTAINER: vitrine_app
+      REDIS_CONTAINER: vitrine_redis
+      DOCKER_HOST: tcp://docker_socket_proxy:2375
+      OPS_BROKER_URL: http://ops_broker:8770
+      OPS_BROKER_TOKEN: ${OPS_BROKER_TOKEN}
+      OPS_REQUEST_TIMEOUT: 1200
+    depends_on:
+      docker_socket_proxy:
+        condition: service_started
+      ops_broker:
+        condition: service_healthy
+    volumes:
+      - /srv/factory/vitrine-ai-pro:/srv/factory/vitrine-ai-pro:ro
+      - /proc:/host/proc:ro
+    ports:
+      - 127.0.0.1:8765:8765
+    networks: [vitrine_mcp_internal]
+    read_only: true
+    tmpfs: [/tmp, /home/connector/.cache]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1',8765),5); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  vitrine_mcp_internal:
+    name: vitrine_mcp_internal
+    internal: true
