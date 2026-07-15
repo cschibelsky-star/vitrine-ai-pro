@@ -1,17 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class HeygenAvatar extends Model
+/**
+ * @deprecated Use \App\Shared\AI\Media\Models\HeygenAvatar.
+ */
+class HeygenAvatar extends \App\Shared\AI\Media\Models\HeygenAvatar
 {
-    protected $table = 'heygen_avatars';
-    protected $guarded = [];
-
-    public function jobs(): HasMany
-    {
-        return $this->hasMany(HeygenVideoJob::class);
-    }
 }
