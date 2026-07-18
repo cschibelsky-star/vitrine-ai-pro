@@ -157,3 +157,14 @@ Route::prefix('mission')->middleware('throttle:600,1')->group(function () {
 });
 
 require __DIR__.'/site_factory_api.php';
+
+$factoryRouteFiles = glob(__DIR__.'/api_factory_*.php') ?: [];
+
+if ($factoryRouteFiles !== []) {
+    Route::middleware(config('factory_operational.generated_api_middleware', ['auth:sanctum']))
+        ->group(function () use ($factoryRouteFiles): void {
+            foreach ($factoryRouteFiles as $factoryRouteFile) {
+                require $factoryRouteFile;
+            }
+        });
+}
