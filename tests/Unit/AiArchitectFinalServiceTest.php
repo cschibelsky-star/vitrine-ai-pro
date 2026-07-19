@@ -6,13 +6,12 @@ namespace Tests\Unit;
 
 use App\Factory\Finalization\Services\AiArchitectFinalService;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AiArchitectFinalServiceTest extends TestCase
 {
-    /**
-     * @dataProvider productDomainProvider
-     */
+    #[DataProvider('productDomainProvider')]
     public function test_it_selects_the_canonical_product_domain(
         string $request,
         string $expectedDomain,
