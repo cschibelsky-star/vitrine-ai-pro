@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from project_registry import project_git_status, project_status, projects_catalog
 from server import (
     audit_snapshot,
     docker_status,
@@ -32,28 +33,54 @@ def _step(code: str, title: str, tool: str, requires_confirmation: bool = False)
 
 @mcp.tool(annotations={"readOnlyHint": True, "destructiveHint": False})
 def supervisor_overview() -> dict[str, Any]:
-    """Retorna a visão consolidada do Supervisor IA sobre VPS, Factory, Git, Laravel, filas e n8n."""
+    """Retorna a visão consolidada do Supervisor IA sobre VPS, projetos, Factory, Git, Laravel, filas e n8n."""
     return {
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "system": system_health(),
         "docker": docker_status(),
+        "projects": projects_catalog(),
         "git": git_status(),
         "laravel": laravel_status(),
         "queue": queue_status(),
         "factory": factory_inventory(),
         "n8n": n8n_health(),
+        "supervisor_version": "1.1.0",
     }
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "destructiveHint": False})
-def supervisor_plan(objective: str) -> dict[str, Any]:
+def supervisor_project_overview(project_slug: str) -> dict[str, Any]:
+    """Retorna a visão consolidada e somente leitura de um projeto cadastrado."""
+    return {
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "project": project_status(project_slug),
+        "git": project_git_status(project_slug),
+        "execution_policy": "Somente projetos cadastrados no Project Registry podem ser consultados.",
+        "supervisor_version": "1.1.0",
+    }
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "destructiveHint": False})
+def supervisor_plan(objective: str, project_slug: str = "") -> dict[str, Any]:
     """Cria um plano operacional auditável sem executar mudanças na VPS."""
     normalized = " ".join(objective.lower().split())
     steps: list[dict[str, Any]] = [
         _step("audit", "Coletar retrato operacional completo", "audit_snapshot"),
-        _step("git", "Verificar divergências entre VPS e GitHub", "git_status"),
-        _step("factory", "Inventariar comandos, builds e pedidos da Factory", "factory_inventory"),
     ]
+
+    if project_slug:
+        project = project_status(project_slug)
+        steps.extend([
+            _step("project", "Validar cadastro e runtime do projeto", f"project_status:{project_slug}"),
+            _step("git", "Verificar estado Git do projeto", f"project_git_status:{project_slug}"),
+        ])
+    else:
+        project = None
+        steps.extend([
+            _step("projects", "Listar projetos autorizados", "projects_catalog"),
+            _step("git", "Verificar divergências entre VPS e GitHub", "git_status"),
+            _step("factory", "Inventariar comandos, builds e pedidos da Factory", "factory_inventory"),
+        ])
 
     if any(word in normalized for word in ("homolog", "teste", "qualidade", "qa")):
         steps.extend([
@@ -78,6 +105,8 @@ def supervisor_plan(objective: str) -> dict[str, Any]:
 
     return {
         "objective": objective,
+        "project_slug": project_slug or None,
+        "project": project,
         "mode": "plan_only",
         "execution_policy": "Toda mudança exige confirm='EXECUTAR' e ferramenta permitida pelo broker.",
         "steps": steps,
@@ -109,6 +138,7 @@ def n8n_health() -> dict[str, Any]:
 def supervisor_audit() -> dict[str, Any]:
     """Alias operacional do Auditor IA para um snapshot consolidado somente leitura."""
     snapshot = audit_snapshot()
+    snapshot["projects"] = projects_catalog()
     snapshot["n8n"] = n8n_health()
-    snapshot["supervisor_version"] = "1.0.0"
+    snapshot["supervisor_version"] = "1.1.0"
     return snapshot
