@@ -57,6 +57,27 @@ def deploy_git_branch(branch: str, confirm: str = "") -> dict[str, Any]:
 
 
 @mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": True})
+def project_publish_archive(
+    project: str,
+    archive_base64: str,
+    domain: str | None = None,
+    environment: str = "homolog",
+    confirm: str = "",
+) -> dict[str, Any]:
+    """Publica um ZIP Next.js em homologação: recebe Base64, extrai, constrói Docker, configura Nginx e executa health check. Use confirm='EXECUTAR'."""
+    return _post(
+        "/project/publish-archive",
+        {
+            "project": project,
+            "archive_base64": archive_base64,
+            "domain": domain,
+            "environment": environment,
+            "confirm": confirm,
+        },
+    )
+
+
+@mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": True})
 def run_n8n_workflow(alias: str, payload: dict[str, Any] | None = None, confirm: str = "") -> dict[str, Any]:
     """Dispara somente webhook n8n cadastrado, habilitado e permitido. Use confirm='EXECUTAR'."""
     return _post("/n8n/workflow", {"alias": alias, "payload": payload or {}, "confirm": confirm})

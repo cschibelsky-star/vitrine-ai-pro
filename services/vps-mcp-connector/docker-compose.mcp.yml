@@ -31,18 +31,26 @@ services:
     command: ["uvicorn", "ops_broker:app", "--host", "0.0.0.0", "--port", "8770"]
     environment:
       VITRINE_APP_ROOT: /srv/factory/vitrine-ai-pro
+      PROJECTS_ROOT: /srv/projects
+      NGINX_CONF_ROOT: /srv/vitrine/docker/nginx/conf.d
+      NGINX_CONTAINER: vitrine_nginx
       LARAVEL_CONTAINER: vitrine_app
       OPS_BROKER_TOKEN: ${OPS_BROKER_TOKEN}
       OPS_AUDIT_LOG: /var/log/vitrine-ops/audit.jsonl
       OPS_TIMEOUT: 1200
+      PROJECT_MAX_ARCHIVE_BYTES: ${PROJECT_MAX_ARCHIVE_BYTES:-26214400}
       N8N_BASE_URL: ${N8N_BASE_URL:-http://n8n:5678}
       N8N_WEBHOOK_TOKEN: ${N8N_WEBHOOK_TOKEN:-}
       N8N_WORKFLOW_CATALOG_JSON: '${N8N_WORKFLOW_CATALOG_JSON:-{}}'
     volumes:
       - /srv/factory/vitrine-ai-pro:/srv/factory/vitrine-ai-pro:rw
+      - /srv/projects:/srv/projects:rw
+      - /srv/vitrine/docker/nginx/conf.d:/srv/vitrine/docker/nginx/conf.d:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./audit:/var/log/vitrine-ops
-    networks: [vitrine_mcp_internal]
+    networks:
+      - vitrine_mcp_internal
+      - vitrine_net
     security_opt: [no-new-privileges:true]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8770/health', timeout=5)"]
@@ -99,3 +107,5 @@ networks:
   vitrine_mcp_internal:
     name: vitrine_mcp_internal
     internal: true
+  vitrine_net:
+    external: true
