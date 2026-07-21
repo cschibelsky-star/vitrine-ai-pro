@@ -10,7 +10,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY server.py main.py ops_broker.py supervisor.py workflow_catalog.py factory_kernel.py ./
+COPY server.py main.py ops_broker.py supervisor.py workflow_catalog.py factory_kernel.py project_registry.py ./
 
 RUN useradd --create-home --uid 10001 connector
 
