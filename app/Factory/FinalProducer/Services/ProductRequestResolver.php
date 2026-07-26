@@ -50,12 +50,38 @@ class ProductRequestResolver
             $confidence = 1;
         }
 
+        $via = $this->resolveViaDestination($product, $text);
+
         return [
             'request' => $request,
             'resolved_product' => $product,
             'confidence_score' => $confidence,
             'scores' => $scores,
+            'via_product' => $via['product'],
+            'via_task' => $via['task'],
+            'via_ready' => $via['product'] !== null && $via['task'] !== null,
             'resolved_at' => now()->toISOString(),
+        ];
+    }
+
+    private function resolveViaDestination(string $product, string $text): array
+    {
+        if (! in_array($product, ['portal_news', 'tv_digital'], true)) {
+            return ['product' => null, 'task' => null];
+        }
+
+        $task = match (true) {
+            str_contains($text, 'resum') => 'article_summary',
+            str_contains($text, 'titulo') || str_contains($text, 'manchete') => 'headline_generation',
+            str_contains($text, 'seo') => 'seo_enrichment',
+            str_contains($text, 'roteiro') || str_contains($text, 'video') => 'video_script_generation',
+            str_contains($text, 'classific') || str_contains($text, 'categoria') => 'content_classification',
+            default => 'article_expansion',
+        };
+
+        return [
+            'product' => 'tv-digital-enterprise',
+            'task' => $task,
         ];
     }
 }
