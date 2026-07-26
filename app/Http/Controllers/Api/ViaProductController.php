@@ -8,6 +8,7 @@ use App\Factory\AI\Via\Products\TvDigital\TvDigitalViaService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ViaProductController extends Controller
 {
@@ -35,7 +36,7 @@ class ViaProductController extends Controller
         }
 
         $payload = $request->validate([
-            'task' => ['required', 'string', 'max:80'],
+            'task' => ['required', 'string', 'max:80', Rule::in(ProcurementViaService::supportedTasks())],
             'input' => ['required', 'array'],
             'context' => ['nullable', 'array'],
         ]);
@@ -54,7 +55,7 @@ class ViaProductController extends Controller
         }
 
         $payload = $request->validate([
-            'task' => ['required', 'string', 'max:80'],
+            'task' => ['required', 'string', 'max:80', Rule::in(TvDigitalViaService::supportedTasks())],
             'input' => ['required', 'array'],
             'context' => ['nullable', 'array'],
         ]);
