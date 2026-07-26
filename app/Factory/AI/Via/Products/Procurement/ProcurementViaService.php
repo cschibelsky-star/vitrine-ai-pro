@@ -19,6 +19,11 @@ class ProcurementViaService
     ) {
     }
 
+    public static function supportedTasks(): array
+    {
+        return self::SUPPORTED_TASKS;
+    }
+
     public function execute(string $task, array $input, array $context = []): array
     {
         if (! in_array($task, self::SUPPORTED_TASKS, true)) {
