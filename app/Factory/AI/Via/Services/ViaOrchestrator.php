@@ -23,6 +23,8 @@ class ViaOrchestrator
             'user_id' => Arr::get($context, 'user_id'),
             'product' => Arr::get($context, 'product', 'factory'),
             'session_id' => Arr::get($context, 'session_id'),
+            'workflow_uuid' => Arr::get($context, 'workflow_uuid'),
+            'execution_uuid' => Arr::get($context, 'execution_uuid'),
             'trace_id' => $traceId,
             'correlation_id' => $correlationId,
             'metadata' => Arr::get($context, 'metadata', []),
@@ -35,6 +37,8 @@ class ViaOrchestrator
         $result = $this->router->route($payload, [
             'providers' => Arr::get($context, 'providers', []),
             'company_id' => $normalizedContext['company_id'],
+            'workflow_uuid' => $normalizedContext['workflow_uuid'],
+            'execution_uuid' => $normalizedContext['execution_uuid'],
             'trace_id' => $traceId,
             'correlation_id' => $correlationId,
             'metadata' => $normalizedContext['metadata'],
