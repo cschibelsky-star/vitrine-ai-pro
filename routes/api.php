@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\FlowUsageController;
 use App\Http\Controllers\Api\FlowWorkflowRegistryController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\MissionControlController;
+use App\Http\Controllers\Api\ViaProductController;
 use App\Http\Controllers\Api\VitrineFlowProvisionController;
 use Illuminate\Support\Facades\Route;
 
@@ -68,6 +69,17 @@ Route::prefix('flow')->group(function () {
     Route::post('/ai/route', [FlowAiRouterController::class, 'route'])
         ->middleware('throttle:240,1')
         ->name('flow.ai.route');
+
+    Route::prefix('via/products')->middleware('throttle:120,1')->group(function () {
+        Route::post('/social-media/generate', [ViaProductController::class, 'socialMedia'])
+            ->name('flow.via.products.social-media.generate');
+
+        Route::post('/procurement/execute', [ViaProductController::class, 'procurement'])
+            ->name('flow.via.products.procurement.execute');
+
+        Route::post('/tv-digital/execute', [ViaProductController::class, 'tvDigital'])
+            ->name('flow.via.products.tv-digital.execute');
+    });
 
     Route::post('/secrets/upsert', [FlowPlatformServicesController::class, 'putSecret'])
         ->middleware('throttle:120,1')
