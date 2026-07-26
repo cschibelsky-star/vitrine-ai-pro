@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Factory\AI\Via\Services\ViaOrchestrator;
 use App\Http\Controllers\Controller;
-use App\Services\FlowAiRouterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FlowAiRouterController extends Controller
 {
-    public function route(Request $request, FlowAiRouterService $router): JsonResponse
+    public function route(Request $request, ViaOrchestrator $via): JsonResponse
     {
         if (! $this->authorized($request)) {
             return response()->json(['message' => 'Não autorizado.'], 401);
@@ -17,6 +17,9 @@ class FlowAiRouterController extends Controller
 
         $payload = $request->validate([
             'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'user_id' => ['nullable', 'integer'],
+            'product' => ['nullable', 'string', 'max:100'],
+            'session_id' => ['nullable', 'string', 'max:120'],
             'workflow_uuid' => ['nullable', 'uuid'],
             'execution_uuid' => ['nullable', 'uuid'],
             'trace_id' => ['nullable', 'uuid'],
@@ -27,11 +30,14 @@ class FlowAiRouterController extends Controller
             'metadata' => ['nullable', 'array'],
         ]);
 
-        $result = $router->route(
+        $result = $via->handle(
             $payload['request'],
             [
                 'providers' => $payload['providers'] ?? [],
                 'company_id' => $payload['company_id'] ?? null,
+                'user_id' => $payload['user_id'] ?? null,
+                'product' => $payload['product'] ?? 'factory',
+                'session_id' => $payload['session_id'] ?? null,
                 'workflow_uuid' => $payload['workflow_uuid'] ?? null,
                 'execution_uuid' => $payload['execution_uuid'] ?? null,
                 'trace_id' => $payload['trace_id'] ?? null,
