@@ -157,3 +157,6 @@ Route::prefix('mission')->middleware('throttle:600,1')->group(function () {
 });
 
 require __DIR__.'/site_factory_api.php';
+
+\Illuminate\Support\Facades\Route::post('/vendedoria-pro-news/leads', [\App\Http\Controllers\Api\VendedoriaProNewsLeadController::class, 'store'])
+    ->middleware('throttle:30,1');
