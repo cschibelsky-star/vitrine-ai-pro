@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>VendedorIA Pro News | VitrineIA Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Agente comercial inteligente para captar interessados em portais de notícias automatizados da VitrineIA Pro.">
+    <style>
+        :root {
+            --bg: #07111f;
+            --card: #101b2d;
+            --card2: #0b1627;
+            --text: #ffffff;
+            --muted: #c9d6ea;
+            --line: rgba(255,255,255,.12);
+            --blue: #27d3f5;
+            --green: #42f5b0;
+            --yellow: #facc15;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(39,211,245,.18), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(66,245,176,.12), transparent 32%),
+                var(--bg);
+            color: var(--text);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .wrap {
+            width: min(1160px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 22px 0;
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(12px);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            font-weight: 900;
+            letter-spacing: -.4px;
+        }
+
+        .brand span {
+            color: var(--blue);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .hero {
+            padding: 76px 0 48px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 34px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(39,211,245,.12);
+            color: #7ee9ff;
+            font-size: 13px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(39,211,245,.22);
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            font-size: clamp(38px, 6vw, 68px);
+            line-height: .96;
+            letter-spacing: -2.5px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.65;
+            max-width: 680px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            padding: 15px 18px;
+            font-weight: 800;
+            border: 1px solid var(--line);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #06111f;
+            border-color: transparent;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,.06);
+            color: #ffffff;
+        }
+
+        .panel {
+            background: linear-gradient(145deg, rgba(16,31,54,.96), rgba(12,22,40,.96));
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            padding: 26px;
+            box-shadow: 0 24px 80px rgba(0,0,0,.35);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,.06);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 24px;
+            color: var(--green);
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .section {
+            padding: 44px 0;
+        }
+
+        .section h2 {
+            font-size: clamp(28px, 4vw, 44px);
+            letter-spacing: -1px;
+            margin: 0 0 12px;
+        }
+
+        .section-lead {
+            color: var(--muted);
+            line-height: 1.6;
+            max-width: 760px;
+            margin-bottom: 24px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(255,255,255,.055);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 22px;
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+        }
+
+        .card p {
+            color: var(--muted);
+            line-height: 1.55;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .plan {
+            background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 24px;
+        }
+
+        .plan.featured {
+            border-color: rgba(39,211,245,.55);
+            box-shadow: 0 0 0 1px rgba(39,211,245,.18), 0 22px 70px rgba(39,211,245,.09);
+        }
+
+        .price {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--blue);
+            margin: 12px 0;
+        }
+
+        .plan ul {
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        form {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,.07);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+        }
+
+        option {
+            color: #111827;
+        }
+
+        textarea {
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        label {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        label input {
+            width: auto;
+            margin-top: 3px;
+        }
+
+        .status {
+            min-height: 20px;
+            color: var(--green);
+            font-size: 14px;
+        }
+
+        footer {
+            padding: 32px 0;
+            color: var(--muted);
+            border-top: 1px solid var(--line);
+            font-size: 14px;
+        }
+
+        @media (max-width: 860px) {
+            .hero-grid,
+            .cards,
+            .plans,
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="wrap nav">
+            <div class="brand">Vitrine<span>IA</span> Pro</div>
+            <nav class="nav-links">
+                <a href="#solucao">Solução</a>
+                <a href="#planos">Planos</a>
+                <a href="#lead">Quero conhecer</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="wrap hero-grid">
+                <div>
+                    <div class="badge">Agente Comercial Inteligente para Portais News</div>
+                    <h1>Venda portais de notícias automatizados com apoio de IA.</h1>
+                    <p>
+                        O VendedorIA Pro News qualifica interessados, recomenda o melhor plano e envia o lead diretamente para o Comercial Master da VitrineIA Pro.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a class="btn btn-primary" href="#lead">Registrar interesse</a>
+                        <a class="btn btn-secondary" href="#planos">Ver planos</a>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <strong>24h</strong>
+                            <span>captação online</span>
+                        </div>
+                        <div class="stat">
+                            <strong>IA</strong>
+                            <span>qualificação comercial</span>
+                        </div>
+                        <div class="stat">
+                            <strong>CRM</strong>
+                            <span>lead no Comercial Master</span>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="panel" id="lead">
+                    <div class="badge">Enviar lead para o Comercial Master</div>
+                    <h2>Quero conhecer a VitrineIA Pro News</h2>
+                    <p class="section-lead">
+                        Preencha os dados abaixo. O registro será enviado automaticamente para o funil comercial.
+                    </p>
+
+                    <form id="leadForm">
+                        <input name="empresa" placeholder="Empresa ou instituição">
+                        <input name="contato" placeholder="Nome do contato *" required>
+                        <input name="telefone" placeholder="WhatsApp">
+                        <input name="email" type="email" placeholder="E-mail">
+                        <input name="cidade" placeholder="Cidade">
+                        <select name="plano_sugerido">
+                            <option>Portal Automatizado</option>
+                            <option>Portal Local</option>
+                            <option>Licenciamento Institucional</option>
+                            <option>Sob proposta</option>
+                        </select>
+                        <textarea name="observacoes" placeholder="Conte um pouco sobre o projeto"></textarea>
+                        <input name="website" style="display:none" tabindex="-1" autocomplete="off">
+
+                        <label>
+                            <input type="checkbox" name="consentimento_lgpd" required>
+                            Autorizo o contato comercial da VitrineIA Pro e o tratamento dos dados informados conforme a LGPD.
+                        </label>
+
+                        <button class="btn btn-primary" type="submit">Enviar interesse</button>
+                        <div class="status" id="status"></div>
+                    </form>
+                </aside>
+            </div>
+        </section>
+
+        <section class="section" id="solucao">
+            <div class="wrap">
+                <h2>O que a VitrineIA Pro News entrega</h2>
+                <p class="section-lead">
+                    Uma solução para criar e operar portais de notícias com automação editorial, apoio de IA, vídeos, banners e estrutura comercial.
+                </p>
+
+                <div class="cards">
+                    <div class="card">
+                        <h3>Portal automatizado</h3>
+                        <p>Estrutura para publicação de notícias, organização editorial e operação regional.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Conteúdo com IA</h3>
+                        <p>Apoio na triagem, geração, revisão e organização de pautas para acelerar a operação.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Comercial integrado</h3>
+                        <p>Leads captados pelo VendedorIA entram direto no Comercial Master para acompanhamento.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="planos">
+            <div class="wrap">
+                <h2>Planos comerciais</h2>
+                <p class="section-lead">
+                    O VendedorIA sugere o plano conforme o perfil do interessado, mantendo o atendimento organizado no funil.
+                </p>
+
+                <div class="plans">
+                    <div class="plan">
+                        <h3>Portal Local</h3>
+                        <div class="price">R$ 497</div>
+                        <ul>
+                            <li>Portal regional inicial</li>
+                            <li>Estrutura de publicação</li>
+                            <li>Captação comercial local</li>
+                        </ul>
+                    </div>
+
+                    <div class="plan featured">
+                        <h3>Portal Automatizado</h3>
+                        <div class="price">R$ 997</div>
+                        <ul>
+                            <li>Automação editorial com IA</li>
+                            <li>Fluxo de leads integrado</li>
+                            <li>Operação mais escalável</li>
+                        </ul>
+                    </div>
+
+                    <div class="plan">
+                        <h3>Licenciamento Institucional</h3>
+                        <div class="price">R$ 1.500</div>
+                        <ul>
+                            <li>Uso institucional</li>
+                            <li>Modelo para órgãos e entidades</li>
+                            <li>Implantação sob demanda</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            Tecnologia desenvolvida pela VitrineIA Pro. VendedorIA Pro News integrado ao Comercial Master.
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('leadForm');
+        const statusBox = document.getElementById('status');
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            statusBox.textContent = 'Enviando interesse...';
+
+            const data = Object.fromEntries(new FormData(form).entries());
+            data.consentimento_lgpd = form.consentimento_lgpd.checked;
+            data.pagina_origem = 'Landing Comercial VendedorIA Pro News';
+
+            try {
+                const response = await fetch('/api/vendedoria-pro-news/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    statusBox.textContent = 'Não foi possível enviar. Verifique os campos obrigatórios.';
+                    return;
+                }
+
+                statusBox.textContent = 'Lead enviado com sucesso. ID: ' + result.lead_id;
+                form.reset();
+            } catch (error) {
+                statusBox.textContent = 'Erro de conexão ao enviar o lead.';
+            }
+        });
+    </script>
+
+    <script src="/assets/vendedoria-pro-news/widget.js"></script>
+</body>
+</html>

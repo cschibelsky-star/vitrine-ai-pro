@@ -9,6 +9,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FactoryStudioEnterprise;
 use App\Filament\Pages\GeneratedProjects;
 use App\Filament\Pages\MarketplaceEnterprise;
+use App\Filament\Pages\VendedorIaProNews;
 use App\Filament\Resources\CompanyModuleResource;
 use App\Filament\Resources\CompanyResource;
 use App\Filament\Resources\ContractResource;
@@ -80,6 +81,7 @@ class AdminPanelProvider extends PanelProvider
                 MarketplaceEnterprise::class,
                 ClientPortalEnterprise::class,
                 AiCenterEnterprise::class,
+                VendedorIaProNews::class,
             ])
             ->resources([
                 CompanyResource::class,
