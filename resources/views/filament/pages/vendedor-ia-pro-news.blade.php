@@ -18,6 +18,7 @@
                     <a
                         href="{{ $this->getLandingUrl() }}"
                         target="_blank"
+                        rel="noopener noreferrer"
                         class="inline-flex items-center rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500"
                     >
                         Abrir landing
