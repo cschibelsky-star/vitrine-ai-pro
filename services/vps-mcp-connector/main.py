@@ -50,6 +50,12 @@ def restart_application_container(container: str, confirm: str = "") -> dict[str
     return _post("/restart-container", {"container": container, "confirm": confirm})
 
 
+@mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": False})
+def preserve_git_worktree(confirm: str = "") -> dict[str, Any]:
+    """Preserva integralmente a árvore Git atual sem limpá-la ou modificá-la. Use confirm='EXECUTAR'."""
+    return _post("/git/preserve", {"confirm": confirm})
+
+
 @mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": True})
 def deploy_git_branch(branch: str, confirm: str = "") -> dict[str, Any]:
     """Implanta branch com backup, fast-forward, Composer, migrations e optimize. Recusa árvore Git suja. Use confirm='EXECUTAR'."""

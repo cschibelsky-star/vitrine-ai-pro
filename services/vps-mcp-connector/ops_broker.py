@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
+import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +19,7 @@ APP_ROOT = Path(os.getenv("VITRINE_APP_ROOT", "/srv/factory/vitrine-ai-pro")).re
 LARAVEL_CONTAINER = os.getenv("LARAVEL_CONTAINER", "vitrine_app")
 BROKER_TOKEN = os.getenv("OPS_BROKER_TOKEN", "")
 AUDIT_LOG = Path(os.getenv("OPS_AUDIT_LOG", "/var/log/vitrine-ops/audit.jsonl"))
+GIT_PRESERVATION_ROOT = Path(os.getenv("GIT_PRESERVATION_ROOT", "/srv/backups/vitrine-ai-pro/git-preservation")).resolve()
 TIMEOUT = int(os.getenv("OPS_TIMEOUT", "900"))
 N8N_BASE_URL = os.getenv("N8N_BASE_URL", "http://n8n:5678").rstrip("/")
 N8N_WEBHOOK_TOKEN = os.getenv("N8N_WEBHOOK_TOKEN", "")
@@ -49,6 +53,10 @@ class ContainerRequest(BaseModel):
 
 class DeployRequest(BaseModel):
     branch: str
+    confirm: str = ""
+
+
+class PreserveGitRequest(BaseModel):
     confirm: str = ""
 
 
@@ -183,6 +191,136 @@ def restart_container(req: ContainerRequest) -> dict[str, Any]:
         raise HTTPException(status_code=403, detail="container_not_allowed")
     result = run(["docker", "restart", req.container], Path("/"))
     audit("restart_container", req.model_dump(), result)
+    return result
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+@app.post("/git/preserve", dependencies=[Depends(auth)])
+def preserve_git_worktree(req: PreserveGitRequest) -> dict[str, Any]:
+    """Preserva HEAD, mudanças rastreadas e não rastreadas sem alterar a árvore Git."""
+    require_confirm(req.confirm)
+
+    inside = run(["git", "rev-parse", "--is-inside-work-tree"])
+    if inside["exit_code"] != 0 or inside["stdout"].strip() != "true":
+        raise HTTPException(status_code=409, detail="app_root_not_git_repository")
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    head = run(["git", "rev-parse", "HEAD"])
+    branch = run(["git", "branch", "--show-current"])
+    status_before = run(["git", "status", "--porcelain=v1", "-z"])
+    if any(item["exit_code"] != 0 for item in (head, branch, status_before)):
+        raise HTTPException(status_code=500, detail="git_snapshot_failed")
+
+    snapshot_id = f"{timestamp}-{head['stdout'].strip()[:12]}"
+    final_dir = GIT_PRESERVATION_ROOT / snapshot_id
+    temporary_dir = GIT_PRESERVATION_ROOT / f".{snapshot_id}.tmp"
+    if final_dir.exists() or temporary_dir.exists():
+        raise HTTPException(status_code=409, detail="snapshot_already_exists")
+
+    temporary_dir.mkdir(parents=True, exist_ok=False)
+    skipped: list[str] = []
+    try:
+        bundle_path = temporary_dir / "head.bundle"
+        patch_path = temporary_dir / "tracked.patch"
+        untracked_path = temporary_dir / "untracked.tar.gz"
+
+        with bundle_path.open("wb") as output:
+            bundle = subprocess.run(
+                ["git", "bundle", "create", "-", "HEAD"],
+                cwd=str(APP_ROOT),
+                stdout=output,
+                stderr=subprocess.PIPE,
+                timeout=TIMEOUT,
+                check=False,
+            )
+        if bundle.returncode != 0:
+            raise RuntimeError(f"bundle_failed:{bundle.stderr.decode(errors='replace')[-2000:]}")
+
+        with patch_path.open("wb") as output:
+            patch = subprocess.run(
+                ["git", "diff", "--binary", "HEAD", "--"],
+                cwd=str(APP_ROOT),
+                stdout=output,
+                stderr=subprocess.PIPE,
+                timeout=TIMEOUT,
+                check=False,
+            )
+        if patch.returncode != 0:
+            raise RuntimeError(f"patch_failed:{patch.stderr.decode(errors='replace')[-2000:]}")
+
+        untracked = subprocess.run(
+            ["git", "ls-files", "-z", "--others", "--exclude-standard"],
+            cwd=str(APP_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=TIMEOUT,
+            check=False,
+        )
+        if untracked.returncode != 0:
+            raise RuntimeError(f"untracked_list_failed:{untracked.stderr.decode(errors='replace')[-2000:]}")
+
+        names = [item.decode("utf-8", errors="surrogateescape") for item in untracked.stdout.split(b"\0") if item]
+        with tarfile.open(untracked_path, "w:gz", dereference=False) as archive:
+            for name in names:
+                source = APP_ROOT / name
+                try:
+                    source.relative_to(APP_ROOT)
+                except ValueError:
+                    skipped.append(name)
+                    continue
+                if not source.exists() and not source.is_symlink():
+                    skipped.append(name)
+                    continue
+                archive.add(source, arcname=name, recursive=True)
+
+        status_after = run(["git", "status", "--porcelain=v1", "-z"])
+        if status_after["exit_code"] != 0 or status_after["stdout"] != status_before["stdout"]:
+            raise RuntimeError("working_tree_changed_during_preservation")
+
+        manifest = {
+            "snapshot_id": snapshot_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "repository": str(APP_ROOT),
+            "branch": branch["stdout"].strip() or "(detached HEAD)",
+            "head": head["stdout"].strip(),
+            "status_porcelain_sha256": hashlib.sha256(status_before["stdout"].encode()).hexdigest(),
+            "artifacts": {
+                "head.bundle": {"sha256": _sha256(bundle_path), "size": bundle_path.stat().st_size},
+                "tracked.patch": {"sha256": _sha256(patch_path), "size": patch_path.stat().st_size},
+                "untracked.tar.gz": {"sha256": _sha256(untracked_path), "size": untracked_path.stat().st_size},
+            },
+            "untracked_entries": len(names),
+            "skipped_entries": skipped,
+            "worktree_unchanged": True,
+        }
+        (temporary_dir / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        temporary_dir.rename(final_dir)
+    except Exception:
+        shutil.rmtree(temporary_dir, ignore_errors=True)
+        raise
+
+    result = {
+        "ok": True,
+        "snapshot_id": snapshot_id,
+        "path": str(final_dir),
+        "branch": manifest["branch"],
+        "head": manifest["head"],
+        "artifacts": manifest["artifacts"],
+        "untracked_entries": manifest["untracked_entries"],
+        "skipped_entries": manifest["skipped_entries"],
+        "worktree_unchanged": True,
+    }
+    audit("preserve_git_worktree", req.model_dump(), result)
     return result
 
 
