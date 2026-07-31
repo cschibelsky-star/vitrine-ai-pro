@@ -32,12 +32,12 @@ jobs:
           extensions: mbstring, xml, ctype, json, tokenizer, pdo, fileinfo
           coverage: none
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
-
       - name: Prepare Laravel runtime
         run: |
           mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run Factory regression tests
         run: php artisan test tests/Feature/FactoryDryRunIsolationTest.php
