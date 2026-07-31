@@ -11,7 +11,50 @@ class FactoryFinalMasterService
 {
     public function buildAndInstall(string $request, bool $dryRun = true, bool $force = false, bool $migrate = false): array
     {
-        $base = storage_path('app/factory/final-master/' . date('Ymd_His'));
+        if (! $dryRun) {
+            return $this->execute($request, false, $force, $migrate);
+        }
+
+        $originalStoragePath = storage_path();
+        $reportBase = $originalStoragePath
+            . '/app/factory/final-master/'
+            . date('Ymd_His')
+            . '_'
+            . bin2hex(random_bytes(4));
+        $sandboxStoragePath = $reportBase . '/sandbox-storage';
+
+        File::ensureDirectoryExists($sandboxStoragePath);
+        app()->useStoragePath($sandboxStoragePath);
+
+        try {
+            return $this->execute(
+                $request,
+                true,
+                $force,
+                false,
+                $reportBase,
+                $sandboxStoragePath,
+            );
+        } finally {
+            app()->useStoragePath($originalStoragePath);
+        }
+    }
+
+    protected function execute(
+        string $request,
+        bool $dryRun,
+        bool $force,
+        bool $migrate,
+        ?string $reportBase = null,
+        ?string $sandboxStoragePath = null,
+    ): array {
+        $base = $reportBase
+            ?? storage_path(
+                'app/factory/final-master/'
+                . date('Ymd_His')
+                . '_'
+                . bin2hex(random_bytes(4))
+            );
         $stepsDir = $base . '/steps';
         File::ensureDirectoryExists($stepsDir);
 
@@ -103,8 +146,10 @@ class FactoryFinalMasterService
             'migrate' => $migrate,
             'blueprint' => $blueprint,
             'steps' => $steps,
+            'sandbox_storage_path' => $sandboxStoragePath,
+            'shared_storage_untouched' => $dryRun,
             'final_note' => $dryRun
-                ? 'Dry-run concluído. Para instalar de verdade, rode o mesmo comando com --force --migrate.'
+                ? 'Dry-run isolado concluído. Revise o relatório antes de autorizar uma instalação real.'
                 : 'Instalação executada. Verifique painel, migrations e logs.',
             'created_at' => now()->toISOString(),
         ];

@@ -10,7 +10,7 @@ use Throwable;
 
 class FactoryProduceEnterpriseCommand extends Command
 {
-    protected $signature = 'factory:produce {product : Produto a produzir, ex: gov360}';
+    protected $signature = 'factory:produce-enterprise {product : Produto a produzir, ex: gov360}';
 
     protected $description = 'Produz um produto completo em modo seguro usando a Factory.';
 
