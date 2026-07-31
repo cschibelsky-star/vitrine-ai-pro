@@ -1,0 +1,43 @@
+name: Factory Tests
+
+on:
+  pull_request:
+    branches:
+      - feature/factory-enterprise-10-ui
+    paths:
+      - 'app/Factory/**'
+      - 'config/factory_*.php'
+      - 'tests/Feature/FactoryDryRunIsolationTest.php'
+      - 'phpunit.xml.dist'
+      - '.github/workflows/factory-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  factory:
+    name: Factory regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, tokenizer, pdo, fileinfo
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare Laravel runtime
+        run: |
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+
+      - name: Run Factory regression tests
+        run: php artisan test tests/Feature/FactoryDryRunIsolationTest.php
