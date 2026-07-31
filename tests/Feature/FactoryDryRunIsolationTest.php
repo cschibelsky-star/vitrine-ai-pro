@@ -60,6 +60,13 @@ class FactoryDryRunIsolationTest extends TestCase
                 ['registros', 'categorias', 'documentos'],
                 $actualModules
             );
+
+            $spacedName = app(AiArchitectFinalService::class)->architect(
+                'Implantar o produto GOV 360'
+            );
+
+            $this->assertSame('gov360_known', $spacedName['domain']);
+            $this->assertSame('gov360', $spacedName['blueprint']['slug']);
         } finally {
             app()->useStoragePath($applicationStorage);
             File::deleteDirectory($temporaryStorage);
