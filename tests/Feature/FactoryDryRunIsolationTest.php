@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Factory\Console\Commands\FactoryProduceCommand;
 use App\Factory\Console\Commands\FactoryProduceEnterpriseCommand;
+use App\Factory\Finalization\Services\AiArchitectFinalService;
 use App\Factory\FinalMaster\Services\FactoryFinalMasterService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -26,6 +27,43 @@ class FactoryDryRunIsolationTest extends TestCase
             FactoryProduceEnterpriseCommand::class,
             $commands['factory:produce-enterprise']
         );
+    }
+
+    public function test_gov360_request_uses_the_known_enterprise_product_blueprint(): void
+    {
+        $applicationStorage = storage_path();
+        $temporaryStorage = sys_get_temp_dir()
+            . '/factory-gov360-architect-test-'
+            . bin2hex(random_bytes(6));
+
+        File::ensureDirectoryExists($temporaryStorage);
+        app()->useStoragePath($temporaryStorage);
+
+        try {
+            $architecture = app(AiArchitectFinalService::class)->architect(
+                'Criar instância de homologação do produto Gov360'
+            );
+
+            $expectedModules = array_column(
+                config('factory_enterprise_products.gov360.modules'),
+                'slug'
+            );
+            $actualModules = array_column(
+                $architecture['blueprint']['modules'],
+                'slug'
+            );
+
+            $this->assertSame('gov360_known', $architecture['domain']);
+            $this->assertSame('gov360', $architecture['blueprint']['slug']);
+            $this->assertSame($expectedModules, $actualModules);
+            $this->assertNotSame(
+                ['registros', 'categorias', 'documentos'],
+                $actualModules
+            );
+        } finally {
+            app()->useStoragePath($applicationStorage);
+            File::deleteDirectory($temporaryStorage);
+        }
     }
 
     public function test_dry_run_uses_isolated_storage_and_restores_application_storage(): void
