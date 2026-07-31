@@ -12,7 +12,9 @@ class AiArchitectFinalService
     public function architect(string $request): array
     {
         $domain = $this->detectDomain($request);
-        $template = config('factory_4_domains.' . $domain);
+        $template = $domain === 'gov360_known'
+            ? config('factory_enterprise_products.gov360')
+            : config('factory_4_domains.' . $domain);
 
         if (! $template) {
             $template = $this->genericTemplate($request);
@@ -58,7 +60,13 @@ class AiArchitectFinalService
             }
         }
 
-        if (str_contains($text, 'governo') || str_contains($text, 'licitacao') || str_contains($text, 'vender')) {
+        if (
+            str_contains($text, 'gov360')
+            || str_contains($text, 'gov 360')
+            || str_contains($text, 'governo')
+            || str_contains($text, 'licitacao')
+            || str_contains($text, 'vender')
+        ) {
             return 'gov360_known';
         }
 
