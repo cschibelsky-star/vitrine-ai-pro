@@ -39,6 +39,10 @@ final class ViaFactoryController extends Controller
                 'produzir_solicitacao_com_confirmacao',
                 'finalizar_projeto_com_confirmacao',
                 'produzir_enterprise_com_confirmacao',
+                'executar_smart_qa',
+                'executar_qa_modulo',
+                'simular_instalacao_final_com_confirmacao',
+                'simular_instalacao_real_com_confirmacao',
             ],
         ]);
     }
@@ -118,6 +122,10 @@ final class ViaFactoryController extends Controller
                 'produce_request',
                 'finish_project',
                 'produce_enterprise',
+                'smart_qa2',
+                'qa_module',
+                'install_final_dry_run',
+                'real_install_dry_run',
             ])],
             'payload' => ['sometimes', 'array'],
             'confirm' => ['sometimes', 'nullable', 'string', 'max:20'],
@@ -155,6 +163,26 @@ final class ViaFactoryController extends Controller
             'produce_enterprise' => [
                 'command' => 'factory:produce-enterprise',
                 'arguments' => ['product' => $this->allowedProduct($this->requiredText($payload, 'product', 3))],
+                'sensitive' => true,
+            ],
+            'smart_qa2' => [
+                'command' => 'factory:smart-qa2',
+                'arguments' => [],
+                'sensitive' => false,
+            ],
+            'qa_module' => [
+                'command' => 'factory:qa-module',
+                'arguments' => ['slug' => $this->requiredSlug($payload, 'slug')],
+                'sensitive' => false,
+            ],
+            'install_final_dry_run' => [
+                'command' => 'factory:install-final',
+                'arguments' => ['blueprint' => $this->requiredSlug($payload, 'blueprint'), '--dry-run' => true],
+                'sensitive' => true,
+            ],
+            'real_install_dry_run' => [
+                'command' => 'factory:real-install',
+                'arguments' => ['blueprint' => $this->requiredSlug($payload, 'blueprint'), '--dry-run' => true],
                 'sensitive' => true,
             ],
         };
@@ -247,6 +275,55 @@ final class ViaFactoryController extends Controller
                     'ok' => $result['exit_code'] === 0,
                 ];
             }
+        }
+
+        if (preg_match('/(?:execute|rode|fa[cç]a)\s+(?:o\s+)?smart\s*qa(?:\s*2)?/iu', $message)) {
+            $result = $this->runArtisan('factory:smart-qa2');
+            return [
+                'answer' => $result['exit_code'] === 0
+                    ? "Smart QA concluído com sucesso.\n\n".$result['output']
+                    : "O Smart QA encontrou falhas.\n\n".$result['output'],
+                'mode' => 'factory-action',
+                'factory_connected' => true,
+                'action' => 'smart_qa2',
+                'ok' => $result['exit_code'] === 0,
+            ];
+        }
+
+        if (preg_match('/(?:execute|rode|fa[cç]a)\s+(?:o\s+)?qa\s+(?:do\s+)?m[oó]dulo\s+([a-z0-9_-]+)/iu', $message, $matches)) {
+            $slug = strtolower(trim($matches[1]));
+            $result = $this->runArtisan('factory:qa-module', ['slug' => $slug]);
+            return [
+                'answer' => $result['exit_code'] === 0
+                    ? "QA do módulo concluído com sucesso.\n\n".$result['output']
+                    : "O QA do módulo encontrou falhas.\n\n".$result['output'],
+                'mode' => 'factory-action',
+                'factory_connected' => true,
+                'action' => 'qa_module',
+                'ok' => $result['exit_code'] === 0,
+            ];
+        }
+
+        if (preg_match('/(?:simule|simular|teste)\s+(?:a\s+)?instala[cç][aã]o\s+final\s+(?:do\s+)?(?:blueprint\s+)?([a-z0-9_-]+)/iu', $message, $matches)) {
+            return [
+                'answer' => 'Posso simular a instalação final sem alterar o sistema ativo. Confirme para executar o dry-run.',
+                'mode' => 'factory-confirmation',
+                'factory_connected' => true,
+                'requires_confirmation' => true,
+                'action' => 'install_final_dry_run',
+                'payload' => ['blueprint' => strtolower(trim($matches[1]))],
+            ];
+        }
+
+        if (preg_match('/(?:simule|simular|teste)\s+(?:a\s+)?instala[cç][aã]o\s+real\s+(?:do\s+)?(?:blueprint\s+)?([a-z0-9_-]+)/iu', $message, $matches)) {
+            return [
+                'answer' => 'Posso simular a instalação do código real sem modificar arquivos ativos. Confirme para executar o dry-run.',
+                'mode' => 'factory-confirmation',
+                'factory_connected' => true,
+                'requires_confirmation' => true,
+                'action' => 'real_install_dry_run',
+                'payload' => ['blueprint' => strtolower(trim($matches[1]))],
+            ];
         }
 
         if (preg_match('/(?:produza|gerar|gere)\s+(?:o\s+)?(?:produto\s+)?enterprise\s+([a-z0-9_-]+)/iu', $message, $matches)) {
@@ -519,6 +596,13 @@ final class ViaFactoryController extends Controller
                 'output' => $exception->getMessage(),
             ];
         }
+    }
+
+    private function requiredSlug(array $payload, string $key): string
+    {
+        $value = strtolower(trim((string) ($payload[$key] ?? '')));
+        abort_unless((bool) preg_match('/^[a-z0-9][a-z0-9_-]{1,119}$/', $value), 422, "O campo {$key} precisa conter um slug válido.");
+        return $value;
     }
 
     private function requiredText(array $payload, string $key, int $minimum): string

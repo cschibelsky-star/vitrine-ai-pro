@@ -63,6 +63,7 @@
                     <button type="button" class="via-factory-shortcut" data-prompt="Mostre as execuções recentes">Execuções</button>
                     <button type="button" class="via-factory-shortcut" data-prompt="Como está a produção e a release?">Produção</button>
                     <button type="button" class="via-factory-shortcut" data-prompt="Como está o ecossistema e os serviços?">Ecossistema</button>
+                    <button type="button" class="via-factory-shortcut" data-prompt="Execute o Smart QA 2">Smart QA</button>
                     <button type="button" class="via-factory-shortcut" data-prompt="Explique como produzir um sistema pela Factory">Ciclo de produção</button>
                 </div>
                 <form class="via-factory-composer" data-via-form>
