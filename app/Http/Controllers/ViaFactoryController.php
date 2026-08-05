@@ -36,6 +36,9 @@ final class ViaFactoryController extends Controller
                 'consultar_release',
                 'gerar_plano',
                 'criar_arquitetura_com_confirmacao',
+                'produzir_solicitacao_com_confirmacao',
+                'finalizar_projeto_com_confirmacao',
+                'produzir_enterprise_com_confirmacao',
             ],
         ]);
     }
@@ -112,6 +115,9 @@ final class ViaFactoryController extends Controller
                 'plugins',
                 'ai_plan',
                 'architect_request',
+                'produce_request',
+                'finish_project',
+                'produce_enterprise',
             ])],
             'payload' => ['sometimes', 'array'],
             'confirm' => ['sometimes', 'nullable', 'string', 'max:20'],
@@ -136,13 +142,28 @@ final class ViaFactoryController extends Controller
                 'arguments' => ['request' => $this->words($this->requiredText($payload, 'request', 10))],
                 'sensitive' => true,
             ],
+            'produce_request' => [
+                'command' => 'factory:produce-request',
+                'arguments' => ['request' => $this->words($this->requiredText($payload, 'request', 10))],
+                'sensitive' => true,
+            ],
+            'finish_project' => [
+                'command' => 'factory:finish-project',
+                'arguments' => ['request' => $this->words($this->requiredText($payload, 'request', 10))],
+                'sensitive' => true,
+            ],
+            'produce_enterprise' => [
+                'command' => 'factory:produce-enterprise',
+                'arguments' => ['product' => $this->allowedProduct($this->requiredText($payload, 'product', 3))],
+                'sensitive' => true,
+            ],
         };
 
         if ($definition['sensitive'] && $confirm !== 'EXECUTAR') {
             return response()->json([
                 'ok' => false,
                 'requires_confirmation' => true,
-                'answer' => 'Esta ação criará artefatos na Factory. Confirme explicitamente para executar.',
+                'answer' => 'Esta ação criará ou alterará artefatos da Factory. Confirme explicitamente para executar.',
                 'action' => $action,
                 'payload' => $payload,
             ], 409);
@@ -224,6 +245,46 @@ final class ViaFactoryController extends Controller
                     'factory_connected' => true,
                     'action' => 'ai_plan',
                     'ok' => $result['exit_code'] === 0,
+                ];
+            }
+        }
+
+        if (preg_match('/(?:produza|gerar|gere)\s+(?:o\s+)?(?:produto\s+)?enterprise\s+([a-z0-9_-]+)/iu', $message, $matches)) {
+            $product = trim($matches[1]);
+            return [
+                'answer' => 'Posso produzir o pacote Enterprise do produto informado. A ação gera builds completos e exige confirmação.',
+                'mode' => 'factory-confirmation',
+                'factory_connected' => true,
+                'requires_confirmation' => true,
+                'action' => 'produce_enterprise',
+                'payload' => ['product' => $product],
+            ];
+        }
+
+        if (preg_match('/(?:produza|produzir|gere o pacote|crie o pacote)\s+(?:um\s+)?(?:sistema|produto|pacote)?\s*(?:para|de)?\s*(.+)/iu', $message, $matches)) {
+            $description = trim($matches[1]);
+            if (mb_strlen($description) >= 10) {
+                return [
+                    'answer' => 'Posso produzir essa solicitação na área segura da Factory. A ação gera artefatos e precisa da sua confirmação.',
+                    'mode' => 'factory-confirmation',
+                    'factory_connected' => true,
+                    'requires_confirmation' => true,
+                    'action' => 'produce_request',
+                    'payload' => ['request' => $description],
+                ];
+            }
+        }
+
+        if (preg_match('/(?:finalize|finalizar|conclua|concluir)\s+(?:o\s+)?(?:projeto|sistema)?\s*(?:para|de)?\s*(.+)/iu', $message, $matches)) {
+            $description = trim($matches[1]);
+            if (mb_strlen($description) >= 10) {
+                return [
+                    'answer' => 'Posso executar a finalização completa, incluindo produção e real build. Essa ação exige confirmação explícita.',
+                    'mode' => 'factory-confirmation',
+                    'factory_connected' => true,
+                    'requires_confirmation' => true,
+                    'action' => 'finish_project',
+                    'payload' => ['request' => $description],
                 ];
             }
         }
@@ -466,6 +527,29 @@ final class ViaFactoryController extends Controller
         abort_if(mb_strlen($value) < $minimum, 422, "O campo {$key} precisa ter pelo menos {$minimum} caracteres.");
 
         return $value;
+    }
+
+    private function allowedProduct(string $value): string
+    {
+        $product = mb_strtolower(trim($value), 'UTF-8');
+        $aliases = [
+            'gov360' => 'gov360',
+            'governo' => 'gov360',
+            'guia_digital' => 'guia_digital',
+            'guia-digital' => 'guia_digital',
+            'guia' => 'guia_digital',
+            'portal_news' => 'portal_news',
+            'portal-news' => 'portal_news',
+            'news' => 'portal_news',
+            'tv_digital' => 'tv_digital',
+            'tv-digital' => 'tv_digital',
+            'tv' => 'tv_digital',
+            'sismed' => 'sismed',
+        ];
+
+        abort_unless(isset($aliases[$product]), 422, 'Produto Enterprise não permitido. Use gov360, guia_digital, portal_news, tv_digital ou sismed.');
+
+        return $aliases[$product];
     }
 
     private function words(string $value): array

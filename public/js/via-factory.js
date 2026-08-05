@@ -63,6 +63,7 @@
                     <button type="button" class="via-factory-shortcut" data-prompt="Mostre as execuções recentes">Execuções</button>
                     <button type="button" class="via-factory-shortcut" data-prompt="Como está a produção e a release?">Produção</button>
                     <button type="button" class="via-factory-shortcut" data-prompt="Como está o ecossistema e os serviços?">Ecossistema</button>
+                    <button type="button" class="via-factory-shortcut" data-prompt="Explique como produzir um sistema pela Factory">Ciclo de produção</button>
                 </div>
                 <form class="via-factory-composer" data-via-form>
                     <button type="button" class="via-factory-icon" data-via-mic title="Falar com a VIA">🎙</button>
@@ -412,7 +413,7 @@
     loadContext(false);
 
     const api = {
-        version: config.version || '1.0.0',
+        version: '2.0.0',
         open: () => setOpen(true),
         close: () => setOpen(false),
         toggle: () => setOpen(!state.open),
