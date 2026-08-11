@@ -8,6 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Migration duplicada historicamente. Mantida por compatibilidade com
+        // ambientes onde seu nome já possa constar na tabela migrations.
+        // A migration canônica anterior é 2026_06_28_002029_create_fornecedores_table.
+        if (Schema::hasTable('fornecedores')) {
+            return;
+        }
+
         Schema::create('fornecedores', function (Blueprint $table): void {
             $table->id();
             $table->string('nome');
@@ -23,6 +30,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('fornecedores');
+        // Não remove a tabela: ela pertence à migration canônica anterior.
     }
 };
