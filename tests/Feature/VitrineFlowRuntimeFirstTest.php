@@ -31,7 +31,8 @@ class VitrineFlowRuntimeFirstTest extends TestCase
             'company_id' => $company->getKey(),
             'descricao' => 'Provisionamento',
             'valor' => 100,
-            'status' => 'pago',
+            'vencimento' => now()->addDay()->toDateString(),
+            'status' => 'Pago',
         ]);
         $workflow = FlowWorkflow::query()->create([
             'uuid' => (string) Str::uuid(),
@@ -73,7 +74,8 @@ class VitrineFlowRuntimeFirstTest extends TestCase
             'company_id' => $company->getKey(),
             'descricao' => 'Provisionamento',
             'valor' => 100,
-            'status' => 'pago',
+            'vencimento' => now()->addDay()->toDateString(),
+            'status' => 'Pago',
         ]);
 
         Http::fake([
@@ -99,7 +101,8 @@ class VitrineFlowRuntimeFirstTest extends TestCase
             'company_id' => $company->getKey(),
             'descricao' => 'Provisionamento',
             'valor' => 100,
-            'status' => 'pago',
+            'vencimento' => now()->addDay()->toDateString(),
+            'status' => 'Pago',
         ]);
 
         $runtime = Mockery::mock(FlowRuntimeService::class);
