@@ -53,6 +53,16 @@ jobs:
           extensions: mbstring, pdo_mysql, bcmath, intl
           coverage: none
 
+      - name: Prepare Laravel runtime directories
+        run: |
+          mkdir -p bootstrap/cache
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/testing
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          chmod -R ug+rwX bootstrap/cache storage
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
