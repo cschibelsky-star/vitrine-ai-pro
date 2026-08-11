@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('agendamentos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('animal_id')->constrained('animals')->cascadeOnDelete();
+            $table->foreignId('animal_id')->constrained('animais')->cascadeOnDelete();
             $table->date('data_agendamento')->nullable();
             $table->string('tipo')->nullable();
             $table->text('observacoes')->nullable();
