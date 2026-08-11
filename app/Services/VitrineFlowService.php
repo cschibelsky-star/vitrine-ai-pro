@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FlowWorkflow;
 use App\Models\Payment;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -9,11 +10,89 @@ use RuntimeException;
 
 class VitrineFlowService
 {
+    public function __construct(
+        private readonly FlowRuntimeService $runtime,
+    ) {
+    }
+
     public function dispatchProvisioning(Payment $payment): array
     {
         $payment->loadMissing(['company', 'product', 'plan', 'contract']);
 
-        $response = $this->client()->post($this->provisionUrl(), [
+        if ((bool) config('vitrine_flow.prefer_runtime', true)) {
+            $workflow = $this->resolveProvisioningWorkflow($payment);
+
+            if ($workflow !== null) {
+                $execution = $this->runtime->start(
+                    $workflow,
+                    $this->provisioningPayload($payment),
+                    [
+                        'company_id' => $payment->company?->getKey(),
+                        'correlation_id' => 'payment:'.$payment->getKey(),
+                        'metadata' => [
+                            'source' => 'payment.approved',
+                            'payment_id' => $payment->getKey(),
+                        ],
+                    ],
+                );
+
+                return [
+                    'accepted' => true,
+                    'mode' => 'runtime',
+                    'execution_uuid' => $execution->uuid,
+                    'workflow_uuid' => $workflow->uuid,
+                ];
+            }
+
+            if (! (bool) config('vitrine_flow.legacy_fallback', true)) {
+                throw new RuntimeException('Workflow canônico de provisionamento não está registrado e ativo.');
+            }
+        }
+
+        return $this->dispatchLegacyProvisioning($payment);
+    }
+
+    private function resolveProvisioningWorkflow(Payment $payment): ?FlowWorkflow
+    {
+        $workflowKey = (string) config('vitrine_flow.provision_workflow_key', 'provision_product');
+        $companyId = $payment->company?->getKey();
+
+        return FlowWorkflow::query()
+            ->where('workflow_key', $workflowKey)
+            ->where('status', 'active')
+            ->where('is_active', true)
+            ->where(function ($query) use ($companyId): void {
+                if ($companyId !== null) {
+                    $query->where('company_id', $companyId)
+                        ->orWhereNull('company_id');
+
+                    return;
+                }
+
+                $query->whereNull('company_id');
+            })
+            ->orderByRaw('CASE WHEN company_id IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    private function dispatchLegacyProvisioning(Payment $payment): array
+    {
+        $response = $this->client()->post($this->provisionUrl(), $this->provisioningPayload($payment));
+
+        if ($response->failed()) {
+            throw new RuntimeException('Falha ao acionar Vitrine IA Flow: HTTP '.$response->status());
+        }
+
+        return array_merge(
+            ['accepted' => true, 'mode' => 'legacy'],
+            $response->json() ?? [],
+        );
+    }
+
+    private function provisioningPayload(Payment $payment): array
+    {
+        return [
             'event' => 'payment.approved',
             'source' => 'vitrine-ai-pro',
             'occurred_at' => now()->toIso8601String(),
@@ -41,13 +120,7 @@ class VitrineFlowService
             ],
             'contract_id' => $payment->contract?->getKey(),
             'callback_url' => url('/api/vitrine-flow/provision/callback'),
-        ]);
-
-        if ($response->failed()) {
-            throw new RuntimeException('Falha ao acionar Vitrine IA Flow: HTTP '.$response->status());
-        }
-
-        return $response->json() ?? ['accepted' => true];
+        ];
     }
 
     private function client(): PendingRequest
