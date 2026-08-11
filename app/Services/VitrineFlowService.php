@@ -6,6 +6,7 @@ use App\Models\FlowWorkflow;
 use App\Models\Payment;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class VitrineFlowService
@@ -28,7 +29,7 @@ class VitrineFlowService
                     $this->provisioningPayload($payment),
                     [
                         'company_id' => $payment->company?->getKey(),
-                        'correlation_id' => 'payment:'.$payment->getKey(),
+                        'correlation_id' => (string) Str::uuid(),
                         'metadata' => [
                             'source' => 'payment.approved',
                             'payment_id' => $payment->getKey(),
