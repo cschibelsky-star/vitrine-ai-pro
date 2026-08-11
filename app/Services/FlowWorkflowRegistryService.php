@@ -36,7 +36,8 @@ class FlowWorkflowRegistryService
         $workflow->fill($this->normalize($data));
         $workflow->save();
 
-        return $workflow->fresh();
+        // Mantem wasRecentlyCreated no mesmo objeto para o controller responder 201/200 corretamente.
+        return $workflow->refresh();
     }
 
     public function normalize(array $data): array
