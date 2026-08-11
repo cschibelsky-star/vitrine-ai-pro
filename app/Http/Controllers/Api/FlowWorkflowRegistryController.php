@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FlowWorkflow;
+use App\Services\FlowWorkflowRegistryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class FlowWorkflowRegistryController extends Controller
 {
-    public function register(Request $request): JsonResponse
+    public function register(Request $request, FlowWorkflowRegistryService $registry): JsonResponse
     {
         if (! $this->authorized($request)) {
             return response()->json(['message' => 'Não autorizado.'], 401);
@@ -42,27 +42,11 @@ class FlowWorkflowRegistryController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $uuid = $data['uuid'] ?? null;
-        unset($data['uuid']);
-
-        $workflow = $uuid
-            ? FlowWorkflow::query()->firstOrNew(['uuid' => $uuid])
-            : FlowWorkflow::query()->firstOrNew([
-                'company_id' => $data['company_id'] ?? null,
-                'workflow_key' => $data['workflow_key'],
-                'version' => $data['version'],
-            ]);
-
-        if (! $workflow->exists && ! $workflow->uuid) {
-            $workflow->uuid = (string) Str::uuid();
-        }
-
-        $workflow->fill($data);
-        $workflow->save();
+        $workflow = $registry->register($data);
 
         return response()->json([
             'ok' => true,
-            'workflow' => $workflow->fresh(),
+            'workflow' => $workflow,
         ], $workflow->wasRecentlyCreated ? 201 : 200);
     }
 
