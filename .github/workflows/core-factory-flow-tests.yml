@@ -75,7 +75,10 @@ jobs:
           php -l tests/Unit/FactoryFlowWorkflowPublisherTest.php
           php -l tests/Feature/VitrineFlowRuntimeFirstTest.php
 
-      - name: Run migrations
+      - name: Quarantine Factory clinic test migrations
+        run: bash scripts/ci/quarantine_factory_test_migrations.sh
+
+      - name: Run Core migrations
         run: php artisan migrate --force
 
       - name: Run Core Factory Flow tests
