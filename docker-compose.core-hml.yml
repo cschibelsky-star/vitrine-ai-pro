@@ -7,10 +7,13 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     command: >-
-      sh -lc "composer install --no-interaction --prefer-dist --optimize-autoloader
+      sh -lc "mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      && chmod -R ug+rwX storage bootstrap/cache
+      && composer install --no-interaction --prefer-dist --optimize-autoloader
       && php artisan config:clear
       && php artisan migrate --force
-      && php artisan db:seed --force
+      && php artisan db:seed --class=AiProviderSeeder --force
+      && php artisan db:seed --class=AiAgentSeeder --force
       && php-fpm"
     volumes:
       - ./:/var/www/html
