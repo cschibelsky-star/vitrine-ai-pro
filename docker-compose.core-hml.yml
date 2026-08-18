@@ -1,25 +1,13 @@
 services:
   core_app:
+    image: vitrine-core-hml-app:latest
     build:
       context: .
       dockerfile: docker/core/php/Dockerfile
     container_name: vitrine_core_app_hml
     restart: unless-stopped
     working_dir: /var/www/html
-    command: >-
-      sh -lc "mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache docs
-      && exec > docs/core-hml-boot.txt 2>&1
-      && set -e
-      && chmod -R ug+rwX storage bootstrap/cache
-      && composer install --no-interaction --prefer-dist --optimize-autoloader
-      && php artisan config:clear
-      && php artisan migrate --force
-      && php artisan db:seed --class=AiProviderSeeder --force
-      && php artisan db:seed --class=AiAgentSeeder --force
-      && php-fpm"
-    volumes:
-      - ./:/var/www/html
-      - core_vendor_hml:/var/www/html/vendor
+    command: php-fpm
     environment:
       APP_NAME: "Vitrine IA Pro Core HML"
       APP_ENV: homologation
@@ -46,6 +34,34 @@ services:
     networks:
       - core_hml_internal
       - vitrine_net
+
+  core_bootstrap:
+    image: vitrine-core-hml-app:latest
+    container_name: vitrine_core_bootstrap_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: >-
+      sh -lc "php artisan config:clear
+      && php artisan migrate --force
+      && php artisan db:seed --class=AiProviderSeeder --force
+      && php artisan db:seed --class=AiAgentSeeder --force"
+    environment:
+      APP_NAME: "Vitrine IA Pro Core HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      DB_CONNECTION: mysql
+      DB_HOST: core_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_core_hml
+      DB_USERNAME: vitrine_core
+      DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
+      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+    depends_on:
+      core_db:
+        condition: service_healthy
+    networks:
+      - core_hml_internal
 
   core_web:
     image: nginx:stable
@@ -88,7 +104,6 @@ services:
       - core_hml_internal
 
 volumes:
-  core_vendor_hml:
   core_db_hml:
 
 networks:
