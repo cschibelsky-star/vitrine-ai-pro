@@ -11,9 +11,9 @@ class AiProviderSeeder extends Seeder
     public function run(): void
     {
         $providers = [
-            ['name' => 'Gemini', 'provider_type' => 'text', 'status' => 'ativo', 'notes' => 'Provedor principal para IA editorial, RSS, resumos e conteúdo.'],
-            ['name' => 'OpenAI', 'provider_type' => 'agents', 'status' => 'ativo', 'notes' => 'Provedor para agentes, assistentes e análise avançada.'],
-            ['name' => 'HeyGen', 'provider_type' => 'video', 'status' => 'ativo', 'notes' => 'Provedor para Repórter IA, avatares e vídeos.'],
+            ['name' => 'Gemini', 'provider_type' => 'gemini', 'status' => 'ativo', 'notes' => 'Provedor principal para IA editorial, RSS, resumos e conteúdo.'],
+            ['name' => 'OpenAI', 'provider_type' => 'openai', 'status' => 'ativo', 'notes' => 'Provedor para agentes, assistentes e análise avançada.'],
+            ['name' => 'HeyGen', 'provider_type' => 'heygen', 'status' => 'ativo', 'notes' => 'Provedor para Repórter IA, avatares e vídeos.'],
         ];
 
         foreach ($providers as $provider) {
