@@ -118,7 +118,7 @@ services:
       MARIADB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
       MARIADB_ROOT_PASSWORD: "VitrineCoreRootHml_2026_b7c42e"
     volumes:
-      - core_db_hml:/var/lib/mysql
+      - core_db_hml_v2:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -128,7 +128,7 @@ services:
       - core_hml_internal
 
 volumes:
-  core_db_hml:
+  core_db_hml_v2:
 
 networks:
   core_hml_internal:
