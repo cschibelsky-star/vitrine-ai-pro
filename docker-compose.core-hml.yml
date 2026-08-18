@@ -19,18 +19,18 @@ services:
       APP_NAME: "Vitrine IA Pro Core HML"
       APP_ENV: homologation
       APP_DEBUG: "false"
-      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      APP_KEY: "${CORE_HML_APP_KEY}"
       APP_URL: "http://127.0.0.1:8892"
       DB_CONNECTION: mysql
       DB_HOST: core_db
       DB_PORT: 3306
-      DB_DATABASE: vitrine_core_hml
-      DB_USERNAME: vitrine_core
-      DB_PASSWORD: vitrine_core_hml
+      DB_DATABASE: "${CORE_HML_DB_DATABASE}"
+      DB_USERNAME: "${CORE_HML_DB_USERNAME}"
+      DB_PASSWORD: "${CORE_HML_DB_PASSWORD}"
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
-      CENTRO_IA_INTERNAL_TOKEN: "core-hml-cursos-ia-2026"
+      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN}"
       CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
@@ -54,7 +54,7 @@ services:
     depends_on:
       - core_app
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || wget -qO- http://127.0.0.1/up >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up >/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -68,10 +68,10 @@ services:
     container_name: vitrine_core_db_hml
     restart: unless-stopped
     environment:
-      MARIADB_DATABASE: vitrine_core_hml
-      MARIADB_USER: vitrine_core
-      MARIADB_PASSWORD: vitrine_core_hml
-      MARIADB_ROOT_PASSWORD: vitrine_core_root_hml
+      MARIADB_DATABASE: "${CORE_HML_DB_DATABASE}"
+      MARIADB_USER: "${CORE_HML_DB_USERNAME}"
+      MARIADB_PASSWORD: "${CORE_HML_DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${CORE_HML_DB_ROOT_PASSWORD}"
     volumes:
       - core_db_hml:/var/lib/mysql
     healthcheck:
