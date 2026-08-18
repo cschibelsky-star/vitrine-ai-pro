@@ -1,0 +1,93 @@
+services:
+  core_app:
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_core_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: >-
+      sh -lc "composer install --no-interaction --prefer-dist --optimize-autoloader
+      && php artisan config:clear
+      && php artisan migrate --force
+      && php artisan db:seed --force
+      && php-fpm"
+    volumes:
+      - ./:/var/www/html
+      - core_vendor_hml:/var/www/html/vendor
+    environment:
+      APP_NAME: "Vitrine IA Pro Core HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      APP_URL: "http://127.0.0.1:8892"
+      DB_CONNECTION: mysql
+      DB_HOST: core_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_core_hml
+      DB_USERNAME: vitrine_core
+      DB_PASSWORD: vitrine_core_hml
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      CENTRO_IA_INTERNAL_TOKEN: "core-hml-cursos-ia-2026"
+      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
+    depends_on:
+      core_db:
+        condition: service_healthy
+    networks:
+      - core_hml_internal
+      - vitrine_net
+
+  core_web:
+    image: nginx:stable
+    container_name: vitrine_core_web_hml
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8892:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/core/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - core_app
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || wget -qO- http://127.0.0.1/up >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - core_hml_internal
+      - vitrine_net
+
+  core_db:
+    image: mariadb:11.4
+    container_name: vitrine_core_db_hml
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: vitrine_core_hml
+      MARIADB_USER: vitrine_core
+      MARIADB_PASSWORD: vitrine_core_hml
+      MARIADB_ROOT_PASSWORD: vitrine_core_root_hml
+    volumes:
+      - core_db_hml:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core_hml_internal
+
+volumes:
+  core_vendor_hml:
+  core_db_hml:
+
+networks:
+  core_hml_internal:
+    driver: bridge
+  vitrine_net:
+    external: true
