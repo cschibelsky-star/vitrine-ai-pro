@@ -1,3 +1,15 @@
+x-core-db-env: &core-db-env
+  APP_NAME: "Vitrine IA Pro Core HML"
+  APP_ENV: homologation
+  APP_DEBUG: "false"
+  APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+  DB_CONNECTION: mysql
+  DB_HOST: core_db
+  DB_PORT: 3306
+  DB_DATABASE: vitrine_core_hml
+  DB_USERNAME: vitrine_core
+  DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
+
 services:
   core_app:
     image: vitrine-core-hml-app:latest
@@ -9,17 +21,8 @@ services:
     working_dir: /var/www/html
     command: php-fpm
     environment:
-      APP_NAME: "Vitrine IA Pro Core HML"
-      APP_ENV: homologation
-      APP_DEBUG: "false"
-      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      <<: *core-db-env
       APP_URL: "http://127.0.0.1:8893"
-      DB_CONNECTION: mysql
-      DB_HOST: core_db
-      DB_PORT: 3306
-      DB_DATABASE: vitrine_core_hml
-      DB_USERNAME: vitrine_core
-      DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
@@ -31,38 +34,55 @@ services:
     depends_on:
       core_db:
         condition: service_healthy
-      core_bootstrap:
+      core_seed_agents:
         condition: service_completed_successfully
     networks:
       - core_hml_internal
       - vitrine_net
 
-  core_bootstrap:
+  core_migrate:
     image: vitrine-core-hml-app:latest
     pull_policy: never
-    container_name: vitrine_core_bootstrap_hml
+    container_name: vitrine_core_migrate_hml
     restart: "no"
     working_dir: /var/www/html
-    command: >-
-      sh -lc "php artisan config:clear
-      && php artisan migrate --force
-      && php artisan db:seed --class=AiProviderSeeder --force
-      && php artisan db:seed --class=AiAgentSeeder --force"
+    command: sh -lc "php artisan config:clear && php artisan migrate --force"
     environment:
-      APP_NAME: "Vitrine IA Pro Core HML"
-      APP_ENV: homologation
-      APP_DEBUG: "false"
-      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
-      DB_CONNECTION: mysql
-      DB_HOST: core_db
-      DB_PORT: 3306
-      DB_DATABASE: vitrine_core_hml
-      DB_USERNAME: vitrine_core
-      DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
-      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+      <<: *core-db-env
     depends_on:
       core_db:
         condition: service_healthy
+    networks:
+      - core_hml_internal
+
+  core_seed_providers:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_seed_providers_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: php artisan db:seed --class=AiProviderSeeder --force
+    environment:
+      <<: *core-db-env
+    depends_on:
+      core_migrate:
+        condition: service_completed_successfully
+    networks:
+      - core_hml_internal
+
+  core_seed_agents:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_seed_agents_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: php artisan db:seed --class=AiAgentSeeder --force
+    environment:
+      <<: *core-db-env
+      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+    depends_on:
+      core_seed_providers:
+        condition: service_completed_successfully
     networks:
       - core_hml_internal
 
