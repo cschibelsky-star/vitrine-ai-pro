@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     command: >-
-      sh -lc "mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-      && exec > core-hml-boot.log 2>&1
+      sh -lc "mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache docs
+      && exec > docs/core-hml-boot.txt 2>&1
       && set -e
       && chmod -R ug+rwX storage bootstrap/cache
       && composer install --no-interaction --prefer-dist --optimize-autoloader
