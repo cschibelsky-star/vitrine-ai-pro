@@ -9,6 +9,7 @@
 /storage/logs/*
 /bootstrap/cache/*.php
 /core-hml-boot.log
+/docs/core-hml-boot.txt
 *.zip
 error_log
 .DS_Store
