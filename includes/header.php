@@ -2,5 +2,5 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= page_title($title ?? '') ?></title><meta name="description" content="<?= e($description ?? cfg('tagline')) ?>">
 <link rel="icon" type="image/png" href="/assets/img/favicon.png">
-<link rel="stylesheet" href="/assets/css/style.css"><script defer src="/assets/js/main.js"></script></head>
+<link rel="stylesheet" href="/assets/css/style.css"><link rel="stylesheet" href="/assets/css/sales-sprint.css"><script defer src="/assets/js/main.js"></script></head>
 <body><header class="topbar"><a class="brand officialBrand" href="/" aria-label="VITRINE IA PRO"><img class="brandLogo" src="/assets/img/logo-vitrine-ai-pro-header.png" alt="VITRINE IA PRO"><small>Ecossistema de soluções digitais</small></a><button class="menuBtn" data-menu>☰</button><nav class="nav" id="nav"><a href="/index.php">Início</a><a href="/#solucoes">Soluções</a><a href="/tv-digital.php">TV Digital</a><a href="/news.php">Portal News AI</a><a href="/governo.php">Governo Digital</a><a href="/demonstracoes.php">Demonstrações</a><a href="/casos-reais.php">Cases</a><a href="/diagnostico.php">Diagnóstico</a><a class="btn small" href="/solicitacao-institucional.php">Solicitar proposta</a></nav></header><main>
