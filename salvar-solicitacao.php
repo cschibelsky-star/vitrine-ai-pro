@@ -12,6 +12,7 @@ $data=[
   'telefone'=>clean_input($_POST['telefone'] ?? '',50),
   'cidade'=>clean_input($_POST['cidade'] ?? '',255),
   'modelo'=>clean_input($_POST['modelo'] ?? '',255),
+  'modelo_comercial'=>clean_input($_POST['modelo_comercial'] ?? 'Ainda não sei',255),
   'finalidade'=>clean_input($_POST['finalidade'] ?? '',255),
   'necessidade'=>clean_input($_POST['necessidade'] ?? '',4000),
   'consentimento_lgpd'=>!empty($_POST['consentimento_lgpd']) ? '1' : '',
@@ -30,6 +31,7 @@ $_SESSION['solicitacao_recebida']=[
   'id'=>$localId,
   'nome'=>$data['nome'],
   'modelo'=>$data['modelo'],
+  'modelo_comercial'=>$data['modelo_comercial'],
   'master'=>$masterOk ? '1' : '0',
 ];
 header('Location: /solicitacao-recebida.php');
