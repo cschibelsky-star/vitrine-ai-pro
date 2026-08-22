@@ -1,60 +1,84 @@
-<?php $title='Comunicação Pública, Mídia Regional e TV Digital'; require __DIR__.'/includes/header.php'; ?>
+<?php $title='Ecossistema de Soluções Digitais'; $description='VITRINE IA PRO: ecossistema de soluções digitais para empresas, mídia, cidades e governo, com produtos próprios, implantação assistida e desenvolvimento sob medida.'; require __DIR__.'/includes/header.php'; ?>
 <section class="hero heroPremium marketHero">
   <div class="heroGrid">
     <div>
-      <span class="eyebrow">Plataforma de comunicação por licenciamento</span>
-      <h1>Transforme informação em confiança, audiência e presença digital.</h1>
-      <p>Órgãos públicos, veículos de comunicação e operações audiovisuais precisam informar com clareza, manter canais próprios e operar com consistência. A Vitrine AI Pro organiza essa estrutura em uma plataforma licenciada, com implantação assistida, suporte e evolução contínua.</p>
-      <div class="actions"><a class="btn" href="/solicitacao-institucional.php">Solicitar apresentação</a><a class="btn ghost" href="/diagnostico.php">Receber diagnóstico</a></div>
-      <div class="heroTrust"><span>Governo Digital</span><span>Mídia Regional</span><span>TV Digital</span><span>Contratação Institucional</span></div>
+      <span class="eyebrow">Ecossistema de soluções digitais</span>
+      <h1>Tecnologia para transformar operação, comunicação e serviços em resultados.</h1>
+      <p>A VITRINE IA PRO reúne produtos próprios, plataformas especializadas e desenvolvimento sob medida para empresas, veículos de mídia, cidades e órgãos públicos. Cada solução pode ser contratada conforme o estágio, o objetivo e a realidade da operação.</p>
+      <div class="actions"><a class="btn" href="#solucoes">Conhecer soluções</a><a class="btn ghost" href="/diagnostico.php">Receber diagnóstico</a></div>
+      <div class="heroTrust"><span>Produtos próprios</span><span>Implantação assistida</span><span>Integrações</span><span>Suporte contínuo</span></div>
     </div>
     <div class="officialIdentityCard">
-      <img src="/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine AI Pro">
-      <div class="previewTop"><strong>Fluxo institucional</strong><span>da necessidade à proposta</span></div>
-      <div class="previewGrid"><article><b>01</b><span>Diagnóstico</span></article><article><b>02</b><span>Escopo</span></article><article><b>03</b><span>Proposta</span></article><article><b>04</b><span>Implantação</span></article></div>
-      <div class="identityPills"><span>Governo</span><span>Mídia</span><span>TV Digital</span></div>
+      <img src="/assets/img/logo-vitrine-ai-pro.png" alt="VITRINE IA PRO">
+      <div class="previewTop"><strong>Da necessidade à solução</strong><span>diagnóstico, produto, implantação e evolução</span></div>
+      <div class="previewGrid"><article><b>01</b><span>Diagnóstico</span></article><article><b>02</b><span>Solução</span></article><article><b>03</b><span>Implantação</span></article><article><b>04</b><span>Evolução</span></article></div>
+      <div class="identityPills"><span>Empresas</span><span>Mídia</span><span>Cidades</span><span>Governo</span></div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <span class="eyebrow dark">Resultado antes da tecnologia</span>
-  <h2>O que a Vitrine AI Pro ajuda sua organização a alcançar.</h2>
-  <p class="lead">A tecnologia só tem valor quando melhora a operação, fortalece a comunicação e cria capacidade de resposta. Por isso, a plataforma foi estruturada em torno de resultados claros para cada tipo de cliente.</p>
-  <div class="grid three">
-    <article class="problem govAccent"><h3>🏛 Mais confiança pública</h3><p>Informações oficiais, agenda, serviços, documentos, vídeos e prestação de contas em canais digitais organizados e acessíveis.</p></article>
-    <article class="problem newsAccent"><h3>📰 Mais audiência e receita</h3><p>Rotina editorial mais eficiente, presença regional fortalecida, espaços comerciais estruturados e distribuição de conteúdo multimídia.</p></article>
-    <article class="problem tvAccent"><h3>🎥 Mais presença audiovisual</h3><p>Programação, transmissões, entrevistas, podcasts e acervo de vídeos em um ambiente próprio, profissional e preparado para crescimento.</p></article>
+<section class="section" id="solucoes">
+  <span class="eyebrow dark">Soluções em destaque</span>
+  <h2>Produtos para operações que precisam vender, informar, comunicar e crescer.</h2>
+  <p class="lead">A VITRINE IA PRO funciona como marca-mãe do ecossistema. Alguns produtos são vendidos diretamente aqui; outros possuem demonstrações ou jornadas próprias, sempre conectadas à mesma estrutura comercial.</p>
+  <div class="solutionGrid">
+    <article class="solutionCard tv"><div class="icon">🎥</div><h3>TV Digital Enterprise</h3><p>Operação audiovisual própria com vídeos, transmissões ao vivo, programação, acervo, notícias e recursos de monetização.</p><ul><li>TVs Web e canais institucionais</li><li>Vídeos, lives, podcasts e programação</li><li>Implantação por planos e módulos</li></ul><a class="btn small purple" href="/tv-digital.php">Conhecer TV Digital</a></article>
+    <article class="solutionCard news"><div class="icon">📰</div><h3>Portal News AI Pro</h3><p>Portal de notícias com estrutura editorial, automações, IA de apoio, captação de conteúdo e recursos comerciais.</p><ul><li>Portais e veículos regionais</li><li>RSS, editorias e IA editorial</li><li>Banners, newsletter e monetização</li></ul><a class="btn small red" href="/news.php">Conhecer Portal News</a></article>
+    <article class="solutionCard gov"><div class="icon">📍</div><h3>Guia Digital da Cidade®</h3><p>Plataforma mobile para turismo, eventos, gastronomia, hospedagem, comércio local, mapas e divulgação territorial.</p><ul><li>Produto licenciável por cidade</li><li>Modelo Conheça Sua Cidade</li><li>Case piloto Conheça Sumaré</li></ul><a class="btn small" href="/solicitacao-institucional.php">Solicitar apresentação</a></article>
+    <article class="solutionCard news"><div class="icon">📱</div><h3>Vitrine Social Media</h3><p>Produção e gestão estruturada de conteúdo para redes sociais com painel, fluxo editorial e recursos de IA.</p><ul><li>Planejamento e produção de conteúdo</li><li>Content Engine e gestão editorial</li><li>Operação assistida para marcas</li></ul><a class="btn small red" href="/solicitacao-institucional.php">Conhecer solução</a></article>
   </div>
 </section>
 
 <section class="section alt">
-  <span class="eyebrow dark">Áreas de especialização</span>
-  <h2>Foco comercial em três operações de alto valor.</h2>
-  <p class="lead">A Vitrine AI Pro não tenta atender todos os mercados. A plataforma foi direcionada para comunicação pública, mídia regional e TV Digital, três áreas em que conteúdo, credibilidade e operação contínua são decisivos.</p>
-  <div class="solutionGrid">
-    <article class="solutionCard gov"><div class="icon">🏛</div><h3>Governo Digital</h3><p>Para órgãos públicos que precisam melhorar comunicação oficial, transparência, relacionamento com o cidadão e organização de informações institucionais.</p><ul><li>Prefeituras, secretarias e autarquias</li><li>Câmaras municipais e comunicação legislativa</li><li>Consórcios e fundações públicas</li></ul><a class="btn small" href="/governo.php">Ver Governo Digital</a></article>
-    <article class="solutionCard news"><div class="icon">📰</div><h3>Comunicação e Mídia</h3><p>Para veículos regionais que desejam publicar com mais consistência, aumentar relevância local e estruturar novas oportunidades comerciais.</p><ul><li>Portais de notícias</li><li>Rádios, jornais e redes locais</li><li>Projetos de mídia regional</li></ul><a class="btn small red" href="/news.php">Ver Comunicação e Mídia</a></article>
-    <article class="solutionCard tv"><div class="icon">🎥</div><h3>TV Digital</h3><p>Para quem precisa transformar vídeos, lives, programas e entrevistas em uma operação audiovisual com identidade, grade e acervo próprio.</p><ul><li>TVs Web e canais institucionais</li><li>Podcasts, eventos e transmissões</li><li>Comunicação audiovisual pública ou privada</li></ul><a class="btn small purple" href="/tv-digital.php">Ver TV Digital</a></article>
+  <span class="eyebrow dark">Governo e setor público</span>
+  <h2>Soluções digitais com implantação consultiva e escopo institucional.</h2>
+  <p class="lead">Para o setor público, a contratação parte da necessidade do órgão, diagnóstico, definição de escopo e documentação para análise administrativa, técnica e jurídica.</p>
+  <div class="grid three">
+    <article class="card govAccent"><h3>Governo Digital IA</h3><p>Comunicação oficial, transparência, documentos, agenda, atendimento digital e organização de serviços para prefeituras, câmaras e entidades públicas.</p><a class="btn small" href="/governo.php">Ver Governo Digital</a></article>
+    <article class="card govAccent"><h3>AssessorGov IA</h3><p>Produto GovTech em evolução para apoiar rotinas de assessoria, organização de informação e operação institucional. Disponível inicialmente para projetos piloto e validação.</p><a class="btn small" href="/solicitacao-institucional.php">Registrar interesse</a></article>
+    <article class="card govAccent"><h3>SISMED</h3><p>Vertical de Saúde Digital IA em desenvolvimento progressivo, com foco em gestão operacional, atendimentos, agenda, triagem e relatórios.</p><a class="btn small" href="/solicitacao-institucional.php">Interesse institucional</a></article>
+  </div>
+  <div class="actions" style="justify-content:center;margin-top:28px"><a class="btn" href="/contratacao-publica.php">Entender contratação pública</a><a class="btn ghost" href="/documentos-publicos.php">Documentos institucionais</a></div>
+</section>
+
+<section class="section">
+  <span class="eyebrow dark">Soluções para empresas</span>
+  <h2>Quando o produto pronto não resolve tudo, desenvolvemos a solução necessária.</h2>
+  <p class="lead">A estrutura técnica da VITRINE IA PRO também permite criar, integrar e evoluir sistemas digitais sob medida, sempre a partir de um problema operacional concreto.</p>
+  <div class="grid three">
+    <article class="card"><h3>Sistemas Web</h3><p>Painéis, portais, áreas administrativas, plataformas internas e sistemas de operação adaptados ao processo do cliente.</p></article>
+    <article class="card"><h3>Integrações e automações</h3><p>Conexão entre sistemas, APIs, fluxos automáticos, IA e ferramentas já utilizadas pela empresa ou instituição.</p></article>
+    <article class="card"><h3>Evolução e suporte</h3><p>Implantação assistida, manutenção, melhorias contínuas, segurança, documentação e acompanhamento técnico.</p></article>
+  </div>
+  <div class="actions" style="justify-content:center;margin-top:28px"><a class="btn" href="/solicitacao-institucional.php">Solicitar diagnóstico de projeto</a></div>
+</section>
+
+<section class="section alt">
+  <span class="eyebrow dark">Educação e capacitação</span>
+  <h2>Cursos IA</h2>
+  <p class="lead">Plataforma educacional em homologação para criação, organização e oferta de cursos, com recursos de geração assistida de conteúdo, gestão acadêmica e evolução para experiências de aprendizagem com IA.</p>
+  <div class="actions"><a class="btn" href="/solicitacao-institucional.php">Conhecer o projeto</a></div>
+</section>
+
+<section class="section appCases">
+  <span class="eyebrow dark">Demonstrações</span>
+  <h2>Veja cenários antes de definir o escopo.</h2>
+  <p class="lead">As demonstrações 360 não são produtos separados. Elas ajudam a visualizar aplicações possíveis do ecossistema para governo, legislativo, mídia regional e TV Digital.</p>
+  <div class="demoTiles focused"><a href="/demos/cidade-inteligente-360/" class="tile city featured"><strong>Cidade Inteligente 360</strong><span>Visão integrada de comunicação pública, mídia e TV Digital.</span></a><a href="/demos/municipio-360/" class="tile gov"><strong>Município 360</strong><span>Serviços, comunicação oficial e relacionamento com o cidadão.</span></a><a href="/demos/camara-360/" class="tile chamber"><strong>Câmara 360</strong><span>Transparência legislativa, sessões, vereadores e TV Câmara.</span></a><a href="/demos/news-360/" class="tile news"><strong>News 360</strong><span>Conteúdo regional, audiência e monetização.</span></a><a href="/demos/tv-360/" class="tile tv"><strong>TV 360</strong><span>Programação, transmissão ao vivo e acervo audiovisual.</span></a></div>
+  <div class="actions" style="justify-content:center;margin-top:28px"><a class="btn ghost" href="/demonstracoes.php">Ver todas as demonstrações</a></div>
+</section>
+
+<section class="section alt">
+  <div class="proof">
+    <div><span class="eyebrow dark">Cases e tecnologia em operação</span><h2>Projetos reais ajudam a validar e evoluir nossos produtos.</h2><p class="lead">TV Sumaré valida fluxos editoriais, notícias, vídeos e operação de mídia. Conheça Sumaré representa o piloto real da vertical de Guia Digital da Cidade.</p><div class="securityList"><span>TV Sumaré — mídia, notícias e audiovisual</span><span>Conheça Sumaré — turismo e guia digital</span></div><a class="btn" href="/casos-reais.php">Ver cases</a></div>
+    <div class="proofBox"><strong>Produtos com aplicação real</strong><span>implantação • aprendizado • evolução contínua</span></div>
   </div>
 </section>
 
-<section class="section publicFlow">
-  <span class="eyebrow dark">Contratação institucional</span>
-  <h2>Para órgãos públicos, o caminho é institucional e documentado.</h2>
-  <p class="lead">A Vitrine AI Pro opera por solicitação institucional. O processo parte do diagnóstico da necessidade, passa pela definição de escopo e segue com proposta formal e documentação de apoio para análise administrativa, técnica e jurídica do órgão interessado.</p>
-  <div class="flowSteps"><span>Necessidade</span><span>Diagnóstico</span><span>Escopo</span><span>Proposta</span><span>Análise do órgão</span></div>
-  <div class="actions"><a class="btn" href="/contratacao-publica.php">Entender contratação pública</a><a class="btn ghost" href="/documentos-publicos.php">Acessar documentos</a></div>
+<section class="section cta">
+  <span class="eyebrow dark">Próxima etapa</span>
+  <h2>Qual solução faz sentido para sua operação?</h2>
+  <p class="lead">Conte o que você precisa. O diagnóstico identifica se já existe um produto adequado no ecossistema ou se o melhor caminho é uma implantação personalizada.</p>
+  <div class="actions" style="justify-content:center"><a class="btn" href="/diagnostico.php">Iniciar diagnóstico</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div>
 </section>
-
-<section class="section appCases alt">
-  <span class="eyebrow dark">Cenários de aplicação</span>
-  <h2>Veja como a plataforma se adapta a operações diferentes.</h2>
-  <p class="lead">Cada cenário apresenta uma aplicação prática da Vitrine AI Pro com linguagem, prioridades e organização próprias. Eles servem para demonstrar, antes da proposta, como a mesma arquitetura pode apoiar uma prefeitura, uma câmara municipal, um veículo regional ou uma operação de TV Digital com escopo, linguagem e operação adequados a cada contexto.</p>
-  <div class="demoTiles focused"><a href="/demos/cidade-inteligente-360/" class="tile city featured"><strong>Cidade Inteligente 360</strong><span>Integra comunicação pública, mídia regional e TV Digital em uma experiência única.</span></a><a href="/demos/municipio-360/" class="tile gov"><strong>Município 360</strong><span>Comunicação oficial, serviços ao cidadão e prestação de contas.</span></a><a href="/demos/camara-360/" class="tile chamber"><strong>Câmara 360</strong><span>Transparência legislativa, sessões, vereadores e TV Câmara.</span></a><a href="/demos/news-360/" class="tile news"><strong>News 360</strong><span>Audiência, conteúdo regional e estrutura de monetização.</span></a><a href="/demos/tv-360/" class="tile tv"><strong>TV 360</strong><span>Programação, transmissão ao vivo e acervo audiovisual.</span></a></div>
-</section>
-
-<section class="section alt"><div class="proof"><div><span class="eyebrow dark">Tecnologia em operação</span><h2>Aprendizado prático aplicado à evolução da plataforma.</h2><p class="lead">A experiência operacional da TV Sumaré contribui para validar processos de publicação, organização editorial, gestão multimídia e distribuição de conteúdo. Esses aprendizados apoiam a evolução contínua da arquitetura utilizada pela Vitrine AI Pro.</p><a class="btn" href="/casos-reais.php">Ver aplicação prática</a></div><div class="proofBox"><strong>TV Sumaré</strong><span>notícias • vídeos • operação editorial • comunicação digital</span></div></div></section>
-
-<section class="section cta"><span class="eyebrow dark">Próxima etapa</span><h2>Receba uma orientação objetiva para sua operação.</h2><p class="lead">O diagnóstico ajuda a identificar a frente correta, o cenário mais próximo da sua realidade e os documentos necessários para avançar com segurança.</p><div class="actions" style="justify-content:center"><a class="btn" href="/diagnostico.php">Iniciar diagnóstico</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div></section>
 <?php require __DIR__.'/includes/footer.php'; ?>
