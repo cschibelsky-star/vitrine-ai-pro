@@ -1,0 +1,42 @@
+/* Sales Sprint 15d - refinamento visual isolado das paginas comerciais */
+html,body{max-width:100%;overflow-x:hidden}
+body{min-width:0}
+.topbar{gap:18px;padding-left:clamp(18px,4vw,64px);padding-right:clamp(18px,4vw,64px)}
+.officialBrand{min-width:0;flex:0 1 auto}.brandLogo{max-width:210px;height:auto;display:block}.officialBrand small{white-space:nowrap}
+.nav{min-width:0;gap:clamp(10px,1.25vw,20px);flex-wrap:nowrap}.nav a{white-space:nowrap}
+.hero,.tvSolutionHero,.mediaHero,.refinedHero,.section,.demoHero,.smartHero,.tvHero,.newsTop{padding-left:clamp(20px,6vw,96px);padding-right:clamp(20px,6vw,96px)}
+.heroGrid,.split,.proof,.solutionGrid,.grid,.demoTiles,.featureRows,.flowSteps{min-width:0}.heroGrid>*,.split>*,.proof>*,.solutionGrid>*,.grid>*,.demoTiles>*{min-width:0}
+.hero h1,.tvSolutionHero h1,.mediaHero h1,.section h1,.section h2{overflow-wrap:anywhere}
+.solutionGrid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}.solutionCard{height:100%;display:flex;flex-direction:column}.solutionCard .btn{margin-top:auto;align-self:flex-start}
+.grid.three,.three{grid-template-columns:repeat(3,minmax(0,1fr))}.card,.problem{min-width:0;overflow-wrap:anywhere}
+.demoTiles{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-width:0}
+.flowSteps{display:flex;flex-wrap:wrap}.flowSteps span{min-width:0;flex:1 1 150px;text-align:center}
+.table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.actions .btn{max-width:100%;text-align:center}
+.mediaPanel,.officialIdentityCard,.playerMini,.refinedPanel,.proofBox{min-width:0;max-width:100%}
+.securityList span,.pillGrid span{overflow-wrap:anywhere}
+
+@media(max-width:1180px){
+  .menuBtn{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;flex:0 0 auto}
+  .nav{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;flex-direction:column;align-items:stretch;padding:18px clamp(20px,6vw,72px);border-bottom:1px solid var(--line);box-shadow:0 18px 36px rgba(15,23,42,.12);gap:4px;max-height:calc(100vh - 76px);overflow-y:auto}
+  .nav.open{display:flex}.nav a{white-space:normal;padding:10px 0}.nav .btn{margin-top:8px;text-align:center}
+}
+
+@media(max-width:900px){
+  .topbar{padding-top:10px;padding-bottom:10px}.brandLogo{max-width:165px}.officialBrand small{display:none}
+  .hero,.tvSolutionHero,.mediaHero,.refinedHero{padding-top:56px;padding-bottom:56px}
+  .heroGrid,.split,.proof,.solutionGrid,.grid.three,.three,.demoTiles{grid-template-columns:1fr}
+  .section{padding-top:52px;padding-bottom:52px}.section h2{font-size:clamp(28px,8vw,36px)}
+  .hero h1,.tvSolutionHero h1,.mediaHero h1{font-size:clamp(34px,9vw,44px);line-height:1.08}
+  .lead,.hero p{font-size:17px}.solutionCard,.card,.problem{padding:22px}
+  .actions{align-items:stretch}.actions .btn{width:100%}
+  .proofBox{min-height:180px}.tile{min-height:135px}
+}
+
+@media(max-width:520px){
+  .topbar{padding-left:14px;padding-right:14px}.brandLogo{max-width:145px}
+  .hero,.tvSolutionHero,.mediaHero,.refinedHero,.section{padding-left:18px;padding-right:18px}
+  .solutionCard,.card,.problem{border-radius:18px;padding:19px}.tile{border-radius:20px;padding:20px}
+  .heroTrust,.identityPills{gap:8px}.heroTrust span,.identityPills span{font-size:12px}
+  .flowSteps{gap:8px}.flowSteps span{flex-basis:100%}
+}
