@@ -24,7 +24,7 @@
   <div class="solutionGrid">
     <article class="solutionCard tv"><div class="icon">🎥</div><h3>TV Digital Enterprise</h3><p>Operação audiovisual própria com vídeos, transmissões ao vivo, programação, acervo, notícias e recursos de monetização.</p><ul><li>TVs Web e canais institucionais</li><li>Vídeos, lives, podcasts e programação</li><li>Implantação por planos e módulos</li></ul><a class="btn small purple" href="/tv-digital.php">Conhecer TV Digital</a></article>
     <article class="solutionCard news"><div class="icon">📰</div><h3>Portal News AI Pro</h3><p>Portal de notícias com estrutura editorial, automações, IA de apoio, captação de conteúdo e recursos comerciais.</p><ul><li>Portais e veículos regionais</li><li>RSS, editorias e IA editorial</li><li>Banners, newsletter e monetização</li></ul><a class="btn small red" href="/news.php">Conhecer Portal News</a></article>
-    <article class="solutionCard gov"><div class="icon">📍</div><h3>Guia Digital da Cidade®</h3><p>Plataforma mobile para turismo, eventos, gastronomia, hospedagem, comércio local, mapas e divulgação territorial.</p><ul><li>Produto licenciável por cidade</li><li>Modelo Conheça Sua Cidade</li><li>Case piloto Conheça Sumaré</li></ul><a class="btn small" href="/solicitacao-institucional.php">Solicitar apresentação</a></article>
+    <article class="solutionCard gov"><div class="icon">📍</div><h3>Guia Digital da Cidade®</h3><p>Plataforma mobile para turismo, eventos, gastronomia, hospedagem, comércio local, mapas e divulgação territorial.</p><ul><li>Produto licenciável por cidade</li><li>Modelo Conheça Sua Cidade</li><li>Case piloto Conheça Sumaré</li></ul><a class="btn small" href="/guia-digital.php">Conhecer Guia Digital</a></article>
     <article class="solutionCard news"><div class="icon">📱</div><h3>Vitrine Social Media</h3><p>Produção e gestão estruturada de conteúdo para redes sociais com painel, fluxo editorial e recursos de IA.</p><ul><li>Planejamento e produção de conteúdo</li><li>Content Engine e gestão editorial</li><li>Operação assistida para marcas</li></ul><a class="btn small red" href="/solicitacao-institucional.php">Conhecer solução</a></article>
   </div>
 </section>
@@ -50,7 +50,7 @@
     <article class="card"><h3>Integrações e automações</h3><p>Conexão entre sistemas, APIs, fluxos automáticos, IA e ferramentas já utilizadas pela empresa ou instituição.</p></article>
     <article class="card"><h3>Evolução e suporte</h3><p>Implantação assistida, manutenção, melhorias contínuas, segurança, documentação e acompanhamento técnico.</p></article>
   </div>
-  <div class="actions" style="justify-content:center;margin-top:28px"><a class="btn" href="/solicitacao-institucional.php">Solicitar diagnóstico de projeto</a></div>
+  <div class="actions" style="justify-content:center;margin-top:28px"><a class="btn" href="/desenvolvimento.php">Conhecer desenvolvimento sob medida</a></div>
 </section>
 
 <section class="section alt">
