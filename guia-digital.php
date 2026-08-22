@@ -1,0 +1,28 @@
+<?php $title='Guia Digital da Cidade®'; $description='Guia Digital da Cidade® da VITRINE IA PRO: turismo, eventos, gastronomia, hospedagem, comércio local, mapas, PWA e área do operador.'; require __DIR__.'/includes/header.php'; ?>
+<section class="hero heroPremium marketHero">
+  <div class="heroGrid">
+    <div>
+      <span class="eyebrow">Guia Digital da Cidade®</span>
+      <h1>Um guia digital para conectar cidade, visitantes, negócios e experiências locais.</h1>
+      <p>O Guia Digital da Cidade® organiza atrativos, eventos, gastronomia, hospedagem, comércio e roteiros em uma experiência mobile preparada para operação local, divulgação territorial e evolução por módulos.</p>
+      <div class="actions"><a class="btn" href="/solicitacao-institucional.php">Solicitar apresentação</a><a class="btn ghost" href="/casos-reais.php">Ver case Conheça Sumaré</a></div>
+      <div class="heroTrust"><span>Turismo</span><span>Eventos</span><span>Comércio local</span><span>PWA Mobile</span></div>
+    </div>
+    <div class="officialIdentityCard">
+      <div class="previewTop"><strong>Experiência da cidade</strong><span>conteúdo, mapa e operação local</span></div>
+      <div class="previewGrid"><article><b>01</b><span>Descobrir</span></article><article><b>02</b><span>Explorar</span></article><article><b>03</b><span>Visitar</span></article><article><b>04</b><span>Compartilhar</span></article></div>
+      <div class="identityPills"><span>Atrativos</span><span>Eventos</span><span>Gastronomia</span><span>Mapa</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section"><span class="eyebrow dark">Produto por cidade</span><h2>Uma plataforma licenciável para turismo, cultura e economia local.</h2><p class="lead">O produto pode ser operado por organização local, projeto territorial ou instituição pública, com identidade da cidade e estrutura preparada para cadastro e atualização de conteúdo.</p><div class="grid three"><article class="card"><h3>Descoberta e turismo</h3><p>Atrativos, roteiros, mapa, localização, eventos e informações úteis para visitantes e moradores.</p></article><article class="card"><h3>Economia local</h3><p>Gastronomia, hospedagem, comércio e espaços de destaque para fortalecer negócios e experiências da cidade.</p></article><article class="card"><h3>Operação e gestão</h3><p>Painel administrativo, formulário de cadastro, área do operador, categorias personalizadas e recursos de publicação.</p></article></div></section>
+
+<section class="section alt"><span class="eyebrow dark">Módulos disponíveis</span><h2>Monte a experiência de acordo com a cidade.</h2><div class="pillGrid"><span>Atrativos Turísticos</span><span>Eventos</span><span>Gastronomia</span><span>Hospedagem</span><span>Comércio Local</span><span>Roteiros Recomendados</span><span>Mapa / Localização</span><span>Formulário de Cadastro</span><span>Painel Administrativo</span><span>PWA Mobile</span><span>Landing de Captação</span><span>Área do Operador</span><span>Categorias Personalizadas</span><span>Galeria de Imagens</span></div></section>
+
+<section class="section"><span class="eyebrow dark">Planos</span><h2>Estrutura para começar, operar e ampliar.</h2><p class="lead">Os planos organizam a implantação e os módulos disponíveis. Personalizações, integrações e operação institucional são definidas conforme o escopo.</p><div class="grid three"><article class="card"><h3>Start</h3><h2>R$ 497/mês</h2><p>Para iniciar o guia com estrutura essencial de conteúdo, mapa, eventos, hospedagem e gastronomia.</p><a class="btn small" href="/solicitacao-institucional.php">Quero o Start</a></article><article class="card"><span class="eyebrow dark">Mais indicado</span><h3>Pro</h3><h2>R$ 997/mês</h2><p>Para operação com painel, PWA, comércio local, roteiros e recursos ampliados de gestão.</p><a class="btn small" href="/solicitacao-institucional.php">Quero o Pro</a></article><article class="card govAccent"><h3>Governo</h3><h2>R$ 1.500/mês</h2><p>Para implantação institucional com escopo, documentação e operação ajustados à realidade do município.</p><a class="btn small" href="/solicitacao-institucional.php">Falar sobre Governo</a></article></div></section>
+
+<section class="section alt"><div class="proof"><div><span class="eyebrow dark">Modelo e case</span><h2>Conheça Sua Cidade + Conheça Sumaré.</h2><p class="lead">Conheça Sua Cidade representa o modelo replicável do produto. Conheça Sumaré é o piloto real utilizado para validar estrutura mobile, conteúdo turístico, eventos, atrativos e operação do guia.</p><div class="securityList"><span>Conheça Sua Cidade — modelo demonstrativo</span><span>Conheça Sumaré — piloto e case real</span></div><a class="btn" href="/casos-reais.php">Ver cases</a></div><div class="proofBox"><strong>Guia Digital da Cidade®</strong><span>produto • modelo replicável • piloto real</span></div></div></section>
+
+<section class="section cta"><span class="eyebrow dark">Leve o Guia para sua cidade</span><h2>Receba uma proposta de implantação.</h2><p class="lead">Informe a cidade, o perfil da operação e os objetivos do projeto. A proposta define plano, módulos, implantação e responsabilidades.</p><div class="actions" style="justify-content:center"><a class="btn" href="/solicitacao-institucional.php">Solicitar proposta</a><a class="btn ghost" href="/diagnostico.php">Receber diagnóstico</a></div></section>
+<?php require __DIR__.'/includes/footer.php'; ?>
