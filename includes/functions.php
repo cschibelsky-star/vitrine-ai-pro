@@ -37,7 +37,7 @@ function lead_product_from_profile($perfil='', $modelo=''){
   if(strpos($txt,'portal news')!==false || strpos($txt,'notícia')!==false || strpos($txt,'noticia')!==false || strpos($txt,'rádio')!==false || strpos($txt,'radio')!==false || strpos($txt,'jornal')!==false){ return ['Portal News AI','Pro']; }
   if(strpos($txt,'guia digital')!==false || strpos($txt,'turismo')!==false || strpos($txt,'operador de turismo')!==false){ return ['Visite Cidade','Governo']; }
   if(strpos($txt,'social media')!==false || strpos($txt,'marca')!==false || strpos($txt,'comunicação')!==false || strpos($txt,'comunicacao')!==false){ return ['Vitrine Social Media','Sob proposta']; }
-  if(strpos($txt,'desenvolvimento')!==false || strpos($txt,'empresa')!==false || strpos($txt,'comércio')!==false || strpos($txt,'comercio')!==false){ return ['Desenvolvimento de Soluções Digitais','Sob proposta']; }
+  if(strpos($txt,'desenvolvimento')!==false || strpos($txt,'empresa')!==false || strpos($txt,'comércio')!==false || strpos($txt,'comercio')!==false || strpos($txt,'imobiliária')!==false || strpos($txt,'imobiliaria')!==false || strpos($txt,'corretor')!==false || strpos($txt,'ong')!==false || strpos($txt,'associação')!==false || strpos($txt,'associacao')!==false){ return ['Desenvolvimento de Soluções Digitais','Sob proposta']; }
   if(strpos($txt,'curso')!==false || strpos($txt,'ensino')!==false || strpos($txt,'educa')!==false){ return ['Cursos IA','Sob proposta']; }
   if(strpos($txt,'sismed')!==false || strpos($txt,'saúde')!==false || strpos($txt,'saude')!==false){ return ['SISMED','Sob proposta']; }
   if(strpos($txt,'assessorgov')!==false){ return ['AssessorGov IA','Sob proposta']; }
@@ -70,7 +70,7 @@ function build_master_lead_payload($data){
   $nome=$data['nome'] ?? ($data['contato'] ?? '');
   $empresa=$data['organizacao'] ?? ($data['empresa'] ?? ($data['cidade'] ?? 'Lead do site'));
   $observacoes=[];
-  foreach(['perfil','cargo','modelo','finalidade','necessidade','cidade','origem'] as $k){ if(!empty($data[$k])){ $observacoes[]=ucfirst(str_replace('_',' ',$k)).': '.$data[$k]; } }
+  foreach(['perfil','cargo','modelo','modelo_comercial','finalidade','necessidade','cidade','origem'] as $k){ if(!empty($data[$k])){ $observacoes[]=ucfirst(str_replace('_',' ',$k)).': '.$data[$k]; } }
   return [
     'external_id'=>clean_input($data['external_id'] ?? '',191),
     'empresa'=>clean_input($empresa,255),
