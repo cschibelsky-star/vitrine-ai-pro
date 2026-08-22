@@ -2,6 +2,7 @@ Options -Indexes
 DirectoryIndex index.php index.html
 <IfModule mod_rewrite.c>
 RewriteEngine On
+RewriteRule ^data/ - [F,L]
 </IfModule>
 <FilesMatch "^(config\.php|composer\.(json|lock))$">
   Require all denied
