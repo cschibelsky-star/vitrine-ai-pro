@@ -17,6 +17,18 @@ ORIGIN=git@github.com:cschibelsky-star/vitrine-ai-pro.git
  M storage/app/factory/releases/factory_v3_0_0.json
 ?? FACTORY_ENTERPRISE_10_0_FULL_PATCH/
 ?? bootstrap/cache/filament/
+--- TRACKED_DIFF_NAME_STATUS ---
+M	bootstrap/cache/packages.php
+M	bootstrap/cache/services.php
+M	storage/app/factory/releases/factory_v3_0_0.json
+--- TRACKED_DIFF_STAT ---
+ bootstrap/cache/packages.php                     | 26 ++++++++
+ bootstrap/cache/services.php                     | 78 +++++++++++++-----------
+ storage/app/factory/releases/factory_v3_0_0.json |  2 +-
+ 3 files changed, 69 insertions(+), 37 deletions(-)
+--- UNTRACKED_TOP_LEVEL ---
+332K	FACTORY_ENTERPRISE_10_0_FULL_PATCH/
+24K	bootstrap/cache/filament/
 --- ROOT=/home1/cris1649/factory.vitrineaipro.com.br ---
 EXISTS=yes
 GIT_REPOSITORY=no
