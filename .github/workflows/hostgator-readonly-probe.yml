@@ -4,47 +4,83 @@ on:
   push:
     branches:
       - ops/hostgator-readonly-probe
+    paths:
+      - .github/workflows/hostgator-readonly-probe.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Read-only HostGator probe
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v4
         with:
-          host: ${{ secrets.HOSTGATOR_HOST }}
-          username: ${{ secrets.HOSTGATOR_USER }}
-          port: ${{ secrets.HOSTGATOR_PORT }}
-          key: ${{ secrets.HOSTGATOR_SSH_KEY }}
-          script_stop: false
-          script: |
-            set +x
-            echo 'HOSTGATOR_PROBE_START'
-            printf 'USER='; whoami
-            printf 'HOME='; pwd
-            printf 'GIT='; git --version 2>/dev/null || true
-            for d in \
-              "$HOME/public_html" \
-              "$HOME/vitrine-ai-pro" \
-              "$HOME/factory.vitrineaipro.com.br" \
-              "$HOME/conhecasumare.com.br"; do
-              echo "--- ROOT=$d ---"
-              if [ -d "$d" ]; then
-                echo 'EXISTS=yes'
-                if [ -d "$d/.git" ]; then
-                  cd "$d"
-                  printf 'BRANCH='; git branch --show-current 2>/dev/null || true
-                  printf 'HEAD='; git rev-parse HEAD 2>/dev/null || true
-                  printf 'ORIGIN='; git remote get-url origin 2>/dev/null || true
-                  git status --short --branch 2>/dev/null || true
-                else
-                  echo 'GIT_REPOSITORY=no'
-                fi
-              else
-                echo 'EXISTS=no'
-              fi
-            done
-            echo 'HOSTGATOR_PROBE_END'
+          ref: ops/hostgator-readonly-probe
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          HOSTGATOR_SSH_KEY: ${{ secrets.HOSTGATOR_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$HOSTGATOR_SSH_KEY" > ~/.ssh/hostgator_ops
+          chmod 600 ~/.ssh/hostgator_ops
+
+      - name: Run read-only HostGator probe
+        shell: bash
+        env:
+          HOSTGATOR_HOST: ${{ secrets.HOSTGATOR_HOST }}
+          HOSTGATOR_USER: ${{ secrets.HOSTGATOR_USER }}
+          HOSTGATOR_PORT: ${{ secrets.HOSTGATOR_PORT }}
+        run: |
+          set -euo pipefail
+          : > hostgator-probe-result.txt
+          ssh \
+            -i ~/.ssh/hostgator_ops \
+            -p "$HOSTGATOR_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 \
+            "$HOSTGATOR_USER@$HOSTGATOR_HOST" \
+            'set +x
+             echo HOSTGATOR_PROBE_START
+             printf "USER="; whoami
+             printf "HOME="; pwd
+             printf "GIT="; git --version 2>/dev/null || true
+             for d in "$HOME/public_html" "$HOME/vitrine-ai-pro" "$HOME/factory.vitrineaipro.com.br" "$HOME/conhecasumare.com.br"; do
+               echo "--- ROOT=$d ---"
+               if [ -d "$d" ]; then
+                 echo EXISTS=yes
+                 if [ -d "$d/.git" ]; then
+                   cd "$d"
+                   printf "BRANCH="; git branch --show-current 2>/dev/null || true
+                   printf "HEAD="; git rev-parse HEAD 2>/dev/null || true
+                   printf "ORIGIN="; git remote get-url origin 2>/dev/null || true
+                   git status --short --branch 2>/dev/null || true
+                 else
+                   echo GIT_REPOSITORY=no
+                 fi
+               else
+                 echo EXISTS=no
+               fi
+             done
+             echo HOSTGATOR_PROBE_END' \
+            > hostgator-probe-result.txt 2>&1 || {
+              rc=$?
+              printf 'HOSTGATOR_PROBE_FAILED\nSSH_EXIT=%s\n' "$rc" >> hostgator-probe-result.txt
+            }
+
+      - name: Publish sanitized result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Vitrine Ops Bot"
+          git config user.email "vitrine-ops@users.noreply.github.com"
+          git add hostgator-probe-result.txt
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "ops: record sanitized HostGator probe result"
+          git push origin HEAD:ops/hostgator-readonly-probe
