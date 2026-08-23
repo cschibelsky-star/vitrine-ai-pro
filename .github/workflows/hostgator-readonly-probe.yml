@@ -1,0 +1,50 @@
+name: HostGator Readonly Probe
+
+on:
+  push:
+    branches:
+      - ops/hostgator-readonly-probe
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read-only HostGator probe
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTGATOR_HOST }}
+          username: ${{ secrets.HOSTGATOR_USER }}
+          port: ${{ secrets.HOSTGATOR_PORT }}
+          key: ${{ secrets.HOSTGATOR_SSH_KEY }}
+          script_stop: false
+          script: |
+            set +x
+            echo 'HOSTGATOR_PROBE_START'
+            printf 'USER='; whoami
+            printf 'HOME='; pwd
+            printf 'GIT='; git --version 2>/dev/null || true
+            for d in \
+              "$HOME/public_html" \
+              "$HOME/vitrine-ai-pro" \
+              "$HOME/factory.vitrineaipro.com.br" \
+              "$HOME/conhecasumare.com.br"; do
+              echo "--- ROOT=$d ---"
+              if [ -d "$d" ]; then
+                echo 'EXISTS=yes'
+                if [ -d "$d/.git" ]; then
+                  cd "$d"
+                  printf 'BRANCH='; git branch --show-current 2>/dev/null || true
+                  printf 'HEAD='; git rev-parse HEAD 2>/dev/null || true
+                  printf 'ORIGIN='; git remote get-url origin 2>/dev/null || true
+                  git status --short --branch 2>/dev/null || true
+                else
+                  echo 'GIT_REPOSITORY=no'
+                fi
+              else
+                echo 'EXISTS=no'
+              fi
+            done
+            echo 'HOSTGATOR_PROBE_END'
