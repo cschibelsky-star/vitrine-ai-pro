@@ -11,6 +11,10 @@ RewriteRule ^(?:data|app|bootstrap|config|database|routes|scripts|files|docs|ven
 # Mantém /documentos/*.txt disponível para materiais comerciais públicos.
 RewriteRule ^[^/]+\.(?:md|txt|py|sh|yml|yaml|log|sql|bak|dist)$ - [F,L,NC]
 
+# Scripts históricos de instalação, bootstrap, patch e seed não são rotas públicas.
+RewriteRule ^(?:install|setup|bootstrap|patch|migrate|seed|factory)[^/]*\.php$ - [F,L,NC]
+RewriteRule ^[^/]*_bootstrap\.php$ - [F,L,NC]
+
 # Arquivos ocultos, exceto ACME/Let's Encrypt.
 RewriteRule ^\.(?!well-known(?:/|$)) - [F,L]
 </IfModule>
