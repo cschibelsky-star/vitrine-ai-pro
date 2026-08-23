@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__.'/includes/functions.php';
+require_once __DIR__.'/includes/lead-persistence.php';
 if(session_status() !== PHP_SESSION_ACTIVE){ session_start(); }
 if($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_verify()){ form_error_redirect(); }
 
@@ -24,7 +25,8 @@ if($data['perfil']==='' || $data['organizacao']==='' || $data['nome']==='' || $d
 }
 if(!filter_var($data['email'],FILTER_VALIDATE_EMAIL)){ form_error_redirect(); }
 
-$localId=lead_save($data);
+$localId=lead_save_confirmed($data);
+if($localId===false){ form_error_redirect(); }
 $data['external_id']=$localId;
 $masterOk=master_lead_send(build_master_lead_payload($data));
 $_SESSION['solicitacao_recebida']=[
