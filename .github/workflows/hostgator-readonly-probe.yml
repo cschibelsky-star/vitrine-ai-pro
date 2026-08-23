@@ -59,6 +59,17 @@ jobs:
                    printf "HEAD="; git rev-parse HEAD 2>/dev/null || true
                    printf "ORIGIN="; git remote get-url origin 2>/dev/null || true
                    git status --short --branch 2>/dev/null || true
+                   echo "--- TRACKED_DIFF_NAME_STATUS ---"
+                   git diff --name-status 2>/dev/null || true
+                   echo "--- TRACKED_DIFF_STAT ---"
+                   git diff --stat 2>/dev/null || true
+                   echo "--- UNTRACKED_TOP_LEVEL ---"
+                   git status --short 2>/dev/null | awk '"'"'$1=="??" {print substr($0,4)}'"'"' | while IFS= read -r p; do
+                     [ -n "$p" ] || continue
+                     if [ -e "$p" ]; then
+                       du -sh "$p" 2>/dev/null || true
+                     fi
+                   done
                  else
                    echo GIT_REPOSITORY=no
                  fi
