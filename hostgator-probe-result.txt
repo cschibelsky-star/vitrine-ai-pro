@@ -1,0 +1,26 @@
+Warning: Permanently added 'tvsumare.com.br' (ED25519) to the list of known hosts.
+HOSTGATOR_PROBE_START
+USER=cris1649
+HOME=/home1/cris1649
+GIT=git version 2.52.0
+--- ROOT=/home1/cris1649/public_html ---
+EXISTS=yes
+GIT_REPOSITORY=no
+--- ROOT=/home1/cris1649/vitrine-ai-pro ---
+EXISTS=yes
+BRANCH=main
+HEAD=43c5472f473ddeb6797fe7aec13445206c8f1c1a
+ORIGIN=git@github.com:cschibelsky-star/vitrine-ai-pro.git
+## main
+ M bootstrap/cache/packages.php
+ M bootstrap/cache/services.php
+ M storage/app/factory/releases/factory_v3_0_0.json
+?? FACTORY_ENTERPRISE_10_0_FULL_PATCH/
+?? bootstrap/cache/filament/
+--- ROOT=/home1/cris1649/factory.vitrineaipro.com.br ---
+EXISTS=yes
+GIT_REPOSITORY=no
+--- ROOT=/home1/cris1649/conhecasumare.com.br ---
+EXISTS=yes
+GIT_REPOSITORY=no
+HOSTGATOR_PROBE_END
