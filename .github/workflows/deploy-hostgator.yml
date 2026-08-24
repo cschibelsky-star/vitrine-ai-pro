@@ -18,6 +18,7 @@ jobs:
           port: ${{ secrets.HOSTGATOR_PORT }}
           key: ${{ secrets.HOSTGATOR_SSH_KEY }}
           script: |
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
             mkdir -p ~/deploy-backups/vitrine-ai-pro
             tar -czf ~/deploy-backups/vitrine-ai-pro/backup-$(date +%Y%m%d-%H%M%S).tar.gz --exclude=vendor --exclude=node_modules --exclude=storage/logs .
@@ -26,3 +27,13 @@ jobs:
             php artisan migrate --force
             php artisan optimize:clear
             php artisan optimize
+
+            # Publicacao do dominio principal VITRINE IA PRO
+            if [ -d "$HOME/vitrineiapro.com.br" ]; then
+              rsync -a --delete \
+                --exclude='.env' \
+                --exclude='data/' \
+                --exclude='storage/' \
+                --exclude='vendor/' \
+                ./ "$HOME/vitrineiapro.com.br/"
+            fi
