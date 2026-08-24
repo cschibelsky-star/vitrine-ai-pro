@@ -1,12 +1,28 @@
 Options -Indexes
 DirectoryIndex index.php index.html
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteRule ^data/ - [F,L]
+
+# Dados e código interno nunca devem ser servidos diretamente.
+RewriteRule ^(?:data|app|bootstrap|config|database|routes|scripts|files|docs|vendor|storage|tests|resources|includes)(?:/|$) - [F,L,NC]
+
+# Arquivos de desenvolvimento/documentação técnica na raiz.
+# Mantém /documentos/*.txt disponível para materiais comerciais públicos.
+RewriteRule ^[^/]+\.(?:md|txt|py|sh|yml|yaml|log|sql|bak|dist)$ - [F,L,NC]
+
+# Scripts históricos de instalação, bootstrap, patch e seed não são rotas públicas.
+RewriteRule ^(?:install|setup|bootstrap|patch|migrate|seed|factory)[^/]*\.php$ - [F,L,NC]
+RewriteRule ^[^/]*_bootstrap\.php$ - [F,L,NC]
+
+# Arquivos ocultos, exceto ACME/Let's Encrypt.
+RewriteRule ^\.(?!well-known(?:/|$)) - [F,L]
 </IfModule>
-<FilesMatch "^(config\.php|composer\.(json|lock))$">
+
+<FilesMatch "^(config\.php|composer\.(json|lock)|package(?:-lock)?\.json|phpunit\.xml(?:\.dist)?|artisan)$">
   Require all denied
 </FilesMatch>
+
 <IfModule mod_headers.c>
 Header set X-Content-Type-Options "nosniff"
 Header set X-Frame-Options "SAMEORIGIN"
