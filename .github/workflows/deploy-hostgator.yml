@@ -23,14 +23,21 @@ jobs:
             mkdir -p ~/deploy-backups/vitrine-ai-pro
             tar -czf ~/deploy-backups/vitrine-ai-pro/backup-$(date +%Y%m%d-%H%M%S).tar.gz --exclude=vendor --exclude=node_modules --exclude=storage/logs .
             git pull origin main
-            composer install --no-dev --optimize-autoloader
-            php artisan migrate --force
-            php artisan optimize:clear
-            php artisan optimize
+
+            # Etapas Laravel sao opcionais nesta hospedagem.
+            if command -v composer >/dev/null 2>&1; then
+              composer install --no-dev --optimize-autoloader
+            fi
+            if command -v php >/dev/null 2>&1 && [ -f artisan ]; then
+              php artisan migrate --force || true
+              php artisan optimize:clear || true
+              php artisan optimize || true
+            fi
 
             # Publicacao do dominio principal VITRINE IA PRO
             if [ -d "$HOME/vitrineiapro.com.br" ]; then
               rsync -a --delete \
+                --exclude='.git/' \
                 --exclude='.env' \
                 --exclude='data/' \
                 --exclude='storage/' \
