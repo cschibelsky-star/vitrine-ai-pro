@@ -18,11 +18,17 @@
   </div>
   <div class="vitrineHeroTech">
     <div class="techTag">TECNOLOGIA QUE CONECTA,<br><strong>RESULTADOS QUE APARECEM.</strong></div>
-    <div class="techDashboard">
-      <div class="dashboardHeader"><span>VITRINE IA PRO</span><small>Visão da solução</small></div>
-      <div class="dashboardStats"><article><small>Projeto</small><strong>Estruturado</strong><em>diagnóstico + escopo</em></article><article><small>Operação</small><strong>Escalável</strong><em>SaaS / White Label</em></article><article><small>Evolução</small><strong>Contínua</strong><em>suporte + melhorias</em></article></div>
-      <div class="dashboardMain"><div class="dashboardChart"><span class="chartLine c1"></span><span class="chartLine c2"></span><span class="chartLine c3"></span><span class="chartLine c4"></span><span class="chartLine c5"></span></div><div class="dashboardSteps"><b>Etapas</b><span>1 · Entender</span><span>2 · Estruturar</span><span>3 · Implantar</span><span>4 · Evoluir</span></div></div>
-      <div class="dashboardFooter"><span>Laravel / PHP</span><span>React / JS</span><span>Integrações</span><span>Cloud</span></div>
+    <div class="solutionCanvas" aria-label="Visão tecnológica das soluções VITRINE IA PRO">
+      <div class="canvasTop"><div class="canvasBrand"><i></i><span>VITRINE IA PRO</span></div><small>soluções digitais conectadas</small></div>
+      <div class="canvasStage">
+        <span class="canvasLine l1"></span><span class="canvasLine l2"></span><span class="canvasLine l3"></span><span class="canvasLine l4"></span>
+        <article class="canvasNode n1"><b>Experiência digital</b><small>web · mobile · portais</small></article>
+        <article class="canvasNode n2"><b>Integrações</b><small>serviços · dados · APIs</small></article>
+        <article class="canvasNode n3"><b>Automação</b><small>processos · produtividade</small></article>
+        <article class="canvasNode n4"><b>Escala</b><small>SaaS · personalizado · White Label</small></article>
+        <div class="canvasCore"><div><strong>Sua necessidade</strong><span>transformada em solução</span></div></div>
+      </div>
+      <div class="canvasBottom"><span><strong>01</strong>Entender</span><span><strong>02</strong>Estruturar</span><span><strong>03</strong>Implantar</span><span><strong>04</strong>Evoluir</span></div>
     </div>
     <div class="techPhone"><strong>Sua ideia.</strong><span>Nossa tecnologia.</span><small>Resultados reais.</small></div>
   </div>
