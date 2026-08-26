@@ -1,4 +1,5 @@
 <?php
+// Carrega os helpers antes de tratar os parametros de pre-preenchimento.
 require_once __DIR__.'/includes/functions.php';
 $title='Solicitação Comercial';
 $prefModelo=clean_input($_GET['modelo'] ?? '',255);
