@@ -38,6 +38,7 @@ jobs:
             if [ -d "$HOME/vitrineiapro.com.br" ]; then
               rsync -a --delete \
                 --exclude='.git/' \
+                --exclude='.github/' \
                 --exclude='.env' \
                 --exclude='data/' \
                 --exclude='storage/' \
