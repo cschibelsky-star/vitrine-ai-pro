@@ -4,6 +4,9 @@ DirectoryIndex index.php index.html
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
+# A área administrativa não deve ser exposta no domínio público.
+RewriteRule ^admin(?:/|$) - [F,L,NC]
+
 # Dados e código interno nunca devem ser servidos diretamente.
 RewriteRule ^(?:data|app|bootstrap|config|database|routes|scripts|files|docs|vendor|storage|tests|resources|includes)(?:/|$) - [F,L,NC]
 
