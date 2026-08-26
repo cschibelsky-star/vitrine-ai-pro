@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/includes/functions.php';
 $title='Solicitação Comercial';
 $prefModelo=clean_input($_GET['modelo'] ?? '',255);
 $prefPerfil=clean_input($_GET['perfil'] ?? '',255);
