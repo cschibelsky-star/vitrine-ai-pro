@@ -46,9 +46,30 @@
   </div>
 </section>
 
-<section class="homeProof">
-  <div><span class="techLabel light">TECNOLOGIA EM OPERAÇÃO</span><h2>Produtos, demonstrações e aplicações reais.</h2><p>Conheça cenários que mostram como nossas soluções podem ser aplicadas em operações de mídia, cidades, governo e comunicação digital.</p></div>
-  <div class="proofActions"><a class="btn" href="/demonstracoes.php">Ver demonstrações</a><a class="btn techGhost" href="/casos-reais.php">Ver aplicações reais</a></div>
+<section class="visualProofSection" id="aplicacoes">
+  <div class="visualProofIntro">
+    <span class="techLabel light">CASES E APLICAÇÕES</span>
+    <div><h2>Veja a tecnologia aplicada, não apenas descrita.</h2><p>Cases reais mostram soluções em operação. Demonstrações apresentam cenários que podemos adaptar ou desenvolver conforme a necessidade de cada cliente.</p></div>
+  </div>
+
+  <div class="realCaseGrid">
+    <a class="realCaseCard" href="/casos-reais.php" aria-label="Ver case real TV Sumaré">
+      <figure><img src="/assets/img/cases/tv-sumare-showcase.jpg" alt="Case real TV Sumaré — portal de mídia e TV Digital" loading="lazy"><span>CASE REAL</span></figure>
+      <div><small>MÍDIA • NOTÍCIAS • AUDIOVISUAL</small><h3>TV Sumaré</h3><p>Aplicação real de portal editorial, notícias, vídeos e operação de mídia digital.</p><strong>Ver aplicação real →</strong></div>
+    </a>
+    <a class="realCaseCard" href="/casos-reais.php" aria-label="Ver case real Conheça Sumaré">
+      <figure><img src="/assets/img/cases/conheca-sumare-showcase.jpg" alt="Case real Conheça Sumaré — guia digital da cidade" loading="lazy"><span>CASE REAL</span></figure>
+      <div><small>CIDADE • TURISMO • COMÉRCIO LOCAL</small><h3>Conheça Sumaré</h3><p>Piloto real da vertical Guia Digital da Cidade®, conectando descoberta local, atrativos e serviços.</p><strong>Ver aplicação real →</strong></div>
+    </a>
+  </div>
+
+  <div class="applicationHeader"><div><span class="techLabel light">EXEMPLOS DE APLICAÇÃO</span><h3>Outros cenários que podemos desenvolver ou adaptar.</h3></div><a href="/demonstracoes.php">Ver todas as demonstrações →</a></div>
+  <div class="applicationGrid">
+    <a href="/demos/municipio-360/"><span>DEMONSTRAÇÃO</span><strong>Município 360</strong><p>Serviços digitais, comunicação institucional e relacionamento com o cidadão.</p></a>
+    <a href="/demos/camara-360/"><span>DEMONSTRAÇÃO</span><strong>Câmara 360</strong><p>Transparência legislativa, sessões, vereadores, conteúdo e TV Câmara.</p></a>
+    <a href="/demos/news-360/"><span>DEMONSTRAÇÃO</span><strong>News 360</strong><p>Portal de mídia regional com conteúdo, audiência e possibilidades de monetização.</p></a>
+    <a href="/demos/tv-360/"><span>DEMONSTRAÇÃO</span><strong>TV 360</strong><p>Programação, transmissão ao vivo, acervo de vídeos e operação audiovisual.</p></a>
+  </div>
 </section>
 
 <section class="homeFinalCta"><span class="techLabel">COMECE PELA NECESSIDADE</span><h2>O que você precisa criar, automatizar ou melhorar?</h2><p>Conte sua ideia ou problema. A VITRINE IA PRO identifica o caminho digital mais adequado e apresenta uma proposta de solução.</p><div class="actions"><a class="btn" href="/diagnostico.php">Conte sua necessidade</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div></section>
