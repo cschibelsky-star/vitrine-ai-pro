@@ -1,54 +1,120 @@
-<?php $title='Vitrine Social Media'; $description='Vitrine Social Media: produção e gestão estruturada de conteúdo para marcas, com painel editorial, identidade de marca, projetos de conteúdo e recursos de IA.'; require __DIR__.'/includes/header.php'; ?>
-<div class="socialLanding">
-<section class="socialHero">
-  <div class="socialHeroCopy">
-    <span class="socialEyebrow">VITRINE SOCIAL MEDIA</span>
-    <h1>Conteúdo com identidade, organização e escala.</h1>
-    <p>Planeje, produza, revise e acompanhe conteúdos de diferentes marcas em uma operação visual pensada para equipes que precisam publicar com consistência.</p>
-    <div class="actions"><a class="btn socialPrimary" href="/solicitacao-institucional.php">Solicitar apresentação</a><a class="btn socialGhost" href="/diagnostico.php?origem=social-media&necessidade_tipo=Redes+sociais+%2F+produção+de+conteúdo">Receber diagnóstico</a></div>
-    <div class="socialTrust"><span>Identidade de marca</span><span>Projetos editoriais</span><span>IA assistida</span><span>Calendário</span></div>
+<?php
+$title='Vitrine Social Midia';
+$description='Conteúdo recorrente para redes sociais com estratégia, identidade e consistência para marcas, profissionais, influenciadores, criadores, instituições, projetos e organizações.';
+require __DIR__.'/includes/header.php';
+?>
+<style>
+.socialSales{--bg:#080b14;--panel:#101522;--panel2:#151a2b;--line:rgba(255,255,255,.09);--text:#f7f8ff;--muted:#a9b0c3;--violet:#8b5cf6;--blue:#5b7cff;--pink:#ec4899;--green:#38d39f;background:radial-gradient(circle at 75% 8%,rgba(91,124,255,.18),transparent 30%),radial-gradient(circle at 15% 18%,rgba(139,92,246,.17),transparent 28%),var(--bg);color:var(--text);margin:-1px calc(50% - 50vw) 0;overflow:hidden}.socialSales *{box-sizing:border-box}.socialSales a{text-decoration:none}.socialWrap{width:min(1180px,calc(100% - 40px));margin:auto}.socialHeroV2{min-height:720px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:72px 0 56px}.socialEyebrowV2{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(139,92,246,.28);border-radius:999px;background:rgba(139,92,246,.08);font-weight:800;font-size:12px;letter-spacing:.11em;color:#d8c8ff}.socialHeroV2 h1{font-size:clamp(44px,5.2vw,76px);line-height:.98;letter-spacing:-.055em;margin:20px 0 22px;max-width:760px}.socialHeroV2 h1 span{background:linear-gradient(90deg,#a855f7,#5b7cff);-webkit-background-clip:text;background-clip:text;color:transparent}.socialHeroV2 .lead{font-size:19px;line-height:1.65;color:#c2c8d7;max-width:690px;margin:0}.socialAudienceLine{margin-top:18px;color:#949caf;font-size:14px;line-height:1.6}.socialActionsV2{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.socialBtn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:13px;font-weight:800;font-size:15px;transition:.2s}.socialBtnPrimary{background:linear-gradient(90deg,#7c3aed,#5b7cff);color:#fff;box-shadow:0 16px 40px rgba(91,124,255,.25)}.socialBtnPrimary:hover{transform:translateY(-2px)}.socialBtnGhost{border:1px solid rgba(255,255,255,.18);color:#fff;background:rgba(255,255,255,.03)}.socialTrustV2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:28px}.socialTrustV2 span{padding:12px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);font-size:12px;color:#bcc2d1;text-align:center}.socialVisual{position:relative;min-height:610px}.socialPhone{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:270px;height:548px;border-radius:38px;padding:11px;background:#05070b;border:1px solid rgba(255,255,255,.16);box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 5px #121722;z-index:3}.socialPhoneInner{height:100%;border-radius:29px;overflow:hidden;background:#0b0f19;border:1px solid rgba(255,255,255,.06)}.phoneTop{padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11px}.phoneAccount{display:flex;align-items:center;gap:8px}.phoneAvatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,#8b5cf6,#ec4899);display:grid;place-items:center;font-weight:900}.phonePost{height:252px;margin:4px 10px;background:radial-gradient(circle at 70% 30%,rgba(91,124,255,.85),transparent 30%),linear-gradient(145deg,#241142,#0c1a44 55%,#071024);border-radius:15px;padding:25px 20px;display:flex;flex-direction:column;justify-content:center}.phonePost small{font-size:10px;letter-spacing:.12em;color:#d9ceff}.phonePost strong{font-size:28px;line-height:1.05;margin-top:8px}.phonePost p{font-size:11px;line-height:1.45;color:#ced4e5;margin:11px 0 0}.phoneReactions{display:flex;justify-content:space-between;padding:12px 14px 8px;font-size:17px}.phoneCounts{padding:0 14px 10px;font-size:10px;color:#c4cada;line-height:1.5}.phoneCaption{padding:0 14px;font-size:10px;color:#9ea5b6;line-height:1.45}.socialChannels{position:absolute;top:8px;left:4%;right:4%;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;z-index:4}.channelChip{border:1px solid rgba(255,255,255,.11);background:rgba(15,20,34,.86);backdrop-filter:blur(10px);border-radius:10px;padding:8px 10px;font-size:11px;color:#d9deea}.channelChip b{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:5px;margin-right:5px;background:linear-gradient(145deg,#7c3aed,#ec4899);font-size:9px}.floatCard{position:absolute;background:linear-gradient(180deg,rgba(21,26,43,.95),rgba(11,15,26,.95));border:1px solid rgba(139,92,246,.22);border-radius:16px;padding:14px;box-shadow:0 22px 50px rgba(0,0,0,.34);backdrop-filter:blur(10px)}.floatCard small{display:block;color:#8e96aa;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.floatCard strong{display:block;margin-top:5px;font-size:14px}.calendarCard{left:0;top:120px;width:178px}.calendarDays{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}.calendarDays span{height:26px;border-radius:7px;background:#232a3c;display:grid;place-items:center;font-size:9px;color:#aeb6c7}.calendarDays span:nth-child(2),.calendarDays span:nth-child(4){background:linear-gradient(145deg,#7c3aed,#5b7cff);color:white}.metricCard{left:4%;bottom:58px;width:184px}.metricValue{font-size:26px!important}.metricUp{color:var(--green);font-size:10px}.metricLine{height:40px;margin-top:8px;position:relative;overflow:hidden}.metricLine:after{content:"";position:absolute;left:0;right:0;top:17px;height:2px;background:linear-gradient(90deg,#7c3aed,#5b7cff);transform:skewY(-10deg);box-shadow:20px -8px 0 #7c3aed,45px 8px 0 #5b7cff,75px -4px 0 #7c3aed}.nextPost{right:0;top:110px;width:188px}.miniPost{margin-top:10px;height:128px;border-radius:12px;padding:14px;background:linear-gradient(145deg,#48105f,#102c67);display:flex;flex-direction:column;justify-content:flex-end}.miniPost b{font-size:18px;line-height:1.05}.reelCard{right:2%;bottom:110px;width:194px}.reelPreview{height:104px;border-radius:12px;margin-top:9px;background:radial-gradient(circle at center,rgba(236,72,153,.6),transparent 35%),linear-gradient(145deg,#30123d,#101a36);display:grid;place-items:center;font-size:26px}.storiesCard{right:7%;bottom:6px;width:178px}.stories{display:flex;margin-top:9px}.story{width:32px;height:32px;border-radius:50%;background:#20263a;border:2px solid #8b5cf6;margin-right:-3px;display:grid;place-items:center;font-size:9px}.socialTags{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);display:flex;gap:6px;z-index:4}.socialTags span{font-size:9px;border:1px solid rgba(139,92,246,.22);background:#111729;color:#aeb7d0;border-radius:999px;padding:6px 8px}.socialSectionV2{padding:78px 0;border-top:1px solid rgba(255,255,255,.055)}.sectionHead{max-width:760px;margin-bottom:34px}.sectionKicker{color:#9f7aea;text-transform:uppercase;letter-spacing:.12em;font-weight:900;font-size:12px}.socialSectionV2 h2{font-size:clamp(32px,4vw,50px);line-height:1.05;letter-spacing:-.04em;margin:11px 0 14px}.socialSectionV2 .sectionIntro{font-size:17px;color:#aeb5c7;line-height:1.65}.deliverGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}.deliverCard{min-height:160px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#121827,#0e131f);padding:17px}.deliverIcon{width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,rgba(139,92,246,.28),rgba(91,124,255,.2));display:grid;place-items:center;margin-bottom:18px;font-size:17px}.deliverCard h3{font-size:16px;margin:0 0 7px}.deliverCard p{font-size:12px;color:#8f97aa;line-height:1.5;margin:0}.benefitGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.benefitCard{border:1px solid var(--line);border-radius:18px;padding:24px;background:rgba(255,255,255,.025)}.benefitCard h3{margin:10px 0 8px;font-size:20px}.benefitCard p{margin:0;color:#9da5b7;line-height:1.55}.audienceGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.audienceCard{border:1px solid var(--line);border-radius:15px;padding:18px;background:#0f1421}.audienceCard strong{font-size:14px}.audienceCard p{margin:7px 0 0;color:#8f97aa;font-size:12px;line-height:1.45}.processGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.processStep{position:relative;border:1px solid var(--line);background:#101624;border-radius:16px;padding:21px 16px;min-height:145px}.processStep b{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#7c3aed,#5b7cff);font-size:12px}.processStep h3{font-size:16px;margin:16px 0 7px}.processStep p{font-size:12px;color:#9199ad;line-height:1.5;margin:0}.plansGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.planCard{border:1px solid var(--line);border-radius:20px;padding:24px;background:linear-gradient(180deg,#111827,#0c111c);position:relative}.planCard.featured{border-color:rgba(139,92,246,.55);box-shadow:0 24px 55px rgba(91,124,255,.13)}.planBadge{display:inline-block;padding:6px 9px;border-radius:999px;background:rgba(139,92,246,.12);color:#cab9ff;font-size:10px;font-weight:900;letter-spacing:.08em}.planCard h3{font-size:22px;margin:15px 0 5px}.planFor{color:#969fb3;font-size:12px;min-height:36px}.planPrice{font-size:24px;font-weight:900;margin:18px 0 15px}.planPrice small{display:block;font-size:11px;color:#8f97aa;font-weight:500;margin-top:5px}.planList{list-style:none;padding:0;margin:0 0 22px}.planList li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#b9c0d1}.planList li:before{content:"✓";color:#8b5cf6;font-weight:900;margin-right:7px}.planCard .socialBtn{width:100%;min-height:46px}.socialNotice{margin-top:18px;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;color:#8e96aa;font-size:12px;line-height:1.5}.socialCtaV2{padding:82px 0;text-align:center}.socialCtaBox{border:1px solid rgba(139,92,246,.25);border-radius:28px;background:radial-gradient(circle at 50% 0%,rgba(91,124,255,.2),transparent 44%),linear-gradient(180deg,#111728,#0b101b);padding:60px 30px}.socialCtaBox h2{max-width:780px;margin:12px auto 16px}.socialCtaBox p{max-width:670px;margin:0 auto;color:#a6aec1;font-size:17px;line-height:1.6}.socialCtaBox .socialActionsV2{justify-content:center}.socialFaq{display:grid;grid-template-columns:1fr 1.3fr;gap:46px}.faqList details{border-bottom:1px solid var(--line);padding:17px 0}.faqList summary{cursor:pointer;font-weight:800;font-size:15px}.faqList p{color:#9ba3b6;font-size:13px;line-height:1.55;margin:10px 0 0}.socialFine{font-size:11px;color:#70798d;margin-top:14px}@media(max-width:980px){.socialHeroV2{grid-template-columns:1fr;padding-top:50px}.socialVisual{min-height:600px}.deliverGrid{grid-template-columns:repeat(3,1fr)}.audienceGrid{grid-template-columns:repeat(2,1fr)}.processGrid{grid-template-columns:repeat(3,1fr)}.plansGrid{grid-template-columns:repeat(2,1fr)}.socialFaq{grid-template-columns:1fr}.socialTrustV2{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.socialWrap{width:min(100% - 26px,1180px)}.socialHeroV2 h1{font-size:44px}.socialHeroV2 .lead{font-size:16px}.socialVisual{min-height:560px;transform:scale(.84);transform-origin:top center;margin-bottom:-85px}.calendarCard{left:-20px}.metricCard{left:-14px}.nextPost{right:-24px}.reelCard{right:-25px}.storiesCard{right:-12px}.deliverGrid,.benefitGrid,.audienceGrid,.processGrid,.plansGrid{grid-template-columns:1fr}.socialSectionV2{padding:56px 0}.socialActionsV2 .socialBtn{width:100%}}
+</style>
+<div class="socialSales">
+  <div class="socialWrap">
+    <section class="socialHeroV2">
+      <div>
+        <span class="socialEyebrowV2">CONTEÚDO QUE GERA PRESENÇA E RESULTADO</span>
+        <h1>Conteúdo para suas redes sociais com <span>estratégia, identidade e consistência.</span></h1>
+        <p class="lead">Criamos conteúdo recorrente para suas redes sociais: posts, carrosséis, reels, stories, legendas e campanhas pensadas para comunicar melhor, manter frequência e fortalecer sua presença digital.</p>
+        <p class="socialAudienceLine">Para marcas, empresas, profissionais, influenciadores, criadores de conteúdo, instituições, projetos, organizações e equipes de comunicação.</p>
+        <div class="socialActionsV2">
+          <a class="socialBtn socialBtnPrimary" href="#planos">Ver planos</a>
+          <a class="socialBtn socialBtnGhost" href="/solicitacao-institucional.php?origem=social-media">Quero contratar</a>
+        </div>
+        <div class="socialTrustV2"><span>Planejamento</span><span>Conteúdo recorrente</span><span>Identidade</span><span>Revisão</span></div>
+      </div>
+      <div class="socialVisual" aria-label="Exemplo visual de conteúdo para redes sociais">
+        <div class="socialChannels"><span class="channelChip"><b>IG</b>Instagram</span><span class="channelChip"><b>FB</b>Facebook</span><span class="channelChip"><b>IN</b>LinkedIn</span><span class="channelChip"><b>TT</b>TikTok</span><span class="channelChip"><b>YT</b>YouTube</span></div>
+        <div class="floatCard calendarCard"><small>Calendário de conteúdo</small><strong>Semana planejada</strong><div class="calendarDays"><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span></div></div>
+        <div class="floatCard metricCard"><small>Desempenho do mês</small><strong class="metricValue">128,7K</strong><span class="metricUp">+28% alcance</span><div class="metricLine"></div></div>
+        <div class="socialPhone"><div class="socialPhoneInner"><div class="phoneTop"><div class="phoneAccount"><span class="phoneAvatar">V</span><div><b>@sua.marca</b><br><small>Conteúdo estratégico</small></div></div><span>•••</span></div><div class="phonePost"><small>CONTEÚDO COM PROPÓSITO</small><strong>Marcas que se conectam, crescem.</strong><p>Estratégia, criatividade e consistência para manter sua presença ativa.</p></div><div class="phoneReactions"><span>♡　◯　➤</span><span>▢</span></div><div class="phoneCounts"><b>2,5 mil curtidas</b><br>326 comentários · 152 compartilhamentos</div><div class="phoneCaption"><b>@sua.marca</b> Conteúdo criado para informar, conectar e gerar presença.</div></div></div>
+        <div class="floatCard nextPost"><small>Próximo post</small><div class="miniPost"><small>CARROSSEL</small><b>5 passos para fortalecer sua presença nas redes.</b></div></div>
+        <div class="floatCard reelCard"><small>Reel em produção</small><strong>Vídeo curto + roteiro</strong><div class="reelPreview">▶</div></div>
+        <div class="floatCard storiesCard"><small>Stories prontos</small><div class="stories"><span class="story">01</span><span class="story">02</span><span class="story">03</span><span class="story">+9</span></div></div>
+        <div class="socialTags"><span>#conteudocomestrategia</span><span>@sua.marca</span><span>#presençadigital</span></div>
+      </div>
+    </section>
   </div>
-  <div class="socialWorkspace" aria-label="Prévia visual da operação Vitrine Social Media">
-    <div class="socialWorkspaceTop"><div><b>Vitrine Social Media</b><small>Workspace de conteúdo</small></div><span class="workspaceStatus">Operação ativa</span></div>
-    <div class="socialWorkspaceBody">
-      <aside class="socialMiniNav"><span class="active">Visão geral</span><span>Marcas</span><span>Projetos</span><span>Conteúdos</span><span>Calendário</span></aside>
-      <div class="socialBoard">
-        <div class="socialStats"><article><small>Marcas</small><strong>Contexto</strong></article><article><small>Conteúdo</small><strong>Produção</strong></article><article><small>Agenda</small><strong>Fluxo</strong></article></div>
-        <div class="socialContentGrid"><article class="socialPreviewCard gradientA"><span>POST</span><strong>Campanha de marca</strong><small>Identidade + CTA + legenda</small></article><article class="socialPreviewCard gradientB"><span>CARROSSEL</span><strong>Conteúdo educativo</strong><small>Roteiro + slides + revisão</small></article><article class="socialPreviewCard gradientC"><span>REELS</span><strong>Conteúdo dinâmico</strong><small>Ideia + roteiro + agenda</small></article></div>
+
+  <section class="socialSectionV2">
+    <div class="socialWrap">
+      <div class="sectionHead"><span class="sectionKicker">O que você recebe</span><h2>Conteúdo pronto para alimentar suas redes sociais.</h2><p class="sectionIntro">Você não compra uma ferramenta. Você contrata uma produção de conteúdo organizada para manter sua presença digital ativa e coerente.</p></div>
+      <div class="deliverGrid">
+        <article class="deliverCard"><span class="deliverIcon">▣</span><h3>Posts</h3><p>Peças estáticas para feed, campanhas, ofertas, informação e posicionamento.</p></article>
+        <article class="deliverCard"><span class="deliverIcon">▦</span><h3>Carrosséis</h3><p>Conteúdo em sequência para educar, explicar, gerar valor e retenção.</p></article>
+        <article class="deliverCard"><span class="deliverIcon">▶</span><h3>Reels</h3><p>Ideias e roteiros para vídeos curtos com foco em alcance e conexão.</p></article>
+        <article class="deliverCard"><span class="deliverIcon">◉</span><h3>Stories</h3><p>Conteúdos rápidos para relacionamento, rotina, divulgação e chamada.</p></article>
+        <article class="deliverCard"><span class="deliverIcon">✎</span><h3>Legendas</h3><p>Textos, chamadas, CTAs e hashtags alinhados ao objetivo do conteúdo.</p></article>
+        <article class="deliverCard"><span class="deliverIcon">✦</span><h3>Campanhas</h3><p>Pacotes coordenados para datas, lançamentos, ações e comunicação recorrente.</p></article>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section socialSection">
-  <span class="eyebrow dark">Operação de conteúdo</span>
-  <h2>Do briefing à publicação, tudo começa pelo contexto da marca.</h2>
-  <p class="lead">A aplicação estrutura clientes, marcas, projetos de conteúdo, peças, legendas, CTAs, hashtags, canais, calendário e registros de geração assistida.</p>
-  <div class="grid three socialFeatureGrid">
-    <article class="card socialFeature"><span class="socialIcon">✦</span><h3>Identidade da marca</h3><p>Tom de voz, público, cores, palavras preferidas, restrições, logo e contexto para manter consistência.</p></article>
-    <article class="card socialFeature"><span class="socialIcon">▦</span><h3>Projetos de conteúdo</h3><p>Objetivo, formato, canal, legenda, CTA, hashtags, status, agenda e histórico em um único fluxo.</p></article>
-    <article class="card socialFeature"><span class="socialIcon">AI</span><h3>Produção assistida</h3><p>Templates e registros de geração apoiam a criação sem perder o contexto e a identidade de cada marca.</p></article>
-  </div>
-</section>
+  <section class="socialSectionV2">
+    <div class="socialWrap">
+      <div class="sectionHead"><span class="sectionKicker">Para quem é</span><h2>Conteúdo para quem precisa aparecer, comunicar e crescer.</h2></div>
+      <div class="audienceGrid">
+        <article class="audienceCard"><strong>Influenciadores</strong><p>Mais frequência e apoio para transformar ideias em conteúdo recorrente.</p></article>
+        <article class="audienceCard"><strong>Criadores de conteúdo</strong><p>Pautas, roteiros, carrosséis, legendas e campanhas para ganhar escala.</p></article>
+        <article class="audienceCard"><strong>Profissionais e marcas pessoais</strong><p>Presença digital com posicionamento, autoridade e identidade.</p></article>
+        <article class="audienceCard"><strong>Empresas e negócios</strong><p>Comunicação constante para produtos, serviços, ofertas e relacionamento.</p></article>
+        <article class="audienceCard"><strong>Instituições</strong><p>Conteúdo informativo e institucional com linguagem coerente.</p></article>
+        <article class="audienceCard"><strong>Projetos e organizações</strong><p>Comunicação de ações, propósito, impacto, agenda e mobilização.</p></article>
+        <article class="audienceCard"><strong>Agências</strong><p>Mais capacidade de produção e organização para múltiplos clientes.</p></article>
+        <article class="audienceCard"><strong>Equipes de comunicação</strong><p>Uma rotina estruturada para planejar, revisar e entregar conteúdo.</p></article>
+      </div>
+    </div>
+  </section>
 
-<section class="section socialFlowSection">
-  <div class="socialFlowCopy"><span class="socialEyebrow">FLUXO EDITORIAL</span><h2>Uma rotina visual para produzir com método.</h2><p>Organize o trabalho em etapas claras, mantendo aprovação, agenda e histórico de cada conteúdo.</p></div>
-  <div class="socialPipeline"><span><b>01</b>Marca</span><span><b>02</b>Ideia</span><span><b>03</b>Produção</span><span><b>04</b>Revisão</span><span><b>05</b>Agenda</span></div>
-  <p class="socialNote">Publicação automática em redes sociais somente é oferecida quando as integrações oficiais de cada plataforma estiverem homologadas.</p>
-</section>
+  <section class="socialSectionV2">
+    <div class="socialWrap">
+      <div class="sectionHead"><span class="sectionKicker">Como funciona</span><h2>Você traz o contexto. Nós transformamos em conteúdo.</h2></div>
+      <div class="processGrid">
+        <article class="processStep"><b>01</b><h3>Conhecemos você</h3><p>Marca, atuação, público, linguagem, produtos, serviços e objetivos.</p></article>
+        <article class="processStep"><b>02</b><h3>Planejamos</h3><p>Organizamos temas, pautas, formatos, campanhas e frequência.</p></article>
+        <article class="processStep"><b>03</b><h3>Produzimos</h3><p>Desenvolvemos textos, estrutura visual, roteiros, CTAs e peças.</p></article>
+        <article class="processStep"><b>04</b><h3>Você revisa</h3><p>Aprova o conteúdo ou solicita os ajustes previstos no plano contratado.</p></article>
+        <article class="processStep"><b>05</b><h3>Conteúdo pronto</h3><p>Você recebe uma produção organizada para utilizar nas suas redes.</p></article>
+      </div>
+    </div>
+  </section>
 
-<section class="section socialAudience">
-  <div class="split">
-    <div><span class="eyebrow dark">Para quem é</span><h2>Uma operação de conteúdo com método, não uma agência genérica.</h2><p class="lead">Indicada para empresas, marcas, profissionais, veículos e equipes de comunicação que precisam produzir conteúdo recorrente com organização e identidade.</p></div>
-    <div class="socialPilotCard"><span>Implantação assistida</span><h3>Comece com um projeto piloto.</h3><p>O produto está em evolução e homologação. A contratação inicial é feita por escopo definido, sem prometer integrações ainda não homologadas.</p><a class="btn socialPrimary" href="/solicitacao-institucional.php">Solicitar projeto piloto</a></div>
-  </div>
-</section>
+  <section class="socialSectionV2">
+    <div class="socialWrap">
+      <div class="sectionHead"><span class="sectionKicker">Por que Vitrine Social Midia</span><h2>Mais conteúdo. Mais consistência. Menos improviso.</h2></div>
+      <div class="benefitGrid">
+        <article class="benefitCard"><span class="deliverIcon">◎</span><h3>Consistência que fortalece</h3><p>Planejamento e produção recorrente para não deixar suas redes abandonadas ou depender de conteúdo de última hora.</p></article>
+        <article class="benefitCard"><span class="deliverIcon">◷</span><h3>Mais tempo para o que importa</h3><p>Reduza o tempo gasto pensando em pautas, textos, formatos e organização da produção.</p></article>
+        <article class="benefitCard"><span class="deliverIcon">AI</span><h3>IA com contexto</h3><p>A inteligência artificial apoia a criação e o refinamento sem substituir o contexto, a identidade e a revisão da comunicação.</p></article>
+      </div>
+    </div>
+  </section>
 
-<section class="section socialCta">
-  <span class="socialEyebrow">VITRINE SOCIAL MEDIA</span>
-  <h2>Transforme sua produção de conteúdo em uma operação organizada.</h2>
-  <p>Apresente sua rotina atual e receba uma proposta compatível com canais, volume de conteúdo e processo de aprovação.</p>
-  <div class="actions" style="justify-content:center"><a class="btn socialPrimary" href="/solicitacao-institucional.php">Solicitar apresentação</a><a class="btn socialGhost" href="/diagnostico.php?origem=social-media">Receber diagnóstico</a></div>
-</section>
+  <section class="socialSectionV2" id="planos">
+    <div class="socialWrap">
+      <div class="sectionHead"><span class="sectionKicker">Planos e contratação</span><h2>Escolha o nível de produção que combina com a sua presença digital.</h2><p class="sectionIntro">A estrutura comercial está pronta para contratação recorrente. Os valores serão publicados aqui assim que a tabela definitiva do Vitrine Social Midia for homologada.</p></div>
+      <div class="plansGrid">
+        <article class="planCard"><span class="planBadge">COMEÇAR</span><h3>Essencial</h3><p class="planFor">Para quem precisa iniciar ou organizar a presença nas redes.</p><div class="planPrice">Valor em homologação<small>contratação mensal</small></div><ul class="planList"><li>Planejamento de conteúdo</li><li>Posts e legendas</li><li>Identidade de comunicação</li><li>Revisão prevista no pacote</li></ul><a class="socialBtn socialBtnGhost" href="/solicitacao-institucional.php?origem=social-media&plano=essencial">Tenho interesse</a></article>
+        <article class="planCard featured"><span class="planBadge">MAIS PRESENÇA</span><h3>Presença</h3><p class="planFor">Para quem quer manter frequência e variedade de formatos.</p><div class="planPrice">Valor em homologação<small>contratação mensal</small></div><ul class="planList"><li>Planejamento recorrente</li><li>Posts e carrosséis</li><li>Roteiros para vídeos</li><li>Legendas, CTAs e hashtags</li></ul><a class="socialBtn socialBtnPrimary" href="/solicitacao-institucional.php?origem=social-media&plano=presenca">Quero este plano</a></article>
+        <article class="planCard"><span class="planBadge">ESCALA</span><h3>Pro</h3><p class="planFor">Para produção mais intensa, campanhas e múltiplos formatos.</p><div class="planPrice">Valor em homologação<small>contratação mensal</small></div><ul class="planList"><li>Maior volume de conteúdo</li><li>Campanhas coordenadas</li><li>Mais formatos e frequência</li><li>Fluxo de revisão organizado</li></ul><a class="socialBtn socialBtnGhost" href="/solicitacao-institucional.php?origem=social-media&plano=pro">Tenho interesse</a></article>
+        <article class="planCard"><span class="planBadge">PERSONALIZADO</span><h3>Sob medida</h3><p class="planFor">Para agências, equipes, múltiplas marcas ou demandas especiais.</p><div class="planPrice">Proposta personalizada<small>escopo conforme necessidade</small></div><ul class="planList"><li>Volume personalizado</li><li>Múltiplas marcas ou projetos</li><li>Fluxo adaptado à operação</li><li>Atendimento por escopo</li></ul><a class="socialBtn socialBtnGhost" href="/solicitacao-institucional.php?origem=social-media&plano=sob-medida">Solicitar proposta</a></article>
+      </div>
+      <div class="socialNotice">Não prometemos automações ainda não homologadas. Publicação automática, integrações específicas, analytics completos e outros recursos avançados entram somente quando estiverem validados para cada canal.</div>
+    </div>
+  </section>
+
+  <section class="socialSectionV2">
+    <div class="socialWrap socialFaq">
+      <div><span class="sectionKicker">Dúvidas frequentes</span><h2>Antes de contratar.</h2><p class="sectionIntro">O serviço é pensado para tornar sua produção mais previsível, organizada e recorrente.</p></div>
+      <div class="faqList">
+        <details><summary>Preciso ser uma empresa para contratar?</summary><p>Não. O Vitrine Social Midia atende profissionais, influenciadores, criadores de conteúdo, marcas pessoais, empresas, instituições, projetos, organizações e equipes.</p></details>
+        <details><summary>O conteúdo é genérico de inteligência artificial?</summary><p>Não. A IA é uma camada de apoio. O conteúdo parte do seu contexto, objetivos, público, identidade e direcionamento.</p></details>
+        <details><summary>Posso revisar antes de usar?</summary><p>Sim. O fluxo prevê revisão e os ajustes definidos no pacote contratado antes da entrega final.</p></details>
+        <details><summary>Vocês produzem posts, carrosséis e roteiros?</summary><p>Sim. A oferta inclui diferentes formatos de conteúdo conforme o plano contratado, incluindo posts, carrosséis, legendas, campanhas e roteiros para vídeos curtos.</p></details>
+        <details><summary>A publicação nas redes é automática?</summary><p>Somente quando houver integração oficial homologada para o canal. Enquanto isso, a entrega é organizada para publicação pelo responsável da conta.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="socialCtaV2">
+    <div class="socialWrap"><div class="socialCtaBox"><span class="socialEyebrowV2">VITRINE SOCIAL MIDIA</span><h2>Suas redes precisam de conteúdo. Sua rotina não precisa virar uma fábrica de improvisos.</h2><p>Transforme sua presença digital em uma produção recorrente, organizada e alinhada ao que você quer comunicar.</p><div class="socialActionsV2"><a class="socialBtn socialBtnPrimary" href="#planos">Ver planos</a><a class="socialBtn socialBtnGhost" href="/solicitacao-institucional.php?origem=social-media">Quero contratar</a></div><div class="socialFine">A disponibilidade de formatos e recursos varia conforme o plano e o estágio de homologação das integrações.</div></div></div>
+  </section>
 </div>
 <?php require __DIR__.'/includes/footer.php'; ?>
