@@ -1,0 +1,28 @@
+<?php $title='Desenvolvimento de Soluções Digitais'; $description='A VITRINE IA PRO desenvolve soluções digitais escaláveis em modelos SaaS, SaaS personalizado e White Label.'; require __DIR__.'/includes/header.php'; ?>
+<section class="hero heroPremium marketHero">
+  <div class="heroGrid">
+    <div>
+      <span class="eyebrow">Soluções digitais escaláveis</span>
+      <h1>Você apresenta a necessidade. A VITRINE IA PRO desenvolve a solução digital.</h1>
+      <p>Desenvolvemos sistemas, plataformas, portais, aplicativos, integrações e automações preparados para crescer com a operação. A solução pode nascer como SaaS, SaaS personalizado ou White Label, conforme o modelo de negócio e o nível de personalização necessário.</p>
+      <div class="actions"><a class="btn" href="/diagnostico.php">Conte o que você precisa</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div>
+      <div class="heroTrust"><span>SaaS</span><span>White Label</span><span>Integrações</span><span>Evolução contínua</span></div>
+    </div>
+    <div class="officialIdentityCard">
+      <div class="previewTop"><strong>Da necessidade à solução</strong><span>diagnóstico, arquitetura, implantação e escala</span></div>
+      <div class="previewGrid"><article><b>01</b><span>Diagnóstico</span></article><article><b>02</b><span>Escopo</span></article><article><b>03</b><span>Construção</span></article><article><b>04</b><span>Escala</span></article></div>
+      <div class="identityPills"><span>Web</span><span>Mobile</span><span>Automação</span><span>IA</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section"><span class="eyebrow dark">O que desenvolvemos</span><h2>Soluções conectadas ao processo real da sua organização.</h2><p class="lead">Não partimos de uma lista genérica de funcionalidades. Entendemos o processo, os gargalos, os usuários, as integrações necessárias e o resultado esperado para estruturar uma solução que possa ser implantada e evoluída com segurança.</p><div class="grid three"><article class="card"><h3>Sistemas e plataformas</h3><p>Áreas administrativas, CRMs, dashboards, fluxos internos, gestão de cadastros, operações comerciais, plataformas e ferramentas específicas para equipes.</p></article><article class="card"><h3>Portais, sites e aplicativos</h3><p>Portais institucionais, experiências de alta conversão, áreas de cliente, soluções mobile e aplicações responsivas orientadas ao público.</p></article><article class="card"><h3>Integrações, automações e IA</h3><p>APIs, conexão entre sistemas, processamento de dados, automações de rotina e recursos de inteligência artificial aplicados ao processo.</p></article></div></section>
+
+<section class="section alt"><span class="eyebrow dark">Modelos de contratação</span><h2>Uma solução preparada para crescer com a operação.</h2><div class="grid three"><article class="card tvAccent"><h3>SaaS</h3><p>Solução padronizada, hospedada e evoluída continuamente pela VITRINE IA PRO, com planos, módulos, licenciamento e suporte recorrente.</p></article><article class="card newsAccent"><h3>SaaS Personalizado</h3><p>Partimos de uma base validada e adaptamos identidade, integrações, fluxos e módulos ao processo específico do cliente.</p></article><article class="card govAccent"><h3>White Label</h3><p>Para operações que precisam utilizar a solução com marca e identidade próprias, mantendo uma base tecnológica escalável e atualizável.</p></article></div></section>
+
+<section class="section"><span class="eyebrow dark">Como funciona</span><h2>Do problema à implantação, com escopo claro.</h2><div class="flowSteps"><span>Necessidade</span><span>Diagnóstico</span><span>Escopo</span><span>Proposta</span><span>Desenvolvimento</span><span>Homologação</span><span>Implantação</span><span>Evolução</span></div><p class="lead" style="margin-top:24px">A proposta define entregáveis, responsabilidades, integrações, critérios de aceite, implantação, licenciamento e suporte. Assim a solução nasce com objetivo operacional e modelo de evolução definidos.</p></section>
+
+<section class="section alt"><span class="eyebrow dark">Nem tudo precisa começar do zero</span><h2>Produtos e componentes existentes podem acelerar a solução.</h2><p class="lead">Antes de propor um desenvolvimento exclusivo, verificamos se TV Digital Enterprise, Portal News AI Pro, Guia Digital da Cidade®, Governo Digital IA, Vitrine Social Media ou outra solução já resolve parte da necessidade. Quando isso acontece, personalizamos e integramos o necessário para reduzir tempo de implantação.</p><div class="grid three"><article class="card"><h3>Solução pronta</h3><p>Quando um produto atende a necessidade, a implantação tende a ser mais rápida, previsível e escalável.</p></article><article class="card"><h3>Base + personalização</h3><p>Uma solução existente recebe identidade, integrações e processos específicos sem perder capacidade de evolução.</p></article><article class="card"><h3>Solução exclusiva</h3><p>Quando o processo exige arquitetura própria, estruturamos uma nova solução com possibilidade de evolução recorrente.</p></article></div></section>
+
+<section class="section cta"><span class="eyebrow dark">Conte o problema</span><h2>Você não precisa saber qual tecnologia comprar.</h2><p class="lead">Explique sua necessidade, seu público e o resultado esperado. A VITRINE IA PRO identifica o melhor caminho entre uma solução SaaS, uma base personalizada, White Label ou um novo desenvolvimento.</p><div class="actions" style="justify-content:center"><a class="btn" href="/diagnostico.php">Conte o que você precisa</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div></section>
+<?php require __DIR__.'/includes/footer.php'; ?>

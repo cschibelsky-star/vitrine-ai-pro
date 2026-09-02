@@ -3,6 +3,8 @@ name: PHP Syntax
 on:
   pull_request:
     paths:
+      - '*.php'
+      - 'includes/**/*.php'
       - 'app/**/*.php'
       - 'bootstrap/**/*.php'
       - 'config/**/*.php'
@@ -28,4 +30,4 @@ jobs:
           coverage: none
 
       - name: Validate PHP syntax
-        run: find app bootstrap config database routes -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find . -maxdepth 1 -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l && find includes app bootstrap config database routes -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
