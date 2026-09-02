@@ -15,10 +15,13 @@ class AiProviderSeeder extends Seeder
                 'name' => 'Gemini',
                 'provider_type' => 'text',
                 'status' => 'ativo',
-                'notes' => 'Google Gemini para estratégia, conteúdo, análise e apoio editorial.',
+                'notes' => 'Google Gemini para estratégia, conteúdo, análise, apoio editorial e geração de imagem.',
                 'config' => [
                     'model_default' => 'gemini-2.5-flash',
-                    'capabilities' => ['marketing_strategy', 'copy', 'critical_review'],
+                    'capabilities' => ['marketing_strategy', 'copy', 'critical_review', 'image_generation'],
+                    'models' => [
+                        'image_generation' => 'gemini-3.1-flash-image',
+                    ],
                 ],
             ],
             [
