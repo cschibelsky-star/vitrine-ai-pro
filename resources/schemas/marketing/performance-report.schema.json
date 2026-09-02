@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/performance-report-v1.json",
+  "title": "Performance Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "performance_report_id",
+    "campaign_id",
+    "period",
+    "metrics",
+    "insights",
+    "recommendations",
+    "status"
+  ],
+  "properties": {
+    "performance_report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "period": {
+      "type": "object"
+    },
+    "metrics": {
+      "type": "array"
+    },
+    "insights": {
+      "type": "array"
+    },
+    "anomalies": {
+      "type": "array"
+    },
+    "recommendations": {
+      "type": "array"
+    },
+    "status": {
+      "const": "completed"
+    }
+  }
+}

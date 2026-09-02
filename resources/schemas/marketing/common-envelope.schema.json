@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/common-envelope-v1.json",
+  "title": "Marketing Agent Common Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tenant_id", "company_id", "campaign_id", "task_id", "agent_id", "attempt", "language", "dependencies", "input_refs", "constraints", "payload"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "tenant_id": {"type": "integer", "minimum": 1},
+    "company_id": {"type": "integer", "minimum": 1},
+    "campaign_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "agent_id": {"type": "string", "minLength": 1},
+    "attempt": {"type": "integer", "minimum": 1},
+    "language": {"const": "pt-BR"},
+    "dependencies": {"type": "array", "items": {"type": "string"}},
+    "input_refs": {"type": "array", "items": {"type": "string"}},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["may_publish", "may_spend", "may_invent_facts"],
+      "properties": {
+        "may_publish": {"const": false},
+        "may_spend": {"const": false},
+        "may_invent_facts": {"const": false}
+      }
+    },
+    "payload": {"type": "object"}
+  }
+}
