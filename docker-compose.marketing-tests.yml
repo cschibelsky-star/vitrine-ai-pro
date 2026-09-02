@@ -13,7 +13,7 @@ services:
       - ALL
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
-      - /project/storage/framework/cache/data:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/framework/cache:rw,noexec,nosuid,nodev,size=16m
       - /project/storage/framework/sessions:rw,noexec,nosuid,nodev,size=16m
       - /project/storage/framework/views:rw,noexec,nosuid,nodev,size=16m
       - /project/storage/logs:rw,noexec,nosuid,nodev,size=16m
