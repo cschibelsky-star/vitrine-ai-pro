@@ -1,149 +1,133 @@
-x-core-db-env: &core-db-env
-  APP_NAME: "Vitrine IA Pro Core HML"
-  APP_ENV: homologation
-  APP_DEBUG: "false"
-  APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
-  DB_CONNECTION: mysql
-  DB_HOST: core_db
-  DB_PORT: 3306
-  DB_DATABASE: vitrine_core_hml
-  DB_USERNAME: vitrine_core
-  DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
-
 services:
-  core_app:
-    image: vitrine-core-hml-app:latest
-    build:
-      context: .
-      dockerfile: docker/core/php/Dockerfile
-    container_name: vitrine_core_app_hml
-    restart: unless-stopped
-    working_dir: /var/www/html
-    command: php-fpm
-    env_file:
-      - ../.env.runtime
-    environment:
-      <<: *core-db-env
-      APP_URL: "http://127.0.0.1:8893"
-      SESSION_DRIVER: file
-      CACHE_STORE: file
-      QUEUE_CONNECTION: sync
-      CENTRO_IA_INTERNAL_TOKEN: "HML-CURSOS-IA"
-      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-      HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
-    depends_on:
-      core_db:
-        condition: service_healthy
-      core_seed_agents:
-        condition: service_completed_successfully
-    networks:
-      - core_hml_internal
-      - vitrine_net
-
-  core_migrate:
-    image: vitrine-core-hml-app:latest
-    pull_policy: never
-    container_name: vitrine_core_migrate_hml
-    restart: "no"
-    working_dir: /var/www/html
-    command: >-
-      sh -lc "php artisan config:clear
-      && php artisan migrate --path=database/migrations/2024_01_01_000002_create_companies_table.php --force
-      && php artisan migrate --path=database/migrations/2024_01_01_000003_create_products_table.php --force
-      && php artisan migrate --path=database/migrations/2024_01_01_000004_create_licenses_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130001_create_ai_providers_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130002_create_ai_agents_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130003_create_ai_queues_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130004_create_ai_executions_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130005_create_ai_consumptions_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130006_create_ai_alerts_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force"
-    environment:
-      <<: *core-db-env
-    depends_on:
-      core_db:
-        condition: service_healthy
-    networks:
-      - core_hml_internal
-
-  core_seed_providers:
-    image: vitrine-core-hml-app:latest
-    pull_policy: never
-    container_name: vitrine_core_seed_providers_hml
-    restart: "no"
-    working_dir: /var/www/html
-    command: php artisan db:seed --class=AiProviderSeeder --force
-    environment:
-      <<: *core-db-env
-    depends_on:
-      core_migrate:
-        condition: service_completed_successfully
-    networks:
-      - core_hml_internal
-
-  core_seed_agents:
-    image: vitrine-core-hml-app:latest
-    pull_policy: never
-    container_name: vitrine_core_seed_agents_hml
-    restart: "no"
-    working_dir: /var/www/html
-    command: php artisan db:seed --class=AiAgentSeeder --force
-    environment:
-      <<: *core-db-env
-      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
-    depends_on:
-      core_seed_providers:
-        condition: service_completed_successfully
-    networks:
-      - core_hml_internal
-
-  core_web:
-    image: nginx:stable
-    container_name: vitrine_core_web_hml
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8893:80"
-    volumes:
-      - ./:/var/www/html:ro
-      - ./docker/core/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      core_app:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - core_hml_internal
-      - vitrine_net
-
-  core_db:
+  marketing_db:
     image: mariadb:11.4
-    container_name: vitrine_core_db_hml
+    container_name: vitrine_marketing_db_hml
     restart: unless-stopped
     environment:
-      MARIADB_DATABASE: vitrine_core_hml
-      MARIADB_USER: vitrine_core
-      MARIADB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
-      MARIADB_ROOT_PASSWORD: "VitrineCoreRootHml_2026_b7c42e"
+      MARIADB_DATABASE: vitrine_marketing_hml
+      MARIADB_USER: vitrine_marketing
+      MARIADB_PASSWORD: "VitrineMarketingHml_2026_8f3a91"
+      MARIADB_ROOT_PASSWORD: "VitrineMarketingRootHml_2026_b7c42e"
     volumes:
-      - core_db_hml_v2:/var/lib/mysql
+      - marketing_db_hml:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 10
     networks:
-      - core_hml_internal
+      - vitrine_net
+
+  marketing_app:
+    image: vitrine-marketing-agents-core-hml-app:latest
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_marketing_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php-fpm
+    env_file:
+      - ../.env.runtime
+    environment:
+      APP_NAME: "Vitrine Marketing IA HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      DB_CONNECTION: mysql
+      DB_HOST: marketing_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_marketing_hml
+      DB_USERNAME: vitrine_marketing
+      DB_PASSWORD: "VitrineMarketingHml_2026_8f3a91"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - marketing_storage_hml:/var/www/html/storage
+    depends_on:
+      marketing_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
+  marketing_validate:
+    image: vitrine-marketing-agents-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_marketing_validate_hml
+    restart: "no"
+    working_dir: /var/www/html
+    env_file:
+      - ../.env.runtime
+    environment:
+      APP_NAME: "Vitrine Marketing IA HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+      DB_CONNECTION: mysql
+      DB_HOST: marketing_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_marketing_hml
+      DB_USERNAME: vitrine_marketing
+      DB_PASSWORD: "VitrineMarketingHml_2026_8f3a91"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    command:
+      - sh
+      - -lc
+      - |
+        set -eu
+        rm -f /evidence/result.json /evidence/run.txt /evidence/exit.json
+        exec > /evidence/run.txt 2>&1
+        trap 'code=$$?; printf "{\"exit_code\":%s}\n" "$$code" > /evidence/exit.json' EXIT
+        echo "[1/5] lint"
+        php -l app/Services/Ai/AiExecutionService.php
+        php -l app/Services/Ai/AiRoutingService.php
+        php -l app/Services/Ai/AiMediaGenerationService.php
+        php -l app/Models/AiMediaGeneration.php
+        php -l database/migrations/2026_09_01_211700_create_ai_media_generations_table.php
+        echo "[2/5] media migration"
+        php artisan migrate --path=database/migrations/2026_09_01_211700_create_ai_media_generations_table.php --force
+        php artisan db:seed --class=AiProviderSeeder --force
+        php artisan db:seed --class=AiAgentSeeder --force
+        php -r '
+        require "vendor/autoload.php";
+        $$app = require "bootstrap/app.php";
+        $$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        $$agent = App\Models\AiAgent::query()->where("slug", "marketing-ia")->firstOrFail();
+        $$router = $$app->make(App\Services\Ai\AiRoutingService::class);
+        $$textResult = $$router->execute($$agent, "Crie uma chamada curta de marketing para a Vitrine IA Pro. Responda em uma frase.", "copy");
+        $$textOutput = is_string($$textResult->output) ? trim($$textResult->output) : json_encode($$textResult->output, JSON_UNESCAPED_UNICODE);
+        $$textOk = $$textResult->status === "Concluído" && $$textOutput !== "";
+        $$textModel = $$textResult->model_name ?: data_get($$textResult->metadata, "model_name");
+        $$evidence = [
+            "ok" => $$textOk,
+            "text_ok" => $$textOk,
+            "text_status" => $$textResult->status,
+            "text_model" => $$textModel,
+            "text_provider_id" => $$textResult->ai_provider_id,
+            "text_output_nonempty" => $$textOutput !== "",
+            "text_output" => mb_substr($$textOutput, 0, 1200),
+            "paid_image_e2e" => "disabled_by_default",
+            "paid_image_reason" => "Nano Banana API requires paid billing; run separately when billing is enabled.",
+        ];
+        file_put_contents("/evidence/result.json", json_encode($$evidence, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        exit($$evidence["ok"] ? 0 : 2);
+        '
+    volumes:
+      - marketing_storage_hml:/var/www/html/storage
+      - ./storage/app/marketing-e2e:/evidence
+    depends_on:
+      marketing_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
 
 volumes:
-  core_db_hml_v2:
+  marketing_db_hml:
+  marketing_storage_hml:
 
 networks:
-  core_hml_internal:
-    driver: bridge
   vitrine_net:
     external: true

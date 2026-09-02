@@ -51,10 +51,19 @@ class AiMediaGenerationService
                 'finished_at' => ($result['status'] ?? null) === 'Concluído' ? now() : null,
             ]);
         } catch (Throwable $e) {
+            $message = $e->getMessage();
+            $quotaUnavailable = str_contains(strtolower($message), 'quota')
+                || str_contains($message, 'HTTP 429')
+                || str_contains(strtolower($message), 'too_many_requests');
+
             $generation->update([
-                'status' => 'Erro',
-                'error_message' => $e->getMessage(),
-                'output' => $e->getMessage(),
+                'status' => $quotaUnavailable ? 'Indisponível' : 'Erro',
+                'error_message' => $message,
+                'output' => $message,
+                'metadata' => array_merge((array) $generation->metadata, [
+                    'failure_type' => $quotaUnavailable ? 'quota_or_billing' : 'provider_error',
+                    'retryable' => ! $quotaUnavailable,
+                ]),
                 'duration_ms' => (int) round((microtime(true) - $started) * 1000),
                 'finished_at' => now(),
             ]);
@@ -108,7 +117,7 @@ class AiMediaGenerationService
                 ],
                 'response_format' => [
                     'type' => 'image',
-                    'mime_type' => 'image/png',
+                    'mime_type' => 'image/jpeg',
                     'aspect_ratio' => '1:1',
                     'image_size' => '1K',
                 ],

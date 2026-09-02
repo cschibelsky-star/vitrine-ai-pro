@@ -32,6 +32,10 @@ class AiExecutionService
             'model_name' => $model,
             'status' => 'Processando',
             'input' => $prompt,
+            'metadata' => [
+                'provider_slug' => $providerIdentity,
+                'model_name' => $model,
+            ],
             'started_at' => now(),
         ]));
 
@@ -165,7 +169,7 @@ class AiExecutionService
 
         return match ($providerIdentity) {
             'openai' => 'gpt-4o-mini',
-            'gemini', 'google', 'google-gemini' => 'gemini-2.5-flash',
+            'gemini', 'google', 'google-gemini' => 'gemini-3.6-flash',
             default => 'manual',
         };
     }

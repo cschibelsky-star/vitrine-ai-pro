@@ -17,7 +17,7 @@ class AiProviderSeeder extends Seeder
                 'status' => 'ativo',
                 'notes' => 'Google Gemini para estratégia, conteúdo, análise e geração de imagem.',
                 'config' => [
-                    'model_default' => 'gemini-2.5-flash',
+                    'model_default' => 'gemini-3.6-flash',
                     'capabilities' => ['marketing_strategy', 'copy', 'critical_review', 'image_generation'],
                     'models' => [
                         'image_generation' => 'gemini-3.1-flash-image',
