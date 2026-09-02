@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
 use App\Services\Ai\AiExecutionService;
+use App\Services\Ai\AiRoutingService;
 use Illuminate\Http\Request;
 
 class AiRunController extends Controller
@@ -15,7 +16,7 @@ class AiRunController extends Controller
         return view('ai.run', compact('agents'));
     }
 
-    public function store(Request $request, AiExecutionService $service)
+    public function store(Request $request, AiExecutionService $service, AiRoutingService $router)
     {
         $data = $request->validate([
             'ai_agent_id' => ['required', 'exists:ai_agents,id'],
@@ -23,7 +24,10 @@ class AiRunController extends Controller
         ]);
 
         $agent = AiAgent::findOrFail($data['ai_agent_id']);
-        $execution = $service->execute($agent, $data['prompt']);
+
+        $execution = $agent->slug === 'marketing-ia'
+            ? $router->execute($agent, $data['prompt'])
+            : $service->execute($agent, $data['prompt']);
 
         return view('ai.result', compact('agent', 'execution'));
     }
