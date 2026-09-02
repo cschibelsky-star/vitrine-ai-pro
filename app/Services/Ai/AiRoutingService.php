@@ -17,7 +17,7 @@ class AiRoutingService
     {
         $capability = $capability ?: $this->classifyCapability($prompt);
         $route = $this->resolveRoute($capability);
-        $provider = $this->resolveProvider($route['providers']);
+        $provider = $this->resolveProvider($route['providers'], $capability);
 
         if (! $provider) {
             return $this->executor->execute($agent, $prompt);
@@ -68,7 +68,7 @@ class AiRoutingService
         };
     }
 
-    protected function resolveProvider(array $slugs): ?AiProvider
+    protected function resolveProvider(array $slugs, string $capability): ?AiProvider
     {
         foreach ($slugs as $slug) {
             $provider = AiProvider::query()
@@ -81,11 +81,10 @@ class AiRoutingService
             }
 
             $capabilities = (array) data_get($provider->config, 'capabilities', []);
-            if ($capabilities === [] || in_array('*', $capabilities, true)) {
+
+            if ($capabilities === [] || in_array('*', $capabilities, true) || in_array($capability, $capabilities, true)) {
                 return $provider;
             }
-
-            return $provider;
         }
 
         return null;
