@@ -1,0 +1,23 @@
+services:
+  marketing_tests:
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile.test
+    image: vitrine-marketing-agents-core-test:latest
+    command: ["sleep", "infinity"]
+    network_mode: none
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /project/storage/framework/cache/data:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/framework/sessions:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/framework/views:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/logs:rw,noexec,nosuid,nodev,size=16m
+      - /project/bootstrap/cache:rw,noexec,nosuid,nodev,size=16m
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1.0
