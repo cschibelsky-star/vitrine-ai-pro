@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     command: php-fpm
+    env_file:
+      - ../.env.runtime
     environment:
       <<: *core-db-env
       APP_URL: "http://127.0.0.1:8893"
@@ -29,7 +31,6 @@ services:
       CENTRO_IA_INTERNAL_TOKEN: "HML-CURSOS-IA"
       CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
     depends_on:
       core_db:
