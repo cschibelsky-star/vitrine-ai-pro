@@ -4,16 +4,19 @@ namespace App\Services\Ai;
 
 use App\Models\AiAgent;
 use App\Models\AiExecution;
+use App\Models\AiMediaGeneration;
 use App\Models\AiProvider;
 use Illuminate\Support\Str;
 
 class AiRoutingService
 {
-    public function __construct(private readonly AiExecutionService $executor)
-    {
+    public function __construct(
+        private readonly AiExecutionService $executor,
+        private readonly AiMediaGenerationService $mediaGenerator,
+    ) {
     }
 
-    public function execute(AiAgent $agent, string $prompt, ?string $capability = null): AiExecution
+    public function execute(AiAgent $agent, string $prompt, ?string $capability = null): AiExecution|AiMediaGeneration
     {
         $capability = $capability ?: $this->classifyCapability($prompt);
         $route = $this->resolveRoute($capability);
@@ -25,6 +28,10 @@ class AiRoutingService
 
         $model = data_get($provider->config, 'models.'.$capability)
             ?: data_get($provider->config, 'model_default');
+
+        if ($this->isMediaCapability($capability)) {
+            return $this->mediaGenerator->generate($agent, $provider, $capability, $prompt, $model);
+        }
 
         return $this->executor->execute($agent, $prompt, $provider, $model);
     }
@@ -88,6 +95,11 @@ class AiRoutingService
         }
 
         return null;
+    }
+
+    protected function isMediaCapability(string $capability): bool
+    {
+        return in_array($capability, ['image_generation', 'video_generation', 'avatar_video'], true);
     }
 
     protected function containsAny(string $text, array $needles): bool
