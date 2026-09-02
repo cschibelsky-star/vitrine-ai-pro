@@ -12,17 +12,21 @@ use Throwable;
 
 class AiExecutionService
 {
-    public function execute(AiAgent $agent, string $prompt): AiExecution
-    {
+    public function execute(
+        AiAgent $agent,
+        string $prompt,
+        ?AiProvider $providerOverride = null,
+        ?string $modelOverride = null,
+    ): AiExecution {
         $agent = $agent->loadMissing('provider');
-        $provider = $this->resolveProvider($agent);
-        $providerType = $this->providerType($provider);
+        $provider = $providerOverride ?: $this->resolveProvider($agent);
+        $providerIdentity = $this->providerIdentity($provider);
         $apiKey = $this->resolveApiKey($provider);
-        $model = $this->resolveModel($agent, $provider, $providerType);
+        $model = $modelOverride ?: $this->resolveModel($agent, $provider, $providerIdentity);
 
         $execution = AiExecution::create($this->safeData('ai_executions', [
-            'name' => 'Execução - ' . $agent->name,
-            'slug' => 'execucao-' . Str::slug($agent->name) . '-' . time(),
+            'name' => 'Execução - '.$agent->name,
+            'slug' => 'execucao-'.Str::slug($agent->name).'-'.time(),
             'ai_agent_id' => $agent->id,
             'ai_provider_id' => $provider->id ?? null,
             'model_name' => $model,
@@ -34,7 +38,7 @@ class AiExecutionService
         $started = microtime(true);
 
         try {
-            $output = $this->callProvider($providerType, $apiKey, $model, $prompt, $agent);
+            $output = $this->callProvider($providerIdentity, $apiKey, $model, $prompt, $agent);
             $durationMs = (int) round((microtime(true) - $started) * 1000);
 
             $execution->update($this->safeData('ai_executions', [
@@ -64,9 +68,9 @@ class AiExecutionService
 
     public function testProvider(AiProvider $provider): array
     {
-        $providerType = $this->providerType($provider);
+        $providerIdentity = $this->providerIdentity($provider);
         $apiKey = $this->resolveApiKey($provider);
-        $model = $this->resolveModel(null, $provider, $providerType);
+        $model = $this->resolveModel(null, $provider, $providerIdentity);
 
         if (! $apiKey) {
             return [
@@ -78,7 +82,7 @@ class AiExecutionService
 
         try {
             $output = $this->callProvider(
-                $providerType,
+                $providerIdentity,
                 $apiKey,
                 $model,
                 'Responda apenas: CONEXAO_OK',
@@ -112,26 +116,31 @@ class AiExecutionService
         return null;
     }
 
-    protected function providerType(?AiProvider $provider): string
+    protected function providerIdentity(?AiProvider $provider): string
     {
-        return strtolower((string) (
-            $provider->provider_type
-            ?? $provider->type
-            ?? $provider->slug
-            ?? 'manual'
-        ));
+        if (! $provider) {
+            return 'manual';
+        }
+
+        $slug = strtolower(trim((string) ($provider->slug ?? '')));
+
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return strtolower((string) ($provider->name ?? 'manual'));
     }
 
     protected function resolveApiKey(?AiProvider $provider): ?string
     {
-        $providerType = $this->providerType($provider);
+        $providerIdentity = $this->providerIdentity($provider);
         $key = trim((string) ($provider->api_key ?? ''));
 
         if ($key !== '') {
             return $key;
         }
 
-        return match ($providerType) {
+        return match ($providerIdentity) {
             'openai' => env('OPENAI_API_KEY') ?: env('OPENAI_KEY') ?: null,
             'gemini', 'google', 'google-gemini' => env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY') ?: env('GOOGLE_GEMINI_API_KEY') ?: null,
             'heygen' => env('HEYGEN_API_KEY') ?: env('HEYGEN_KEY') ?: null,
@@ -139,7 +148,7 @@ class AiExecutionService
         };
     }
 
-    protected function resolveModel(?AiAgent $agent, ?AiProvider $provider, string $providerType): string
+    protected function resolveModel(?AiAgent $agent, ?AiProvider $provider, string $providerIdentity): string
     {
         if ($agent && ! empty($agent->model_name)) {
             return $agent->model_name;
@@ -154,16 +163,16 @@ class AiExecutionService
             return $config['model_default'];
         }
 
-        return match ($providerType) {
+        return match ($providerIdentity) {
             'openai' => 'gpt-4o-mini',
             'gemini', 'google', 'google-gemini' => 'gemini-2.5-flash',
             default => 'manual',
         };
     }
 
-    protected function callProvider(string $providerType, ?string $apiKey, string $model, string $prompt, AiAgent $agent): string
+    protected function callProvider(string $providerIdentity, ?string $apiKey, string $model, string $prompt, AiAgent $agent): string
     {
-        if (in_array($providerType, ['openai'], true)) {
+        if ($providerIdentity === 'openai') {
             if (! $apiKey) {
                 throw new \RuntimeException('API Key OpenAI ausente.');
             }
@@ -180,34 +189,36 @@ class AiExecutionService
                 ]);
 
             if ($response->failed()) {
-                throw new \RuntimeException('OpenAI erro: ' . $response->body());
+                throw new \RuntimeException('OpenAI erro: '.$response->body());
             }
 
             return (string) data_get($response->json(), 'choices.0.message.content', 'Sem resposta da OpenAI.');
         }
 
-        if (in_array($providerType, ['gemini', 'google', 'google-gemini'], true)) {
+        if (in_array($providerIdentity, ['gemini', 'google', 'google-gemini'], true)) {
             if (! $apiKey) {
                 throw new \RuntimeException('API Key Gemini ausente.');
             }
 
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
-            $response = Http::timeout(60)->post($url, [
-                'contents' => [
-                    ['parts' => [['text' => $prompt]]],
-                ],
-            ]);
+            $response = Http::withHeaders(['X-goog-api-key' => $apiKey])
+                ->timeout(60)
+                ->post($url, [
+                    'contents' => [
+                        ['parts' => [['text' => $prompt]]],
+                    ],
+                ]);
 
             if ($response->failed()) {
-                throw new \RuntimeException('Gemini erro: ' . $response->body());
+                throw new \RuntimeException('Gemini erro: '.$response->body());
             }
 
             return (string) data_get($response->json(), 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
         }
 
-        if ($providerType === 'heygen') {
-            return "HEYGEN CENTRALIZADO: provedor reconhecido. A execução de vídeo será implementada no módulo premium separado.";
+        if ($providerIdentity === 'heygen') {
+            return 'HEYGEN CENTRALIZADO: provedor reconhecido. A execução de vídeo será implementada no módulo premium separado.';
         }
 
         return "EXECUÇÃO INTERNA\n\nAgente: {$agent->name}\nModelo: {$model}\n\nPrompt recebido:\n{$prompt}\n\nResultado: execução interna concluída. Configure OpenAI/Gemini para resposta externa real.";
@@ -220,8 +231,8 @@ class AiExecutionService
         }
 
         DB::table('ai_consumptions')->insert($this->safeData('ai_consumptions', [
-            'name' => 'Consumo - ' . $agent->name,
-            'slug' => 'consumo-' . Str::slug($agent->name) . '-' . time(),
+            'name' => 'Consumo - '.$agent->name,
+            'slug' => 'consumo-'.Str::slug($agent->name).'-'.time(),
             'ai_provider_id' => $provider->id ?? null,
             'ai_agent_id' => $agent->id,
             'model_name' => $model,
@@ -240,9 +251,9 @@ class AiExecutionService
         }
 
         DB::table('ai_alerts')->insert($this->safeData('ai_alerts', [
-            'name' => 'Falha na execução - ' . $agent->name,
-            'title' => 'Falha na execução - ' . $agent->name,
-            'slug' => 'falha-' . Str::slug($agent->name) . '-' . time(),
+            'name' => 'Falha na execução - '.$agent->name,
+            'title' => 'Falha na execução - '.$agent->name,
+            'slug' => 'falha-'.Str::slug($agent->name).'-'.time(),
             'status' => 'Aberto',
             'level' => 'Erro',
             'message' => $message,
