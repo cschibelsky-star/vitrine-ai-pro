@@ -6,11 +6,13 @@
 /storage/app/backups/
 /storage/app/factory/
 /storage/app/commercial/
+/storage/app/marketing-e2e/
 /storage/logs/*
 /bootstrap/cache/*.php
 /core-hml-boot.log
 /docs/core-hml-boot.txt
 *.zip
+*.bak-*
 error_log
 .DS_Store
 /public/storage
