@@ -19,6 +19,12 @@ RUN composer install \
 
 COPY . .
 
-RUN composer dump-autoload --optimize
+RUN mkdir -p \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && composer dump-autoload --optimize
 
 CMD ["vendor/bin/phpunit", "tests/Unit/Marketing", "--colors=never"]
