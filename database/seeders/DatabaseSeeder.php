@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             LicenseSeeder::class,
             PaymentSeeder::class,
             SettingSeeder::class,
+            AiProviderSeeder::class,
+            AiAgentSeeder::class,
         ]);
     }
 }

@@ -1,0 +1,148 @@
+x-core-db-env: &core-db-env
+  APP_NAME: "Vitrine IA Pro Core HML"
+  APP_ENV: homologation
+  APP_DEBUG: "false"
+  APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+  DB_CONNECTION: mysql
+  DB_HOST: core_db
+  DB_PORT: 3306
+  DB_DATABASE: vitrine_core_hml
+  DB_USERNAME: vitrine_core
+  DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
+
+services:
+  core_app:
+    image: vitrine-core-hml-app:latest
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_core_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php-fpm
+    environment:
+      <<: *core-db-env
+      APP_URL: "http://127.0.0.1:8893"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      CENTRO_IA_INTERNAL_TOKEN: "HML-CURSOS-IA"
+      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
+    depends_on:
+      core_db:
+        condition: service_healthy
+      core_seed_agents:
+        condition: service_completed_successfully
+    networks:
+      - core_hml_internal
+      - vitrine_net
+
+  core_migrate:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_migrate_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: >-
+      sh -lc "php artisan config:clear
+      && php artisan migrate --path=database/migrations/2024_01_01_000002_create_companies_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000003_create_products_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000004_create_licenses_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130001_create_ai_providers_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130002_create_ai_agents_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130003_create_ai_queues_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130004_create_ai_executions_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130005_create_ai_consumptions_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130006_create_ai_alerts_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force"
+    environment:
+      <<: *core-db-env
+    depends_on:
+      core_db:
+        condition: service_healthy
+    networks:
+      - core_hml_internal
+
+  core_seed_providers:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_seed_providers_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: php artisan db:seed --class=AiProviderSeeder --force
+    environment:
+      <<: *core-db-env
+    depends_on:
+      core_migrate:
+        condition: service_completed_successfully
+    networks:
+      - core_hml_internal
+
+  core_seed_agents:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_seed_agents_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: php artisan db:seed --class=AiAgentSeeder --force
+    environment:
+      <<: *core-db-env
+      CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
+    depends_on:
+      core_seed_providers:
+        condition: service_completed_successfully
+    networks:
+      - core_hml_internal
+
+  core_web:
+    image: nginx:stable
+    container_name: vitrine_core_web_hml
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8893:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/core/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      core_app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - core_hml_internal
+      - vitrine_net
+
+  core_db:
+    image: mariadb:11.4
+    container_name: vitrine_core_db_hml
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: vitrine_core_hml
+      MARIADB_USER: vitrine_core
+      MARIADB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
+      MARIADB_ROOT_PASSWORD: "VitrineCoreRootHml_2026_b7c42e"
+    volumes:
+      - core_db_hml_v2:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core_hml_internal
+
+volumes:
+  core_db_hml_v2:
+
+networks:
+  core_hml_internal:
+    driver: bridge
+  vitrine_net:
+    external: true

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/qa-report-v1.json",
+  "title": "QA Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "qa_report_id",
+    "campaign_id",
+    "result",
+    "summary",
+    "checks",
+    "issues",
+    "approved_item_ids",
+    "revision_item_ids",
+    "status"
+  ],
+  "properties": {
+    "qa_report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result": {
+      "enum": [
+        "approved",
+        "approved_with_warnings",
+        "needs_revision",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "type": "object"
+    },
+    "checks": {
+      "type": "object"
+    },
+    "issues": {
+      "type": "array"
+    },
+    "approved_item_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "revision_item_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "const": "completed"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/content-package-v1.json",
+  "title": "Content Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "content_package_id",
+    "campaign_id",
+    "message_hierarchy",
+    "content_items",
+    "status"
+  ],
+  "properties": {
+    "content_package_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message_hierarchy": {
+      "type": "object"
+    },
+    "content_items": {
+      "type": "array"
+    },
+    "carousel_scripts": {
+      "type": "array"
+    },
+    "story_sequences": {
+      "type": "array"
+    },
+    "video_scripts": {
+      "type": "array"
+    },
+    "email_sequences": {
+      "type": "array"
+    },
+    "whatsapp_sequences": {
+      "type": "array"
+    },
+    "landing_page_copy": {
+      "type": "object"
+    },
+    "ad_variations": {
+      "type": "array"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "const": "completed"
+    }
+  }
+}

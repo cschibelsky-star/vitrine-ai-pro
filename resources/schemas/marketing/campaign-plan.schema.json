@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/campaign-plan-v1.json",
+  "title": "Campaign Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "plan_id",
+    "campaign_id",
+    "objective",
+    "duration_days",
+    "phases",
+    "channels",
+    "funnel",
+    "deliverables",
+    "kpis",
+    "status"
+  ],
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_days": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phases": {
+      "type": "array"
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "funnel": {
+      "type": "array"
+    },
+    "deliverables": {
+      "type": "object"
+    },
+    "content_matrix": {
+      "type": "array"
+    },
+    "cta_strategy": {
+      "type": "array"
+    },
+    "kpis": {
+      "type": "array"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risks": {
+      "type": "array"
+    },
+    "status": {
+      "const": "completed"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/campaign-v1.json",
+  "title": "Marketing Campaign",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["campaign_id", "tenant_id", "company_id", "product_id", "name", "objective", "automation_mode", "status"],
+  "properties": {
+    "campaign_id": {"type": "string", "minLength": 1},
+    "tenant_id": {"type": "integer", "minimum": 1},
+    "company_id": {"type": "integer", "minimum": 1},
+    "product_id": {"type": "integer", "minimum": 1},
+    "name": {"type": "string", "minLength": 1, "maxLength": 180},
+    "objective": {"type": "string", "minLength": 1},
+    "automation_mode": {"enum": ["manual", "assisted", "autonomous"]},
+    "status": {"enum": ["draft", "ready", "running", "paused", "blocked", "completed", "cancelled"]},
+    "known_facts": {"type": "array"},
+    "missing_information": {"type": "array"},
+    "restrictions": {"type": "array"}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineaipro.com.br/schemas/marketing/distribution-plan-v1.json",
+  "title": "Distribution Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "distribution_plan_id",
+    "calendar",
+    "status"
+  ],
+  "properties": {
+    "distribution_plan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calendar": {
+      "type": "array"
+    },
+    "channel_adaptations": {
+      "type": "array"
+    },
+    "sequence_logic": {
+      "type": "array"
+    },
+    "conflicts": {
+      "type": "array"
+    },
+    "status": {
+      "const": "completed"
+    }
+  }
+}

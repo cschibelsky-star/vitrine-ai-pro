@@ -23,6 +23,7 @@ class AiAgentSeeder extends Seeder
             ['name' => 'Turismo IA', 'type' => 'especialista', 'product_scope' => 'Visite Cidade', 'provider' => $gemini, 'description' => 'Roteiros, atrativos, eventos e descrições turísticas.'],
             ['name' => 'Compras IA', 'type' => 'especialista', 'product_scope' => 'Compras Públicas', 'provider' => $openai, 'description' => 'Apoio a DFD, ETP, TR, conferência documental e Lei 14.133.'],
             ['name' => 'Município IA', 'type' => 'especialista', 'product_scope' => 'Município Digital IA', 'provider' => $openai, 'description' => 'Atendimento cidadão, FAQ, serviços públicos e comunicação institucional.'],
+            ['name' => 'Cursos IA', 'type' => 'especialista', 'product_scope' => 'Cursos IA', 'provider' => $openai, 'description' => 'Geração estruturada de cursos, módulos, aulas, objetivos pedagógicos e roteiros didáticos a partir de fontes homologadas.'],
             ['name' => 'SISMED IA', 'type' => 'especialista futuro', 'product_scope' => 'SISMED', 'provider' => $openai, 'description' => 'Apoio administrativo, fluxos internos, relatórios e protocolos.'],
         ];
 
