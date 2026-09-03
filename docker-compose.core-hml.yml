@@ -2,13 +2,13 @@ x-core-db-env: &core-db-env
   APP_NAME: "Vitrine IA Pro Core HML"
   APP_ENV: homologation
   APP_DEBUG: "false"
-  APP_KEY: "base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+  APP_KEY: "${CORE_APP_KEY:?CORE_APP_KEY is required}"
   DB_CONNECTION: mysql
   DB_HOST: core_db
   DB_PORT: 3306
   DB_DATABASE: vitrine_core_hml
   DB_USERNAME: vitrine_core
-  DB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
+  DB_PASSWORD: "${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}"
 
 services:
   core_app:
@@ -26,7 +26,7 @@ services:
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
-      CENTRO_IA_INTERNAL_TOKEN: "HML-CURSOS-IA"
+      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN:?CENTRO_IA_INTERNAL_TOKEN is required}"
       CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
@@ -126,8 +126,8 @@ services:
     environment:
       MARIADB_DATABASE: vitrine_core_hml
       MARIADB_USER: vitrine_core
-      MARIADB_PASSWORD: "VitrineCoreHml_2026_8f3a91"
-      MARIADB_ROOT_PASSWORD: "VitrineCoreRootHml_2026_b7c42e"
+      MARIADB_PASSWORD: "${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}"
+      MARIADB_ROOT_PASSWORD: "${CORE_DB_ROOT_PASSWORD:?CORE_DB_ROOT_PASSWORD is required}"
     volumes:
       - core_db_hml_v2:/var/lib/mysql
     healthcheck:
