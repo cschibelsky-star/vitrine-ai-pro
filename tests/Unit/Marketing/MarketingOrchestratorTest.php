@@ -49,6 +49,33 @@ class MarketingOrchestratorTest extends TestCase
         $this->assertSame(['social_distribution'], $orchestrator->readyAgents($state));
     }
 
+    public function test_vitrine_social_midia_simulation_runs_the_complete_e2e_workflow(): void
+    {
+        $result = app(MarketingOrchestrator::class)->simulateCampaign('VSM-E2E-001');
+
+        $this->assertSame('VSM-E2E-001', $result['campaign_id']);
+        $this->assertSame('simulation', $result['mode']);
+        $this->assertSame([
+            ['product_market_strategist'],
+            ['campaign_planner'],
+            ['copy_content'],
+            ['creative_director', 'video_producer'],
+            ['social_distribution'],
+            ['qa_brand_guardian'],
+        ], $result['waves']);
+        $this->assertSame([
+            'product_market_strategist' => TaskStatus::Completed->value,
+            'campaign_planner' => TaskStatus::Completed->value,
+            'copy_content' => TaskStatus::Completed->value,
+            'creative_director' => TaskStatus::Completed->value,
+            'video_producer' => TaskStatus::Completed->value,
+            'social_distribution' => TaskStatus::Completed->value,
+            'qa_brand_guardian' => TaskStatus::Completed->value,
+        ], $result['final_state']);
+        $this->assertFalse($result['publish_performed']);
+        $this->assertFalse($result['spend_performed']);
+    }
+
     public function test_qa_revision_reopens_only_the_affected_branch(): void
     {
         $orchestrator = app(MarketingOrchestrator::class);
