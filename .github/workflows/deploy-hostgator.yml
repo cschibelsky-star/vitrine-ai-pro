@@ -86,8 +86,8 @@ jobs:
             # Diretório de leads deve permanecer privado/persistente e nunca e substituido pelo deploy.
             mkdir -p "$DOCROOT/data/leads"
 
-            # Verificacao de publicacao: a Home precisa conter o hero comercial atual.
-            grep -Fq "Você apresenta a necessidade. A VITRINE IA PRO desenvolve a solução digital." "$DOCROOT/index.php" \
+            # Verificacao de publicacao: o index no document root deve ser byte-a-byte igual ao index validado no repositorio.
+            cmp -s "$REPO_PATH/index.php" "$DOCROOT/index.php" \
               || { echo "DEPLOY_ERROR: homepage verification failed"; exit 24; }
 
             echo "DEPLOY_OK: public document root synchronized safely"
