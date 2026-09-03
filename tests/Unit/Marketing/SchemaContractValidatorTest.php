@@ -5,7 +5,7 @@ namespace Tests\Unit\Marketing;
 use App\Marketing\Application\SchemaContractValidator;
 use PHPUnit\Framework\TestCase;
 
-class SchemaContractValidatorTest extends PHPUnit\Framework\TestCase
+class SchemaContractValidatorTest extends TestCase
 {
     public function test_empty_decoded_json_object_is_accepted_as_object(): void
     {
