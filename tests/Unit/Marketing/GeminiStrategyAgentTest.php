@@ -42,7 +42,8 @@ class GeminiStrategyAgentTest extends TestCase
             return $request->hasHeader('x-goog-api-key', 'test-key-not-secret')
                 && ! str_contains($request->url(), 'test-key-not-secret')
                 && $request['generationConfig']['responseMimeType'] === 'application/json'
-                && isset($request['generationConfig']['responseSchema']);
+                && isset($request['generationConfig']['responseSchema'])
+                && $request['generationConfig']['responseSchema']['properties']['objections']['items']['type'] === 'object';
         });
     }
 
