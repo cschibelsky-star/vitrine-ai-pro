@@ -32,6 +32,56 @@ final readonly class MarketingOrchestrator
         return $state;
     }
 
+    /**
+     * Executes the workflow without external side effects.
+     *
+     * Agents released in the same wave are logically parallel. The simulation
+     * completes each wave deterministically so it can be asserted in E2E tests.
+     *
+     * @return array{
+     *     campaign_id: string,
+     *     mode: 'simulation',
+     *     waves: list<list<string>>,
+     *     final_state: array<string, string>,
+     *     publish_performed: false,
+     *     spend_performed: false
+     * }
+     */
+    public function simulateCampaign(string $campaignId): array
+    {
+        $state = $this->createCampaign($campaignId);
+        $waves = [];
+
+        while (($readyAgents = $this->readyAgents($state)) !== []) {
+            $waves[] = $readyAgents;
+
+            foreach ($readyAgents as $agentId) {
+                $this->start($state, $agentId);
+            }
+
+            foreach ($readyAgents as $agentId) {
+                $this->complete($state, $agentId);
+            }
+        }
+
+        foreach ($state->tasks() as $agentId => $status) {
+            if ($status !== TaskStatus::Completed) {
+                throw new LogicException(
+                    "Simulation stalled with task [{$agentId}] in status [{$status->value}].",
+                );
+            }
+        }
+
+        return [
+            'campaign_id' => $campaignId,
+            'mode' => 'simulation',
+            'waves' => $waves,
+            'final_state' => $state->toArray(),
+            'publish_performed' => false,
+            'spend_performed' => false,
+        ];
+    }
+
     /** @return list<string> */
     public function readyAgents(CampaignWorkflowState $state): array
     {
