@@ -99,11 +99,14 @@ final readonly class MarketingOrchestrator
                 continue;
             }
 
-            $dependenciesComplete = array_all(
-                $this->registry->dependenciesOf($agentId),
-                fn (string $dependency): bool =>
-                    $state->statusOf($dependency) === TaskStatus::Completed,
-            );
+            $dependenciesComplete = true;
+
+            foreach ($this->registry->dependenciesOf($agentId) as $dependency) {
+                if ($state->statusOf($dependency) !== TaskStatus::Completed) {
+                    $dependenciesComplete = false;
+                    break;
+                }
+            }
 
             if ($dependenciesComplete) {
                 $state->transition($agentId, TaskStatus::Ready);
