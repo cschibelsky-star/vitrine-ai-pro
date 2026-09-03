@@ -8,5 +8,9 @@ return [
             'agent_id' => env('CENTRO_IA_COURSE_GENERATION_AGENT_ID'),
             'agent_slug' => env('CENTRO_IA_COURSE_GENERATION_AGENT_SLUG'),
         ],
+        'via_chat' => [
+            'agent_id' => env('CENTRO_IA_VIA_AGENT_ID'),
+            'agent_slug' => env('CENTRO_IA_VIA_AGENT_SLUG', 'via'),
+        ],
     ],
 ];
