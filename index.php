@@ -27,12 +27,12 @@
 <section class="salesSection lightSection" id="segmentos">
   <div class="salesSectionHead centered"><h2>Soluções por segmento</h2></div>
   <div class="segmentGrid">
-    <article><b class="segIcon blue">▦</b><h3>Empresas e Comércio</h3><p>Plataformas, portais e sistemas para vender mais e gerir melhor seu negócio.</p><a href="/diagnostico.php?perfil=Empresa%20%2F%20Comércio%20%2F%20Prestador%20de%20Serviços">Saiba mais →</a></article>
-    <article><b class="segIcon green">⌂</b><h3>Imobiliário</h3><p>Portais imobiliários, CRM, captação de leads, sites e atendimento automatizado.</p><a href="/diagnostico.php?perfil=Imobiliária%20%2F%20Corretor">Saiba mais →</a></article>
+    <article><b class="segIcon blue">▦</b><h3>Empresas e Comércio</h3><p>Plataformas, portais e sistemas para vender mais e gerir melhor seu negócio.</p><a href="/solucoes.php?segmento=empresas&origem=home-segmentos">Saiba mais →</a></article>
+    <article><b class="segIcon green">⌂</b><h3>Imobiliário</h3><p>Portais imobiliários, CRM, captação de leads, sites e atendimento automatizado.</p><a href="/solucoes.php?segmento=imobiliario&origem=home-segmentos">Saiba mais →</a></article>
     <article><b class="segIcon purple">▰</b><h3>Governo</h3><p>Soluções digitais para gestão pública, transparência e serviços ao cidadão.</p><a href="/governo.php">Saiba mais →</a></article>
     <article><b class="segIcon orange">▣</b><h3>Comunicação e Mídia</h3><p>Portais de notícias, TV Digital e plataformas de conteúdo.</p><a href="/tv-digital.php">Saiba mais →</a></article>
     <article><b class="segIcon cyan">●</b><h3>Cidades e Turismo</h3><p>Guias digitais, eventos, comércio local e turismo inteligente.</p><a href="/guia-digital.php">Saiba mais →</a></article>
-    <article><b class="segIcon pink">♡</b><h3>Terceiro Setor</h3><p>Plataformas para ONGs e instituições com gestão, comunicação e voluntariado.</p><a href="/diagnostico.php?perfil=ONG%20%2F%20Associação%20%2F%20Terceiro%20Setor">Saiba mais →</a></article>
+    <article><b class="segIcon pink">♡</b><h3>Terceiro Setor</h3><p>Plataformas para ONGs e instituições com gestão, comunicação e voluntariado.</p><a href="/solucoes.php?segmento=terceiro-setor&origem=home-segmentos">Saiba mais →</a></article>
   </div>
 </section>
 
