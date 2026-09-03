@@ -71,7 +71,7 @@ final class SchemaContractValidator
     private function assertType(string $schemaName, string $field, mixed $value, array $rules): void
     {
         $valid = match ($rules['type'] ?? null) {
-            'object' => is_array($value) && ! array_is_list($value),
+            'object' => is_array($value) && ($value === [] || ! array_is_list($value)),
             'array' => is_array($value),
             'string' => is_string($value),
             'integer' => is_int($value),
