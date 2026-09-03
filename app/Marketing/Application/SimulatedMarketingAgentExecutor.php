@@ -6,7 +6,7 @@ namespace App\Marketing\Application;
 
 use InvalidArgumentException;
 
-final class SimulatedMarketingAgentExecutor
+final class SimulatedMarketingAgentExecutor implements MarketingAgentExecutor
 {
     /**
      * @param array<string, mixed> $campaign
@@ -110,5 +110,10 @@ final class SimulatedMarketingAgentExecutor
             ],
             default => throw new InvalidArgumentException("No simulated executor for [{$agentId}]."),
         };
+    }
+
+    public function metadataFor(string $agentId): array
+    {
+        return ['provider' => 'simulated', 'fallback' => false];
     }
 }
