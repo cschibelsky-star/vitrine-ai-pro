@@ -156,6 +156,10 @@ PROMPT;
             $result['items'] = $this->toGeminiSchema($result['items']);
         }
 
+        if (($result['type'] ?? null) === 'array' && ! isset($result['items'])) {
+            $result['items'] = ['type' => 'object'];
+        }
+
         return $result;
     }
 }
