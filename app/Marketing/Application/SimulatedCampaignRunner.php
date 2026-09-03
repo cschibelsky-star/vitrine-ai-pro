@@ -23,7 +23,7 @@ final readonly class SimulatedCampaignRunner
     public function __construct(
         private MarketingOrchestrator $orchestrator,
         private AgentRegistry $registry,
-        private SimulatedMarketingAgentExecutor $executor,
+        private ResilientMarketingAgentExecutor $executor,
         private SchemaContractValidator $validator,
     ) {
     }
@@ -44,6 +44,7 @@ final readonly class SimulatedCampaignRunner
         $artifacts = [];
         $executionBatches = [];
         $envelopes = [];
+        $executionMetadata = [];
 
         while (($readyAgents = $this->orchestrator->readyAgents($state)) !== []) {
             $executionBatches[] = $readyAgents;
@@ -73,6 +74,7 @@ final readonly class SimulatedCampaignRunner
                 );
 
                 $output = $this->executor->execute($agentId, $campaign, $inputs);
+                $executionMetadata[$agentId] = $this->executor->metadataFor($agentId);
                 $this->validator->assertValid(self::SCHEMAS[$agentId], $output);
 
                 $serialized = json_encode($output, JSON_THROW_ON_ERROR);
@@ -110,6 +112,7 @@ final readonly class SimulatedCampaignRunner
             'tasks' => $state->toArray(),
             'execution_batches' => $executionBatches,
             'envelopes' => $envelopes,
+            'execution_metadata' => $executionMetadata,
             'artifact_versions' => $artifactVersions ?? [],
             'qa_result' => $artifacts['qa_brand_guardian']['result'],
             'status' => 'completed',
