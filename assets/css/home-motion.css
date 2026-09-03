@@ -1,0 +1,35 @@
+/* Movimento tecnológico sutil da Home comercial */
+.salesHome .salesHero:before{animation:techGridDrift 22s linear infinite}
+.salesHome .salesHero:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:9%;top:22%;background:radial-gradient(circle,rgba(32,137,255,.18),rgba(86,54,255,.08) 45%,transparent 70%);filter:blur(6px);pointer-events:none;animation:techPulseOrb 5.5s ease-in-out infinite}
+.salesHome .salesHeroVisual{position:relative;z-index:2;animation:techFloat 6s ease-in-out infinite;transform-origin:50% 55%}
+.salesHome .salesHeroVisual img{will-change:transform,filter;animation:techGlow 4.8s ease-in-out infinite}
+.salesHome .salesTags span{position:relative;overflow:hidden;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.salesHome .salesTags span:after{content:"";position:absolute;top:0;bottom:0;width:30px;left:-45px;background:linear-gradient(90deg,transparent,rgba(120,205,255,.32),transparent);transform:skewX(-18deg);animation:techTagSweep 6.5s ease-in-out infinite}
+.salesHome .salesTags span:nth-child(2):after{animation-delay:.45s}.salesHome .salesTags span:nth-child(3):after{animation-delay:.9s}.salesHome .salesTags span:nth-child(4):after{animation-delay:1.35s}.salesHome .salesTags span:nth-child(5):after{animation-delay:1.8s}.salesHome .salesTags span:nth-child(6):after{animation-delay:2.25s}
+.salesHome .salesTags span:hover{transform:translateY(-2px);border-color:#4b8cff;box-shadow:0 0 16px rgba(47,141,255,.2)}
+.salesHome .salesPrimary{position:relative;overflow:hidden;animation:techButtonPulse 3.6s ease-in-out infinite}
+.salesHome .salesPrimary:after{content:"";position:absolute;inset:-60% auto -60% -35%;width:24%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:rotate(18deg);animation:techButtonSweep 5.2s ease-in-out infinite}
+.salesHome .salesStrip article>span,.salesHome .segIcon,.salesHome .prodIcon,.salesHome .modelGrid article>span,.salesHome .processGrid article>span{will-change:transform;animation:techIconBreathe 3.8s ease-in-out infinite}
+.salesHome .salesStrip article:nth-child(2)>span,.salesHome .segmentGrid article:nth-child(2) .segIcon,.salesHome .productSalesGrid>a:nth-child(2) .prodIcon{animation-delay:.35s}
+.salesHome .salesStrip article:nth-child(3)>span,.salesHome .segmentGrid article:nth-child(3) .segIcon,.salesHome .productSalesGrid>a:nth-child(3) .prodIcon{animation-delay:.7s}
+.salesHome .salesStrip article:nth-child(4)>span,.salesHome .segmentGrid article:nth-child(4) .segIcon,.salesHome .productSalesGrid>a:nth-child(4) .prodIcon{animation-delay:1.05s}
+.salesHome .salesStrip article:nth-child(5)>span,.salesHome .segmentGrid article:nth-child(5) .segIcon,.salesHome .productSalesGrid>a:nth-child(5) .prodIcon{animation-delay:1.4s}
+.salesHome .salesStrip article:nth-child(6)>span,.salesHome .segmentGrid article:nth-child(6) .segIcon,.salesHome .productSalesGrid>a:nth-child(6) .prodIcon{animation-delay:1.75s}
+.salesHome .salesStrip article,.salesHome .segmentGrid article,.salesHome .modelGrid article,.salesHome .productSalesGrid>a,.salesHome .caseSalesGrid>a{transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease}
+.salesHome .salesStrip article:hover{transform:translateY(-4px);border-color:#3b72b2;box-shadow:0 14px 30px rgba(0,0,0,.2),0 0 22px rgba(31,129,255,.09)}
+.salesHome .caseSalesGrid>a:hover{transform:translateY(-4px);border-color:#4b7dbb;box-shadow:0 18px 40px rgba(0,0,0,.26)}
+.salesHome .caseSalesGrid img{transition:transform .55s ease,filter .55s ease}.salesHome .caseSalesGrid>a:hover img{transform:scale(1.035);filter:saturate(1.08) contrast(1.04)}
+.salesHome .salesFinalCta{background-size:180% 180%;animation:techCtaFlow 9s ease infinite}
+.salesHome .agentFab{animation:techFabPulse 4s ease-in-out infinite}
+@keyframes techGridDrift{0%{background-position:0 0,0 0}100%{background-position:80px 40px,40px 80px}}
+@keyframes techPulseOrb{0%,100%{transform:scale(.92);opacity:.52}50%{transform:scale(1.12);opacity:1}}
+@keyframes techFloat{0%,100%{transform:translate3d(0,0,0) rotate(.15deg)}50%{transform:translate3d(0,-10px,0) rotate(-.2deg)}}
+@keyframes techGlow{0%,100%{filter:drop-shadow(0 28px 55px rgba(0,0,0,.35)) drop-shadow(0 0 0 rgba(32,136,255,0))}50%{filter:drop-shadow(0 32px 62px rgba(0,0,0,.42)) drop-shadow(0 0 18px rgba(32,136,255,.22))}}
+@keyframes techTagSweep{0%,62%{left:-45px;opacity:0}72%{opacity:1}86%,100%{left:130%;opacity:0}}
+@keyframes techButtonPulse{0%,100%{box-shadow:0 0 20px rgba(37,100,255,.28)}50%{box-shadow:0 0 34px rgba(37,125,255,.5)}}
+@keyframes techButtonSweep{0%,58%{left:-35%;opacity:0}68%{opacity:1}82%,100%{left:125%;opacity:0}}
+@keyframes techIconBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.045)}}
+@keyframes techCtaFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes techFabPulse{0%,100%{box-shadow:0 8px 26px rgba(20,104,194,.2)}50%{box-shadow:0 8px 34px rgba(36,173,185,.34)}}
+@media(max-width:650px){.salesHome .salesHeroVisual{animation-duration:7.5s}.salesHome .salesHero:after{width:180px;height:180px;right:-5%;top:35%}}
+@media(prefers-reduced-motion:reduce){.salesHome .salesHero:before,.salesHome .salesHero:after,.salesHome .salesHeroVisual,.salesHome .salesHeroVisual img,.salesHome .salesTags span:after,.salesHome .salesPrimary,.salesHome .salesPrimary:after,.salesHome .salesStrip article>span,.salesHome .segIcon,.salesHome .prodIcon,.salesHome .modelGrid article>span,.salesHome .processGrid article>span,.salesHome .salesFinalCta,.salesHome .agentFab{animation:none!important}.salesHome .salesTags span,.salesHome .salesStrip article,.salesHome .segmentGrid article,.salesHome .modelGrid article,.salesHome .productSalesGrid>a,.salesHome .caseSalesGrid>a,.salesHome .caseSalesGrid img{transition:none!important}.salesHome .salesTags span:hover{transform:none!important}}
