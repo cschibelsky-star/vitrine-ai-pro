@@ -19,13 +19,25 @@ jobs:
           key: ${{ secrets.HOSTGATOR_SSH_KEY }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
-            mkdir -p ~/deploy-backups/vitrine-ai-pro
-            tar -czf ~/deploy-backups/vitrine-ai-pro/backup-$(date +%Y%m%d-%H%M%S).tar.gz --exclude=vendor --exclude=node_modules --exclude=storage/logs .
-            git pull origin main
 
-            # Etapas Laravel sao opcionais nesta hospedagem.
-            if command -v composer >/dev/null 2>&1; then
+            REPO_PATH="${{ secrets.DEPLOY_PATH }}"
+            DOCROOT="$HOME/vitrineiapro.com.br"
+            BACKUP_ROOT="$HOME/deploy-backups/vitrine-ai-pro"
+            STAMP="$(date +%Y%m%d-%H%M%S)"
+
+            test -d "$REPO_PATH" || { echo "DEPLOY_ERROR: repository path missing: $REPO_PATH"; exit 20; }
+            test -d "$DOCROOT" || { echo "DEPLOY_ERROR: document root missing: $DOCROOT"; exit 21; }
+
+            mkdir -p "$BACKUP_ROOT"
+
+            # Backup restauravel do document root atual antes de publicar.
+            tar -czf "$BACKUP_ROOT/document-root-$STAMP.tar.gz" -C "$DOCROOT" .
+
+            cd "$REPO_PATH"
+            git pull --ff-only origin main
+
+            # Etapas Laravel sao opcionais nesta hospedagem e executam apenas no repositorio.
+            if command -v composer >/dev/null 2>&1 && [ -f composer.json ]; then
               composer install --no-dev --optimize-autoloader
             fi
             if command -v php >/dev/null 2>&1 && [ -f artisan ]; then
@@ -34,14 +46,48 @@ jobs:
               php artisan optimize || true
             fi
 
-            # Publicacao do dominio principal VITRINE IA PRO
-            if [ -d "$HOME/vitrineiapro.com.br" ]; then
-              rsync -a --delete \
-                --exclude='.git/' \
-                --exclude='.github/' \
-                --exclude='.env' \
-                --exclude='data/' \
-                --exclude='storage/' \
-                --exclude='vendor/' \
-                ./ "$HOME/vitrineiapro.com.br/"
-            fi
+            # Publicacao explicita: somente camada publica/comercial.
+            # Nao usa --delete para preservar .well-known e outros arquivos gerenciados pela hospedagem.
+            PUBLIC_FILES="
+              .htaccess
+              config.php
+              index.php
+              solucoes.php
+              desenvolvimento.php
+              tv-digital.php
+              news.php
+              guia-digital.php
+              social-media.php
+              governo.php
+              demonstracoes.php
+              casos-reais.php
+              diagnostico.php
+              diagnostico-resultado.php
+              solicitacao-institucional.php
+              salvar-solicitacao.php
+              salvar-lead.php
+              contratacao-publica.php
+              documentos-publicos.php
+              lgpd.php
+              contato.php
+            "
+
+            for file in $PUBLIC_FILES; do
+              test -f "$file" || { echo "DEPLOY_ERROR: required public file missing: $file"; exit 22; }
+              install -m 0644 "$file" "$DOCROOT/$file"
+            done
+
+            for dir in assets includes demos; do
+              test -d "$dir" || { echo "DEPLOY_ERROR: required public directory missing: $dir"; exit 23; }
+              mkdir -p "$DOCROOT/$dir"
+              rsync -a "$dir/" "$DOCROOT/$dir/"
+            done
+
+            # Diretório de leads deve permanecer privado/persistente e nunca e substituido pelo deploy.
+            mkdir -p "$DOCROOT/data/leads"
+
+            # Verificacao de publicacao: a Home precisa conter o hero comercial atual.
+            grep -Fq "Você apresenta a necessidade. A VITRINE IA PRO desenvolve a solução digital." "$DOCROOT/index.php" \
+              || { echo "DEPLOY_ERROR: homepage verification failed"; exit 24; }
+
+            echo "DEPLOY_OK: public document root synchronized safely"
