@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Factory\FinalProducer\Services;
 
+use App\Factory\Blueprint\DTO\SystemBlueprint;
+use App\Factory\Blueprint\Services\BlueprintRepository;
+use App\Factory\Blueprint\Services\SystemBuilder;
 use App\Factory\Decision\Services\DecisionEngine;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -13,6 +16,8 @@ class ProduceRequestPipeline
     public function __construct(
         protected ProductRequestResolver $resolver,
         protected DecisionEngine $decisionEngine,
+        protected BlueprintRepository $blueprintRepository,
+        protected SystemBuilder $systemBuilder,
     ) {
     }
 
@@ -48,14 +53,20 @@ class ProduceRequestPipeline
         }
 
         if (! $product) {
+            $blueprint = SystemBlueprint::fromArray((array) ($resolved['blueprint'] ?? []));
+            $blueprintPath = $this->blueprintRepository->save($blueprint);
+            $builds = $this->systemBuilder->build($blueprint);
+
             $report = [
                 'request' => $request,
                 'domain' => $domain,
                 'resolved_product' => null,
-                'status' => 'awaiting_materialization',
+                'status' => 'materialized',
                 'resolver_path' => $resolverPath,
                 'decision_path' => $decisionPath,
-                'next_command' => 'materialize approved blueprint for domain ' . $domain,
+                'blueprint_path' => $blueprintPath,
+                'builds' => $builds,
+                'next_command' => 'php artisan factory:qa-module ' . ($builds[0]['module'] ?? ''),
                 'created_at' => now()->toISOString(),
             ];
 
