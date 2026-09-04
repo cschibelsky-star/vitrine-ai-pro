@@ -51,7 +51,7 @@ class MarketingOperationalE2ETest extends TestCase
         }
     }
 
-    public function test_qa_rejection_blocks_campaign_and_still_never_publishes_or_spends(): void
+    public function test_qa_block_blocks_campaign_and_still_never_publishes_or_spends(): void
     {
         $executor = new class(app(SimulatedMarketingAgentExecutor::class)) implements MarketingAgentExecutor {
             public function __construct(private SimulatedMarketingAgentExecutor $delegate)
@@ -63,7 +63,7 @@ class MarketingOperationalE2ETest extends TestCase
                 $output = $this->delegate->execute($agentId, $campaign, $inputs);
 
                 if ($agentId === 'qa_brand_guardian') {
-                    $output['result'] = 'rejected';
+                    $output['result'] = 'blocked';
                     $output['summary']['blocking_issues'] = 1;
                     $output['issues'] = [['type' => 'brand', 'severity' => 'blocking']];
                     $output['approved_item_ids'] = [];
@@ -86,7 +86,7 @@ class MarketingOperationalE2ETest extends TestCase
         );
 
         $this->assertSame('blocked', $result['status']);
-        $this->assertSame('rejected', $result['qa_result']);
+        $this->assertSame('blocked', $result['qa_result']);
         $this->assertFalse($result['published']);
         $this->assertFalse($result['spent']);
         $this->assertSame('blocked', $result['state']['tasks']['qa_brand_guardian']['status']);
