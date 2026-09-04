@@ -3,6 +3,9 @@
         $agents = $this->getAgents();
         $runtime = $this->getRuntime();
         $pipeline = $this->getPipeline();
+        $campaignState = $this->getCampaignState();
+        $campaign = $campaignState['campaign'] ?? null;
+        $tasks = $campaignState['tasks'] ?? [];
         $enabledAgents = collect($agents)->filter(fn (array $agent) => (bool) ($agent['enabled'] ?? false))->count();
         $blockingAgents = collect($agents)->filter(fn (array $agent) => (bool) ($agent['may_block_pipeline'] ?? false))->count();
     @endphp
@@ -14,7 +17,7 @@
                     <div class="text-xs font-semibold uppercase tracking-[0.22em] text-primary-300">Core · IA Center</div>
                     <h1 class="mt-3 text-3xl font-bold">Marketing IA</h1>
                     <p class="mt-2 text-sm leading-6 text-gray-300">
-                        Painel operacional da equipe de agentes de Marketing da Vitrine AI Pro. Estados de campanha e execução aparecerão aqui assim que o Campaign State e o orquestrador estiverem conectados.
+                        Painel operacional da equipe de agentes de Marketing da Vitrine IA Pro, conectado ao estado persistido das campanhas quando essa camada estiver disponível.
                     </p>
                 </div>
 
@@ -32,8 +35,8 @@
                         <div class="mt-2 text-2xl font-bold">{{ $blockingAgents }}</div>
                     </div>
                     <div class="rounded-xl border border-gray-800 bg-gray-900/80 p-4">
-                        <div class="text-xs uppercase tracking-wider text-gray-400">Campanhas ativas</div>
-                        <div class="mt-2 text-2xl font-bold">—</div>
+                        <div class="text-xs uppercase tracking-wider text-gray-400">Estado observado</div>
+                        <div class="mt-2 text-lg font-bold">{{ $campaign ? strtoupper($campaign['status']) : 'SEM CAMPANHA' }}</div>
                     </div>
                 </div>
             </div>
@@ -42,16 +45,12 @@
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Gemini</div>
-                <div class="mt-2 text-lg font-semibold text-gray-950 dark:text-white">
-                    {{ $runtime['gemini_configured'] ? 'Configurado' : 'Não configurado' }}
-                </div>
+                <div class="mt-2 text-lg font-semibold text-gray-950 dark:text-white">{{ $runtime['gemini_configured'] ? 'Configurado' : 'Não configurado' }}</div>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Modelo: {{ $runtime['model'] }}</p>
             </div>
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Estratégia Gemini</div>
-                <div class="mt-2 text-lg font-semibold text-gray-950 dark:text-white">
-                    {{ $runtime['strategy_enabled'] ? 'Habilitada' : 'Desabilitada' }}
-                </div>
+                <div class="mt-2 text-lg font-semibold text-gray-950 dark:text-white">{{ $runtime['strategy_enabled'] ? 'Habilitada' : 'Desabilitada' }}</div>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Feature flag do runtime.</p>
             </div>
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -72,7 +71,13 @@
                     <div class="text-xs font-semibold uppercase tracking-wider text-primary-600">Workflow</div>
                     <h2 class="mt-1 text-xl font-bold text-gray-950 dark:text-white">Pipeline da campanha</h2>
                 </div>
-                <span class="text-sm text-gray-500 dark:text-gray-400">Runtime de campanha: aguardando Campaign State</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                    @if ($campaign)
+                        {{ $campaign['name'] ?: $campaign['public_id'] }} · {{ $campaign['status'] }}
+                    @else
+                        {{ ($campaignState['reason'] ?? '') === 'persistence_not_ready' ? 'Persistência ainda não disponível' : 'Nenhuma campanha persistida' }}
+                    @endif
+                </span>
             </div>
 
             <div class="mt-6 grid gap-3 lg:grid-cols-6">
@@ -81,12 +86,15 @@
                         <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ $stage['label'] }}</div>
                         <div class="mt-3 space-y-2">
                             @foreach ($stage['agents'] as $agentId)
-                                @php($agent = $agents[$agentId] ?? null)
+                                @php
+                                    $agent = $agents[$agentId] ?? null;
+                                    $task = $tasks[$agentId] ?? null;
+                                @endphp
                                 @if ($agent)
                                     <div>
                                         <div class="text-sm font-semibold text-gray-950 dark:text-white">{{ $agent['name'] }}</div>
-                                        <div class="mt-1 text-xs {{ ($agent['enabled'] ?? false) ? 'text-success-600' : 'text-gray-400' }}">
-                                            {{ ($agent['enabled'] ?? false) ? 'configurado' : 'condicional/inativo' }}
+                                        <div class="mt-1 text-xs {{ $task ? 'text-primary-600' : (($agent['enabled'] ?? false) ? 'text-success-600' : 'text-gray-400') }}">
+                                            {{ $task ? $task['status'] : (($agent['enabled'] ?? false) ? 'configurado' : 'condicional/inativo') }}
                                         </div>
                                     </div>
                                 @endif
@@ -128,24 +136,42 @@
             </div>
 
             <div class="space-y-6">
-                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/60 dark:bg-amber-950/20">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">Próxima integração</div>
-                    <h2 class="mt-2 font-bold text-amber-950 dark:text-amber-100">Campaign State</h2>
-                    <p class="mt-2 text-sm leading-6 text-amber-800 dark:text-amber-300">
-                        Campanhas, progresso, filas, duração, falhas e aprovações permanecem sem números artificiais até a camada de estado operacional existir.
-                    </p>
+                <div class="rounded-2xl border border-primary-200 bg-primary-50 p-5 dark:border-primary-900/60 dark:bg-primary-950/20">
+                    <div class="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-400">Campaign State</div>
+                    <h2 class="mt-2 font-bold text-primary-950 dark:text-primary-100">{{ $campaign ? ($campaign['name'] ?: 'Campanha observada') : 'Sem campanha persistida' }}</h2>
+                    @if ($campaign)
+                        <div class="mt-3 space-y-1 text-sm text-primary-800 dark:text-primary-300">
+                            <div>Status: <strong>{{ $campaign['status'] }}</strong></div>
+                            <div>Tarefas: <strong>{{ count($tasks) }}</strong></div>
+                            <div>Artefatos: <strong>{{ $campaignState['artifact_count'] }}</strong></div>
+                            <div>Bloqueios: <strong>{{ count($campaignState['blocked_tasks'] ?? []) }}</strong></div>
+                        </div>
+                    @else
+                        <p class="mt-2 text-sm leading-6 text-primary-800 dark:text-primary-300">
+                            O dashboard não fabrica números: aguardará um registro real da camada de persistência do Marketing IA.
+                        </p>
+                    @endif
                 </div>
 
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Aprovações pendentes</div>
-                    <div class="mt-2 text-3xl font-bold text-gray-950 dark:text-white">—</div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Disponível quando o workflow persistir checkpoints de aprovação.</p>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Estados das tarefas</div>
+                    @if ($campaign)
+                        <div class="mt-3 space-y-2 text-sm">
+                            @forelse (($campaignState['status_counts'] ?? []) as $status => $count)
+                                <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">{{ $status }}</span><strong class="text-gray-950 dark:text-white">{{ $count }}</strong></div>
+                            @empty
+                                <div class="text-gray-500">Nenhuma tarefa registrada.</div>
+                            @endforelse
+                        </div>
+                    @else
+                        <div class="mt-2 text-3xl font-bold text-gray-950 dark:text-white">—</div>
+                    @endif
                 </div>
 
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                     <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Consumo do período</div>
                     <div class="mt-2 text-3xl font-bold text-gray-950 dark:text-white">—</div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tokens e custo serão calculados a partir de execuções auditadas.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Permanece sem estimativa até existir contabilização auditada de tokens e custo.</p>
                 </div>
             </div>
         </section>
