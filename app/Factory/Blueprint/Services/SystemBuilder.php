@@ -27,7 +27,8 @@ class SystemBuilder
     {
         $model = $this->modelName($module->slug);
         $listPage = $this->listPageName($module->slug);
-        $base = storage_path('app/factory/builds/' . $module->slug);
+        $buildKey = $system->slug . '/' . $module->slug;
+        $base = storage_path('app/factory/builds/' . $buildKey);
 
         if (File::isDirectory($base)) {
             File::deleteDirectory($base);
@@ -49,6 +50,7 @@ class SystemBuilder
         $this->put($base . "/module.json", json_encode([
             'system' => $system->slug,
             'module' => $module->slug,
+            'build_key' => $buildKey,
             'model' => $model,
             'relationships' => $this->relationships($module),
             'dashboard_metrics' => $module->dashboardMetrics,
@@ -56,7 +58,9 @@ class SystemBuilder
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
 
         return [
-            'module' => $module->slug,
+            'module' => $buildKey,
+            'module_slug' => $module->slug,
+            'system' => $system->slug,
             'model' => $model,
             'path' => $base,
         ];
