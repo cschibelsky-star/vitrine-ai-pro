@@ -7,6 +7,7 @@ use App\Filament\Pages\ClientPortalEnterprise;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FactoryStudioEnterprise;
 use App\Filament\Pages\GeneratedProjects;
+use App\Filament\Pages\MarketingDashboard;
 use App\Filament\Pages\MarketplaceEnterprise;
 use App\Filament\Resources\CompanyModuleResource;
 use App\Filament\Resources\CompanyResource;
@@ -84,6 +85,7 @@ class AdminPanelProvider extends PanelProvider
                 MarketplaceEnterprise::class,
                 ClientPortalEnterprise::class,
                 AiCenterEnterprise::class,
+                MarketingDashboard::class,
             ])
 
             ->resources([
