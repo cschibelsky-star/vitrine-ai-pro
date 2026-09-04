@@ -10,7 +10,7 @@ class ModuleDashboardGenerator
 {
     public function generate(string $slug): array
     {
-        $modulePath = storage_path('app/factory/builds/' . $slug);
+        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug);
         $manifestPath = $modulePath . '/module.json';
 
         $manifest = File::exists($manifestPath)

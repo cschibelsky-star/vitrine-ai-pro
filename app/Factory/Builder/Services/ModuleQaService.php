@@ -12,9 +12,9 @@ class ModuleQaService
     {
     }
 
-    public function inspect(string $slug): array
+    public function inspect(string $slug, ?string $systemSlug = null): array
     {
-        $base = storage_path('app/factory/builds/' . $slug);
+        $base = BuildPathResolver::resolve($slug, $systemSlug);
         $checks = [];
         $status = 'passed';
 

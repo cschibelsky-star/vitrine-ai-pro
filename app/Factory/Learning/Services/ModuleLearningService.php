@@ -9,9 +9,9 @@ use RuntimeException;
 
 class ModuleLearningService
 {
-    public function learn(string $slug): array
+    public function learn(string $slug, ?string $systemSlug = null): array
     {
-        $modulePath = storage_path('app/factory/builds/' . $slug);
+        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug, $systemSlug);
         $manifestPath = $modulePath . '/module.json';
 
         if (! File::isDirectory($modulePath)) {

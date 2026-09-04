@@ -6,6 +6,7 @@ namespace App\Factory\Blueprint\Services;
 
 use App\Factory\Blueprint\DTO\BlueprintField;
 use App\Factory\Blueprint\DTO\SystemBlueprint;
+use App\Factory\Builder\Services\BuildPathResolver;
 use App\Factory\Blueprint\DTO\SystemModuleBlueprint;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -28,7 +29,7 @@ class SystemBuilder
         $model = $this->modelName($module->slug);
         $listPage = $this->listPageName($module->slug);
         $buildKey = $system->slug . '/' . $module->slug;
-        $base = storage_path('app/factory/builds/' . $buildKey);
+        $base = BuildPathResolver::forSystem($system->slug, $module->slug);
 
         if (File::isDirectory($base)) {
             File::deleteDirectory($base);

@@ -8,9 +8,9 @@ use RuntimeException;
 
 class ModuleInstaller
 {
-    public function install(string $slug, bool $dryRun = false, bool $force = false): array
+    public function install(string $slug, bool $dryRun = false, bool $force = false, ?string $systemSlug = null): array
     {
-        $sourceBase = storage_path('app/factory/builds/' . $slug);
+        $sourceBase = BuildPathResolver::resolve($slug, $systemSlug);
 
         if (! is_dir($sourceBase)) {
             throw new RuntimeException("Módulo não encontrado em: {$sourceBase}");

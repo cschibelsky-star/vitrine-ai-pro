@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\File;
 
 class WidgetIntelligenceService
 {
-    public function generate(string $slug): array
+    public function generate(string $slug, ?string $systemSlug = null): array
     {
-        $modulePath = storage_path('app/factory/builds/' . $slug);
+        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug, $systemSlug);
         $manifestPath = $modulePath . '/module.json';
 
         $manifest = File::exists($manifestPath)

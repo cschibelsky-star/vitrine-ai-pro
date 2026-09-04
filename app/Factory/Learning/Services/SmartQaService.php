@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\File;
 
 class SmartQaService
 {
-    public function inspect(string $slug): array
+    public function inspect(string $slug, ?string $systemSlug = null): array
     {
-        $modulePath = storage_path('app/factory/builds/' . $slug);
+        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug, $systemSlug);
         $checks = [];
         $status = 'passed';
 
