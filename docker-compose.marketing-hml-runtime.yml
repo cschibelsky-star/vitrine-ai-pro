@@ -1,2 +1,16 @@
 include:
   - .docker-compose.core-hml.yml.bak-20260902-025745-693426
+
+services:
+  marketing_web_internal:
+    image: nginx:stable
+    container_name: vitrine_marketing_web_internal_hml
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/marketing/nginx/internal.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      marketing_app:
+        condition: service_healthy
+    networks:
+      - vitrine_net
