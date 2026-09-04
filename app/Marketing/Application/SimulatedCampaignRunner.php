@@ -6,6 +6,7 @@ namespace App\Marketing\Application;
 
 use App\Marketing\Domain\Agents\AgentRegistry;
 use App\Marketing\Domain\Contracts\CommonEnvelope;
+use App\Marketing\Domain\Tasks\TaskStatus;
 use RuntimeException;
 
 final readonly class SimulatedCampaignRunner
@@ -40,11 +41,12 @@ final readonly class SimulatedCampaignRunner
             throw new RuntimeException('The V1 simulation requires assisted automation mode.');
         }
 
-        $state = $this->orchestrator->createCampaign((string) $campaign['campaign_id']);
+        $state = $this->orchestrator->createOperationalCampaign($campaign);
         $artifacts = [];
         $executionBatches = [];
         $envelopes = [];
         $executionMetadata = [];
+        $artifactVersions = [];
 
         while (($readyAgents = $this->orchestrator->readyAgents($state)) !== []) {
             $executionBatches[] = $readyAgents;
@@ -89,18 +91,25 @@ final readonly class SimulatedCampaignRunner
                     'content' => $output,
                 ];
 
-                $this->orchestrator->complete($state, $agentId);
+                $this->orchestrator->complete($state, $agentId, "artifact:{$agentId}:v1");
             }
         }
 
+        $taskStatuses = array_map(
+            static fn (array $task): string => $task['status']->value,
+            $state->tasks(),
+        );
+
         $incomplete = array_filter(
-            $state->toArray(),
-            static fn (string $status): bool => $status !== 'completed',
+            $taskStatuses,
+            static fn (string $status): bool => $status !== TaskStatus::Completed->value,
         );
 
         if ($incomplete !== []) {
             throw new RuntimeException('Campaign simulation stopped with incomplete tasks.');
         }
+
+        $state->complete(now()->toISOString());
 
         return [
             'campaign_id' => $campaign['campaign_id'],
@@ -109,11 +118,12 @@ final readonly class SimulatedCampaignRunner
             'automation_mode' => 'assisted',
             'published' => false,
             'spent' => false,
-            'tasks' => $state->toArray(),
+            'tasks' => $taskStatuses,
+            'state' => $state->toArray(),
             'execution_batches' => $executionBatches,
             'envelopes' => $envelopes,
             'execution_metadata' => $executionMetadata,
-            'artifact_versions' => $artifactVersions ?? [],
+            'artifact_versions' => $artifactVersions,
             'qa_result' => $artifacts['qa_brand_guardian']['result'],
             'status' => 'completed',
         ];
