@@ -12,9 +12,7 @@ final class FfmpegIncrementalComposerTest extends TestCase
 {
     public function test_real_ffmpeg_composes_two_local_scene_clips_into_non_empty_mp4(): void
     {
-        if (! $this->ffmpegAvailable()) {
-            $this->markTestSkipped('ffmpeg runtime is not installed in this validation image');
-        }
+        $this->assertTrue($this->ffmpegAvailable(), 'ffmpeg must be installed in the Marketing validation/runtime image');
 
         $root = sys_get_temp_dir().'/marketing-ffmpeg-e2e-'.bin2hex(random_bytes(5));
         mkdir($root, 0775, true);
@@ -22,8 +20,8 @@ final class FfmpegIncrementalComposerTest extends TestCase
         $scene2 = $root.'/scene-2.mp4';
 
         try {
-            $this->makeClip($scene1, 1);
-            $this->makeClip($scene2, 2);
+            $this->makeClip($scene1);
+            $this->makeClip($scene2);
 
             $project = new VideoProject('ffmpeg-e2e', 'product-1', 'campaign-1');
             $project->addScene('scene-1', 1, ['script' => 'Cena 1'])->markRendered($scene1);
@@ -46,7 +44,7 @@ final class FfmpegIncrementalComposerTest extends TestCase
         return $exitCode === 0;
     }
 
-    private function makeClip(string $path, int $frequency): void
+    private function makeClip(string $path): void
     {
         $command = sprintf(
             'ffmpeg -hide_banner -loglevel error -y -f lavfi -i %s -t 0.4 -c:v libx264 -pix_fmt yuv420p %s 2>&1',
