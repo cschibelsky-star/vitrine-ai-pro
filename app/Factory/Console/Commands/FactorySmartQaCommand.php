@@ -9,12 +9,12 @@ use Illuminate\Console\Command;
 
 class FactorySmartQaCommand extends Command
 {
-    protected $signature = 'factory:smart-qa {slug : Slug do módulo gerado}';
+    protected $signature = 'factory:smart-qa {slug : Slug do módulo gerado} {--system= : Slug do sistema para builds namespaced}';
     protected $description = 'Executa Smart QA em um módulo gerado pela Factory.';
 
     public function handle(SmartQaService $qa): int
     {
-        $report = $qa->inspect((string) $this->argument('slug'));
+        $report = $qa->inspect((string) $this->argument('slug'), (string) ($this->option('system') ?? ''));
 
         $this->info('Smart QA');
         $this->line('Módulo: ' . $report['module']);

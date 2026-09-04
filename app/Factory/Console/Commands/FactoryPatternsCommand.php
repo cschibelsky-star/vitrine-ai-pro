@@ -9,12 +9,12 @@ use Illuminate\Console\Command;
 
 class FactoryPatternsCommand extends Command
 {
-    protected $signature = 'factory:patterns {slug : Slug do módulo gerado}';
+    protected $signature = 'factory:patterns {slug : Slug do módulo gerado} {--system= : Slug do sistema para builds namespaced}';
     protected $description = 'Identifica padrões e sugestões para um módulo gerado.';
 
     public function handle(PatternLibrary $patterns): int
     {
-        $result = $patterns->inspect((string) $this->argument('slug'));
+        $result = $patterns->inspect((string) $this->argument('slug'), (string) ($this->option('system') ?? ''));
 
         $this->info('Padrões identificados');
         $this->line('Módulo: ' . $result['module']);

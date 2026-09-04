@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\File;
 
 class ModuleDashboardGenerator
 {
-    public function generate(string $slug): array
+    public function generate(string $slug, ?string $systemSlug = null): array
     {
-        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug);
+        $modulePath = \App\Factory\Builder\Services\BuildPathResolver::resolve($slug, $systemSlug);
         $manifestPath = $modulePath . '/module.json';
 
         $manifest = File::exists($manifestPath)
@@ -59,7 +59,7 @@ class ModuleDashboardGenerator
             'generated_at' => now()->toISOString(),
         ];
 
-        $dir = storage_path('app/factory/dashboards/modules');
+        $dir = storage_path('app/factory/dashboards/modules' . ($systemSlug ? '/' . $systemSlug : ''));
         File::ensureDirectoryExists($dir);
 
         $path = $dir . '/' . $slug . '.json';

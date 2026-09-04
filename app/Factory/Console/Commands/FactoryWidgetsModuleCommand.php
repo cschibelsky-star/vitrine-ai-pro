@@ -10,13 +10,13 @@ use Throwable;
 
 class FactoryWidgetsModuleCommand extends Command
 {
-    protected $signature = 'factory:widgets-module {slug : Slug do módulo gerado}';
+    protected $signature = 'factory:widgets-module {slug : Slug do módulo gerado} {--system= : Slug do sistema para builds namespaced}';
     protected $description = 'Gera widgets inteligentes para um módulo.';
 
     public function handle(WidgetIntelligenceService $widgets): int
     {
         try {
-            $result = $widgets->generate((string) $this->argument('slug'));
+            $result = $widgets->generate((string) $this->argument('slug'), (string) ($this->option('system') ?? ''));
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
             return self::FAILURE;

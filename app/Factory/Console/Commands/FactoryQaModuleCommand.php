@@ -9,12 +9,12 @@ use Illuminate\Console\Command;
 
 class FactoryQaModuleCommand extends Command
 {
-    protected $signature = 'factory:qa-module {slug}';
+    protected $signature = 'factory:qa-module {slug} {--system= : Slug do sistema para builds namespaced}';
     protected $description = 'Executa QA em módulo gerado pela Factory.';
 
     public function handle(ModuleQaService $qa): int
     {
-        $report = $qa->inspect((string) $this->argument('slug'));
+        $report = $qa->inspect((string) $this->argument('slug'), (string) ($this->option('system') ?? ''));
 
         $this->line('Status: ' . $report['status']);
 
