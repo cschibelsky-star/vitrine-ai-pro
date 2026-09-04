@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Marketing\Application\MarketingDashboardStateReader;
 use App\Marketing\Domain\Agents\AgentRegistry;
 use Filament\Pages\Page;
 
@@ -30,6 +31,11 @@ class MarketingDashboard extends Page
             'strategy_enabled' => (bool) ($gemini['strategy_enabled'] ?? false),
             'model' => (string) ($gemini['model'] ?? 'not configured'),
         ];
+    }
+
+    public function getCampaignState(): array
+    {
+        return app(MarketingDashboardStateReader::class)->latest();
     }
 
     public function getPipeline(): array
