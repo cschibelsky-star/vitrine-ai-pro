@@ -138,6 +138,21 @@ services:
     networks:
       - core_hml_internal
 
+  video_ffmpeg_e2e:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_marketing_video_ffmpeg_e2e_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: ./vendor/bin/phpunit tests/Unit/Marketing/FfmpegIncrementalComposerTest.php
+    environment:
+      APP_ENV: testing
+      APP_KEY: "${CORE_APP_KEY:?CORE_APP_KEY is required}"
+    profiles:
+      - video-e2e
+    networks:
+      - core_hml_internal
+
 volumes:
   core_db_hml_v2:
 
