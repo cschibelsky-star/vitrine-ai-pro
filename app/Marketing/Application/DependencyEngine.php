@@ -25,7 +25,7 @@ final class DependencyEngine
         $ready = [];
 
         foreach ($campaign->tasks() as $agentId => $task) {
-            if (($task['status'] ?? null) !== TaskStatus::Pending) {
+            if (! in_array(($task['status'] ?? null), [TaskStatus::Pending, TaskStatus::NeedsRevision], true)) {
                 continue;
             }
 
