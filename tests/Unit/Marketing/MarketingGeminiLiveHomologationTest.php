@@ -13,6 +13,10 @@ final class MarketingGeminiLiveHomologationTest extends TestCase
 {
     public function test_live_gemini_strategy_runs_operational_campaign_without_publish_or_spend(): void
     {
+        if ((string) env('MARKETING_LIVE_HOMOLOGATION', '0') !== '1') {
+            $this->markTestSkipped('Live marketing homologation is disabled.');
+        }
+
         $executor = app(ResilientMarketingAgentExecutor::class);
 
         $result = app(MarketingOrchestrator::class)->runOperationalCampaign(
