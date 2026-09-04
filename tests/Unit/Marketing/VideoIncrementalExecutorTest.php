@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Marketing;
 
+use App\Marketing\Application\VideoClipComposer;
 use App\Marketing\Application\VideoIncrementalExecutor;
 use App\Marketing\Application\VideoIncrementalPlanner;
 use App\Marketing\Application\VideoSceneRenderer;
@@ -41,23 +42,36 @@ final class VideoIncrementalExecutorTest extends TestCase
         $renderer = new RecordingSceneRenderer(completed: true);
         $executor = new VideoIncrementalExecutor(new VideoIncrementalPlanner(), $renderer);
 
-        $result = $executor->dispatch($project, VideoOperation::RegenerateScene, [
-            'scene-2' => [],
-        ]);
-
-        $this->assertTrue($result['ready_to_compose']);
-        $render = $executor->finalize(
-            $project,
-            VideoOperation::RegenerateScene,
-            $result['jobs'],
-            'https://cdn.test/video-v2.mp4',
-        );
+        $result = $executor->dispatch($project, VideoOperation::RegenerateScene, ['scene-2' => []]);
+        $render = $executor->finalize($project, VideoOperation::RegenerateScene, $result['jobs'], 'https://cdn.test/video-v2.mp4');
 
         $this->assertSame(2, $render->version);
         $this->assertSame('https://cdn.test/scene-1-v1.mp4', $render->sceneRenderRefs['scene-1']);
         $this->assertSame('https://cdn.test/scene-2-v2.mp4', $render->sceneRenderRefs['scene-2']);
         $this->assertSame('https://cdn.test/scene-3-v1.mp4', $render->sceneRenderRefs['scene-3']);
         $this->assertSame(['scene-2'], $renderer->dispatchedSceneIds);
+    }
+
+    public function test_composer_receives_all_clips_in_scene_order_but_only_changed_scene_is_rerendered(): void
+    {
+        $project = $this->renderedProject();
+        $renderer = new RecordingSceneRenderer(completed: true);
+        $composer = new RecordingClipComposer();
+        $executor = new VideoIncrementalExecutor(new VideoIncrementalPlanner(), $renderer, $composer);
+
+        $result = $executor->dispatch($project, VideoOperation::EditVideo, [
+            'scene-2' => ['script' => 'CTA novo'],
+        ]);
+        $render = $executor->composeAndFinalize($project, VideoOperation::EditVideo, $result['jobs']);
+
+        $this->assertSame(['scene-2'], $renderer->dispatchedSceneIds);
+        $this->assertSame([
+            'https://cdn.test/scene-1-v1.mp4',
+            'https://cdn.test/scene-2-v2.mp4',
+            'https://cdn.test/scene-3-v1.mp4',
+        ], $composer->clips);
+        $this->assertSame('/tmp/video-1-v2.mp4', $render->outputRef);
+        $this->assertSame(2, $render->version);
     }
 
     private function renderedProject(): VideoProject
@@ -67,9 +81,7 @@ final class VideoIncrementalExecutorTest extends TestCase
             $scene = $project->addScene('scene-'.$position, $position, ['script' => 'Cena '.$position]);
             $scene->markRendered('https://cdn.test/scene-'.$position.'-v1.mp4');
         }
-
         (new VideoIncrementalPlanner())->compose($project, VideoOperation::CreateVideo, 'https://cdn.test/video-v1.mp4', []);
-
         return $project;
     }
 }
@@ -78,28 +90,25 @@ final class RecordingSceneRenderer implements VideoSceneRenderer
 {
     /** @var list<string> */
     public array $dispatchedSceneIds = [];
-
     public function __construct(private bool $completed = false) {}
-
     public function dispatch(VideoProject $project, VideoScene $scene, array $context = []): array
     {
         $this->dispatchedSceneIds[] = $scene->sceneId;
-
-        return [
-            'provider' => 'heygen',
-            'status' => $this->completed ? 'completed' : 'processing',
-            'job_ref' => 'job-'.$scene->sceneId.'-v'.$scene->version(),
-            'render_ref' => $this->completed ? 'https://cdn.test/'.$scene->sceneId.'-v'.$scene->version().'.mp4' : null,
-        ];
+        return ['provider'=>'heygen','status'=>$this->completed?'completed':'processing','job_ref'=>'job-'.$scene->sceneId.'-v'.$scene->version(),'render_ref'=>$this->completed?'https://cdn.test/'.$scene->sceneId.'-v'.$scene->version().'.mp4':null];
     }
-
     public function refresh(string $jobRef): array
     {
-        return [
-            'provider' => 'heygen',
-            'status' => 'completed',
-            'job_ref' => $jobRef,
-            'render_ref' => 'https://cdn.test/refreshed.mp4',
-        ];
+        return ['provider'=>'heygen','status'=>'completed','job_ref'=>$jobRef,'render_ref'=>'https://cdn.test/refreshed.mp4'];
+    }
+}
+
+final class RecordingClipComposer implements VideoClipComposer
+{
+    /** @var list<string> */
+    public array $clips = [];
+    public function compose(VideoProject $project, array $orderedClipRefs, int $version): string
+    {
+        $this->clips = $orderedClipRefs;
+        return '/tmp/'.$project->projectId.'-v'.$version.'.mp4';
     }
 }
