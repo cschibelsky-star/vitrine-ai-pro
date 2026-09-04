@@ -36,10 +36,13 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
         } catch (Throwable $exception) {
             report($exception);
 
+            $message = preg_replace('/AIza[0-9A-Za-z_-]+/', '[redacted]', $exception->getMessage()) ?: 'Gemini execution failed.';
+
             $this->metadata[$agentId] = [
                 'provider' => 'simulated',
                 'fallback' => true,
                 'fallback_reason' => $exception::class,
+                'fallback_message' => mb_substr($message, 0, 240),
             ];
 
             return $this->simulated->execute($agentId, $campaign, $inputs);
