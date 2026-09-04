@@ -48,9 +48,9 @@ class FinalizationProductionService
             foreach (($blueprint['modules'] ?? []) as $module) {
                 $slug = $module['slug'];
                 $dashboards[$slug] = [
-                    'dashboard' => $this->call('factory:dashboard-module', ['slug' => $slug]),
-                    'widgets' => $this->call('factory:widgets-module', ['slug' => $slug]),
-                    'qa' => $this->call('factory:smart-qa', ['slug' => $slug]),
+                    'dashboard' => $this->call('factory:dashboard-module', ['slug' => $slug, '--system' => $blueprint['slug']]),
+                    'widgets' => $this->call('factory:widgets-module', ['slug' => $slug, '--system' => $blueprint['slug']]),
+                    'qa' => $this->call('factory:smart-qa', ['slug' => $slug, '--system' => $blueprint['slug']]),
                 ];
             }
 

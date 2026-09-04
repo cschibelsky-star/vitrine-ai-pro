@@ -227,7 +227,7 @@ final class ViaFactoryController extends Controller
             'finish_project' => ['factory:finish-project', ['request' => $this->words($this->requiredText($payload,'request',10))], true],
             'produce_enterprise' => ['factory:produce-enterprise', ['product' => $this->allowedProduct($this->requiredText($payload,'product',3))], true],
             'smart_qa2' => ['factory:smart-qa2', [], false],
-            'qa_module' => ['factory:qa-module', ['slug' => $this->requiredSlug($payload,'slug')], false],
+            'qa_module' => ['factory:qa-module', ['slug' => $this->requiredSlug($payload,'slug'), '--system' => isset($payload['system']) ? $this->requiredSlug($payload,'system') : ''], false],
             'install_final_dry_run' => ['factory:install-final', ['blueprint' => $this->requiredSlug($payload,'blueprint'), '--dry-run' => true], true],
             'real_install_dry_run' => ['factory:real-install', ['blueprint' => $this->requiredSlug($payload,'blueprint'), '--dry-run' => true], true],
         };

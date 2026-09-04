@@ -81,6 +81,11 @@ class SystemBuilder
             'contratos' => 'Contrato',
             'documentos' => 'Documento',
             'historicos' => 'Historico',
+            'perfis' => 'Perfil',
+            'oportunidades' => 'Oportunidade',
+            'matching' => 'Matching',
+            'analises' => 'Analise',
+            'planos_acao' => 'PlanoAcao',
             default => Str::studly(Str::singular($slug)),
         };
     }
@@ -93,6 +98,11 @@ class SystemBuilder
             'contratos' => 'ListContratos',
             'documentos' => 'ListDocumentos',
             'historicos' => 'ListHistoricos',
+            'perfis' => 'ListPerfis',
+            'oportunidades' => 'ListOportunidades',
+            'matching' => 'ListMatching',
+            'analises' => 'ListAnalises',
+            'planos_acao' => 'ListPlanosAcao',
             default => 'List' . Str::studly(Str::plural($slug)),
         };
     }
@@ -106,7 +116,11 @@ class SystemBuilder
     {
         $columns = collect($module->fields)->map(function (BlueprintField $field): string {
             if ($field->type === 'foreignId') {
-                $table = Str::snake(Str::pluralStudly((string) $field->relatedModel));
+                $table = match ((string) $field->relatedModel) {
+                    'Perfil' => 'perfis',
+                    'Oportunidade' => 'oportunidades',
+                    default => Str::snake(Str::pluralStudly((string) $field->relatedModel)),
+                };
                 return "            \$table->foreignId('{$field->name}')->constrained('{$table}')->cascadeOnDelete();";
             }
 
@@ -114,6 +128,7 @@ class SystemBuilder
                 'text' => "            \$table->text('{$field->name}')" . ($field->nullable ? '->nullable()' : '') . ";",
                 'date' => "            \$table->date('{$field->name}')" . ($field->nullable ? '->nullable()' : '') . ";",
                 'decimal' => "            \$table->decimal('{$field->name}', 12, 2)->default(0);",
+                'boolean' => "            \$table->boolean('{$field->name}')" . ($field->nullable ? '->nullable()' : '') . ";",
                 default => "            \$table->string('{$field->name}')" . ($field->nullable ? '->nullable()' : '') . ";",
             };
         })->implode("\n");
@@ -245,13 +260,15 @@ PHP;
         $formFields = collect($module->fields)->map(function (BlueprintField $field): string {
             if ($field->type === 'foreignId') {
                 $relationship = Str::camel(str_replace('_id', '', $field->name));
-                return "                    Select::make('{$field->name}')->label('{$this->label($field->name)}')->relationship('{$relationship}', 'nome')->searchable()->preload(),";
+                $displayColumn = $field->relatedModel === 'Oportunidade' ? 'titulo' : 'nome';
+                return "                    Select::make('{$field->name}')->label('{$this->label($field->name)}')->relationship('{$relationship}', '{$displayColumn}')->searchable()->preload(),";
             }
 
             return match ($field->type) {
                 'text' => "                    Textarea::make('{$field->name}')->label('{$this->label($field->name)}')->columnSpanFull(),",
                 'date' => "                    DatePicker::make('{$field->name}')->label('{$this->label($field->name)}'),",
                 'decimal' => "                    TextInput::make('{$field->name}')->label('{$this->label($field->name)}')->numeric(),",
+                'boolean' => "                    Toggle::make('{$field->name}')->label('{$this->label($field->name)}'),",
                 default => "                    TextInput::make('{$field->name}')->label('{$this->label($field->name)}')->maxLength(255),",
             };
         })->implode("\n");
@@ -259,7 +276,8 @@ PHP;
         $tableColumns = collect($module->fields)->map(function (BlueprintField $field): string {
             if ($field->type === 'foreignId') {
                 $relationship = Str::camel(str_replace('_id', '', $field->name));
-                return "                TextColumn::make('{$relationship}.nome')->label('{$this->label($field->name)}')->searchable()->sortable(),";
+                $displayColumn = $field->relatedModel === 'Oportunidade' ? 'titulo' : 'nome';
+                return "                TextColumn::make('{$relationship}.{$displayColumn}')->label('{$this->label($field->name)}')->searchable()->sortable(),";
             }
 
             return "                TextColumn::make('{$field->name}')->label('{$this->label($field->name)}')->searchable()->sortable(),";
@@ -277,6 +295,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
