@@ -1,0 +1,206 @@
+x-factory-app-env: &factory-app-env
+  APP_NAME: "Vitrine IA Pro Factory HML"
+  APP_ENV: homologation
+  APP_DEBUG: "false"
+  APP_KEY: "base64:L9gVu/ZJgsRCXfHyJAmuVMer3Bh5e3zky91CaCrneBQ="
+  APP_URL: "https://factory.hml.vitrineiapro.com.br"
+  DB_CONNECTION: mysql
+  DB_HOST: vitrine_factory_hml_db
+  DB_PORT: 3306
+  DB_DATABASE: vitrine_factory_hml
+  DB_USERNAME: vitrine_factory
+  DB_PASSWORD: "Vxg3Kky7NBAxOsEcsQSplMhq0E1v01cj"
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+  QUEUE_CONNECTION: sync
+
+services:
+  vitrine_factory_hml_db:
+    image: mariadb:11.4
+    container_name: vitrine_factory_hml_db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: vitrine_factory_hml
+      MARIADB_USER: vitrine_factory
+      MARIADB_PASSWORD: "Vxg3Kky7NBAxOsEcsQSplMhq0E1v01cj"
+      MARIADB_ROOT_PASSWORD: "R0-2Y_zNl7UuXqQxAhxnMYzaUq2FcJO6"
+    volumes:
+      - factory_db_hml:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_migrate:
+    image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app:latest
+    pull_policy: never
+    container_name: vitrine_factory_hml_migrate
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      <<: *factory-app-env
+    command: >-
+      sh -lc 'php artisan config:clear > FACTORY_MIGRATE.txt 2>&1 &&
+      rm -rf /tmp/factory-migrations && mkdir -p /tmp/factory-migrations &&
+      cp database/migrations/*.php /tmp/factory-migrations/ &&
+      rm -f
+      /tmp/factory-migrations/2026_06_28_220457_create_clientes_table.php
+      /tmp/factory-migrations/2026_06_28_220458_create_animais_table.php
+      /tmp/factory-migrations/2026_06_28_220459_create_agendamentos_table.php
+      /tmp/factory-migrations/2026_06_28_220500_create_prontuarios_table.php
+      /tmp/factory-migrations/2026_06_28_220501_create_vacinas_table.php
+      /tmp/factory-migrations/2026_06_28_223140_create_clientes_table.php
+      /tmp/factory-migrations/2026_06_28_223141_create_animais_table.php
+      /tmp/factory-migrations/2026_06_28_223142_create_agendamentos_table.php
+      /tmp/factory-migrations/2026_06_28_223143_create_prontuarios_table.php
+      /tmp/factory-migrations/2026_06_28_223144_create_vacinas_table.php
+      /tmp/factory-migrations/2026_06_28_223158_create_clientes_table.php
+      /tmp/factory-migrations/2026_06_28_223159_create_animais_table.php
+      /tmp/factory-migrations/2026_06_28_223200_create_agendamentos_table.php
+      /tmp/factory-migrations/2026_06_28_223201_create_prontuarios_table.php
+      /tmp/factory-migrations/2026_06_28_223202_create_vacinas_table.php
+      /tmp/factory-migrations/2026_06_28_224801_create_clientes_table.php
+      /tmp/factory-migrations/2026_06_28_224802_create_animais_table.php
+      /tmp/factory-migrations/2026_06_28_224803_create_agendamentos_table.php
+      /tmp/factory-migrations/2026_06_28_224804_create_prontuarios_table.php
+      /tmp/factory-migrations/2026_06_28_224805_create_vacinas_table.php
+      /tmp/factory-migrations/2026_06_28_220502_create_financeiro_table.php
+      /tmp/factory-migrations/2026_06_28_223145_create_financeiro_table.php
+      /tmp/factory-migrations/2026_06_28_223203_create_financeiro_table.php
+      /tmp/factory-migrations/2026_06_28_224806_create_financeiro_table.php &&
+      php artisan migrate --force --path=/tmp/factory-migrations --realpath >> FACTORY_MIGRATE.txt 2>&1'
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      vitrine_factory_hml_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: vitrine_factory_hml_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      <<: *factory-app-env
+      CORE_AI_HUB_URL: "http://vitrine_core_web_hml/api/internal/ai-dev/chat"
+      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN:-HML-CURSOS-IA}"
+      VIA_AI_PROJECT_ID: "via-agent-hub"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      vitrine_factory_hml_migrate:
+        condition: service_completed_successfully
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_web:
+    image: nginx:stable
+    container_name: vitrine_factory_hml_web
+    restart: unless-stopped
+    ports:
+      - "18083:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      vitrine_factory_hml_app:
+        condition: service_started
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_check:
+    image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app:latest
+    container_name: vitrine_factory_hml_check
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      <<: *factory-app-env
+    command:
+      - sh
+      - -lc
+      - >-
+        php -l app/Factory/FinalMaster/Services/FactoryFinalMasterService.php &&
+        php -l app/Factory/RealBuilder/Services/RealBuildInstaller.php &&
+        php -l app/Factory/EnterpriseMaturity/Services/EnterpriseBuildInstaller.php &&
+        php -l app/Filament/Pages/FactoryStudioEnterprise.php &&
+        php -l routes/site_factory_api.php &&
+        php -l routes/factory_generated.php &&
+        echo LINT_OK &&
+        tail -f /dev/null
+    volumes:
+      - ./:/var/www/html:ro
+    depends_on:
+      vitrine_factory_hml_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_dryrun:
+    image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app:latest
+    container_name: vitrine_factory_hml_dryrun
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      <<: *factory-app-env
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+    command:
+      - sh
+      - -lc
+      - >-
+        log=app/Factory/FinalMaster/FACTORY_HML_DRYRUN.txt;
+        rm -f "$$log";
+        mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache;
+        if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --prefer-dist --no-progress >> "$$log" 2>&1; fi;
+        php artisan factory:build-and-install "Quero um sistema de teste da Factory" --dry-run >> "$$log" 2>&1;
+        code=$$?;
+        echo "DRYRUN_EXIT_CODE=$$code" >> "$$log";
+        tail -f /dev/null
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      vitrine_factory_hml_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
+  vitrine_factory_hml_intake_probe:
+    profiles: ["probe"]
+    image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app:latest
+    pull_policy: never
+    container_name: vitrine_factory_hml_intake_probe
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      <<: *factory-app-env
+      CORE_AI_HUB_URL: "http://vitrine_core_web_hml/api/internal/ai-dev/chat"
+      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN:-HML-CURSOS-IA}"
+      VIA_AI_PROJECT_ID: "via-agent-hub"
+    command:
+      - php
+      - artisan
+      - factory:discovery-validation-probe
+      - "1"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      vitrine_factory_hml_app:
+        condition: service_started
+    networks:
+      - vitrine_net
+
+volumes:
+  factory_db_hml:
+
+networks:
+  vitrine_net:
+    external: true

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('vacinas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('animal_id')->constrained('animals')->cascadeOnDelete();
+            $table->foreignId('animal_id')->constrained('animais')->cascadeOnDelete();
             $table->string('nome');
             $table->date('data_aplicacao')->nullable();
             $table->date('proxima_dose')->nullable();

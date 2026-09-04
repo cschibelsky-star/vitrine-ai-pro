@@ -1,0 +1,17 @@
+Factory Final Master concluída.
+Status: finished
+Modo: dry_run
+Blueprint: quero_um_sistema_de_teste_da_factory
+Relatório: /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/FINAL_MASTER_REPORT.json
+Dry-run isolado concluído. Revise o relatório antes de autorizar uma instalação real.
++-----------------------+----------------------------------------------------------------------------------------------------------+
+| Etapa                 | Arquivo                                                                                                  |
++-----------------------+----------------------------------------------------------------------------------------------------------+
+| 01_finalize_request   | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/01_finalize_request.json   |
+| 02_blueprint_context  | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/02_blueprint_context.json  |
+| 03_real_build         | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/03_real_build.json         |
+| 04_enterprise_build   | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/04_enterprise_build.json   |
+| 05_real_install       | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/05_real_install.json       |
+| 06_enterprise_install | /var/www/html/storage/app/factory/final-master/20260831_125546_a545e49c/steps/06_enterprise_install.json |
++-----------------------+----------------------------------------------------------------------------------------------------------+
+DRYRUN_EXIT_CODE=0

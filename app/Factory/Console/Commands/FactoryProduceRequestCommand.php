@@ -10,26 +10,29 @@ use Throwable;
 
 class FactoryProduceRequestCommand extends Command
 {
-    protected $signature = 'factory:produce-request {request* : Solicitação livre do sistema a produzir}';
-    protected $description = 'Produz um sistema a partir de uma solicitação livre.';
+    protected $signature = 'factory:produce-request {request* : Solicitação livre do sistema a produzir} {--approved : Confirma aprovação explícita para produção}';
+    protected $description = 'Prepara ou produz um sistema a partir de uma solicitação livre usando o Factory Intelligence Core.';
 
     public function handle(ProduceRequestPipeline $pipeline): int
     {
         $request = implode(' ', (array) $this->argument('request'));
 
         try {
-            $report = $pipeline->run($request);
+            $report = $pipeline->run($request, (bool) $this->option('approved'));
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
             return self::FAILURE;
         }
 
-        $this->info('Factory Request Production finalizada.');
-        $this->line('Produto resolvido: ' . $report['resolved_product']);
+        $this->info('Factory Request Pipeline concluído.');
+        $this->line('Domínio: ' . ($report['domain'] ?? 'n/d'));
+        $this->line('Produto resolvido: ' . ($report['resolved_product'] ?? 'nenhum'));
         $this->line('Status: ' . $report['status']);
         $this->line('Relatório: ' . $report['path']);
-        $this->warn('Próximo comando: ' . $report['next_command']);
+        $this->warn('Próximo passo: ' . $report['next_command']);
 
-        return $report['status'] === 'finished' ? self::SUCCESS : self::FAILURE;
+        return in_array($report['status'], ['finished', 'awaiting_approval', 'awaiting_materialization'], true)
+            ? self::SUCCESS
+            : self::FAILURE;
     }
 }

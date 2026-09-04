@@ -8,21 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('fornecedores', function (Blueprint $table): void {
-            $table->id();
-            $table->string('nome');
-            $table->string('documento')->nullable();
-            $table->string('email')->nullable();
-            $table->string('telefone')->nullable();
-            $table->string('cidade')->nullable();
-            $table->string('status');
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Compatibilidade: a tabela ja e criada pela migration 2026_06_28_002029.
+        // Mantemos esta migration como no-op para preservar o historico sem recriar a tabela.
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('fornecedores');
+        // No-op: a tabela pertence a migration 2026_06_28_002029.
     }
 };

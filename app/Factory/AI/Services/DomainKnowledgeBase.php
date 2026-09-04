@@ -8,6 +8,26 @@ class DomainKnowledgeBase
 {
     public function match(string $normalizedText): string
     {
+        $fundingSignals = [
+            'captacao',
+            'recursos',
+            'financiamento',
+            'oportunidade',
+            'oportunidades',
+            'edital',
+            'aderencia',
+            'candidatura',
+            'matching',
+        ];
+
+        $fundingScore = collect($fundingSignals)
+            ->filter(fn (string $signal): bool => str_contains($normalizedText, $signal))
+            ->count();
+
+        if ($fundingScore >= 2 || str_contains($normalizedText, 'captacao de recursos')) {
+            return 'captacao_recursos';
+        }
+
         if (str_contains($normalizedText, 'licitacao') || str_contains($normalizedText, 'licitações') || str_contains($normalizedText, 'licitacoes')) {
             return 'licitacoes';
         }
@@ -38,6 +58,7 @@ class DomainKnowledgeBase
     public function blueprintFor(string $domain, string $prompt): array
     {
         return match ($domain) {
+            'captacao_recursos' => $this->captacaoRecursos($prompt),
             'licitacoes' => $this->licitacoes($prompt),
             'patrimonio' => $this->patrimonio($prompt),
             'crm' => $this->crm($prompt),
@@ -126,6 +147,99 @@ class DomainKnowledgeBase
                         $this->field('status', false),
                     ],
                     'dashboard_metrics' => ['total', 'pendentes', 'aprovados'],
+                ],
+            ],
+        ];
+    }
+
+    protected function captacaoRecursos(string $prompt): array
+    {
+        return [
+            'name' => 'Captação de Recursos e Oportunidades',
+            'slug' => 'captacao_recursos_oportunidades',
+            'description' => $prompt,
+            'modules' => [
+                [
+                    'name' => 'Perfis',
+                    'slug' => 'perfis',
+                    'label' => 'Perfil/DNA',
+                    'fields' => [
+                        $this->field('nome', false),
+                        $this->field('tipo_organizacao'),
+                        $this->field('areas_atuacao', true, 'text'),
+                        $this->field('publico_atendido', true, 'text'),
+                        $this->field('territorio'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativos'],
+                ],
+                [
+                    'name' => 'Oportunidades',
+                    'slug' => 'oportunidades',
+                    'label' => 'Oportunidades',
+                    'fields' => [
+                        $this->field('titulo', false),
+                        $this->field('fonte'),
+                        $this->field('tipo'),
+                        $this->field('prazo', true, 'date'),
+                        $this->field('valor_estimado', true, 'decimal'),
+                        $this->field('requisitos', true, 'text'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'abertas', 'prioritarias'],
+                ],
+                [
+                    'name' => 'Matching',
+                    'slug' => 'matching',
+                    'label' => 'Matching',
+                    'fields' => [
+                        $this->foreign('perfil_id', 'Perfil'),
+                        $this->foreign('oportunidade_id', 'Oportunidade'),
+                        $this->field('score', true, 'decimal'),
+                        $this->field('aderencia', true, 'text'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'alta_aderencia'],
+                ],
+                [
+                    'name' => 'Analises',
+                    'slug' => 'analises',
+                    'label' => 'Análises',
+                    'fields' => [
+                        $this->foreign('oportunidade_id', 'Oportunidade'),
+                        $this->field('resumo', true, 'text'),
+                        $this->field('riscos', true, 'text'),
+                        $this->field('recomendacao', true, 'text'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'recomendadas'],
+                ],
+                [
+                    'name' => 'Documentos',
+                    'slug' => 'documentos',
+                    'label' => 'Documentos e Lacunas',
+                    'fields' => [
+                        $this->foreign('oportunidade_id', 'Oportunidade'),
+                        $this->field('nome', false),
+                        $this->field('tipo'),
+                        $this->field('obrigatorio', true, 'boolean'),
+                        $this->field('status', false),
+                        $this->field('lacuna', true, 'text'),
+                    ],
+                    'dashboard_metrics' => ['total', 'pendentes', 'lacunas'],
+                ],
+                [
+                    'name' => 'PlanosDeAcao',
+                    'slug' => 'planos_acao',
+                    'label' => 'Planos de Ação',
+                    'fields' => [
+                        $this->foreign('oportunidade_id', 'Oportunidade'),
+                        $this->field('acao', false, 'text'),
+                        $this->field('responsavel'),
+                        $this->field('prazo', true, 'date'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'pendentes', 'concluidos'],
                 ],
             ],
         ];

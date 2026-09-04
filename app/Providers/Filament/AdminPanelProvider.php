@@ -56,7 +56,11 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Vitrine IA Pro Enterprise')
             ->renderHook(
                 'panels::head.end',
-                fn (): string => '<link rel="stylesheet" href="' . asset('css/vitrine-enterprise-ui.css') . '?v=10.0.2"><link rel="stylesheet" href="' . asset('css/vitrine-enterprise-overrides.css') . '?v=10.0.3">'
+                fn (): string => '<link rel="stylesheet" href="' . asset('css/vitrine-enterprise-ui.css') . '?v=10.0.2"><link rel="stylesheet" href="' . asset('css/vitrine-enterprise-overrides.css') . '?v=10.0.3"><link rel="stylesheet" href="' . asset('css/via-factory.css') . '?v=2.1.0">'
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn (): string => view('via.factory-widget')->render()
             )
             ->navigationGroups([
                 NavigationGroup::make('01 · Centro Operacional'),

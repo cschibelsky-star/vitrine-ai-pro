@@ -2,11 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Factory\FinalMaster\Services\FactoryFinalMasterService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Artisan;
+use Throwable;
 
 class FactoryStudioEnterprise extends Page
 {
@@ -19,6 +20,7 @@ class FactoryStudioEnterprise extends Page
 
     public ?string $lastOutput = null;
     public ?string $lastStatus = null;
+    public ?array $lastReport = null;
 
     protected function getHeaderActions(): array
     {
@@ -34,19 +36,46 @@ class FactoryStudioEnterprise extends Page
                         ->rows(4),
                 ])
                 ->action(function (array $data): void {
-                    $exitCode = Artisan::call('factory:build-and-install', [
-                        'request' => [(string) $data['request']],
-                        '--dry-run' => true,
-                    ]);
+                    try {
+                        $report = app(FactoryFinalMasterService::class)->buildAndInstall(
+                            request: (string) $data['request'],
+                            dryRun: true,
+                            force: false,
+                            migrate: false,
+                        );
 
-                    $this->lastOutput = Artisan::output();
-                    $this->lastStatus = $exitCode === 0 ? 'dry-run concluído' : 'falha';
+                        $this->lastReport = $report;
+                        $this->lastStatus = ($report['status'] ?? 'failed') === 'finished'
+                            ? 'dry-run concluído'
+                            : 'falha';
+                        $this->lastOutput = json_encode(
+                            $report,
+                            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                        ) ?: null;
 
-                    Notification::make()
-                        ->title($exitCode === 0 ? 'Produção simulada' : 'Falha na produção')
-                        ->success($exitCode === 0)
-                        ->danger($exitCode !== 0)
-                        ->send();
+                        Notification::make()
+                            ->title($this->lastStatus === 'dry-run concluído'
+                                ? 'Produção simulada com sucesso'
+                                : 'Pipeline interrompido')
+                            ->body($report['final_note'] ?? null)
+                            ->success($this->lastStatus === 'dry-run concluído')
+                            ->danger($this->lastStatus !== 'dry-run concluído')
+                            ->send();
+                    } catch (Throwable $exception) {
+                        $this->lastReport = [
+                            'status' => 'failed',
+                            'failed_stage' => 'studio',
+                            'error' => $exception->getMessage(),
+                        ];
+                        $this->lastStatus = 'falha';
+                        $this->lastOutput = $exception->getMessage();
+
+                        Notification::make()
+                            ->title('Falha na produção')
+                            ->body($exception->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
         ];
     }

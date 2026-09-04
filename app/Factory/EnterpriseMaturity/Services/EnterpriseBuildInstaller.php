@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Factory\EnterpriseMaturity\Services;
 
 use Illuminate\Support\Facades\File;
+use RuntimeException;
 
 class EnterpriseBuildInstaller
 {
@@ -13,12 +14,15 @@ class EnterpriseBuildInstaller
         $source = storage_path('app/factory/enterprise-builds/' . $blueprintSlug);
 
         if (! File::isDirectory($source)) {
-            throw new \RuntimeException("Enterprise build não encontrado. Rode factory:enterprise-build {$blueprintSlug} antes.");
+            throw new RuntimeException("Enterprise build não encontrado. Rode factory:enterprise-build {$blueprintSlug} antes.");
         }
 
         $files = File::allFiles($source);
         $results = [];
-        $backupBase = storage_path('app/factory/backups/enterprise-install/' . date('Ymd_His') . '_' . $blueprintSlug);
+        $transactionId = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
+        $backupBase = $dryRun
+            ? null
+            : storage_path('app/factory/backups/enterprise-install/' . $transactionId . '_' . $blueprintSlug);
 
         foreach ($files as $file) {
             $relative = $file->getRelativePathname();
@@ -29,45 +33,74 @@ class EnterpriseBuildInstaller
 
             $destination = base_path($relative);
             $exists = File::exists($destination);
+            $sourceChecksum = hash_file('sha256', $file->getPathname()) ?: null;
+            $previousChecksum = $exists ? (hash_file('sha256', $destination) ?: null) : null;
+            $backupPath = null;
 
             if ($dryRun) {
-                $status = $exists ? 'would_skip_or_overwrite_with_force' : 'would_copy';
+                $status = $exists
+                    ? ($force ? 'would_overwrite_with_backup' : 'would_skip_exists')
+                    : 'would_copy';
             } elseif ($exists && ! $force) {
                 $status = 'skipped_exists';
             } else {
                 if ($exists) {
                     $backupPath = $backupBase . '/' . $relative;
                     File::ensureDirectoryExists(dirname($backupPath));
-                    File::copy($destination, $backupPath);
+
+                    if (! File::copy($destination, $backupPath)) {
+                        throw new RuntimeException("Falha ao criar backup antes de sobrescrever: {$destination}");
+                    }
                 }
 
                 File::ensureDirectoryExists(dirname($destination));
-                File::copy($file->getPathname(), $destination);
+
+                if (! File::copy($file->getPathname(), $destination)) {
+                    throw new RuntimeException("Falha ao instalar arquivo enterprise: {$destination}");
+                }
+
                 $status = $exists ? 'overwritten_with_backup' : 'copied';
             }
 
+            $installedChecksum = (! $dryRun && File::exists($destination))
+                ? (hash_file('sha256', $destination) ?: null)
+                : null;
+
             $results[] = [
+                'relative_path' => $relative,
                 'source' => $file->getPathname(),
                 'destination' => $destination,
-                'exists' => $exists,
+                'existed_before' => $exists,
                 'status' => $status,
+                'source_sha256' => $sourceChecksum,
+                'previous_sha256' => $previousChecksum,
+                'installed_sha256' => $installedChecksum,
+                'backup_path' => $backupPath,
+                'rollback_action' => $dryRun
+                    ? 'none'
+                    : ($exists && $force ? 'restore_backup' : (! $exists ? 'delete_created_file' : 'none')),
             ];
         }
 
         $report = [
+            'transaction_id' => $transactionId,
             'blueprint' => $blueprintSlug,
             'mode' => $dryRun ? 'dry_run' : 'install',
             'force' => $force,
             'files' => count($results),
+            'copied' => count(array_filter($results, fn (array $item) => $item['status'] === 'copied')),
+            'overwritten' => count(array_filter($results, fn (array $item) => $item['status'] === 'overwritten_with_backup')),
+            'skipped' => count(array_filter($results, fn (array $item) => in_array($item['status'], ['skipped_exists', 'would_skip_exists'], true))),
             'results' => $results,
             'backup_path' => $backupBase,
+            'rollback_ready' => ! $dryRun && count(array_filter($results, fn (array $item) => $item['rollback_action'] !== 'none')) > 0,
             'created_at' => now()->toISOString(),
         ];
 
         $reportDir = storage_path('app/factory/enterprise-installs/' . $blueprintSlug);
         File::ensureDirectoryExists($reportDir);
 
-        $path = $reportDir . '/ENTERPRISE_INSTALL_REPORT_' . date('Ymd_His') . '.json';
+        $path = $reportDir . '/ENTERPRISE_INSTALL_REPORT_' . $transactionId . '.json';
         File::put($path, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $report['path'] = $path;
 

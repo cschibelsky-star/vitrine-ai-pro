@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('prontuarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('animal_id')->constrained('animals')->cascadeOnDelete();
+            $table->foreignId('animal_id')->constrained('animais')->cascadeOnDelete();
             $table->text('descricao')->nullable();
             $table->text('diagnostico')->nullable();
             $table->string('status');
