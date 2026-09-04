@@ -70,6 +70,11 @@ final class CampaignState
         return $this->tasks[$agentId];
     }
 
+    public function taskStatus(string $agentId): TaskStatus
+    {
+        return $this->task($agentId)['status'];
+    }
+
     /** @return array<string, array<string, mixed>> */
     public function tasks(): array
     {
@@ -118,6 +123,17 @@ final class CampaignState
     public function requestRevision(string $agentId): void
     {
         $this->transitionTask($agentId, TaskStatus::NeedsRevision);
+    }
+
+    public function resetTask(string $agentId): void
+    {
+        $task = $this->task($agentId);
+        $task['status'] = TaskStatus::Pending;
+        $task['started_at'] = null;
+        $task['completed_at'] = null;
+        $task['last_error'] = null;
+        $task['output_ref'] = null;
+        $this->tasks[$agentId] = $task;
     }
 
     public function blockTask(string $agentId, string $reason): void
