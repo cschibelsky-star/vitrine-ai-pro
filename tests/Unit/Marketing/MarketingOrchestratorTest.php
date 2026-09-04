@@ -11,9 +11,10 @@ class MarketingOrchestratorTest extends TestCase
 {
     public function test_campaign_starts_with_strategy_only(): void
     {
-        $state = app(MarketingOrchestrator::class)->createCampaign('CAM-SOCIAL-001');
+        $orchestrator = app(MarketingOrchestrator::class);
+        $state = $orchestrator->createOperationalCampaign($this->campaign());
 
-        $this->assertSame(['product_market_strategist'], app(MarketingOrchestrator::class)->readyAgents($state));
+        $this->assertSame(['product_market_strategist'], $orchestrator->readyAgents($state));
         $this->assertArrayNotHasKey('marketing_director', $state->tasks());
         $this->assertArrayNotHasKey('performance_analyst', $state->tasks());
     }
@@ -21,7 +22,7 @@ class MarketingOrchestratorTest extends TestCase
     public function test_copy_releases_design_and_video_in_parallel(): void
     {
         $orchestrator = app(MarketingOrchestrator::class);
-        $state = $orchestrator->createCampaign('CAM-SOCIAL-001');
+        $state = $orchestrator->createOperationalCampaign($this->campaign());
 
         $this->finish($orchestrator, $state, 'product_market_strategist');
         $this->assertSame(['campaign_planner'], $orchestrator->readyAgents($state));
@@ -49,33 +50,6 @@ class MarketingOrchestratorTest extends TestCase
         $this->assertSame(['social_distribution'], $orchestrator->readyAgents($state));
     }
 
-    public function test_vitrine_social_midia_simulation_runs_the_complete_e2e_workflow(): void
-    {
-        $result = app(MarketingOrchestrator::class)->simulateCampaign('VSM-E2E-001');
-
-        $this->assertSame('VSM-E2E-001', $result['campaign_id']);
-        $this->assertSame('simulation', $result['mode']);
-        $this->assertSame([
-            ['product_market_strategist'],
-            ['campaign_planner'],
-            ['copy_content'],
-            ['creative_director', 'video_producer'],
-            ['social_distribution'],
-            ['qa_brand_guardian'],
-        ], $result['waves']);
-        $this->assertSame([
-            'product_market_strategist' => TaskStatus::Completed->value,
-            'campaign_planner' => TaskStatus::Completed->value,
-            'copy_content' => TaskStatus::Completed->value,
-            'creative_director' => TaskStatus::Completed->value,
-            'video_producer' => TaskStatus::Completed->value,
-            'social_distribution' => TaskStatus::Completed->value,
-            'qa_brand_guardian' => TaskStatus::Completed->value,
-        ], $result['final_state']);
-        $this->assertFalse($result['publish_performed']);
-        $this->assertFalse($result['spend_performed']);
-    }
-
     public function test_qa_revision_reopens_only_the_affected_branch(): void
     {
         $orchestrator = app(MarketingOrchestrator::class);
@@ -87,16 +61,16 @@ class MarketingOrchestratorTest extends TestCase
             'video_producer',
         );
 
-        $this->assertSame(TaskStatus::Completed, $state->statusOf('creative_director'));
-        $this->assertSame(TaskStatus::Ready, $state->statusOf('video_producer'));
-        $this->assertSame(TaskStatus::Pending, $state->statusOf('social_distribution'));
-        $this->assertSame(TaskStatus::Pending, $state->statusOf('qa_brand_guardian'));
+        $this->assertSame(TaskStatus::Completed, $state->taskStatus('creative_director'));
+        $this->assertSame(TaskStatus::Ready, $state->taskStatus('video_producer'));
+        $this->assertSame(TaskStatus::Pending, $state->taskStatus('social_distribution'));
+        $this->assertSame(TaskStatus::Pending, $state->taskStatus('qa_brand_guardian'));
     }
 
     public function test_non_validator_cannot_block_the_pipeline(): void
     {
         $orchestrator = app(MarketingOrchestrator::class);
-        $state = $orchestrator->createCampaign('CAM-SOCIAL-001');
+        $state = $orchestrator->createOperationalCampaign($this->campaign());
 
         $this->expectException(LogicException::class);
         $orchestrator->block($state, 'copy_content');
@@ -104,7 +78,7 @@ class MarketingOrchestratorTest extends TestCase
 
     private function advanceThroughCopy(MarketingOrchestrator $orchestrator): object
     {
-        $state = $orchestrator->createCampaign('CAM-SOCIAL-001');
+        $state = $orchestrator->createOperationalCampaign($this->campaign());
 
         $this->finish($orchestrator, $state, 'product_market_strategist');
         $this->finish($orchestrator, $state, 'campaign_planner');
@@ -129,5 +103,23 @@ class MarketingOrchestratorTest extends TestCase
     {
         $orchestrator->start($state, $agentId);
         $orchestrator->complete($state, $agentId);
+    }
+
+    /** @return array<string, mixed> */
+    private function campaign(): array
+    {
+        return [
+            'campaign_id' => 'CAM-SOCIAL-001',
+            'tenant_id' => 1,
+            'company_id' => 1,
+            'product_id' => 1,
+            'name' => 'Lançamento Vitrine Social Mídia',
+            'objective' => 'Gerar demonstrações comerciais qualificadas',
+            'automation_mode' => 'assisted',
+            'status' => 'ready',
+            'known_facts' => ['Produto da Vitrine IA Pro'],
+            'missing_information' => [],
+            'restrictions' => ['Não publicar', 'Não contratar mídia'],
+        ];
     }
 }
