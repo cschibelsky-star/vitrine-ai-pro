@@ -27,7 +27,7 @@ class SmartFinalInstallerService
         $results = [];
 
         foreach ($modules as $module) {
-            $command = 'factory:install-module ' . $module;
+            $command = 'factory:install-module ' . $module . ' --system=' . $blueprintSlug;
 
             if ($dryRun) {
                 $command .= ' --dry-run';
