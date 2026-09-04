@@ -13,7 +13,8 @@ class FactoryInstallModuleCommand extends Command
     protected $signature = 'factory:install-module
         {slug : Slug do módulo gerado em storage/app/factory/builds}
         {--dry-run : Apenas simula a instalação}
-        {--force : Sobrescreve arquivos existentes}';
+        {--force : Sobrescreve arquivos existentes}
+        {--system= : Slug do sistema para builds namespaced}';
 
     protected $description = 'Instala um módulo gerado pela Factory no projeto Laravel real.';
 
@@ -22,9 +23,10 @@ class FactoryInstallModuleCommand extends Command
         $slug = (string) $this->argument('slug');
         $dryRun = (bool) $this->option('dry-run');
         $force = (bool) $this->option('force');
+        $systemSlug = (string) ($this->option('system') ?? '');
 
         try {
-            $results = $installer->install($slug, $dryRun, $force);
+            $results = $installer->install($slug, $dryRun, $force, $systemSlug);
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 

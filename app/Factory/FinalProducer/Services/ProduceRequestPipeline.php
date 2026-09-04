@@ -66,7 +66,7 @@ class ProduceRequestPipeline
                 'decision_path' => $decisionPath,
                 'blueprint_path' => $blueprintPath,
                 'builds' => $builds,
-                'next_command' => 'php artisan factory:qa-module ' . ($builds[0]['module'] ?? ''),
+                'next_command' => 'php artisan factory:qa-module ' . ($builds[0]['module_slug'] ?? '') . ' --system=' . $blueprint->slug,
                 'created_at' => now()->toISOString(),
             ];
 

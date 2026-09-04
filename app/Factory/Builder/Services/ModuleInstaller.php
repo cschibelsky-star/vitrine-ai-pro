@@ -63,9 +63,11 @@ class ModuleInstaller
             $relative = str_replace($sourceBase . DIRECTORY_SEPARATOR, '', $source);
 
             if ($relative === 'README_MODULO.md' || $relative === 'module.json') {
+                $buildsRoot = storage_path('app/factory/builds') . DIRECTORY_SEPARATOR;
+                $buildKey = str_replace($buildsRoot, '', $sourceBase);
                 $operations[] = [
                     'source' => $source,
-                    'target' => base_path('storage/app/factory/installed/' . basename(dirname($sourceBase)) . '/' . $relative),
+                    'target' => base_path('storage/app/factory/installed/' . $buildKey . '/' . $relative),
                 ];
                 continue;
             }

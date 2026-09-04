@@ -10,13 +10,13 @@ use Throwable;
 
 class FactoryDashboardModuleCommand extends Command
 {
-    protected $signature = 'factory:dashboard-module {slug : Slug do módulo gerado}';
+    protected $signature = 'factory:dashboard-module {slug : Slug do módulo gerado} {--system= : Slug do sistema para builds namespaced}';
     protected $description = 'Gera especificação de dashboard para um módulo.';
 
     public function handle(ModuleDashboardGenerator $generator): int
     {
         try {
-            $dashboard = $generator->generate((string) $this->argument('slug'));
+            $dashboard = $generator->generate((string) $this->argument('slug'), (string) ($this->option('system') ?? ''));
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
             return self::FAILURE;

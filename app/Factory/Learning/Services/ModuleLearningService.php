@@ -37,7 +37,7 @@ class ModuleLearningService
             ],
         ];
 
-        $dir = storage_path('app/factory/learning/modules');
+        $dir = storage_path('app/factory/learning/modules' . ($systemSlug ? '/' . $systemSlug : ''));
         File::ensureDirectoryExists($dir);
 
         $path = $dir . '/' . $slug . '.json';

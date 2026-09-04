@@ -94,7 +94,7 @@ class WidgetIntelligenceService
             'generated_at' => now()->toISOString(),
         ];
 
-        $dir = storage_path('app/factory/widgets/modules');
+        $dir = storage_path('app/factory/widgets/modules' . ($systemSlug ? '/' . $systemSlug : ''));
         File::ensureDirectoryExists($dir);
 
         $path = $dir . '/' . $slug . '.json';
