@@ -48,9 +48,9 @@
   2026_06_28_122349_create_fornecedores_table .................... 0.04ms DONE
   2026_06_28_220441_create_clientes_table ....................... 17.49ms DONE
   2026_06_28_220442_create_animais_table ........................ 47.71ms DONE
-  2026_06_28_220443_create_agendamentos_table .................... 9.95ms DONE
-  2026_06_28_220444_create_prontuarios_table .................... 36.99ms DONE
-  2026_06_28_220445_create_vacinas_table ........................ 37.18ms DONE
+  2026_06_28_220443_create_agendamentos_table ................... 43.76ms DONE
+  2026_06_28_220444_create_prontuarios_table .................... 37.18ms DONE
+  2026_06_28_220445_create_vacinas_table ........................ 37.90ms DONE
   2026_06_28_220446_create_financeiro_table ..................... 34.10ms DONE
   2026_07_11_160000_create_flow_events_table ................... 146.19ms DONE
   2026_07_11_180000_create_flow_workflows_table ................ 147.60ms DONE
