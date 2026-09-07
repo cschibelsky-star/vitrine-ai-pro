@@ -315,7 +315,7 @@ final class FactoryViaIntakeService
             throw new RuntimeException('CENTRO_IA_INTERNAL_TOKEN ausente na Factory.');
         }
 
-        $url = rtrim((string) env('CORE_AI_HUB_URL', 'http://vitrine_core_web_hml/api/internal/ai-dev/chat'), '/');
+        $url = rtrim((string) env('CORE_AI_HUB_URL', 'http://vitrine_core_web_hml/api/internal/centro-ia/execute'), '/');
         $projectId = trim((string) env('VIA_AI_PROJECT_ID', 'via-agent-hub')) ?: 'via-agent-hub';
         $schema = [
             'name' => 'Nome curto do sistema/projeto',
@@ -335,17 +335,20 @@ final class FactoryViaIntakeService
             ->asJson()
             ->post($url, [
                 'project_id' => $projectId,
-                'profile' => 'balanced',
-                'system' => 'Você é a inteligência de Intake da Vitrine IA Pro Factory. Converta o pedido em análise estruturada para construção de software. Responda SOMENTE JSON válido. Preserve fatos, explicite riscos e decisões abertas, não invente credenciais, domínios, repositórios ou integrações.',
-                'prompt' => "Pedido do usuário:\n{$request}\n\nFormato obrigatório:\n".json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                'options' => ['temperature' => 0.1],
+                'capability' => 'factory_intake',
+                'input' => [
+                    'system' => 'Você é a inteligência de Intake da Vitrine IA Pro Factory. Converta o pedido em análise estruturada para construção de software. Responda SOMENTE JSON válido. Preserve fatos, explicite riscos e decisões abertas, não invente credenciais, domínios, repositórios ou integrações.',
+                    'user' => "Pedido do usuário:\n{$request}\n\nFormato obrigatório:\n".json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    'response_format' => 'json',
+                    'temperature' => 0.1,
+                ],
             ]);
 
         if (! $response->successful()) {
             throw new RuntimeException('Core AI Hub HTTP '.$response->status().': '.mb_substr($response->body(), 0, 1000));
         }
 
-        $content = trim((string) data_get($response->json(), 'data.content', ''));
+        $content = trim((string) data_get($response->json(), 'output_text', ''));
         if ($content === '') {
             throw new RuntimeException('Core AI Hub respondeu sem conteúdo.');
         }
