@@ -10,8 +10,6 @@ class ProductionStatusService
 {
     public function status(): array
     {
-        File::ensureDirectoryExists(storage_path('app/factory/production'));
-
         return [
             'engine' => config('factory_production.name'),
             'version' => config('factory_production.version'),

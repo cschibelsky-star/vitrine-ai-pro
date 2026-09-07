@@ -61,7 +61,7 @@ final class ViaFactoryController extends Controller
                         'requires_confirmation' => true,
                         'confirmation_token' => 'EXECUTAR',
                         'action' => 'execute_intake',
-                        'payload' => ['project_id' => data_get($prepared, 'project.id')],
+                        'payload' => ['approval_token' => data_get($prepared, 'approval_token')],
                         'result' => $prepared,
                     ]);
                 } catch (Throwable $e) {
@@ -179,7 +179,7 @@ final class ViaFactoryController extends Controller
                     'action' => $action,
                     'requires_confirmation' => true,
                     'confirmation_token' => 'EXECUTAR',
-                    'answer' => 'Análise preparada. Revise Perfil/DNA, Prompt Mestre, riscos e decisões abertas. Para iniciar construção, confirme EXECUTAR com o project_id retornado.',
+                    'answer' => 'Análise preparada sem persistência. Revise Perfil/DNA, Prompt Mestre, riscos e decisões abertas. Para persistir e iniciar construção, confirme EXECUTAR com o approval_token retornado.',
                     'result' => $prepared,
                 ]);
             } catch (Throwable $e) {
@@ -200,9 +200,17 @@ final class ViaFactoryController extends Controller
             }
 
             try {
+                $userId = (int) $request->user()->getAuthIdentifier();
+                $approvalToken = trim((string) ($payload['approval_token'] ?? ''));
                 $projectId = (int) ($payload['project_id'] ?? 0);
-                abort_if($projectId <= 0, 422, 'project_id inválido.');
-                $result = $intakeService->executeApproved($projectId, (int) $request->user()->getAuthIdentifier());
+
+                if ($approvalToken !== '') {
+                    $result = $intakeService->executePrepared($approvalToken, $userId);
+                } elseif ($projectId > 0) {
+                    $result = $intakeService->executeApproved($projectId, $userId);
+                } else {
+                    abort(422, 'Informe approval_token válido ou project_id legado.');
+                }
 
                 return response()->json([
                     'ok' => true,

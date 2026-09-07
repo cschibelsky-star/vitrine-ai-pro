@@ -8,6 +8,7 @@ use App\Factory\Models\FactoryExecution;
 use App\Factory\RealBuilder\Services\FinishProjectService;
 use App\Factory\Models\FactoryProject;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -30,6 +31,55 @@ final class FactoryViaIntakeService
         $analysis = $this->analyzeWithCore($request);
         $discoveryGate = $this->evaluateDiscoveryGate($analysis, $request);
         $name = trim((string) ($analysis['name'] ?? '')) ?: Str::headline(Str::limit($request, 60, ''));
+        $preparedAt = now()->toISOString();
+        $approvalToken = Crypt::encryptString(json_encode([
+            'contract' => 'factory.via.intake.approval.v1',
+            'request' => $request,
+            'analysis' => $analysis,
+            'discovery_gate' => $discoveryGate,
+            'prepared_at' => $preparedAt,
+            'prepared_by' => $userId,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return [
+            'project' => [
+                'id' => null,
+                'uuid' => null,
+                'name' => mb_substr($name, 0, 180),
+                'slug' => null,
+                'status' => 'analysis_ready',
+            ],
+            'analysis' => $analysis,
+            'discovery_gate' => $discoveryGate,
+            'approval_token' => $approvalToken,
+            'prepared_at' => $preparedAt,
+            'persisted' => false,
+        ];
+    }
+
+    public function executePrepared(string $approvalToken, ?int $userId = null): array
+    {
+        try {
+            $decoded = json_decode(Crypt::decryptString($approvalToken), true, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable $e) {
+            throw new RuntimeException('Token de aprovação do Intake inválido ou expirado.', 0, $e);
+        }
+
+        if (! is_array($decoded) || ($decoded['contract'] ?? null) !== 'factory.via.intake.approval.v1') {
+            throw new RuntimeException('Contrato do token de aprovação do Intake inválido.');
+        }
+        if (($decoded['prepared_by'] ?? null) !== null && (int) $decoded['prepared_by'] !== (int) $userId) {
+            throw new RuntimeException('Token de aprovação pertence a outro usuário.');
+        }
+
+        $request = trim((string) ($decoded['request'] ?? ''));
+        $analysis = is_array($decoded['analysis'] ?? null) ? $decoded['analysis'] : [];
+        $discoveryGate = is_array($decoded['discovery_gate'] ?? null) ? $decoded['discovery_gate'] : [];
+        if (mb_strlen($request) < 10 || $analysis === [] || $discoveryGate === []) {
+            throw new RuntimeException('Token de aprovação do Intake está incompleto.');
+        }
+
+        $name = trim((string) ($analysis['name'] ?? '')) ?: Str::headline(Str::limit($request, 60, ''));
         $slugBase = Str::slug($name) ?: 'factory-request';
         $slug = $slugBase.'-'.Str::lower(Str::random(6));
 
@@ -49,7 +99,8 @@ final class FactoryViaIntakeService
                 'master_prompt' => $analysis['master_prompt'] ?? '',
                 'analysis' => $analysis,
                 'discovery_gate' => $discoveryGate,
-                'prepared_at' => now()->toISOString(),
+                'prepared_at' => $decoded['prepared_at'] ?? now()->toISOString(),
+                'persisted_at' => now()->toISOString(),
             ],
             'created_by' => $userId,
             'updated_by' => $userId,
@@ -71,17 +122,7 @@ final class FactoryViaIntakeService
             'updated_by' => $userId,
         ]);
 
-        return [
-            'project' => [
-                'id' => $project->id,
-                'uuid' => $project->uuid,
-                'name' => $project->name,
-                'slug' => $project->slug,
-                'status' => $project->status,
-            ],
-            'analysis' => $analysis,
-            'discovery_gate' => $discoveryGate,
-        ];
+        return $this->executeApproved($project->id, $userId);
     }
 
     public function discoveryDecisionForProject(int $projectId, ?int $userId = null): array
