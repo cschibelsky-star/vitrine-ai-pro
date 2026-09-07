@@ -1,0 +1,63 @@
+
+   INFO  Configuration cache cleared successfully.  
+
+
+   INFO  Preparing database.  
+
+  Creating migration table ...................................... 35.06ms DONE
+
+   INFO  Running migrations.  
+
+  2024_01_01_000001_create_users_table .......................... 50.69ms DONE
+  2024_01_01_000002_create_companies_table ...................... 24.83ms DONE
+  2024_01_01_000003_create_products_table ....................... 24.92ms DONE
+  2024_01_01_000004_create_licenses_table ....................... 56.12ms DONE
+  2024_01_01_000005_create_leads_table ........................... 9.95ms DONE
+  2024_01_01_000006_create_payments_table ....................... 32.62ms DONE
+  2024_01_01_000007_create_settings_table ....................... 10.67ms DONE
+  2024_01_01_000008_create_logs_table ........................... 36.99ms DONE
+  2026_01_01_000001_create_factory_projects_table .............. 140.79ms DONE
+  2026_01_01_000002_create_factory_capabilities_table .......... 175.81ms DONE
+  2026_01_01_000003_create_factory_blueprints_table ............ 196.92ms DONE
+  2026_01_01_000004_create_factory_executions_table ............ 221.80ms DONE
+  2026_01_01_000005_create_factory_execution_logs_table ........ 152.93ms DONE
+  2026_06_19_000001_create_plans_table .......................... 35.91ms DONE
+  2026_06_19_000002_add_plan_id_to_licenses_table ............... 57.03ms DONE
+  2026_06_19_000003_add_implantacao_fields_to_companies_table ... 77.75ms DONE
+  2026_06_19_000004_add_extra_fields_to_licenses_table .......... 39.17ms DONE
+  2026_06_19_000005_add_comercial_avancado_fields_to_leads_table  148.23ms DONE
+  2026_06_20_000101_create_modules_table ........................ 49.78ms DONE
+  2026_06_20_000102_create_plan_modules_table .................. 100.11ms DONE
+  2026_06_20_000103_create_company_modules_table ............... 144.50ms DONE
+  2026_06_20_000104_add_instance_fields_to_companies_table ...... 54.58ms DONE
+  2026_06_20_000201_add_client_access_fields_to_users_table ..... 88.34ms DONE
+  2026_06_20_000201_create_contracts_table ..................... 126.30ms DONE
+  2026_06_20_000202_add_financial_fields_to_payments_table ..... 304.83ms DONE
+  2026_06_20_000202_fix_existing_users_roles ..................... 4.15ms DONE
+  2026_06_20_210000_create_support_tickets_table ............... 163.83ms DONE
+  2026_06_21_130001_create_ai_providers_table ................... 26.34ms DONE
+  2026_06_21_130002_create_ai_agents_table ...................... 66.65ms DONE
+  2026_06_21_130003_create_ai_queues_table ..................... 183.15ms DONE
+  2026_06_21_130004_create_ai_executions_table ................. 226.76ms DONE
+  2026_06_21_130005_create_ai_consumptions_table ............... 258.07ms DONE
+  2026_06_21_130006_create_ai_alerts_table ..................... 154.01ms DONE
+  2026_06_21_130007_create_ai_memories_table ................... 132.48ms DONE
+  2026_06_21_160000_add_asaas_fields_to_payments_table ......... 463.17ms DONE
+  2026_06_21_200000_master_2_0_operacional_tables .............. 938.10ms DONE
+  2026_06_28_002029_create_fornecedores_table .................... 7.91ms DONE
+  2026_06_28_122349_create_fornecedores_table .................... 0.04ms DONE
+  2026_06_28_220441_create_clientes_table ....................... 17.49ms DONE
+  2026_06_28_220442_create_animais_table ........................ 47.71ms DONE
+  2026_06_28_220443_create_agendamentos_table .................... 9.95ms DONE
+  2026_06_28_220444_create_prontuarios_table .................... 36.99ms DONE
+  2026_06_28_220445_create_vacinas_table ........................ 37.18ms DONE
+  2026_06_28_220446_create_financeiro_table ..................... 34.10ms DONE
+  2026_07_11_160000_create_flow_events_table ................... 146.19ms DONE
+  2026_07_11_180000_create_flow_workflows_table ................ 147.60ms DONE
+  2026_07_11_190000_create_flow_quota_tables ................... 182.93ms DONE
+  2026_07_11_200000_create_flow_observability_tables ........... 186.93ms DONE
+  2026_07_11_210000_create_flow_feature_flags_table ............ 129.79ms DONE
+  2026_07_11_220000_create_flow_audit_and_compliance_tables .... 212.62ms DONE
+  2026_07_11_230000_create_flow_executions_table ............... 167.12ms DONE
+  2026_07_12_000000_create_flow_schedules_table ................ 198.48ms DONE
+  2026_07_12_010000_create_flow_secrets_and_storage_tables ..... 240.17ms DONE
