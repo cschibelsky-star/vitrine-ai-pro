@@ -1,76 +1,86 @@
-<?php $title='Soluções Digitais com IA'; $description='Sites, sistemas, agentes de IA, automações, dashboards e produtos digitais para empresas, organizações e governos.'; require __DIR__.'/includes/header.php'; ?>
-<section class="homeTechHero">
-  <div class="homeHeroGrid">
-    <div class="homeHeroCopy">
-      <span class="techEyebrow">VITRINE IA PRO • SOLUÇÕES DIGITAIS</span>
+<?php $title='Soluções Digitais Escaláveis'; $description='Soluções digitais com IA, automação, SaaS, White Label e desenvolvimento sob medida para empresas, organizações e governos.'; require __DIR__.'/includes/header.php'; ?>
+
+<section class="salesHero">
+  <div class="salesHeroInner">
+    <div class="salesHeroCopy">
       <h1>Transformamos necessidades em <em>soluções digitais com IA.</em></h1>
-      <p>Sites, sistemas, agentes de IA, automações, dashboards e plataformas desenvolvidos para economizar tempo, organizar processos, melhorar atendimento e gerar resultados.</p>
-      <div class="actions"><a class="btn" href="/diagnostico.php">Conte o que você precisa</a><a class="btn techGhost" href="#produtos">Conhecer produtos</a></div>
-      <div class="techTags"><span>IA</span><span>WEB</span><span>AUTOMAÇÃO</span><span>DADOS</span><span>SAAS</span><span>WHITE LABEL</span></div>
+      <p>Sistemas, plataformas, aplicativos, portais, agentes de IA e automações inteligentes para empresas, organizações e governos.</p>
+      <div class="salesTags"><span>✦ IA</span><span>◉ Web</span><span>⚙ Automação</span><span>▤ Dados</span><span>☁ SaaS</span><span>◇ White Label</span></div>
+      <div class="salesActions"><a class="btn salesPrimary" href="/diagnostico.php">Solicitar diagnóstico →</a><a class="btn salesGhost" href="#segmentos">Conhecer soluções</a></div>
     </div>
-    <div class="techConsole" aria-label="Fluxo de desenvolvimento digital">
-      <div class="consoleHead"><span class="liveDot"></span><strong>VITRINE / DIGITAL OPS</strong><small>ONLINE</small></div>
-      <div class="consoleFlow"><div><b>01</b><span>Necessidade</span></div><i>→</i><div><b>02</b><span>Solução</span></div><i>→</i><div><b>03</b><span>Operação</span></div></div>
-      <div class="consoleMetrics"><article><small>AI</small><strong>Agentes</strong><span>atendimento • vendas • suporte</span></article><article><small>DATA</small><strong>Dashboards</strong><span>indicadores • relatórios • gestão</span></article><article><small>AUTO</small><strong>Automação</strong><span>processos • integrações • fluxos</span></article><article><small>WEB</small><strong>Sistemas</strong><span>sites • portais • plataformas</span></article></div>
-      <div class="consoleLine"><span></span><span></span><span></span><span></span><span></span></div>
-    </div>
+    <div class="salesHeroVisual"><img src="/assets/img/home/hero-sales-reference.svg" alt="Painel tecnológico com notebook, dashboards, automação e inteligência artificial"></div>
   </div>
 </section>
 
-<section class="homeCompact" id="o-que-fazemos">
-  <div class="sectionIntro compactIntro"><span class="techLabel">O QUE FAZEMOS</span><div><h2>Tecnologia aplicada ao que sua operação realmente precisa.</h2><p>Você não precisa chegar com a solução pronta. Conte o problema, a rotina ou a oportunidade. A VITRINE IA PRO estrutura a solução digital mais adequada.</p></div></div>
-  <div class="capabilityGrid">
-    <article><span class="capCode">01 / WEB</span><h3>Sites & Plataformas</h3><p>Sites profissionais, landing pages, portais, áreas restritas e plataformas web.</p></article>
-    <article><span class="capCode">02 / AI</span><h3>Agentes de IA</h3><p>Atendimento, vendas, suporte, consultas e assistentes especializados.</p></article>
-    <article><span class="capCode">03 / AUTO</span><h3>Automação</h3><p>Fluxos automáticos, integrações e redução de tarefas repetitivas.</p></article>
-    <article><span class="capCode">04 / DATA</span><h3>Dashboards</h3><p>Indicadores, relatórios e acompanhamento visual da operação.</p></article>
-    <article><span class="capCode">05 / SYS</span><h3>Sistemas Personalizados</h3><p>CRM, cadastros, gestão, imobiliário, atendimento e necessidades específicas.</p></article>
-    <article><span class="capCode">06 / SCALE</span><h3>SaaS & White Label</h3><p>Soluções escaláveis, licenciadas ou adaptadas à identidade do cliente.</p></article>
+<section class="salesBenefits">
+  <h2>O que sua empresa pode resolver com a VITRINE IA PRO</h2>
+  <div class="salesStrip">
+    <article><span>↗</span><div><strong>Vender mais</strong><small>Aumente suas vendas com experiências digitais que geram resultados.</small></div></article>
+    <article><span>◎</span><div><strong>Organizar clientes</strong><small>Centralize dados, histórico e interações em um só lugar.</small></div></article>
+    <article><span>⚙</span><div><strong>Automatizar processos</strong><small>Elimine tarefas manuais e ganhe produtividade com automação.</small></div></article>
+    <article><span>▤</span><div><strong>Digitalizar atendimento</strong><small>Atenda melhor com IA, chatbots e canais integrados.</small></div></article>
+    <article><span>◉</span><div><strong>Melhorar comunicação</strong><small>Comunique com mais clareza, agilidade e segmentação.</small></div></article>
+    <article><span>➤</span><div><strong>Lançar plataforma própria</strong><small>Tenha sua própria plataforma com sua marca e modelo de negócio.</small></div></article>
   </div>
 </section>
 
-<section class="homeDarkBand">
-  <div><span class="techLabel light">PRECISA DE OUTRA SOLUÇÃO?</span><h2>Se existe uma necessidade digital, podemos avaliar como transformar isso em tecnologia.</h2></div>
-  <a class="btn" href="/diagnostico.php">Solicitar diagnóstico</a>
-</section>
-
-<section class="homeCompact productsSection" id="produtos">
-  <div class="sectionIntro compactIntro"><span class="techLabel">PRODUTOS VITRINE IA PRO</span><div><h2>Soluções já desenvolvidas para operações específicas.</h2><p>Aqui o foco muda: cada produto resolve um contexto próprio e possui sua página, demonstração e forma de contratação.</p></div></div>
-  <div class="productGridTech">
-    <a href="/tv-digital.php"><span class="productStatus">PRODUTO</span><h3>TV Digital Enterprise</h3><p>Portal audiovisual, programação, lives, vídeos e operação de TV Digital.</p><strong>Conhecer produto →</strong></a>
-    <a href="/news.php"><span class="productStatus">PRODUTO</span><h3>Portal News AI Pro</h3><p>Publicação, operação editorial, conteúdo multimídia e inteligência aplicada à mídia.</p><strong>Conhecer produto →</strong></a>
-    <a href="/guia-digital.php"><span class="productStatus">PRODUTO</span><h3>Guia Digital da Cidade®</h3><p>Turismo, eventos, comércio, serviços e descoberta digital de uma cidade.</p><strong>Conhecer produto →</strong></a>
-    <a href="/social-media.php"><span class="productStatus">PRODUTO</span><h3>Vitrine Social Media</h3><p>Planejamento, produção e organização de conteúdo para presença digital.</p><strong>Conhecer produto →</strong></a>
-    <a href="/governo.php"><span class="productStatus">SOLUÇÃO</span><h3>Governo Digital IA</h3><p>Soluções digitais para comunicação, serviços, gestão e relacionamento público.</p><strong>Conhecer solução →</strong></a>
-    <a href="/solucoes.php" class="productCustom"><span class="productStatus">SOB MEDIDA</span><h3>Desenvolvimento Personalizado</h3><p>Quando nenhum produto pronto resolve exatamente o que sua operação precisa.</p><strong>Ver possibilidades →</strong></a>
+<section class="salesSection lightSection" id="segmentos">
+  <div class="salesSectionHead centered"><h2>Soluções por segmento</h2></div>
+  <div class="segmentGrid">
+    <article><b class="segIcon blue">▦</b><h3>Empresas e Comércio</h3><p>Plataformas, portais e sistemas para vender mais e gerir melhor seu negócio.</p><a href="/solucoes.php?segmento=empresas&origem=home-segmentos">Saiba mais →</a></article>
+    <article><b class="segIcon green">⌂</b><h3>Imobiliário</h3><p>Portais imobiliários, CRM, captação de leads, sites e atendimento automatizado.</p><a href="/solucoes.php?segmento=imobiliario&origem=home-segmentos">Saiba mais →</a></article>
+    <article><b class="segIcon purple">▰</b><h3>Governo</h3><p>Soluções digitais para gestão pública, transparência e serviços ao cidadão.</p><a href="/governo.php">Saiba mais →</a></article>
+    <article><b class="segIcon orange">▣</b><h3>Comunicação e Mídia</h3><p>Portais de notícias, TV Digital e plataformas de conteúdo.</p><a href="/tv-digital.php">Saiba mais →</a></article>
+    <article><b class="segIcon cyan">●</b><h3>Cidades e Turismo</h3><p>Guias digitais, eventos, comércio local e turismo inteligente.</p><a href="/guia-digital.php">Saiba mais →</a></article>
+    <article><b class="segIcon pink">♡</b><h3>Terceiro Setor</h3><p>Plataformas para ONGs e instituições com gestão, comunicação e voluntariado.</p><a href="/solucoes.php?segmento=terceiro-setor&origem=home-segmentos">Saiba mais →</a></article>
   </div>
 </section>
 
-<section class="visualProofSection" id="aplicacoes">
-  <div class="visualProofIntro">
-    <span class="techLabel light">CASES E APLICAÇÕES</span>
-    <div><h2>Veja a tecnologia aplicada, não apenas descrita.</h2><p>Cases reais mostram soluções em operação. Demonstrações apresentam cenários que podemos adaptar ou desenvolver conforme a necessidade de cada cliente.</p></div>
-  </div>
-
-  <div class="realCaseGrid">
-    <a class="realCaseCard" href="/casos-reais.php" aria-label="Ver case real TV Sumaré">
-      <figure><img src="/assets/img/cases/tv-sumare-showcase.jpg" alt="Case real TV Sumaré — portal de mídia e TV Digital" loading="lazy"><span>CASE REAL</span></figure>
-      <div><small>MÍDIA • NOTÍCIAS • AUDIOVISUAL</small><h3>TV Sumaré</h3><p>Aplicação real de portal editorial, notícias, vídeos e operação de mídia digital.</p><strong>Ver aplicação real →</strong></div>
-    </a>
-    <a class="realCaseCard" href="/casos-reais.php" aria-label="Ver case real Conheça Sumaré">
-      <figure><img src="/assets/img/cases/conheca-sumare-showcase.jpg" alt="Case real Conheça Sumaré — guia digital da cidade" loading="lazy"><span>CASE REAL</span></figure>
-      <div><small>CIDADE • TURISMO • COMÉRCIO LOCAL</small><h3>Conheça Sumaré</h3><p>Piloto real da vertical Guia Digital da Cidade®, conectando descoberta local, atrativos e serviços.</p><strong>Ver aplicação real →</strong></div>
-    </a>
-  </div>
-
-  <div class="applicationHeader"><div><span class="techLabel light">EXEMPLOS DE APLICAÇÃO</span><h3>Outros cenários que podemos desenvolver ou adaptar.</h3></div><a href="/demonstracoes.php">Ver todas as demonstrações →</a></div>
-  <div class="applicationGrid">
-    <a href="/demos/municipio-360/"><span>DEMONSTRAÇÃO</span><strong>Município 360</strong><p>Serviços digitais, comunicação institucional e relacionamento com o cidadão.</p></a>
-    <a href="/demos/camara-360/"><span>DEMONSTRAÇÃO</span><strong>Câmara 360</strong><p>Transparência legislativa, sessões, vereadores, conteúdo e TV Câmara.</p></a>
-    <a href="/demos/news-360/"><span>DEMONSTRAÇÃO</span><strong>News 360</strong><p>Portal de mídia regional com conteúdo, audiência e possibilidades de monetização.</p></a>
-    <a href="/demos/tv-360/"><span>DEMONSTRAÇÃO</span><strong>TV 360</strong><p>Programação, transmissão ao vivo, acervo de vídeos e operação audiovisual.</p></a>
+<section class="salesSection lightSection salesProcess" id="como-funciona">
+  <div class="salesSectionHead centered"><h2>Como funciona</h2></div>
+  <div class="processGrid">
+    <article><b>1</b><span>⌕</span><h3>Diagnóstico</h3><p>Entendemos seu desafio, objetivos e cenário atual da sua operação.</p></article>
+    <article><b>2</b><span>▤</span><h3>Arquitetura da solução</h3><p>Planejamos a melhor estratégia, tecnologias e integrações.</p></article>
+    <article><b>3</b><span>&lt;/&gt;</span><h3>Desenvolvimento</h3><p>Construímos sua solução com qualidade, segurança e foco em resultado.</p></article>
+    <article><b>4</b><span>➤</span><h3>Implantação</h3><p>Colocamos a solução em produção com testes e treinamentos.</p></article>
+    <article><b>5</b><span>↗</span><h3>Evolução contínua</h3><p>Acompanhamos, otimizamos e evoluímos com dados e novas tecnologias.</p></article>
   </div>
 </section>
 
-<section class="homeFinalCta"><span class="techLabel">COMECE PELA NECESSIDADE</span><h2>O que você precisa criar, automatizar ou melhorar?</h2><p>Conte sua ideia ou problema. A VITRINE IA PRO identifica o caminho digital mais adequado e apresenta uma proposta de solução.</p><div class="actions"><a class="btn" href="/diagnostico.php">Conte sua necessidade</a><a class="btn ghost" href="/solicitacao-institucional.php">Solicitar proposta</a></div></section>
+<section class="salesSection lightSection salesModels" id="modelos">
+  <div class="salesSectionHead centered"><h2>Modelos de contratação</h2></div>
+  <div class="modelGrid">
+    <article><span>☁</span><h3>SaaS</h3><p>Solução pronta com assinatura mensal e atualizações contínuas.</p></article>
+    <article><span>⚙</span><h3>SaaS Personalizado</h3><p>Adaptamos uma solução existente às necessidades específicas do seu negócio.</p></article>
+    <article><span>◇</span><h3>White Label</h3><p>Plataforma com a sua marca para você oferecer tecnologia com identidade própria.</p></article>
+    <article><span>&lt;/&gt;</span><h3>Sob Medida</h3><p>Desenvolvimento completo para necessidades e processos específicos.</p></article>
+  </div>
+</section>
+
+<section class="salesSection lightSection" id="produtos">
+  <div class="salesSectionHead centered"><h2>Soluções disponíveis</h2></div>
+  <div class="productSalesGrid">
+    <a href="/tv-digital.php"><span class="prodIcon">▶</span><h3>TV Digital Enterprise</h3><p>Plataforma completa para canais de TV, transmissões ao vivo e conteúdo sob demanda.</p><strong>Saiba mais →</strong></a>
+    <a href="/news.php"><span class="prodIcon red">▤</span><h3>Portal News AI Pro</h3><p>Portal de notícias com IA, automação editorial e inteligência de conteúdo.</p><strong>Saiba mais →</strong></a>
+    <a href="/guia-digital.php"><span class="prodIcon green">⌖</span><h3>Guia Digital da Cidade®</h3><p>Guia comercial e turístico digital para cidades, regiões e territórios.</p><strong>Saiba mais →</strong></a>
+    <a href="/social-media.php"><span class="prodIcon cyan">◉</span><h3>Vitrine Social Media</h3><p>Gestão e automação de redes sociais com IA para empresas.</p><strong>Saiba mais →</strong></a>
+    <a href="/governo.php"><span class="prodIcon purple">▰</span><h3>Governo Digital IA</h3><p>Plataformas para serviços digitais, atendimento e comunicação pública.</p><strong>Saiba mais →</strong></a>
+    <a href="/solicitacao-institucional.php?modelo=Cursos%20IA"><span class="prodIcon violet">◆</span><h3>Cursos IA</h3><p>Cursos e treinamentos sobre Inteligência Artificial e tecnologias.</p><strong>Saiba mais →</strong></a>
+  </div>
+</section>
+
+<section class="salesCases" id="cases">
+  <div class="salesSectionHead centered"><h2>Cases e aplicações</h2></div>
+  <div class="caseSalesGrid">
+    <a href="/casos-reais.php"><div><small>TV DIGITAL ENTERPRISE</small><h3>TV Sumaré</h3><p>Plataforma de TV Digital completa com conteúdos locais, transmissões ao vivo e programação.</p><strong>Ver case completo →</strong></div><img src="/assets/img/cases/tv-sumare-showcase.jpg" alt="Case TV Sumaré" loading="lazy"></a>
+    <a href="/casos-reais.php"><div><small>GUIA DIGITAL DA CIDADE®</small><h3>Conheça Sumaré</h3><p>Guia digital com informações de empresas, serviços, eventos e turismo para valorizar o comércio e a cultura local.</p><strong>Ver case completo →</strong></div><img src="/assets/img/cases/conheca-sumare-showcase.jpg" alt="Case Conheça Sumaré" loading="lazy"></a>
+  </div>
+</section>
+
+<section class="salesFinalCta">
+  <div><h2>Conte o desafio da sua operação<br>e descubra a <em>solução ideal.</em></h2></div>
+  <div class="ctaProof"><small>✓ Análise gratuita do cenário</small><small>✓ Proposta personalizada</small><small>✓ Soluções escaláveis</small></div>
+  <a class="btn salesPrimary" href="/diagnostico.php">Agendar demonstração →</a>
+</section>
+
 <?php require __DIR__.'/includes/footer.php'; ?>
