@@ -36,7 +36,7 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
         } catch (Throwable $exception) {
             report($exception);
 
-            $message = preg_replace('/AIza[0-9A-Za-z_-]+/', '[redacted]', $exception->getMessage()) ?: 'Gemini execution failed.';
+            $message = preg_replace('/Bearer\s+[A-Za-z0-9._~-]+/i', 'Bearer [redacted]', $exception->getMessage()) ?: 'Hub execution failed.';
 
             $this->metadata[$agentId] = [
                 'provider' => 'simulated',
@@ -56,7 +56,8 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
 
     private function liveStrategyEnabled(): bool
     {
-        return (bool) config('marketing_agents.gemini.strategy_enabled', false)
-            && (string) config('marketing_agents.gemini.api_key') !== '';
+        return (bool) config('marketing_agents.hub.strategy_enabled', false)
+            && trim((string) config('marketing_agents.hub.url')) !== ''
+            && trim((string) config('marketing_agents.hub.token')) !== '';
     }
 }
