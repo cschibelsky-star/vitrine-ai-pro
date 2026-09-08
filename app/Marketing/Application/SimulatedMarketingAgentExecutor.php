@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Marketing\Application;
 
+use App\Shared\AI\Video\VideoEngine;
+use App\Shared\AI\Video\VideoRequest;
 use InvalidArgumentException;
 
 final class SimulatedMarketingAgentExecutor implements MarketingAgentExecutor
@@ -81,14 +83,7 @@ final class SimulatedMarketingAgentExecutor implements MarketingAgentExecutor
                 'missing_assets' => [],
                 'status' => 'completed',
             ],
-            'video_producer' => [
-                'video_package_id' => "VIDEO-{$campaignId}",
-                'videos' => [['id' => 'VIDEO-001', 'duration_seconds' => 30, 'status' => 'storyboard_ready']],
-                'voice_requirements' => ['language' => 'pt-BR', 'tone' => 'natural'],
-                'render_requirements' => ['formats' => ['9:16', '1:1']],
-                'missing_assets' => [],
-                'status' => 'completed',
-            ],
+            'video_producer' => $this->videoProducer($campaign, $inputs),
             'social_distribution' => [
                 'distribution_plan_id' => "DISTRIBUTION-{$campaignId}",
                 'calendar' => [['content_id' => 'POST-001', 'channel' => 'instagram', 'slot' => 'D1-10:00']],
@@ -115,5 +110,60 @@ final class SimulatedMarketingAgentExecutor implements MarketingAgentExecutor
     public function metadataFor(string $agentId): array
     {
         return ['provider' => 'simulated', 'fallback' => false];
+    }
+
+    /**
+     * Build a deterministic plan in the shared Video Engine without invoking a
+     * provider. Real generation remains behind a separate explicit execution
+     * path, so unit/E2E Marketing runs cannot spend HeyGen credits.
+     *
+     * @param array<string, mixed> $campaign
+     * @param array<string, array<string, mixed>> $inputs
+     * @return array<string, mixed>
+     */
+    private function videoProducer(array $campaign, array $inputs): array
+    {
+        $campaignId = (string) $campaign['campaign_id'];
+        $copy = $inputs['copy_content'] ?? [];
+        $hierarchy = is_array($copy['message_hierarchy'] ?? null) ? $copy['message_hierarchy'] : [];
+        $script = trim(implode(' ', array_filter([
+            (string) ($hierarchy['headline'] ?? ''),
+            (string) ($hierarchy['support'] ?? ''),
+            (string) ($hierarchy['cta'] ?? ''),
+        ])));
+        $duration = (int) data_get($copy, 'video_scripts.0.duration_seconds', 30);
+
+        $request = new VideoRequest(
+            requestId: "MARKETING-VIDEO-{$campaignId}",
+            source: 'marketing_agents',
+            sourceId: $campaignId,
+            title: (string) ($campaign['objective'] ?? "Campaign {$campaignId}"),
+            script: $script,
+            aspectRatios: ['9:16', '1:1'],
+            durationSeconds: $duration,
+            metadata: ['agent_id' => 'video_producer'],
+        );
+
+        $session = (new VideoEngine())->plan($request);
+
+        return [
+            'video_package_id' => "VIDEO-{$campaignId}",
+            'videos' => [['id' => 'VIDEO-001', 'duration_seconds' => $duration, 'status' => 'storyboard_ready']],
+            'voice_requirements' => ['language' => 'pt-BR', 'tone' => 'natural'],
+            'render_requirements' => [
+                'formats' => ['9:16', '1:1'],
+                'video_engine' => [
+                    'request_id' => $request->requestId,
+                    'session_id' => $session->sessionId,
+                    'mode' => 'plan_only',
+                    'versions' => array_map(
+                        static fn ($version): array => $version->toArray(),
+                        $session->versions,
+                    ),
+                ],
+            ],
+            'missing_assets' => [],
+            'status' => 'completed',
+        ];
     }
 }
