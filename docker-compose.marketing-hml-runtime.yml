@@ -8,7 +8,6 @@ services:
     environment:
       MARIADB_DATABASE: vitrine_marketing_hml
       MARIADB_USER: vitrine_marketing
-      MARIADB_PASSWORD: "${MARKETING_DB_PASSWORD:?MARKETING_DB_PASSWORD is required}"
       MARIADB_RANDOM_ROOT_PASSWORD: "1"
     volumes:
       - marketing_db_hml:/var/lib/mysql
@@ -35,17 +34,14 @@ services:
       APP_NAME: "Vitrine Marketing IA HML"
       APP_ENV: homologation
       APP_DEBUG: "false"
-      APP_KEY: "${MARKETING_APP_KEY:?MARKETING_APP_KEY is required}"
       DB_CONNECTION: mysql
       DB_HOST: marketing_db
       DB_PORT: 3306
       DB_DATABASE: vitrine_marketing_hml
       DB_USERNAME: vitrine_marketing
-      DB_PASSWORD: "${MARKETING_DB_PASSWORD:?MARKETING_DB_PASSWORD is required}"
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
-      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
     volumes:
       - marketing_storage_hml:/var/www/html/storage
     depends_on:
