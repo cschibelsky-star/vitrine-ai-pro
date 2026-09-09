@@ -12,21 +12,19 @@ class GeminiStrategyAgentTest extends TestCase
     public function test_gemini_returns_structured_validated_strategy_and_usage_metadata(): void
     {
         config([
-            'marketing_agents.gemini.api_key' => 'test-key-not-secret',
-            'marketing_agents.gemini.model' => 'gemini-2.5-flash',
-            'marketing_agents.gemini.timeout' => 30,
+            'marketing_agents.hub.url' => 'https://hub.example.test/v1/execute',
+            'marketing_agents.hub.token' => 'test-hub-token',
+            'marketing_agents.hub.project_id' => 'vitrine-marketing-agents-core',
+            'marketing_agents.hub.capability' => 'marketing_generation',
+            'marketing_agents.hub.timeout' => 30,
         ]);
 
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [[
-                    'content' => ['parts' => [['text' => json_encode($this->strategyPayload())]]],
-                ]],
-                'usageMetadata' => [
-                    'promptTokenCount' => 120,
-                    'candidatesTokenCount' => 80,
-                    'totalTokenCount' => 200,
-                ],
+            'hub.example.test/*' => Http::response([
+                'ok' => true,
+                'output_text' => json_encode($this->strategyPayload()),
+                'model' => 'gemini-2.5-flash',
+                'execution_id' => 'exec-test-001',
             ]),
         ]);
 
@@ -35,28 +33,34 @@ class GeminiStrategyAgentTest extends TestCase
 
         $this->assertSame('STRATEGY-CAM-SOCIAL-001', $strategy['strategy_id']);
         $this->assertSame('completed', $strategy['status']);
-        $this->assertSame('gemini', $agent->metadata()['provider']);
-        $this->assertSame(200, $agent->metadata()['total_tokens']);
+        $this->assertSame('centro-ia', $agent->metadata()['provider']);
+        $this->assertSame('gemini-2.5-flash', $agent->metadata()['model']);
+        $this->assertSame('exec-test-001', $agent->metadata()['execution_id']);
+        $this->assertFalse($agent->metadata()['fallback']);
 
         Http::assertSent(function ($request): bool {
-            return $request->hasHeader('x-goog-api-key', 'test-key-not-secret')
-                && ! str_contains($request->url(), 'test-key-not-secret')
-                && $request['generationConfig']['responseMimeType'] === 'application/json'
-                && isset($request['generationConfig']['responseSchema'])
-                && $request['generationConfig']['responseSchema']['properties']['objections']['items']['type'] === 'object';
+            return $request->url() === 'https://hub.example.test/v1/execute'
+                && $request->hasHeader('Authorization', 'Bearer test-hub-token')
+                && $request->hasHeader('X-Vitrine-Project', 'vitrine-marketing-agents-core')
+                && $request['project_id'] === 'vitrine-marketing-agents-core'
+                && $request['capability'] === 'marketing_generation'
+                && $request['input']['response_format'] === 'json'
+                && $request['input']['temperature'] === 0.2;
         });
     }
 
     public function test_campaign_falls_back_safely_when_gemini_fails(): void
     {
         config([
-            'marketing_agents.gemini.strategy_enabled' => true,
-            'marketing_agents.gemini.api_key' => 'test-key-not-secret',
-            'marketing_agents.gemini.model' => 'gemini-2.5-flash',
+            'marketing_agents.hub.strategy_enabled' => true,
+            'marketing_agents.hub.url' => 'https://hub.example.test/v1/execute',
+            'marketing_agents.hub.token' => 'test-hub-token',
+            'marketing_agents.hub.project_id' => 'vitrine-marketing-agents-core',
+            'marketing_agents.hub.capability' => 'marketing_generation',
         ]);
 
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response(
+            'hub.example.test/*' => Http::response(
                 ['error' => ['message' => 'temporary failure']],
                 503,
             ),
