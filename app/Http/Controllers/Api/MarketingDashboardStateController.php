@@ -28,7 +28,7 @@ final class MarketingDashboardStateController extends Controller
         }
 
         $registry->assertValid();
-        $gemini = (array) config('marketing_agents.gemini', []);
+        $hub = (array) config('marketing_agents.hub', []);
 
         return response()->json([
             'ok' => true,
@@ -36,9 +36,10 @@ final class MarketingDashboardStateController extends Controller
             'runtime' => [
                 'approval_mode' => (string) config('marketing_agents.approval_mode', 'unknown'),
                 'schema_version' => (string) config('marketing_agents.schema_version', 'unknown'),
-                'gemini_configured' => filled($gemini['api_key'] ?? null),
-                'strategy_enabled' => (bool) ($gemini['strategy_enabled'] ?? false),
-                'model' => (string) ($gemini['model'] ?? 'not configured'),
+                'hub_configured' => filled($hub['url'] ?? null) && filled($hub['token'] ?? null),
+                'strategy_enabled' => (bool) ($hub['strategy_enabled'] ?? false),
+                'provider' => 'centro-ia',
+                'capability' => (string) ($hub['capability'] ?? 'not configured'),
             ],
             'agents' => $registry->all(),
             'pipeline' => [
