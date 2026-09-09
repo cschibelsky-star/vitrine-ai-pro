@@ -1,7 +1,59 @@
-include:
-  - .docker-compose.core-hml.yml.bak-20260902-025745-693426
-
 services:
+  marketing_db:
+    image: mariadb:11.4
+    container_name: vitrine_marketing_db_hml
+    restart: unless-stopped
+    env_file:
+      - ../.env.runtime
+    environment:
+      MARIADB_DATABASE: vitrine_marketing_hml
+      MARIADB_USER: vitrine_marketing
+      MARIADB_PASSWORD: "${MARKETING_DB_PASSWORD:?MARKETING_DB_PASSWORD is required}"
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - marketing_db_hml:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - vitrine_net
+
+  marketing_app:
+    image: vitrine-marketing-agents-core-hml-app:latest
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_marketing_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php-fpm
+    env_file:
+      - ../.env.runtime
+    environment:
+      APP_NAME: "Vitrine Marketing IA HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "${MARKETING_APP_KEY:?MARKETING_APP_KEY is required}"
+      DB_CONNECTION: mysql
+      DB_HOST: marketing_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_marketing_hml
+      DB_USERNAME: vitrine_marketing
+      DB_PASSWORD: "${MARKETING_DB_PASSWORD:?MARKETING_DB_PASSWORD is required}"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+    volumes:
+      - marketing_storage_hml:/var/www/html/storage
+    depends_on:
+      marketing_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
   marketing_web_internal:
     image: nginx:stable
     container_name: vitrine_marketing_web_internal_hml
@@ -14,3 +66,11 @@ services:
         condition: service_healthy
     networks:
       - vitrine_net
+
+volumes:
+  marketing_db_hml:
+  marketing_storage_hml:
+
+networks:
+  vitrine_net:
+    external: true
