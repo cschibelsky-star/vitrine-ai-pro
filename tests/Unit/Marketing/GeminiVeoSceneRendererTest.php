@@ -22,7 +22,11 @@ final class GeminiVeoSceneRendererTest extends TestCase
             'generativelanguage.googleapis.com/*' => Http::response(['name' => 'operations/test-operation'], 200),
         ]);
 
-        $project = new VideoProject('reel-001', 'Reel 001');
+        $project = new VideoProject(
+            projectId: 'reel-001',
+            productId: 'vitrine-social-midia',
+            campaignId: 'campaign-test-001',
+        );
         $scene = new VideoScene('scene-01', 1, ['prompt' => 'Photorealistic modern office scene, no text overlays.']);
 
         $result = app(GeminiVeoSceneRenderer::class)->dispatch($project, $scene, [
