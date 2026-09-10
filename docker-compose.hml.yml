@@ -113,8 +113,17 @@ services:
     depends_on:
       vitrine_factory_hml_app:
         condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.factory-hml.rule=Host(`factory.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.factory-hml.entrypoints=websecure"
+      - "traefik.http.routers.factory-hml.tls=true"
+      - "traefik.http.routers.factory-hml.tls.certresolver=le"
+      - "traefik.http.services.factory-hml.loadbalancer.server.port=80"
     networks:
       - vitrine_net
+      - traefik_net
 
   vitrine_factory_hml_check:
     image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app:latest
@@ -204,3 +213,6 @@ volumes:
 networks:
   vitrine_net:
     external: true
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network
