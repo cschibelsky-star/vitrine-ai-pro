@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Marketing;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+final class VideoPreviewController extends Controller
+{
+    private const REEL_01_VERSION = 'SESSION-REEL-01-VITRINE-SOCIAL-MIDIA-20260911-V1';
+
+    public function __invoke(Request $request, string $version): BinaryFileResponse
+    {
+        abort_unless($request->hasValidSignature(), 403);
+        abort_unless(hash_equals(self::REEL_01_VERSION, $version), 404);
+
+        $filename = self::REEL_01_VERSION.'.mp4';
+        $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        return response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Pragma' => 'no-cache',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+    }
+}
