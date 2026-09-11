@@ -34,6 +34,8 @@ services:
       APP_NAME: "Vitrine Marketing IA HML"
       APP_ENV: homologation
       APP_DEBUG: "false"
+      APP_URL: "https://marketing.hml.vitrineiapro.com.br"
+      APP_KEY: "${MARKETING_APP_KEY}"
       DB_CONNECTION: mysql
       DB_HOST: marketing_db
       DB_PORT: 3306
@@ -44,6 +46,7 @@ services:
       QUEUE_CONNECTION: sync
     volumes:
       - marketing_storage_hml:/var/www/html/storage
+      - ../storage/app/marketing/video-producer:/var/www/html/storage/app/video-previews:ro
     depends_on:
       marketing_db:
         condition: service_healthy
@@ -62,6 +65,15 @@ services:
         condition: service_healthy
     networks:
       - vitrine_net
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.marketing-hml.rule=Host(`marketing.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.marketing-hml.entrypoints=websecure"
+      - "traefik.http.routers.marketing-hml.tls=true"
+      - "traefik.http.routers.marketing-hml.tls.certresolver=le"
+      - "traefik.http.services.marketing-hml.loadbalancer.server.port=80"
 
 volumes:
   marketing_db_hml:
@@ -70,3 +82,6 @@ volumes:
 networks:
   vitrine_net:
     external: true
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network
