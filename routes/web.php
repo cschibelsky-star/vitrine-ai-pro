@@ -28,6 +28,10 @@ Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->name('marketing.video-preview');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/marketing/video-preview/reel-01/signed', [VideoPreviewController::class, 'signedUrl'])
+        ->middleware(['throttle:10,1'])
+        ->name('marketing.video-preview.sign');
+
     Route::get('/cliente', [ClientPortalController::class, 'index'])->name('client.portal');
 
     Route::post('/cliente/logout', function (Request $request) {
