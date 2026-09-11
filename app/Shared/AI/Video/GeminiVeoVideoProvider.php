@@ -55,7 +55,7 @@ final class GeminiVeoVideoProvider implements VideoProvider
         $parameters = [
             'aspectRatio' => $request->aspectRatios[0],
             'resolution' => $resolution,
-            'durationSeconds' => (string) $duration,
+            'durationSeconds' => (int) $duration,
         ];
 
         if (isset($request->metadata['seed'])) {
