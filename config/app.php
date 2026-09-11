@@ -10,7 +10,7 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'pt_BR'),
     'faker_locale' => env('APP_FAKER_LOCALE', 'pt_BR'),
     'cipher' => 'AES-256-CBC',
-    'key' => env('APP_KEY'),
+    'key' => env('APP_KEY', env('MARKETING_APP_KEY')),
     'previous_keys' => array_filter(explode(',', env('APP_PREVIOUS_KEYS', ''))),
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
