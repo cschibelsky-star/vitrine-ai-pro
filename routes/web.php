@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\Marketing\VideoPreviewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,11 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return redirect('/admin/login');
 })->name('login');
+
+Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
+    ->middleware(['signed', 'throttle:30,1'])
+    ->where('version', '[A-Za-z0-9._-]+')
+    ->name('marketing.video-preview');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/cliente', [ClientPortalController::class, 'index'])->name('client.portal');
