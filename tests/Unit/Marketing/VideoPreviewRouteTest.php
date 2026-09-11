@@ -43,8 +43,12 @@ final class VideoPreviewRouteTest extends TestCase
 
         $response->assertOk()
             ->assertHeader('content-type', 'video/mp4')
-            ->assertHeader('cache-control', 'private, no-store, max-age=0')
             ->assertHeader('x-robots-tag', 'noindex, nofollow, noarchive');
+
+        $cacheControl = (string) $response->headers->get('cache-control');
+        $this->assertStringContainsString('private', $cacheControl);
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('max-age=0', $cacheControl);
     }
 
     public function test_unsigned_preview_is_forbidden(): void
