@@ -22,13 +22,17 @@ final class VideoPreviewController extends Controller
 
         abort_unless(is_file($path) && is_readable($path), 404);
 
-        return response()->file($path, [
+        $response = response()->file($path, [
             'Content-Type' => 'video/mp4',
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
-            'Cache-Control' => 'private, no-store, max-age=0',
             'Pragma' => 'no-cache',
             'X-Content-Type-Options' => 'nosniff',
             'X-Robots-Tag' => 'noindex, nofollow, noarchive',
         ]);
+        $response->setPrivate();
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('no-store');
+
+        return $response;
     }
 }
