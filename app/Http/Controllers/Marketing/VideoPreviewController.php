@@ -5,12 +5,34 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class VideoPreviewController extends Controller
 {
     private const REEL_01_VERSION = 'SESSION-REEL-01-VITRINE-SOCIAL-MIDIA-20260911-V1';
+
+    public function signedUrl(): JsonResponse
+    {
+        $expiresAt = now()->addMinutes(60);
+
+        return response()->json([
+            'project_id' => 'vitrine-marketing-agents-core-hml',
+            'version_id' => self::REEL_01_VERSION,
+            'expires_at' => $expiresAt->toIso8601String(),
+            'signed_url' => URL::temporarySignedRoute(
+                'marketing.video-preview',
+                $expiresAt,
+                ['version' => self::REEL_01_VERSION],
+            ),
+        ], 200, [
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Pragma' => 'no-cache',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+    }
 
     public function __invoke(Request $request, string $version): BinaryFileResponse
     {
