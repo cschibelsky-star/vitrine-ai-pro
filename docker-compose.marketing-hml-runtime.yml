@@ -35,7 +35,6 @@ services:
       APP_ENV: homologation
       APP_DEBUG: "false"
       APP_URL: "https://marketing.hml.vitrineiapro.com.br"
-      APP_KEY: "${MARKETING_APP_KEY}"
       DB_CONNECTION: mysql
       DB_HOST: marketing_db
       DB_PORT: 3306
