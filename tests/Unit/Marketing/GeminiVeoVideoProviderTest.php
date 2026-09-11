@@ -68,7 +68,7 @@ final class GeminiVeoVideoProviderTest extends TestCase
                 && data_get($payload, 'instances.0.prompt') !== null
                 && data_get($payload, 'parameters.aspectRatio') === '9:16'
                 && data_get($payload, 'parameters.resolution') === '720p'
-                && data_get($payload, 'parameters.durationSeconds') === '8';
+                && data_get($payload, 'parameters.durationSeconds') === 8;
         });
     }
 
