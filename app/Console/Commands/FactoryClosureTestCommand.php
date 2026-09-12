@@ -10,7 +10,7 @@ use Throwable;
 
 class FactoryClosureTestCommand extends Command
 {
-    protected $signature = 'test';
+    protected $signature = 'test {--colors=never}';
     protected $description = 'Executa validações read-only de fechamento da Factory.';
 
     public function handle(
