@@ -29,6 +29,23 @@ class ProduceRequestPipeline
         $domain = (string) ($resolved['domain'] ?? 'generico');
         $key = $product ?: $domain;
 
+        if (! $approved) {
+            return [
+                'request' => $request,
+                'domain' => $domain,
+                'resolved_product' => $product,
+                'status' => 'awaiting_approval',
+                'resolved' => $resolved,
+                'decision' => $decision,
+                'resolver_path' => null,
+                'decision_path' => null,
+                'path' => null,
+                'persisted' => false,
+                'next_command' => 'php artisan factory:produce-request --approved <request>',
+                'created_at' => now()->toISOString(),
+            ];
+        }
+
         $base = storage_path('app/factory/final-producer/requests/' . date('Ymd_His') . '_' . $key);
         File::ensureDirectoryExists($base);
 
@@ -36,21 +53,6 @@ class ProduceRequestPipeline
         $decisionPath = $base . '/02_decision.json';
         File::put($resolverPath, json_encode($resolved, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         File::put($decisionPath, json_encode($decision, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-
-        if (! $approved) {
-            $report = [
-                'request' => $request,
-                'domain' => $domain,
-                'resolved_product' => $product,
-                'status' => 'awaiting_approval',
-                'resolver_path' => $resolverPath,
-                'decision_path' => $decisionPath,
-                'next_command' => 'php artisan factory:produce-request --approved <request>',
-                'created_at' => now()->toISOString(),
-            ];
-
-            return $this->writeReport($base, $report);
-        }
 
         if (! $product) {
             $blueprint = SystemBlueprint::fromArray((array) ($resolved['blueprint'] ?? []));
@@ -66,6 +68,7 @@ class ProduceRequestPipeline
                 'decision_path' => $decisionPath,
                 'blueprint_path' => $blueprintPath,
                 'builds' => $builds,
+                'persisted' => true,
                 'next_command' => 'php artisan factory:qa-module ' . ($builds[0]['module_slug'] ?? '') . ' --system=' . $blueprint->slug,
                 'created_at' => now()->toISOString(),
             ];
@@ -93,6 +96,7 @@ class ProduceRequestPipeline
             'decision_path' => $decisionPath,
             'production_step_path' => $productionPath,
             'production_report_path' => storage_path('app/factory/production/' . $product . '/production_report.json'),
+            'persisted' => true,
             'next_command' => 'php artisan factory:install-system ' . $product . ' --dry-run',
             'created_at' => now()->toISOString(),
         ];
