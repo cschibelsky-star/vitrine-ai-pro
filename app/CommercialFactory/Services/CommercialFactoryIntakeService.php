@@ -3,33 +3,82 @@
 namespace App\CommercialFactory\Services;
 
 use App\Factory\AI\Services\AdvancedRequirementAnalyzer;
+use App\Factory\Approval\Services\ApprovalTokenService;
 use App\Factory\Decision\Services\DecisionEngine;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class CommercialFactoryIntakeService
 {
+    private const APPROVAL_SCOPE = 'commercial_factory_intake';
+
     public function __construct(
         protected CommercialProductResolver $resolver,
         protected AdvancedRequirementAnalyzer $analyzer,
         protected DecisionEngine $decisionEngine,
+        protected ApprovalTokenService $approvalTokens,
     ) {
     }
 
-    public function intake(array $data, bool $dryRun = true): array
-    {
+    public function intake(
+        array $data,
+        bool $dryRun = true,
+        bool $approved = false,
+        ?string $approvalToken = null,
+    ): array {
         $resolved = $this->resolver->resolve((string) $data['product']);
         $product = $resolved['config'];
         $planKey = (string) ($data['plan'] ?? 'start');
         $plan = $product['plans'][$planKey] ?? reset($product['plans']);
         $clientSlug = Str::slug((string) $data['client'], '_');
         $projectSlug = $resolved['key'] . '_' . $clientSlug;
-        $base = storage_path('app/factory/commercial-intake/' . date('Ymd_His') . '_' . $projectSlug);
-        File::ensureDirectoryExists($base);
 
         $prompt = trim(($product['factory_prompt'] ?? '') . "\n\nCliente: " . ($data['client'] ?? '') . "\nPlano: " . ($plan['label'] ?? $planKey) . "\nDomínio: " . ($data['domain'] ?? ''));
         $analysis = $this->analyzer->analyze($prompt);
         $decision = $this->decisionEngine->decide($prompt);
+        $domain = (string) ($analysis['architecture']['domain'] ?? 'generico');
+        $fingerprint = hash('sha256', $projectSlug . '|' . $prompt);
+
+        if (! $approved) {
+            return [
+                'status' => 'awaiting_approval',
+                'project_slug' => $projectSlug,
+                'commercial_status' => 'analysis_ready_for_review',
+                'domain' => $domain,
+                'analysis' => $analysis,
+                'decision' => $decision,
+                'path' => null,
+                'persisted' => false,
+                'next_stage' => 'approval',
+                'build_triggered' => false,
+                'approval_token' => $this->approvalTokens->issue(self::APPROVAL_SCOPE, $fingerprint, [
+                    'project_slug' => $projectSlug,
+                    'domain' => $domain,
+                ]),
+                'created_at' => now()->toISOString(),
+            ];
+        }
+
+        $this->approvalTokens->assertValid($approvalToken, self::APPROVAL_SCOPE, $fingerprint);
+
+        if ($dryRun) {
+            return [
+                'status' => 'approved_dry_run',
+                'project_slug' => $projectSlug,
+                'commercial_status' => 'approved_without_persistence',
+                'domain' => $domain,
+                'analysis' => $analysis,
+                'decision' => $decision,
+                'path' => null,
+                'persisted' => false,
+                'next_stage' => 'persistence',
+                'build_triggered' => false,
+                'created_at' => now()->toISOString(),
+            ];
+        }
+
+        $base = storage_path('app/factory/commercial-intake/' . date('Ymd_His') . '_' . $projectSlug);
+        File::ensureDirectoryExists($base);
 
         File::put($base . '/commercial_intake.json', json_encode([
             'client' => $data['client'],
@@ -43,12 +92,13 @@ class CommercialFactoryIntakeService
         File::put($base . '/decision.json', json_encode($decision, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $report = [
-            'status' => 'awaiting_approval',
+            'status' => 'awaiting_materialization',
             'project_slug' => $projectSlug,
-            'commercial_status' => 'analysis_ready_for_review',
-            'domain' => $analysis['architecture']['domain'] ?? 'generico',
+            'commercial_status' => 'approved_and_persisted',
+            'domain' => $domain,
             'path' => $base . '/commercial_factory_report.json',
-            'next_stage' => 'approval',
+            'persisted' => true,
+            'next_stage' => 'materialization',
             'build_triggered' => false,
             'created_at' => now()->toISOString(),
         ];
