@@ -22,7 +22,7 @@ services:
     command: php-fpm
     environment:
       <<: *core-db-env
-      APP_URL: "http://127.0.0.1:8893"
+      APP_URL: "https://core.hml.vitrineiapro.com.br"
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
