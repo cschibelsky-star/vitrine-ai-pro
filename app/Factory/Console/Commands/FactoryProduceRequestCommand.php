@@ -27,11 +27,12 @@ class FactoryProduceRequestCommand extends Command
         $this->info('Factory Request Pipeline concluído.');
         $this->line('Domínio: ' . ($report['domain'] ?? 'n/d'));
         $this->line('Produto resolvido: ' . ($report['resolved_product'] ?? 'nenhum'));
-        $this->line('Status: ' . $report['status']);
-        $this->line('Relatório: ' . $report['path']);
-        $this->warn('Próximo passo: ' . $report['next_command']);
+        $this->line('Status: ' . ($report['status'] ?? 'n/d'));
+        $this->line('Persistido: ' . (($report['persisted'] ?? false) ? 'sim' : 'não'));
+        $this->line('Relatório: ' . ($report['path'] ?? '-'));
+        $this->warn('Próximo passo: ' . ($report['next_command'] ?? '-'));
 
-        return in_array($report['status'], ['finished', 'awaiting_approval', 'awaiting_materialization'], true)
+        return in_array($report['status'] ?? null, ['finished', 'materialized', 'awaiting_approval', 'awaiting_materialization'], true)
             ? self::SUCCESS
             : self::FAILURE;
     }
