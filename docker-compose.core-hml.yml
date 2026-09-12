@@ -52,19 +52,26 @@ services:
       && php artisan migrate --path=database/migrations/2024_01_01_000002_create_companies_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_20_000201_add_client_access_fields_to_users_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000003_create_products_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_19_000001_create_plans_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000004_create_licenses_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000005_create_leads_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_19_000005_add_comercial_avancado_fields_to_leads_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000006_create_payments_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000007_create_settings_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000008_create_logs_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_000101_create_modules_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_000102_create_plan_modules_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_000103_create_company_modules_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_000201_create_contracts_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_210000_create_support_tickets_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130001_create_ai_providers_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130002_create_ai_agents_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130003_create_ai_queues_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130004_create_ai_executions_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130005_create_ai_consumptions_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130006_create_ai_alerts_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force"
+      && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_21_200000_master_2_0_operacional_tables.php --force"
     environment:
       <<: *core-db-env
     depends_on:
