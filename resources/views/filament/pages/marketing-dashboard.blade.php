@@ -42,6 +42,44 @@
             </div>
         </section>
 
+        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-primary-600">Diretor de Marketing IA</div>
+                    <h2 class="mt-1 text-xl font-bold text-gray-950 dark:text-white">Sessão de criação</h2>
+                    <p class="mt-1 text-xs text-gray-500">{{ $copilotSessionId }}</p>
+                </div>
+                <button type="button" wire:click="newCopilotSession" class="rounded-lg border px-3 py-2 text-sm">Nova sessão</button>
+            </div>
+
+            <div class="mt-5 max-h-[420px] min-h-[240px] space-y-3 overflow-y-auto rounded-xl bg-gray-50 p-4 dark:bg-gray-950/50">
+                @forelse ($copilotMessages as $message)
+                    <div class="flex {{ ($message['role'] ?? '') === 'user' ? 'justify-end' : 'justify-start' }}">
+                        <div class="max-w-[85%] rounded-xl px-4 py-3 text-sm {{ ($message['role'] ?? '') === 'user' ? 'bg-primary-600 text-white' : 'bg-white text-gray-900 dark:bg-gray-800 dark:text-white' }}">
+                            <div class="whitespace-pre-wrap">{{ $message['content'] ?? '' }}</div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-16 text-center text-sm text-gray-500">Converse com o Marketing IA para criar campanhas, conteúdos, Reels e anúncios.</div>
+                @endforelse
+            </div>
+
+            <form wire:submit="sendCopilotMessage" class="mt-4">
+                @if ($copilotError)
+                    <div class="mb-3 text-sm text-danger-600">{{ $copilotError }}</div>
+                @endif
+                <div class="flex gap-3">
+                    <textarea wire:model="copilotMessage" rows="3" maxlength="4000" class="flex-1 rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-950" placeholder="Digite o que deseja criar ou continuar..."></textarea>
+                    <button type="submit" class="self-end rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white">Enviar</button>
+                </div>
+            </form>
+
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
+                <div class="rounded-xl border p-4 text-sm"><strong>Metricool:</strong> publicação orgânica somente após aprovação humana.</div>
+                <div class="rounded-xl border p-4 text-sm"><strong>Windsor.ai FB Ads:</strong> mídia paga somente após autorização explícita de orçamento e ativação.</div>
+            </div>
+        </section>
+
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Gemini</div>
