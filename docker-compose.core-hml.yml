@@ -53,6 +53,10 @@ services:
       && php artisan migrate --path=database/migrations/2026_06_20_000201_add_client_access_fields_to_users_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000003_create_products_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000004_create_licenses_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000005_create_leads_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000006_create_payments_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000007_create_settings_table.php --force
+      && php artisan migrate --path=database/migrations/2024_01_01_000008_create_logs_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130001_create_ai_providers_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130002_create_ai_agents_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130003_create_ai_queues_table.php --force
