@@ -48,6 +48,7 @@ services:
     working_dir: /var/www/html
     command: >-
       sh -lc "php artisan config:clear
+      && php artisan migrate --path=database/migrations/2024_01_01_000001_create_users_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000002_create_companies_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000003_create_products_table.php --force
       && php artisan migrate --path=database/migrations/2024_01_01_000004_create_licenses_table.php --force
