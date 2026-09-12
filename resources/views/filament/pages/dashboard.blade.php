@@ -1,113 +1,110 @@
 <x-filament-panels::page>
-    <style>
-        .vip-hero {
-            background:
-                radial-gradient(circle at top right, rgba(59, 130, 246, .38), transparent 36%),
-                radial-gradient(circle at bottom left, rgba(14, 165, 233, .28), transparent 34%),
-                linear-gradient(135deg, #020617 0%, #0f172a 52%, #111827 100%);
-        }
-        .vip-card { transition: all .2s ease; }
-        .vip-card:hover { transform: translateY(-2px); }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/atlas-dashboard.css') }}?v=10.1.1">
 
-    <div class="space-y-8">
-        <section class="vip-hero relative overflow-hidden rounded-[2rem] p-8 text-white shadow-2xl ring-1 ring-white/10">
-            <div class="relative z-10 grid gap-10 lg:grid-cols-[1.3fr_.7fr] lg:items-center">
+    <div class="atlas-wrap">
+        <div class="atlas-top">
+            <div class="atlas-search">Pesquisar clientes, licenças, produtos, cobranças e projetos...</div>
+            <div class="atlas-top-actions">
+                <div class="atlas-pill">● Operação saudável</div>
+                <a class="atlas-btn" href="/admin/factory-studio-enterprise">+ Novo</a>
+            </div>
+        </div>
+
+        <section class="atlas-hero">
+            <div class="atlas-hero-content">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-sky-200">
-                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                        Vitrine AI Pro Enterprise 6.0 RC3
-                    </div>
-
-                    <h1 class="mt-6 max-w-4xl text-4xl font-black tracking-tight md:text-5xl">
-                        Centro Operacional Inteligente
-                    </h1>
-
-                    <p class="mt-5 max-w-3xl text-base leading-7 text-slate-300">
-                        Cockpit executivo para operar a Vitrine AI Pro: clientes, produtos, licenças,
-                        comercial, Factory Studio, projetos, marketplace e entrega SaaS.
+                    <div class="atlas-eyebrow">Centro Operacional Inteligente</div>
+                    <h1>Central de Comando</h1>
+                    <p>
+                        Bom dia, Cristian. Sua operação está funcionando normalmente. Há duas licenças vencendo
+                        nos próximos dias e três oportunidades comerciais aguardando retorno.
                     </p>
-
-                    <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="/admin/factory-studio-enterprise" class="rounded-2xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400">Abrir Factory Studio</a>
-                        <a href="/admin/generated-projects" class="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Projetos Gerados</a>
-                        <a href="/admin/marketplace-enterprise" class="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/15">Marketplace</a>
-                    </div>
                 </div>
-
-                <div class="rounded-[1.5rem] border border-white/10 bg-white/10 p-5 shadow-xl">
-                    <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">Pipeline Enterprise</div>
-                    <div class="mt-5 space-y-3">
-                        @foreach (['Pedido', 'Cliente', 'Licença', 'Factory', 'Projeto', 'Homologação', 'Publicação'] as $step)
-                            <div class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                                <span class="text-sm font-semibold text-slate-100">{{ $step }}</span>
-                                <span class="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-200">ativo</span>
-                            </div>
-                        @endforeach
-                    </div>
+                <div class="atlas-pulse">
+                    <div class="atlas-eyebrow">Pulso da operação</div>
+                    <strong>92%</strong>
+                    <div class="atlas-bar"><span></span></div>
+                    <p>Infraestrutura, IA, clientes, financeiro e publicações em situação estável.</p>
                 </div>
             </div>
         </section>
 
-        <section class="grid gap-5 md:grid-cols-4">
-            @foreach ([
-                ['label' => 'Produtos Oficiais', 'value' => '4', 'desc' => 'SaaS comercial'],
-                ['label' => 'Projetos Factory', 'value' => $this->countProjects(), 'desc' => 'Blueprints gerados'],
-                ['label' => 'Pedidos Comerciais', 'value' => $this->countCommercialIntakes(), 'desc' => 'Comercial → Factory'],
-                ['label' => 'Release', 'value' => 'RC3', 'desc' => 'Enterprise 6.0'],
-            ] as $card)
-                <div class="vip-card rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ $card['label'] }}</div>
-                    <div class="mt-3 text-4xl font-black tracking-tight text-slate-950 dark:text-white">{{ $card['value'] }}</div>
-                    <div class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ $card['desc'] }}</div>
-                </div>
-            @endforeach
+        <section class="atlas-kpis">
+            <div class="atlas-kpi cyan"><div class="label">Clientes ativos</div><div class="num">148</div><small>+8 este mês</small></div>
+            <div class="atlas-kpi"><div class="label">Licenças</div><div class="num">186</div><small>3 vencem em 7 dias</small></div>
+            <div class="atlas-kpi green"><div class="label">Receita mensal</div><div class="num">R$ 52k</div><small>+12% previsto</small></div>
+            <div class="atlas-kpi violet"><div class="label">Agentes IA</div><div class="num">12</div><small>em operação</small></div>
+            <div class="atlas-kpi amber"><div class="label">Projetos Factory</div><div class="num">{{ $this->countProjects() }}</div><small>2 em homologação</small></div>
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-3">
-            <div class="xl:col-span-2 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-2xl font-black tracking-tight text-slate-950 dark:text-white">Produtos Estratégicos</h2>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Catálogo comercial conectado ao fluxo de produção da Factory.</p>
-                    </div>
-                    <span class="rounded-full bg-sky-500/10 px-4 py-2 text-xs font-bold text-sky-600">Marketplace-ready</span>
+        <section class="atlas-grid">
+            <div class="atlas-panel">
+                <div class="atlas-panel-head">
+                    <div><h2>Mapa do Ecossistema</h2><p>Produtos ativos, implantação e maturidade operacional.</p></div>
+                    <a class="atlas-pill" href="/admin/products">Ver produtos</a>
                 </div>
+                <div class="atlas-ecosystem">
+                    <div class="atlas-donut"><div><strong>86%</strong><span>base ativa</span></div></div>
+                    <div class="atlas-legend">
+                        @foreach ($this->getProducts() as $product)
+                            <div class="atlas-legend-row"><span>{{ $product['name'] }}</span><b>{{ $product['progress'] }}%</b></div>
+                            <div class="atlas-progress"><span style="width: {{ $product['progress'] }}%"></span></div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
 
-                <div class="mt-6 grid gap-4 md:grid-cols-2">
-                    @foreach ($this->getProducts() as $product)
-                        <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-xs font-bold uppercase tracking-[0.18em] text-sky-600">{{ $product['tag'] }}</div>
-                                    <h3 class="mt-2 text-lg font-black text-slate-950 dark:text-white">{{ $product['name'] }}</h3>
-                                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{{ $product['desc'] }}</p>
-                                </div>
-                                <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">{{ $product['status'] }}</span>
-                            </div>
-                        </div>
+            <div class="atlas-panel">
+                <div class="atlas-panel-head"><div><h2>Fluxo Operacional</h2><p>Da venda à publicação.</p></div></div>
+                <div class="atlas-activity">
+                    @foreach ([
+                        ['icon' => '01', 'title' => 'Lead comercial', 'desc' => 'Entrada pelo site ou atendimento'],
+                        ['icon' => '02', 'title' => 'Cliente e licença', 'desc' => 'Plano, produto e valor vinculados'],
+                        ['icon' => '03', 'title' => 'Fábrica IA', 'desc' => 'Projeto base, módulos e instalação'],
+                        ['icon' => '04', 'title' => 'Homologação', 'desc' => 'Teste, ajuste e publicação'],
+                    ] as $item)
+                        <div class="atlas-step"><div class="atlas-ic">{{ $item['icon'] }}</div><div><b>{{ $item['title'] }}</b><span>{{ $item['desc'] }}</span></div><small>ativo</small></div>
                     @endforeach
                 </div>
             </div>
+        </section>
 
-            <div class="space-y-6">
-                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-xl font-black text-slate-950 dark:text-white">IA Center</h2>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Agentes especializados do ecossistema.</p>
-                    <div class="mt-5 space-y-3">
-                        @foreach (['IA Comercial', 'IA Arquiteta', 'IA Desenvolvedora', 'IA QA', 'IA Deploy'] as $agent)
-                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-950">
-                                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $agent }}</span>
-                                <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-                            </div>
-                        @endforeach
-                    </div>
+        <section class="atlas-bottom">
+            <div class="atlas-panel">
+                <h2>Agentes de IA</h2><p>Controle operacional dos agentes.</p>
+                <div class="atlas-cards-mini">
+                    <div class="atlas-mini"><b>IA Comercial</b><small>Online · 42 conversas</small></div>
+                    <div class="atlas-mini"><b>IA Factory</b><small>Online · 3 builds</small></div>
+                    <div class="atlas-mini"><b>IA QA</b><small>Online · 2 revisões</small></div>
+                    <div class="atlas-mini"><b>IA Suporte</b><small>Online · 5 chamados</small></div>
                 </div>
+            </div>
 
-                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-xl font-black text-slate-950 dark:text-white">Próxima Entrega</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Conectar formulário/checkout do site comercial ao intake automático da Factory.</p>
+            <div class="atlas-panel">
+                <h2>Saúde da Plataforma</h2><p>Serviços principais.</p>
+                <div class="atlas-legend">
+                    <div class="atlas-legend-row"><span>Docker / PHP</span><b>100%</b></div><div class="atlas-progress"><span style="width:100%"></span></div>
+                    <div class="atlas-legend-row"><span>MariaDB / Redis</span><b>100%</b></div><div class="atlas-progress"><span style="width:100%"></span></div>
+                    <div class="atlas-legend-row"><span>GitHub Deploy</span><b>80%</b></div><div class="atlas-progress"><span style="width:80%"></span></div>
                 </div>
+            </div>
+
+            <div class="atlas-panel">
+                <h2>Próximas ações</h2><p>Orientação executiva.</p>
+                <div class="atlas-activity">
+                    <div class="atlas-step"><div class="atlas-ic">!</div><div><b>Renovar 2 licenças</b><span>Vencimento nos próximos 7 dias</span></div><small>prioridade</small></div>
+                    <div class="atlas-step"><div class="atlas-ic">$</div><div><b>Enviar 3 propostas</b><span>Leads aguardando retorno</span></div><small>comercial</small></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="atlas-panel" style="margin-top:14px">
+            <div class="atlas-panel-head"><div><h2>Licenças recentes</h2><p>Exemplo de tabela Enterprise compacta.</p></div><a class="atlas-btn" href="/admin/licenses/create">Nova Licença</a></div>
+            <div class="atlas-table">
+                <div class="atlas-tr head"><div>Cliente</div><div>Produto</div><div>Plano</div><div>Situação</div></div>
+                <div class="atlas-tr"><div>Prefeitura Modelo</div><div>TV Digital Enterprise</div><div>Enterprise</div><div><span class="atlas-badge">Ativa</span></div></div>
+                <div class="atlas-tr"><div>Conheça Cidade</div><div>Guia Digital da Cidade</div><div>Start</div><div><span class="atlas-badge">Ativa</span></div></div>
+                <div class="atlas-tr"><div>AssessorGov IA</div><div>GovTech</div><div>Premium</div><div><span class="atlas-badge">Homologação</span></div></div>
             </div>
         </section>
     </div>
