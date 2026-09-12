@@ -24,7 +24,7 @@ class SiteFactoryIntakeController extends Controller
                 'phone' => $request->input('phone'),
                 'source' => $request->string('source')->toString(),
                 'notes' => $request->input('notes'),
-            ], (bool) config('site_factory.dry_run_default', true));
+            ], true, false, null);
         } catch (Throwable $exception) {
             report($exception);
 
@@ -36,15 +36,18 @@ class SiteFactoryIntakeController extends Controller
             ], 500);
         }
 
+        $accepted = ($report['status'] ?? null) === 'awaiting_approval';
+
         return response()->json([
-            'ok' => $report['status'] === 'finished',
-            'status' => $report['status'],
+            'ok' => $accepted,
+            'status' => $report['status'] ?? null,
             'commercial_status' => $report['commercial_status'] ?? null,
             'project_slug' => $report['project_slug'] ?? null,
+            'persisted' => $report['persisted'] ?? false,
             'report_path' => $report['path'] ?? null,
-            'message' => $report['status'] === 'finished'
-                ? 'Pedido recebido e enviado para homologação da Factory.'
-                : 'Pedido recebido, mas a Factory retornou falha.',
-        ], $report['status'] === 'finished' ? 201 : 422);
+            'message' => $accepted
+                ? 'Pedido analisado e aguardando aprovação operacional.'
+                : 'A Factory não aceitou o pedido para análise.',
+        ], $accepted ? 202 : 422);
     }
 }
