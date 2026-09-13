@@ -19,10 +19,10 @@ class LeadResource extends Resource
     protected static ?string $model = Lead::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-funnel';
-    protected static ?string $navigationLabel = 'Comercial';
-    protected static ?string $navigationGroup = 'Comercial';
+    protected static ?string $navigationLabel = 'Leads / Oportunidades';
+    protected static ?string $navigationGroup = '03 · Comercial';
     protected static ?string $modelLabel = 'Lead';
-    protected static ?string $pluralModelLabel = 'Comercial';
+    protected static ?string $pluralModelLabel = 'Leads / Oportunidades';
 
     public static function produtoOptions(): array
     {
