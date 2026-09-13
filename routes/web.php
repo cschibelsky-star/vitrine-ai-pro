@@ -27,6 +27,10 @@ Route::get('/marketing/media/reel-01/{version}', [VideoPreviewController::class,
     ->where('version', '[A-Za-z0-9._-]+\.mp4')
     ->name('marketing.media.reel-01');
 
+Route::get('/marketing/media/reel-02/{version}', [VideoPreviewController::class, 'publicMediaReel02'])
+    ->middleware(['throttle:60,1'])
+    ->name('marketing.media.reel-02');
+
 Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->middleware(['signed', 'throttle:30,1'])
     ->where('version', '[A-Za-z0-9._-]+')

@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 final class VideoPreviewController extends Controller
 {
     private const REEL_01_VERSION = 'SESSION-REEL-01-VITRINE-SOCIAL-MIDIA-20260911-V1';
+    private const REEL_02_VERSION = 'SESSION-REEL-02-VITRINE-SOCIAL-MIDIA-20260913-V1';
 
     public function signedUrl(): JsonResponse
     {
@@ -55,6 +56,32 @@ final class VideoPreviewController extends Controller
 
             abort(404);
         }
+
+        $response = response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPublic();
+        $response->setMaxAge(86400);
+        $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
+    public function publicMediaReel02(string $version): BinaryFileResponse
+    {
+        $requestedVersion = str_ends_with($version, '.mp4')
+            ? substr($version, 0, -4)
+            : $version;
+
+        abort_unless(hash_equals(self::REEL_02_VERSION, $requestedVersion), 404);
+
+        $filename = self::REEL_02_VERSION.'.mp4';
+        $path = storage_path('app/video-previews/reel-02-vitrine-social-midia-20260913/'.$filename);
+
+        abort_unless(is_file($path) && is_readable($path), 404);
 
         $response = response()->file($path, [
             'Content-Type' => 'video/mp4',
