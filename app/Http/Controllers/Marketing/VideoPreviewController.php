@@ -36,12 +36,25 @@ final class VideoPreviewController extends Controller
 
     public function publicMedia(string $version): BinaryFileResponse
     {
-        abort_unless(hash_equals(self::REEL_01_VERSION, $version), 404);
+        $requestedVersion = str_ends_with($version, '.mp4')
+            ? substr($version, 0, -4)
+            : $version;
+
+        abort_unless(hash_equals(self::REEL_01_VERSION, $requestedVersion), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
         $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
 
-        abort_unless(is_file($path) && is_readable($path), 404);
+        if (! is_file($path) || ! is_readable($path)) {
+            logger()->warning('Reel 01 public media file unavailable', [
+                'version' => $version,
+                'path' => $path,
+                'exists' => is_file($path),
+                'readable' => is_readable($path),
+            ]);
+
+            abort(404);
+        }
 
         $response = response()->file($path, [
             'Content-Type' => 'video/mp4',
