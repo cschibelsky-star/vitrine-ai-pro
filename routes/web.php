@@ -22,6 +22,11 @@ Route::get('/login', function () {
     return redirect('/admin/login');
 })->name('login');
 
+Route::get('/marketing/media/reel-01/{version}.mp4', [VideoPreviewController::class, 'publicMedia'])
+    ->middleware(['throttle:60,1'])
+    ->where('version', '[A-Za-z0-9._-]+')
+    ->name('marketing.media.reel-01');
+
 Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->middleware(['signed', 'throttle:30,1'])
     ->where('version', '[A-Za-z0-9._-]+')

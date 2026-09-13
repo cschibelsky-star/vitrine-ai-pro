@@ -34,6 +34,28 @@ final class VideoPreviewController extends Controller
         ]);
     }
 
+    public function publicMedia(string $version): BinaryFileResponse
+    {
+        abort_unless(hash_equals(self::REEL_01_VERSION, $version), 404);
+
+        $filename = self::REEL_01_VERSION.'.mp4';
+        $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPublic();
+        $response->setMaxAge(86400);
+        $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
     public function __invoke(Request $request, string $version): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);
