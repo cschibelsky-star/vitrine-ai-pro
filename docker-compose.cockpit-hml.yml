@@ -12,7 +12,7 @@ services:
       APP_NAME: "Cockpit Administrativo Vitrine IA Pro"
       APP_ENV: homologation
       APP_DEBUG: "false"
-      APP_KEY: "${COCKPIT_APP_KEY:?COCKPIT_APP_KEY is required}"
+      APP_KEY: "${CORE_APP_KEY:?CORE_APP_KEY is required}"
       APP_URL: "https://hml.vitrineiapro.com.br/cockpit"
       DB_CONNECTION: mysql
       DB_HOST: vitrine_core_db_hml
