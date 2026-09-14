@@ -43,7 +43,7 @@ final class VideoPreviewController extends Controller
         abort_unless(hash_equals(self::REEL_01_VERSION, $requestedVersion), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
-        $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+        $path = storage_path('app/external-video-producer/reel-01-vitrine-social-midia/'.$filename);
 
         if (! is_file($path) || ! is_readable($path)) {
             logger()->warning('Reel 01 public media file unavailable', [
