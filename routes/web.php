@@ -34,6 +34,9 @@ Route::middleware(['auth'])->group(function () {
     })->name('client.logout');
 });
 
+if (file_exists(__DIR__.'/cockpit.php')) {
+    require __DIR__.'/cockpit.php';
+}
 
 if (file_exists(__DIR__.'/client_portal_auth.php')) {
     require __DIR__.'/client_portal_auth.php';
