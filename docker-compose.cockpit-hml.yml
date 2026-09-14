@@ -7,19 +7,20 @@ services:
     container_name: vitrine_cockpit_app_hml
     restart: unless-stopped
     working_dir: /var/www/html
-    command: php-fpm
+    env_file:
+      - /srv/projects/vitrine-ia-pro-core/repository/.env.runtime
+    command: >-
+      sh -lc 'export APP_KEY="$$CORE_APP_KEY" DB_PASSWORD="$$CORE_DB_PASSWORD"; exec php-fpm'
     environment:
       APP_NAME: "Cockpit Administrativo Vitrine IA Pro"
       APP_ENV: homologation
       APP_DEBUG: "false"
-      APP_KEY: "${CORE_APP_KEY:?CORE_APP_KEY is required}"
       APP_URL: "https://hml.vitrineiapro.com.br/cockpit"
       DB_CONNECTION: mysql
       DB_HOST: vitrine_core_db_hml
       DB_PORT: 3306
       DB_DATABASE: vitrine_core_hml
       DB_USERNAME: vitrine_core
-      DB_PASSWORD: "${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}"
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
