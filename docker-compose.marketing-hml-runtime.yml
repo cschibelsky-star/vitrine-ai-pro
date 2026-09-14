@@ -58,6 +58,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/var/www/html:ro
+      - /srv/projects/vitrine-marketing-agents-core-hml/storage/app/marketing/video-producer/reel-01-vitrine-social-midia:/var/www/media/reels:ro
       - ./docker/marketing/nginx/internal.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       marketing_app:
