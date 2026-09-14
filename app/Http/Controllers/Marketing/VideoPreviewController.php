@@ -46,6 +46,7 @@ final class VideoPreviewController extends Controller
         $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
 
         if (! is_file($path) || ! is_readable($path)) {
+            error_log('Reel 01 media unavailable path='.$path.' exists='.(is_file($path) ? '1' : '0').' readable='.(is_readable($path) ? '1' : '0'));
             logger()->warning('Reel 01 public media file unavailable', [
                 'version' => $version,
                 'path' => $path,
