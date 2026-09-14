@@ -1,0 +1,73 @@
+services:
+  cockpit_app:
+    image: vitrine-cockpit-hml-app:latest
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_cockpit_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php-fpm
+    environment:
+      APP_NAME: "Cockpit Administrativo Vitrine IA Pro"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "${COCKPIT_APP_KEY:?COCKPIT_APP_KEY is required}"
+      APP_URL: "https://hml.vitrineiapro.com.br/cockpit"
+      DB_CONNECTION: mysql
+      DB_HOST: vitrine_core_db_hml
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_core_hml
+      DB_USERNAME: vitrine_core
+      DB_PASSWORD: "${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    networks:
+      - cockpit_internal
+      - core_internal
+    healthcheck:
+      test: ["CMD-SHELL", "php -v >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  cockpit_web:
+    image: nginx:stable
+    container_name: vitrine_cockpit_web_hml
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/cockpit/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      cockpit_app:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.cockpit-hml.rule=Host(`hml.vitrineiapro.com.br`) && PathPrefix(`/cockpit`)"
+      - "traefik.http.routers.cockpit-hml.entrypoints=websecure"
+      - "traefik.http.routers.cockpit-hml.tls=true"
+      - "traefik.http.routers.cockpit-hml.tls.certresolver=le"
+      - "traefik.http.routers.cockpit-hml.priority=200"
+      - "traefik.http.services.cockpit-hml.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cockpit_internal
+      - traefik_net
+
+networks:
+  cockpit_internal:
+    driver: bridge
+  core_internal:
+    external: true
+    name: repository_core_hml_internal
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network
