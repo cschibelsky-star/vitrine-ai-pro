@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 final class VideoPreviewController extends Controller
 {
@@ -59,6 +60,55 @@ final class VideoPreviewController extends Controller
         $response = response()->file($path, [
             'Content-Type' => 'video/mp4',
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPublic();
+        $response->setMaxAge(86400);
+        $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
+    public function publicAsset(string $bucket, string $asset): BinaryFileResponse
+    {
+        abort_unless($bucket === basename($bucket) && $asset === basename($asset), 404);
+
+        $path = storage_path('app/media-delivery/'.$bucket.'/'.$asset);
+
+        if ((! is_file($path) || ! is_readable($path)) && $bucket === 'reels') {
+            $legacyPath = storage_path('app/external-video-producer/reel-01-vitrine-social-midia/'.$asset);
+            if (is_file($legacyPath) && is_readable($legacyPath)) {
+                $path = $legacyPath;
+            }
+        }
+
+        if (! is_file($path) || ! is_readable($path)) {
+            error_log(sprintf(
+                'Marketing media asset unavailable bucket=%s asset=%s exists=%s readable=%s',
+                $bucket,
+                $asset,
+                is_file($path) ? 'yes' : 'no',
+                is_readable($path) ? 'yes' : 'no',
+            ));
+            abort(404);
+        }
+
+        $extension = strtolower(pathinfo($asset, PATHINFO_EXTENSION));
+        $mime = match ($extension) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'mp4' => 'video/mp4',
+            default => null,
+        };
+        abort_unless($mime !== null, 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="'.$asset.'"',
+            'Content-Length' => (string) filesize($path),
+            'Accept-Ranges' => 'bytes',
             'X-Content-Type-Options' => 'nosniff',
             'X-Robots-Tag' => 'noindex, nofollow, noarchive',
         ]);

@@ -45,7 +45,8 @@ services:
       QUEUE_CONNECTION: sync
     volumes:
       - marketing_storage_hml:/var/www/html/storage
-      - ../storage/app/marketing/video-producer:/var/www/html/storage/app/video-previews:ro
+      - /srv/projects/vitrine-marketing-agents-core-hml/storage/app/marketing/video-producer:/var/www/html/storage/app/external-video-producer:ro
+      - ./assets/img:/var/www/html/storage/app/media-delivery/brand:ro
     depends_on:
       marketing_db:
         condition: service_healthy
