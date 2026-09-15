@@ -10,7 +10,7 @@
                 'id' => auth()->id(),
                 'name' => auth()->user()?->name,
             ],
-            'version' => '3.0.0',
+            'version' => '3.0.1',
             'viaUrl' => 'https://via.hml.vitrineiapro.com.br/',
         ];
     @endphp
@@ -35,19 +35,27 @@
         }
         .via-factory-v03-frame {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
+            width: 180px;
+            height: 180px;
             border: 0;
             background: transparent;
-            pointer-events: none;
+            pointer-events: auto;
+            transition: width .18s ease, height .18s ease;
         }
         .via-factory-v03-host.is-open .via-factory-v03-frame {
-            pointer-events: auto;
+            width: min(520px, 100vw);
+            height: min(820px, 100vh);
         }
         @media (max-width: 640px) {
-            .via-factory-v03-host.is-open {
-                pointer-events: auto;
+            .via-factory-v03-frame {
+                width: 132px;
+                height: 132px;
+            }
+            .via-factory-v03-host.is-open .via-factory-v03-frame {
+                width: 100vw;
+                height: 100vh;
             }
         }
     </style>
