@@ -22,19 +22,36 @@
         @if ($errors->any())
             <div class="error">{{ $errors->first() }}</div>
         @endif
-        <form method="POST" action="{{ route('cockpit.login.submit') }}">
-            @csrf
-            <div class="field">
-                <label for="email">E-mail</label>
-                <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required autofocus>
-            </div>
-            <div class="field">
-                <label for="password">Senha</label>
-                <input id="password" name="password" type="password" autocomplete="current-password" required>
-            </div>
-            <label class="remember"><input type="checkbox" name="remember" value="1"> Manter sessao neste dispositivo</label>
-            <button type="submit">Entrar no Cockpit</button>
-        </form>
+        @if (session('status'))
+            <div class="error" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1);color:#bbf7d0">{{ session('status') }}</div>
+        @endif
+
+        @if ($recoveryMode ?? false)
+            <form method="POST" action="{{ route('cockpit.password.email') }}">
+                @csrf
+                <div class="field">
+                    <label for="email">E-mail administrativo</label>
+                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus>
+                </div>
+                <button type="submit">Solicitar redefinicao</button>
+                <p class="foot"><a href="{{ route('cockpit.login') }}" style="color:var(--text)">Voltar para o login</a></p>
+            </form>
+        @else
+            <form method="POST" action="{{ route('cockpit.login.submit') }}">
+                @csrf
+                <div class="field">
+                    <label for="email">E-mail</label>
+                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="password">Senha</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <label class="remember"><input type="checkbox" name="remember" value="1"> Manter sessao neste dispositivo</label>
+                <button type="submit">Entrar no Cockpit</button>
+                <p class="foot"><a href="{{ route('cockpit.password.request') }}" style="color:var(--text)">Esqueci minha senha</a></p>
+            </form>
+        @endif
     </section>
     <div class="foot">Ambiente de homologacao · acesso restrito</div>
 </main>
