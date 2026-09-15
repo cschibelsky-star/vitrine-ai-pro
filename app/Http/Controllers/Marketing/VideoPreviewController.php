@@ -43,7 +43,7 @@ final class VideoPreviewController extends Controller
         abort_unless(hash_equals(self::REEL_01_VERSION, $requestedVersion), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
-        $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+        $path = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
 
         if (! is_file($path) || ! is_readable($path)) {
             error_log('Reel 01 media unavailable path='.$path.' exists='.(is_file($path) ? '1' : '0').' readable='.(is_readable($path) ? '1' : '0'));
@@ -76,7 +76,7 @@ final class VideoPreviewController extends Controller
         abort_unless(hash_equals(self::REEL_01_VERSION, $version), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
-        $path = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+        $path = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
 
         abort_unless(is_file($path) && is_readable($path), 404);
 
