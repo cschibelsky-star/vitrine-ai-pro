@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\Marketing\VideoPreviewController;
+use App\Marketing\Application\VideoFinalizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,21 @@ Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->where('version', '[A-Za-z0-9._-]+')
     ->name('marketing.video-preview');
 
+Route::get('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {
+    $expected = (string) env('VIDEO_FINALIZE_TOKEN', '');
+    abort_unless($expected !== '' && hash_equals($expected, (string) $request->query('token', '')), 403);
+
+    $source = (string) env('VIDEO_FINALIZE_SOURCE_URL', '');
+    abort_unless($source !== '', 503, 'video_source_not_configured');
+
+    return response()->json($service->finalizeFromUrl(
+        'REEL-03-VITRINE-SOCIAL-MIDIA-20260915',
+        'HEYGEN-9b99ff8586e8402087725968c63ab5dd-V1',
+        $source,
+        base_path('assets/img/logo-vitrine-ai-pro.png'),
+    ));
+})->middleware(['throttle:2,1'])->name('marketing.internal.finalize-reel-03');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/marketing/video-preview/reel-01/signed', [VideoPreviewController::class, 'signedUrl'])
         ->middleware(['throttle:10,1'])
@@ -48,7 +64,6 @@ Route::middleware(['auth'])->group(function () {
         return redirect('/admin/login');
     })->name('client.logout');
 });
-
 
 if (file_exists(__DIR__.'/client_portal_auth.php')) {
     require __DIR__.'/client_portal_auth.php';
