@@ -6,6 +6,7 @@ use App\Marketing\Application\VideoFinalizationService;
 use App\Marketing\Application\VideoSceneRenderer;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use App\Marketing\Infrastructure\Video\HeygenIncrementalSceneRenderer;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        if ($this->app->environment(['homologation', 'production'])) {
+            URL::forceScheme('https');
+        }
     }
 }
