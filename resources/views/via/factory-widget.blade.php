@@ -10,72 +10,29 @@
                 'id' => auth()->id(),
                 'name' => auth()->user()?->name,
             ],
-            'version' => '3.0.1',
-            'viaUrl' => 'https://via.hml.vitrineiapro.com.br/',
+            'version' => '3.1.0',
+            'viaOrigin' => 'https://via.hml.vitrineiapro.com.br',
+            'widgetJs' => 'https://via.hml.vitrineiapro.com.br/widget/via-widget.js',
+            'widgetCss' => 'https://via.hml.vitrineiapro.com.br/widget/via-widget.css',
         ];
     @endphp
 
-    <div id="via-factory-v03-host" class="via-factory-v03-host" aria-label="VIA · Supervisora da Factory">
-        <iframe
-            id="via-factory-v03-frame"
-            class="via-factory-v03-frame"
-            title="VIA · Supervisora da Factory"
-            allow="microphone"
-            referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-    </div>
-
-    <style>
-        .via-factory-v03-host {
-            position: fixed;
-            inset: 0;
-            z-index: 2147483000;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .via-factory-v03-frame {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            width: 180px;
-            height: 180px;
-            border: 0;
-            background: transparent;
-            pointer-events: auto;
-            transition: width .18s ease, height .18s ease;
-        }
-        .via-factory-v03-host.is-open .via-factory-v03-frame {
-            width: min(520px, 100vw);
-            height: min(820px, 100vh);
-        }
-        @media (max-width: 640px) {
-            .via-factory-v03-frame {
-                width: 132px;
-                height: 132px;
-            }
-            .via-factory-v03-host.is-open .via-factory-v03-frame {
-                width: 100vw;
-                height: 100vh;
-            }
-        }
-    </style>
+    <div id="via-factory-v03-host" aria-label="VIA · Supervisora da Factory"></div>
 
     <script>
         window.VIA_FACTORY_CONFIG = {{ Illuminate\Support\Js::from($viaFactoryConfig) }};
         (() => {
             const config = window.VIA_FACTORY_CONFIG;
-            const frame = document.getElementById('via-factory-v03-frame');
             const host = document.getElementById('via-factory-v03-host');
-            if (!config || !frame || !host) return;
+            if (!config || !host) return;
 
-            const viaOrigin = new URL(config.viaUrl).origin;
-            const params = new URLSearchParams({
-                embed: '1',
-                hostOrigin: window.location.origin,
-                viaModule: 'Factory',
-                viaProject: 'VitrineAI-Factory',
-            });
-            frame.src = `${config.viaUrl}?${params.toString()}`;
+            // A VIA agora vive diretamente no DOM da Factory. Não existe iframe,
+            // portanto não existe canvas/página secundária capaz de produzir quadro branco.
+            host.style.position = 'fixed';
+            host.style.inset = '0';
+            host.style.zIndex = '2147483000';
+            host.style.pointerEvents = 'none';
+            host.style.background = 'transparent';
 
             const currentContext = () => ({
                 module: 'Factory',
@@ -85,50 +42,78 @@
                 url: window.location.href,
             });
 
-            window.addEventListener('message', async (event) => {
-                if (event.source !== frame.contentWindow || event.origin !== viaOrigin) return;
-                const data = event.data;
-                if (!data || typeof data !== 'object') return;
+            document.body.dataset.viaModule = 'Factory';
+            document.body.dataset.viaProject = 'VitrineAI-Factory';
 
-                if (data.type === 'via:frame-state') {
-                    host.classList.toggle('is-open', Boolean(data.open));
-                    return;
-                }
+            const nativeFetch = window.fetch.bind(window);
+            if (!window.__VIA_FACTORY_FETCH_BRIDGE__) {
+                window.__VIA_FACTORY_FETCH_BRIDGE__ = true;
+                window.fetch = async (input, init) => {
+                    const requestUrl = typeof input === 'string'
+                        ? input
+                        : input instanceof URL
+                            ? input.toString()
+                            : input?.url || '';
 
-                if (data.type !== 'via:host:request' || !data.requestId) return;
+                    const isViaChat = requestUrl === '/api/via'
+                        || requestUrl === `${config.viaOrigin}/api/via`
+                        || requestUrl.endsWith('/api/via');
 
-                try {
-                    const payload = data.payload && typeof data.payload === 'object' ? data.payload : {};
-                    const response = await fetch(config.chatUrl, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': config.csrfToken,
-                        },
-                        body: JSON.stringify({
-                            ...payload,
-                            context: { ...currentContext(), ...(payload.context || {}) },
-                        }),
+                    if (!isViaChat) return nativeFetch(input, init);
+
+                    try {
+                        const rawBody = typeof init?.body === 'string' ? init.body : '{}';
+                        const payload = JSON.parse(rawBody || '{}');
+                        return nativeFetch(config.chatUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken,
+                            },
+                            body: JSON.stringify({
+                                ...payload,
+                                context: { ...currentContext(), ...(payload.context || {}) },
+                            }),
+                        });
+                    } catch (error) {
+                        return new Response(JSON.stringify({
+                            error: error instanceof Error ? error.message : 'Falha de comunicação com a Factory.',
+                        }), {
+                            status: 502,
+                            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                        });
+                    }
+                };
+            }
+
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = `${config.widgetCss}?v=${encodeURIComponent(config.version)}`;
+            css.dataset.viaCanonicalAsset = 'css';
+            document.head.appendChild(css);
+
+            const script = document.createElement('script');
+            script.src = `${config.widgetJs}?v=${encodeURIComponent(config.version)}`;
+            script.defer = true;
+            script.dataset.viaCanonicalAsset = 'js';
+            script.onload = () => {
+                const mount = () => {
+                    if (!window.VIA?.mount) return;
+                    window.VIA.unmount?.();
+                    window.VIA.mount(host);
+                    window.VIA.setContext?.({ module: 'Factory', project: 'VitrineAI-Factory' });
+                    const widget = host.querySelector('.via-widget');
+                    if (widget) widget.style.pointerEvents = 'none';
+                    host.querySelectorAll('.via-widget > *').forEach((element) => {
+                        element.style.pointerEvents = 'auto';
                     });
-                    const result = await response.json();
-                    frame.contentWindow.postMessage({
-                        type: 'via:host:response',
-                        requestId: data.requestId,
-                        ok: response.ok,
-                        payload: result,
-                        error: response.ok ? undefined : (result.answer || result.message || result.error || 'Falha na VIA da Factory.'),
-                    }, viaOrigin);
-                } catch (error) {
-                    frame.contentWindow.postMessage({
-                        type: 'via:host:response',
-                        requestId: data.requestId,
-                        ok: false,
-                        error: error instanceof Error ? error.message : 'Falha de comunicação com a Factory.',
-                    }, viaOrigin);
-                }
-            });
+                };
+                window.requestAnimationFrame(mount);
+            };
+            script.onerror = () => console.error('[VIA Factory] Falha ao carregar bundle canônico da VIA.');
+            document.body.appendChild(script);
         })();
     </script>
 @endif
