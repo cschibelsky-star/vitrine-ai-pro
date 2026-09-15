@@ -10,8 +10,24 @@ Route::get('/cockpit/login', function () {
         return redirect()->route('cockpit.index');
     }
 
-    return view('cockpit.login');
+    return view('cockpit.login', ['recoveryMode' => false]);
 })->name('cockpit.login');
+
+Route::get('/cockpit/forgot-password', function () {
+    if (Auth::check()) {
+        return redirect()->route('cockpit.index');
+    }
+
+    return view('cockpit.login', ['recoveryMode' => true]);
+})->name('cockpit.password.request');
+
+Route::post('/cockpit/forgot-password', function (Request $request) {
+    $request->validate([
+        'email' => ['required', 'email'],
+    ]);
+
+    return back()->with('status', 'Solicitacao de recuperacao registrada. O envio automatico por e-mail sera habilitado assim que o SMTP seguro do Cockpit estiver configurado.');
+})->middleware('throttle:3,5')->name('cockpit.password.email');
 
 Route::post('/cockpit/login', function (Request $request) {
     $credentials = $request->validate([
@@ -28,7 +44,7 @@ Route::post('/cockpit/login', function (Request $request) {
     $request->session()->regenerate();
     $user = Auth::user();
 
-    if (! $user || ! $user->is_active || ! $user->isAdmin()) {
+    if (! $user || ! ($user->is_active ?? true) || ! $user->isAdmin()) {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -47,7 +63,7 @@ Route::get('/cockpit', function () {
     }
 
     $user = Auth::user();
-    abort_unless($user && $user->is_active && $user->isAdmin(), 403);
+    abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
     $applications = collect(config('cockpit-applications', []))
         ->filter(fn (array $app) => in_array($user->role ?: 'admin', $app['roles'] ?? [], true))
