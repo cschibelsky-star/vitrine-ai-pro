@@ -19,4 +19,17 @@ return [
         'http_retries' => (int) env('GEMINI_VEO_HTTP_RETRIES', 2),
         'http_retry_delay_ms' => (int) env('GEMINI_VEO_HTTP_RETRY_DELAY_MS', 500),
     ],
+
+    'finalization' => [
+        'working_directory' => env('MARKETING_VIDEO_MEDIA_ROOT'),
+        'ffmpeg_binary' => env('FFMPEG_BINARY', 'ffmpeg'),
+        'ffprobe_binary' => env('FFPROBE_BINARY', 'ffprobe'),
+        'official_logo_path' => env('MARKETING_VIDEO_OFFICIAL_LOGO'),
+        'allowed_hosts' => [
+            'files2.heygen.ai',
+            'resource2.heygen.ai',
+            'resource.heygen.ai',
+            'video.heygen.com',
+        ],
+    ],
 ];
