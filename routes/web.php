@@ -33,9 +33,9 @@ Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->where('version', '[A-Za-z0-9._-]+')
     ->name('marketing.video-preview');
 
-Route::get('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {
+Route::post('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {
     $expected = (string) env('VIDEO_FINALIZE_TOKEN', '');
-    abort_unless($expected !== '' && hash_equals($expected, (string) $request->query('token', '')), 403);
+    abort_unless($expected !== '' && hash_equals($expected, (string) $request->header('X-Vitrine-Finalize-Token', '')), 403);
 
     $source = (string) env('VIDEO_FINALIZE_SOURCE_URL', '');
     abort_unless($source !== '', 503, 'video_source_not_configured');
