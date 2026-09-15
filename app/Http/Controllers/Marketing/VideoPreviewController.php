@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 final class VideoPreviewController extends Controller
 {
     private const REEL_01_VERSION = 'SESSION-REEL-01-VITRINE-SOCIAL-MIDIA-20260911-V1';
+    private const REEL_03_VERSION = 'HEYGEN-9b99ff8586e8402087725968c63ab5dd-V1';
 
     public function signedUrl(): JsonResponse
     {
@@ -36,26 +37,12 @@ final class VideoPreviewController extends Controller
 
     public function publicMedia(string $version): BinaryFileResponse
     {
-        $requestedVersion = str_ends_with($version, '.mp4')
-            ? substr($version, 0, -4)
-            : $version;
-
+        $requestedVersion = str_ends_with($version, '.mp4') ? substr($version, 0, -4) : $version;
         abort_unless(hash_equals(self::REEL_01_VERSION, $requestedVersion), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
         $path = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
-
-        if (! is_file($path) || ! is_readable($path)) {
-            error_log('Reel 01 media unavailable path='.$path.' exists='.(is_file($path) ? '1' : '0').' readable='.(is_readable($path) ? '1' : '0'));
-            logger()->warning('Reel 01 public media file unavailable', [
-                'version' => $version,
-                'path' => $path,
-                'exists' => is_file($path),
-                'readable' => is_readable($path),
-            ]);
-
-            abort(404);
-        }
+        abort_unless(is_file($path) && is_readable($path), 404);
 
         $response = response()->file($path, [
             'Content-Type' => 'video/mp4',
@@ -70,6 +57,28 @@ final class VideoPreviewController extends Controller
         return $response;
     }
 
+    public function publicMediaReel03(string $version): BinaryFileResponse
+    {
+        $requestedVersion = str_ends_with($version, '.mp4') ? substr($version, 0, -4) : $version;
+        abort_unless(hash_equals(self::REEL_03_VERSION.'-branded', $requestedVersion), 404);
+
+        $filename = self::REEL_03_VERSION.'-branded.mp4';
+        $path = storage_path('app/marketing/video-producer/reel-03-vitrine-social-midia-20260915/'.$filename);
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="reel-03-vitrine-social-midia-final.mp4"',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPrivate();
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('no-store');
+
+        return $response;
+    }
+
     public function __invoke(Request $request, string $version): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);
@@ -77,7 +86,6 @@ final class VideoPreviewController extends Controller
 
         $filename = self::REEL_01_VERSION.'.mp4';
         $path = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
-
         abort_unless(is_file($path) && is_readable($path), 404);
 
         $response = response()->file($path, [
