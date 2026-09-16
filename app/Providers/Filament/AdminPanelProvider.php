@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\AiCenterEnterprise;
+use App\Filament\Pages\AtlasComercial;
 use App\Filament\Pages\Auth\Login as AtlasLogin;
 use App\Filament\Pages\ClientPortalEnterprise;
 use App\Filament\Pages\Dashboard;
@@ -80,6 +81,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->pages([
                 Dashboard::class,
+                AtlasComercial::class,
                 FactoryStudioEnterprise::class,
                 GeneratedProjects::class,
                 MarketplaceEnterprise::class,
