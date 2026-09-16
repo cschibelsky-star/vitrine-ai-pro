@@ -25,9 +25,9 @@ class FactoryStudioEnterprise extends Page
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('build')
-                ->label('Nova Solicitação')
-                ->icon('heroicon-o-sparkles')
+            Action::make('buildDryRun')
+                ->label('Simular Solicitação')
+                ->icon('heroicon-o-beaker')
                 ->form([
                     Textarea::make('request')
                         ->label('O que deseja construir?')
@@ -36,47 +36,71 @@ class FactoryStudioEnterprise extends Page
                         ->rows(4),
                 ])
                 ->action(function (array $data): void {
-                    try {
-                        $report = app(FactoryFinalMasterService::class)->buildAndInstall(
-                            request: (string) $data['request'],
-                            dryRun: true,
-                            force: false,
-                            migrate: false,
-                        );
+                    $this->runFactoryBuild($data, true);
+                }),
 
-                        $this->lastReport = $report;
-                        $this->lastStatus = ($report['status'] ?? 'failed') === 'finished'
-                            ? 'dry-run concluído'
-                            : 'falha';
-                        $this->lastOutput = json_encode(
-                            $report,
-                            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                        ) ?: null;
-
-                        Notification::make()
-                            ->title($this->lastStatus === 'dry-run concluído'
-                                ? 'Produção simulada com sucesso'
-                                : 'Pipeline interrompido')
-                            ->body($report['final_note'] ?? null)
-                            ->success($this->lastStatus === 'dry-run concluído')
-                            ->danger($this->lastStatus !== 'dry-run concluído')
-                            ->send();
-                    } catch (Throwable $exception) {
-                        $this->lastReport = [
-                            'status' => 'failed',
-                            'failed_stage' => 'studio',
-                            'error' => $exception->getMessage(),
-                        ];
-                        $this->lastStatus = 'falha';
-                        $this->lastOutput = $exception->getMessage();
-
-                        Notification::make()
-                            ->title('Falha na produção')
-                            ->body($exception->getMessage())
-                            ->danger()
-                            ->send();
-                    }
+            Action::make('buildReal')
+                ->label('Produzir de Verdade')
+                ->icon('heroicon-o-rocket-launch')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Confirmar produção real')
+                ->modalDescription('Esta ação executa o pipeline real da Factory e materializa a produção. Migrations permanecem desativadas.')
+                ->modalSubmitActionLabel('EXECUTAR PRODUÇÃO REAL')
+                ->form([
+                    Textarea::make('request')
+                        ->label('O que deseja construir?')
+                        ->required()
+                        ->rows(4),
+                ])
+                ->action(function (array $data): void {
+                    $this->runFactoryBuild($data, false);
                 }),
         ];
+    }
+
+    protected function runFactoryBuild(array $data, bool $dryRun): void
+    {
+        try {
+            $report = app(FactoryFinalMasterService::class)->buildAndInstall(
+                request: (string) $data['request'],
+                dryRun: $dryRun,
+                force: false,
+                migrate: false,
+            );
+
+            $finished = ($report['status'] ?? 'failed') === 'finished';
+            $this->lastReport = $report;
+            $this->lastStatus = $finished
+                ? ($dryRun ? 'dry-run concluído' : 'produção real concluída')
+                : 'falha';
+            $this->lastOutput = json_encode(
+                $report,
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+            ) ?: null;
+
+            Notification::make()
+                ->title($finished
+                    ? ($dryRun ? 'Produção simulada com sucesso' : 'Produção real concluída com sucesso')
+                    : 'Pipeline interrompido')
+                ->body($report['final_note'] ?? null)
+                ->success($finished)
+                ->danger(! $finished)
+                ->send();
+        } catch (Throwable $exception) {
+            $this->lastReport = [
+                'status' => 'failed',
+                'failed_stage' => 'studio',
+                'error' => $exception->getMessage(),
+            ];
+            $this->lastStatus = 'falha';
+            $this->lastOutput = $exception->getMessage();
+
+            Notification::make()
+                ->title('Falha na produção')
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }
