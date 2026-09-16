@@ -26,6 +26,8 @@
             const host = document.getElementById('via-factory-v03-host');
             if (!config || !host) return;
 
+            // A VIA agora vive diretamente no DOM da Factory. Não existe iframe,
+            // portanto não existe canvas/página secundária capaz de produzir quadro branco.
             host.style.position = 'fixed';
             host.style.inset = '0';
             host.style.zIndex = '2147483000';
@@ -196,6 +198,32 @@
 
             document.body.dataset.viaModule = 'Factory';
             document.body.dataset.viaProject = 'VitrineAI-Factory';
+
+            const naturalizeSpeech = (value) => normalizeText(value, 1800)
+                .replace(/https?:\/\/\S+/gi, '')
+                .replace(/\bRota:\s*\S+/gi, '')
+                .replace(/\|/g, ', ')
+                .replace(/[•▪◦]/g, ', ')
+                .replace(/\s*:\s*/g, '. ')
+                .replace(/\s*;\s*/g, '. ')
+                .replace(/\bNovos controles\.\s*/gi, 'Agora estão disponíveis ')
+                .replace(/\bRemovidos controles\.\s*/gi, 'A opção anterior removida foi ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if ('speechSynthesis' in window && !window.__VIA_NATURAL_SPEECH__) {
+                window.__VIA_NATURAL_SPEECH__ = true;
+                const nativeSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+                window.speechSynthesis.speak = (utterance) => {
+                    if (utterance && typeof utterance.text === 'string') {
+                        utterance.text = naturalizeSpeech(utterance.text);
+                        utterance.lang = 'pt-BR';
+                        utterance.rate = 0.96;
+                        utterance.pitch = 1.02;
+                    }
+                    return nativeSpeak(utterance);
+                };
+            }
 
             const nativeFetch = window.fetch.bind(window);
             if (!window.__VIA_FACTORY_FETCH_BRIDGE__) {
