@@ -111,6 +111,25 @@ services:
     networks:
       - core_hml_internal
 
+  core_recover_schema:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_recover_schema_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: >-
+      sh -lc "php artisan migrate --path=database/migrations/2026_06_19_000002_add_plan_id_to_licenses_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_19_000003_add_implantacao_fields_to_companies_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_19_000004_add_extra_fields_to_licenses_table.php --force
+      && php artisan migrate --path=database/migrations/2026_06_20_000104_add_instance_fields_to_companies_table.php --force"
+    environment:
+      <<: *core-db-env
+    depends_on:
+      core_db:
+        condition: service_healthy
+    networks:
+      - core_hml_internal
+
   core_recover_catalog:
     image: vitrine-core-hml-app:latest
     pull_policy: never
