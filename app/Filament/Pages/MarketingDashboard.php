@@ -15,7 +15,7 @@ class MarketingDashboard extends Page
     protected static ?string $navigationLabel = 'Marketing IA';
     protected static ?string $title = 'Marketing IA';
     protected static ?int $navigationSort = 2;
-    protected static string $view = 'filament.pages.marketing-dashboard';
+    protected static string $view = 'filament.pages.marketing-dashboard-exact';
 
     public string $copilotMessage = '';
     public string $copilotSessionId = '';
