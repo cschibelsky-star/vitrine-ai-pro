@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\ClientPortalController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,6 +22,32 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return redirect('/admin/login');
 })->name('login');
+
+Route::get('/sso/cockpit', function (Request $request) {
+    $token = (string) $request->query('token', '');
+    abort_unless(strlen($token) === 64, 404);
+
+    $response = Http::timeout(5)
+        ->acceptJson()
+        ->get('https://hml.vitrineiapro.com.br/cockpit/sso/consume', ['token' => $token]);
+
+    abort_unless($response->successful(), 403);
+
+    $payload = $response->json();
+    abort_unless(is_array($payload) && ($payload['target'] ?? null) === 'factory', 403);
+
+    $email = (string) ($payload['email'] ?? '');
+    $issuedAt = (int) ($payload['issued_at'] ?? 0);
+    abort_unless($email !== '' && $issuedAt > 0 && abs(now()->timestamp - $issuedAt) <= 90, 403);
+
+    $user = User::where('email', $email)->first();
+    abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+    Auth::guard('web')->login($user, false);
+    $request->session()->regenerate();
+
+    return redirect('/admin');
+})->middleware('throttle:20,1')->name('cockpit.sso');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/cliente', [ClientPortalController::class, 'index'])->name('client.portal');
