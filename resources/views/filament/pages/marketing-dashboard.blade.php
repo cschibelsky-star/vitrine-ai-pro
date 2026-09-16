@@ -1,4 +1,209 @@
 <x-filament-panels::page>
+    <style>
+        :root {
+            --vitrine-bg: #090716;
+            --vitrine-bg-2: #120a2d;
+            --vitrine-panel: rgba(19, 14, 45, 0.92);
+            --vitrine-panel-2: rgba(28, 18, 67, 0.86);
+            --vitrine-border: rgba(139, 92, 246, 0.28);
+            --vitrine-purple: #8b5cf6;
+            --vitrine-violet: #6d28d9;
+            --vitrine-magenta: #d946ef;
+            --vitrine-text: #f8f7ff;
+            --vitrine-muted: #b9b4d6;
+        }
+
+        body,
+        .fi-body,
+        .fi-main,
+        .fi-layout {
+            background:
+                radial-gradient(circle at 18% 12%, rgba(124, 58, 237, 0.22), transparent 34%),
+                radial-gradient(circle at 82% 8%, rgba(217, 70, 239, 0.12), transparent 30%),
+                linear-gradient(180deg, var(--vitrine-bg-2) 0%, var(--vitrine-bg) 48%, #06050f 100%) !important;
+            color: var(--vitrine-text) !important;
+        }
+
+        .fi-sidebar {
+            background: linear-gradient(180deg, #1a0f3d 0%, #110927 48%, #0a0718 100%) !important;
+            border-right: 1px solid rgba(139, 92, 246, 0.22) !important;
+            box-shadow: 16px 0 48px rgba(27, 15, 69, 0.32) !important;
+        }
+
+        .fi-sidebar-header,
+        .fi-topbar {
+            background: rgba(12, 8, 29, 0.88) !important;
+            border-color: rgba(139, 92, 246, 0.2) !important;
+            backdrop-filter: blur(18px);
+        }
+
+        .fi-sidebar-item a,
+        .fi-sidebar-item button {
+            color: #d9d5ee !important;
+            border-radius: 14px !important;
+        }
+
+        .fi-sidebar-item.fi-active a,
+        .fi-sidebar-item a:hover,
+        .fi-sidebar-item button:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 55%, #6d28d9 100%) !important;
+            color: white !important;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.28) !important;
+        }
+
+        .fi-sidebar-header .fi-logo,
+        .fi-logo {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.02em !important;
+        }
+
+        .marketing-ai-shell {
+            color: var(--vitrine-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .marketing-ai-shell section,
+        .marketing-ai-shell article,
+        .marketing-ai-shell .vitrine-card {
+            background: linear-gradient(145deg, rgba(30, 23, 65, 0.92), rgba(15, 12, 34, 0.96)) !important;
+            border-color: var(--vitrine-border) !important;
+            box-shadow: 0 18px 48px rgba(5, 3, 16, 0.34) !important;
+        }
+
+        .marketing-ai-shell section:first-of-type {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 78% 20%, rgba(168, 85, 247, 0.42), transparent 24%),
+                radial-gradient(circle at 55% 120%, rgba(126, 34, 206, 0.55), transparent 42%),
+                linear-gradient(135deg, #160b38 0%, #1d0f49 48%, #090716 100%) !important;
+            border: 1px solid rgba(168, 85, 247, 0.42) !important;
+        }
+
+        .marketing-ai-shell section:first-of-type::after {
+            content: "";
+            position: absolute;
+            width: 360px;
+            height: 360px;
+            right: -110px;
+            top: -170px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(217, 70, 239, 0.34), rgba(124, 58, 237, 0.04) 68%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .marketing-ai-shell h1,
+        .marketing-ai-shell h2,
+        .marketing-ai-shell h3,
+        .marketing-ai-shell strong {
+            color: #ffffff !important;
+        }
+
+        .marketing-ai-shell h1 {
+            font-size: clamp(2.3rem, 4vw, 4.8rem) !important;
+            line-height: 0.98 !important;
+            letter-spacing: -0.055em !important;
+            font-weight: 850 !important;
+        }
+
+        .marketing-ai-shell h1 .brand-gradient,
+        .brand-gradient {
+            background: linear-gradient(90deg, #ffffff 0%, #b794f6 46%, #d946ef 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+        }
+
+        .marketing-ai-shell p,
+        .marketing-ai-shell .text-gray-500,
+        .marketing-ai-shell .text-gray-400,
+        .marketing-ai-shell .dark\:text-gray-400 {
+            color: var(--vitrine-muted) !important;
+        }
+
+        .marketing-ai-shell .bg-white,
+        .marketing-ai-shell .dark\:bg-gray-900,
+        .marketing-ai-shell .bg-gray-50,
+        .marketing-ai-shell .dark\:bg-gray-950\/50,
+        .marketing-ai-shell .bg-gray-900\/80 {
+            background: rgba(20, 15, 46, 0.82) !important;
+        }
+
+        .marketing-ai-shell textarea,
+        .marketing-ai-shell input,
+        .marketing-ai-shell select {
+            background: #0f0b23 !important;
+            color: white !important;
+            border-color: rgba(139, 92, 246, 0.34) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+        }
+
+        .marketing-ai-shell textarea:focus,
+        .marketing-ai-shell input:focus,
+        .marketing-ai-shell select:focus {
+            border-color: #8b5cf6 !important;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18) !important;
+        }
+
+        .marketing-ai-shell button[type="submit"],
+        .marketing-ai-shell .vitrine-primary-action {
+            background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 52%, #a855f7 100%) !important;
+            border: 1px solid rgba(196, 181, 253, 0.28) !important;
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.34) !important;
+        }
+
+        .marketing-ai-shell .vitrine-brand-lockup {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.55rem 0.8rem;
+            border: 1px solid rgba(196, 181, 253, 0.22);
+            border-radius: 999px;
+            background: rgba(20, 11, 49, 0.48);
+            backdrop-filter: blur(12px);
+        }
+
+        .marketing-ai-shell .vitrine-mark {
+            width: 2.15rem;
+            height: 2.15rem;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #d946ef 0%, #8b5cf6 42%, #5b21b6 100%);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
+            position: relative;
+            transform: rotate(45deg);
+        }
+
+        .marketing-ai-shell .vitrine-mark::after {
+            content: "";
+            position: absolute;
+            inset: 7px;
+            border-radius: 7px;
+            background: #140b31;
+        }
+
+        .marketing-ai-shell .vitrine-brand-name {
+            font-weight: 850;
+            letter-spacing: -0.04em;
+            font-size: 1.05rem;
+            color: white;
+        }
+
+        .marketing-ai-shell .vitrine-brand-name span {
+            color: #b794f6;
+        }
+
+        .marketing-ai-shell .vitrine-eyebrow {
+            color: #c4b5fd !important;
+            letter-spacing: 0.22em;
+        }
+
+        @media (max-width: 768px) {
+            .marketing-ai-shell h1 {
+                font-size: 2.5rem !important;
+            }
+        }
+    </style>
     @php
         $agents = $this->getAgents();
         $runtime = $this->getRuntime();
@@ -10,14 +215,18 @@
         $blockingAgents = collect($agents)->filter(fn (array $agent) => (bool) ($agent['may_block_pipeline'] ?? false))->count();
     @endphp
 
-    <div class="space-y-6">
-        <section class="overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 p-6 text-white shadow-sm">
-            <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+    <div class="marketing-ai-shell space-y-6">
+        <section class="overflow-hidden rounded-3xl border p-7 text-white shadow-sm lg:p-9">
+            <div class="flex flex-col gap-7 xl:flex-row xl:items-end xl:justify-between">
                 <div class="max-w-3xl">
-                    <div class="text-xs font-semibold uppercase tracking-[0.22em] text-primary-300">Core · IA Center</div>
-                    <h1 class="mt-3 text-3xl font-bold">Marketing IA</h1>
-                    <p class="mt-2 text-sm leading-6 text-gray-300">
-                        Painel operacional da equipe de agentes de Marketing da Vitrine IA Pro, conectado ao estado persistido das campanhas quando essa camada estiver disponível.
+                    <div class="vitrine-brand-lockup">
+                        <span class="vitrine-mark" aria-hidden="true"></span>
+                        <span class="vitrine-brand-name">VITRINE IA <span>PRO</span></span>
+                    </div>
+                    <div class="vitrine-eyebrow mt-6 text-xs font-semibold uppercase">Marketing IA</div>
+                    <h1 class="mt-3 font-bold">Marketing <span class="brand-gradient">IA</span></h1>
+                    <p class="mt-4 max-w-2xl text-base leading-7 text-gray-300">
+                        Estratégia. Criatividade. Resultados. Um centro de marketing inteligente para planejar campanhas, coordenar agentes, produzir conteúdo e acompanhar cada etapa com controle humano.
                     </p>
                 </div>
 

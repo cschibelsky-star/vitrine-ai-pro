@@ -52,9 +52,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->homeUrl(fn (): string => MarketingDashboard::getUrl())
-            ->brandName('Vitrine Marketing IA')
+            ->brandName('VITRINE IA PRO · MARKETING IA')
             ->colors([
-                'primary' => Color::Sky,
+                'primary' => Color::Violet,
             ])
 
             /*
