@@ -34,7 +34,7 @@ class ModuleSeeder extends Seeder
                 ['PWA / App Android', 'tv-pwa-app', 'TV Digital', 'premium', 0, 'Ativo'],
                 ['Dashboard Editorial', 'tv-dashboard-editorial', 'TV Digital', 'premium', 0, 'Ativo'],
             ],
-            'Portal News AI' => [
+            'Portal News AI Pro' => [
                 ['Portal de Notícias', 'news-portal-noticias', 'News AI', 'incluido', 0, 'Ativo'],
                 ['RSS / Captura Automática', 'news-rss-captura', 'News AI', 'incluido', 0, 'Ativo'],
                 ['IA Editorial / Gemini', 'news-ia-editorial', 'News AI', 'premium', 0, 'Ativo'],
@@ -42,7 +42,7 @@ class ModuleSeeder extends Seeder
                 ['Banners e Monetização', 'news-banners-monetizacao', 'News AI', 'extra', 197, 'Ativo'],
                 ['Newsletter', 'news-newsletter', 'News AI', 'extra', 97, 'Ativo'],
             ],
-            'Visite Cidade' => [
+            'Guia Digital da Cidade®' => [
                 ['Atrativos Turísticos', 'guia-atrativos', 'Guia Digital', 'incluido', 0, 'Ativo'],
                 ['Eventos', 'guia-eventos', 'Guia Digital', 'incluido', 0, 'Ativo'],
                 ['Gastronomia', 'guia-gastronomia', 'Guia Digital', 'incluido', 0, 'Ativo'],
@@ -58,7 +58,7 @@ class ModuleSeeder extends Seeder
                 ['Categorias Personalizadas', 'guia-categorias-personalizadas', 'Guia Digital', 'extra', 197, 'Ativo'],
                 ['Galeria de Imagens', 'guia-galeria-imagens', 'Guia Digital', 'incluido', 0, 'Ativo'],
             ],
-            'Município Digital IA' => [
+            'Governo Digital IA' => [
                 ['Portal Institucional', 'gov-portal-institucional', 'Governo Digital', 'incluido', 0, 'Ativo'],
                 ['Páginas Oficiais', 'gov-paginas-oficiais', 'Governo Digital', 'incluido', 0, 'Ativo'],
                 ['Notícias Institucionais', 'gov-noticias', 'Governo Digital', 'incluido', 0, 'Ativo'],
@@ -145,7 +145,7 @@ class ModuleSeeder extends Seeder
                 'responsavel' => 'Vitrine AI Pro',
                 'cidade' => 'Sumaré',
                 'estado' => 'SP',
-                'produto_principal' => 'Conheça Sua Cidade',
+                'produto_principal' => 'Guia Digital da Cidade®',
                 'dominio_principal' => 'conhecasumare.com.br',
                 'dominio_landing' => 'conhecasumare.com.br',
                 'ambiente' => 'Produção',
@@ -159,7 +159,7 @@ class ModuleSeeder extends Seeder
             ['nome' => 'Conheça Sua Cidade'],
             [
                 'responsavel' => 'Vitrine AI Pro',
-                'produto_principal' => 'Conheça Sua Cidade',
+                'produto_principal' => 'Guia Digital da Cidade®',
                 'dominio_principal' => 'conhecasuacidade.com.br',
                 'dominio_landing' => 'conhecasuacidade.com.br',
                 'ambiente' => 'Produção',
