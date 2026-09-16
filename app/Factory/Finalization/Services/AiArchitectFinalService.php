@@ -36,8 +36,14 @@ class AiArchitectFinalService
         $blueprintPath = storage_path('app/factory/blueprints/' . $blueprint['slug'] . '.json');
         $architecturePath = storage_path('app/factory/finalization/architectures/' . date('Ymd_His') . '_' . $blueprint['slug'] . '.json');
 
-        File::put($blueprintPath, json_encode($blueprint, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        File::put($architecturePath, json_encode($blueprint, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $payload = json_encode($blueprint, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if (File::exists($blueprintPath)) {
+            File::delete($blueprintPath);
+        }
+
+        File::put($blueprintPath, $payload);
+        File::put($architecturePath, $payload);
 
         return [
             'request' => $request,
