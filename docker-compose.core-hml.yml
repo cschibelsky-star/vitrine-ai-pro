@@ -145,6 +145,21 @@ services:
     networks:
       - core_hml_internal
 
+  core_audit_catalog:
+    image: vitrine-core-hml-app:latest
+    pull_policy: never
+    container_name: vitrine_core_audit_catalog_hml
+    restart: "no"
+    working_dir: /var/www/html
+    command: php scripts/core_catalog_audit.php
+    environment:
+      <<: *core-db-env
+    depends_on:
+      core_db:
+        condition: service_healthy
+    networks:
+      - core_hml_internal
+
   core_web:
     image: nginx:stable
     container_name: vitrine_core_web_hml
