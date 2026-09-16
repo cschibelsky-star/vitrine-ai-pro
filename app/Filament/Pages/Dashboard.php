@@ -2,68 +2,61 @@
 
 namespace App\Filament\Pages;
 
+use App\Factory\Models\FactoryBlueprint;
+use App\Factory\Models\FactoryCapability;
+use App\Factory\Models\FactoryExecution;
+use App\Factory\Models\FactoryProject;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\File;
 
 class Dashboard extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-command-line';
-
-    protected static ?string $navigationGroup = '01 · Centro Operacional';
-
-    protected static ?string $navigationLabel = 'Command Center';
-
-    protected static ?string $title = 'Vitrine IA Pro Command Center';
-
+    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+    protected static ?string $navigationGroup = '01 · Factory';
+    protected static ?string $navigationLabel = 'Cockpit';
+    protected static ?string $title = 'Vitrine IA Pro · Factory';
     protected static ?int $navigationSort = 1;
-
     protected static string $view = 'filament.pages.dashboard';
 
-    public function countProjects(): int|string
-    {
-        $dir = storage_path('app/factory/blueprints');
-
-        return File::isDirectory($dir) ? count(File::files($dir)) : '—';
-    }
-
-    public function countCommercialIntakes(): int|string
-    {
-        $dir = storage_path('app/factory/commercial-intake');
-
-        return File::isDirectory($dir) ? count(File::directories($dir)) : '—';
-    }
-
-    public function getProducts(): array
+    public function metrics(): array
     {
         return [
-            [
-                'name' => 'TV Digital Enterprise',
-                'tag' => 'Produto SaaS',
-                'status' => 'Comercial',
-                'progress' => 92,
-                'desc' => 'Portal TV com notícias, vídeos, RSS, transmissão ao vivo, banners, comercial e IA editorial.',
-            ],
-            [
-                'name' => 'Guia Digital da Cidade',
-                'tag' => 'Produto SaaS',
-                'status' => 'Comercial',
-                'progress' => 84,
-                'desc' => 'Guia municipal replicável com atrativos, eventos, roteiros, turismo e comércio local.',
-            ],
-            [
-                'name' => 'AssessorGov IA / GovTech',
-                'tag' => 'Produto Estratégico',
-                'status' => 'Factory',
-                'progress' => 68,
-                'desc' => 'Camada GovTech para oportunidades públicas, licitações, contratos e atendimento técnico.',
-            ],
-            [
-                'name' => 'SISMED',
-                'tag' => 'Roadmap',
-                'status' => 'Em desenvolvimento',
-                'progress' => 42,
-                'desc' => 'Produto em desenvolvimento para gestão de saúde e atendimento institucional.',
-            ],
+            'projects' => FactoryProject::count(),
+            'capabilities' => FactoryCapability::count(),
+            'blueprints' => FactoryBlueprint::count(),
+            'executions' => FactoryExecution::count(),
+            'running' => FactoryExecution::where('status', 'running')->count(),
+            'finished' => FactoryExecution::where('status', 'finished')->count(),
+            'failed' => FactoryExecution::where('status', 'failed')->count(),
+        ];
+    }
+
+    public function recentExecutions(): array
+    {
+        return FactoryExecution::query()
+            ->with(['project:id,name', 'blueprint:id,name'])
+            ->latest('updated_at')
+            ->limit(6)
+            ->get()
+            ->map(fn (FactoryExecution $execution) => [
+                'name' => $execution->name ?: ($execution->blueprint?->name ?? 'Execução Factory'),
+                'project' => $execution->project?->name ?? 'Sem projeto associado',
+                'status' => $execution->status ?: '—',
+                'duration' => $execution->duration_ms ? number_format($execution->duration_ms / 1000, 2, ',', '.') . 's' : '—',
+            ])
+            ->all();
+    }
+
+    public function stages(): array
+    {
+        return [
+            ['key' => 'intake', 'code' => 'IN', 'title' => 'Intake & Demandas', 'detail' => 'Necessidades registradas e entrada operacional.'],
+            ['key' => 'radar', 'code' => 'AR', 'title' => 'Análise & Radar', 'detail' => 'Aderência, oportunidades e análise técnica.'],
+            ['key' => 'blueprint', 'code' => 'BP', 'title' => 'Blueprint', 'detail' => 'Arquitetura e plano técnico.'],
+            ['key' => 'development', 'code' => 'DV', 'title' => 'Desenvolvimento', 'detail' => 'Código, componentes e integrações.'],
+            ['key' => 'qa', 'code' => 'QA', 'title' => 'QA & Testes', 'detail' => 'Qualidade, validação e segurança.'],
+            ['key' => 'hml', 'code' => 'HM', 'title' => 'Homologação (HML)', 'detail' => 'Ambientes de teste e validação.'],
+            ['key' => 'release', 'code' => 'RL', 'title' => 'Release & Deploy', 'detail' => 'Publicação controlada e entrega.'],
+            ['key' => 'docs', 'code' => 'DC', 'title' => 'Documentação', 'detail' => 'Documentos, evidências e histórico.'],
         ];
     }
 }
