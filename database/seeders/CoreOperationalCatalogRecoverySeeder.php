@@ -3,10 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
+use App\Models\CompanyModule;
 use App\Models\License;
 use App\Models\Plan;
+use App\Models\PlanModule;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CoreOperationalCatalogRecoverySeeder extends Seeder
 {
@@ -82,22 +86,154 @@ class CoreOperationalCatalogRecoverySeeder extends Seeder
         foreach ($licenses as $item) {
             $company = Company::where('nome', $item['company'])->firstOrFail();
             $product = Product::where('nome', $item['product'])->firstOrFail();
+            $plan = Plan::where('product_id', $product->id)->where('nome', $item['plano'])->firstOrFail();
 
-            License::updateOrCreate(
-                ['company_id' => $company->id, 'product_id' => $product->id],
-                [
-                    'plano' => $item['plano'],
-                    'valor' => $item['valor'],
-                    'inicio' => now()->toDateString(),
-                    'vencimento' => now()->addMonths($item['months'])->toDateString(),
-                    'status' => $item['status'],
-                ],
-            );
+            $license = License::firstOrNew([
+                'company_id' => $company->id,
+                'product_id' => $product->id,
+            ]);
+
+            $license->fill([
+                'plan_id' => $plan->id,
+                'plano' => $item['plano'],
+                'valor' => $item['valor'],
+                'status' => $item['status'],
+            ]);
+
+            if (! $license->exists) {
+                $license->inicio = now()->toDateString();
+                $license->vencimento = now()->addMonths($item['months'])->toDateString();
+            }
+
+            $license->save();
         }
 
         $this->call([
             ModuleSeeder::class,
             SettingSeeder::class,
         ]);
+
+        $this->normalizeLegacyProducts();
+        $this->linkLicensePlans();
+        $this->materializeCompanyModules();
+    }
+
+    private function normalizeLegacyProducts(): void
+    {
+        $mapping = [
+            'Portal News AI' => 'Portal News AI Pro',
+            'Visite Cidade' => 'Guia Digital da Cidade®',
+            'Município Digital IA' => 'Governo Digital IA',
+        ];
+
+        $productReferenceTables = [
+            'plans',
+            'licenses',
+            'modules',
+            'payments',
+            'contracts',
+            'support_tickets',
+            'ai_queues',
+            'ai_executions',
+            'ai_consumptions',
+            'ai_memories',
+            'marketing_campaigns',
+        ];
+
+        foreach ($mapping as $legacyName => $officialName) {
+            $legacy = Product::where('nome', $legacyName)->first();
+            $official = Product::where('nome', $officialName)->first();
+
+            if (! $legacy || ! $official || $legacy->id === $official->id) {
+                continue;
+            }
+
+            foreach ($productReferenceTables as $table) {
+                if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'product_id')) {
+                    continue;
+                }
+
+                DB::table($table)
+                    ->where('product_id', $legacy->id)
+                    ->update(['product_id' => $official->id]);
+            }
+
+            if (Schema::hasTable('companies') && Schema::hasColumn('companies', 'produto_principal')) {
+                DB::table('companies')
+                    ->where('produto_principal', $legacyName)
+                    ->update(['produto_principal' => $officialName]);
+            }
+
+            $references = 0;
+            foreach ($productReferenceTables as $table) {
+                if (Schema::hasTable($table) && Schema::hasColumn($table, 'product_id')) {
+                    $references += DB::table($table)->where('product_id', $legacy->id)->count();
+                }
+            }
+
+            if ($references === 0) {
+                $legacy->delete();
+            }
+        }
+    }
+
+    private function linkLicensePlans(): void
+    {
+        License::query()->each(function (License $license): void {
+            if (! $license->product_id || ! $license->plano) {
+                return;
+            }
+
+            $plan = Plan::where('product_id', $license->product_id)
+                ->where('nome', $license->plano)
+                ->first();
+
+            if ($plan && $license->plan_id !== $plan->id) {
+                $license->plan_id = $plan->id;
+                $license->save();
+            }
+        });
+    }
+
+    private function materializeCompanyModules(): void
+    {
+        if (! Schema::hasTable('company_modules')) {
+            return;
+        }
+
+        License::query()->whereNotNull('plan_id')->each(function (License $license): void {
+            PlanModule::query()
+                ->where('plan_id', $license->plan_id)
+                ->each(function (PlanModule $planModule) use ($license): void {
+                    $status = match (true) {
+                        $planModule->status === 'Inativo' => 'Futuro',
+                        $planModule->tipo_inclusao === 'incluido' => 'Ativo',
+                        default => 'Bloqueado',
+                    };
+
+                    $tipo = match ($planModule->tipo_inclusao) {
+                        'extra' => 'extra',
+                        'premium' => 'premium',
+                        'bloqueado' => 'bloqueado',
+                        default => 'plano',
+                    };
+
+                    CompanyModule::updateOrCreate(
+                        [
+                            'company_id' => $license->company_id,
+                            'module_id' => $planModule->module_id,
+                        ],
+                        [
+                            'plan_id' => $license->plan_id,
+                            'tipo_contratacao' => $tipo,
+                            'valor_mensal_adicional' => $planModule->valor_adicional ?? 0,
+                            'data_inicio' => $license->inicio,
+                            'data_fim' => $license->vencimento,
+                            'status' => $status,
+                            'observacoes' => 'Materializado automaticamente a partir do plano da licença.',
+                        ],
+                    );
+                });
+        });
     }
 }
