@@ -74,48 +74,47 @@ final class ViaFactoryController extends Controller
         if ($answer = $this->answerOperationalIntent($message, $context)) {
             return response()->json($answer);
         }
-        $token = $this->coreAiToken();
-        if ($token !== '') {
-            try {
-                $projectId = $this->viaProjectId();
-                $prompt = "Mensagem do usuário:\n{$message}\n\nContexto operacional da Factory:\n".json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                if (! empty($validated['history'])) {
-                    $prompt .= "\n\nHistórico recente:\n".json_encode($validated['history'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                }
-                $response = Http::withToken($token)
-                    ->withHeaders(['X-Vitrine-Project' => $projectId])
-                    ->timeout(75)
-                    ->acceptJson()
-                    ->asJson()
-                    ->post($this->coreAiHubUrl(), [
-                        'project_id' => $projectId,
-                        'profile' => 'balanced',
-                        'system' => 'Você é a VIA, supervisora operacional da Vitrine IA Pro Factory. Responda em português brasileiro, use somente o contexto fornecido para fatos operacionais e nunca execute ações sensíveis sem confirmação explícita.',
-                        'prompt' => $prompt,
-                        'options' => ['temperature' => 0.2],
-                    ]);
-                if ($response->successful() && is_string(data_get($response->json(), 'data.content'))) {
-                    return response()->json([
-                        'answer' => (string) data_get($response->json(), 'data.content'),
-                        'mode' => 'core-ai-dev-hub',
-                        'factory_connected' => true,
-                        'operational_context' => $context,
-                        'ai' => [
-                            'provider' => data_get($response->json(), 'data.provider'),
-                            'model' => data_get($response->json(), 'data.model'),
-                            'usage' => data_get($response->json(), 'data.usage'),
-                            'request_id' => data_get($response->json(), 'data.request_id'),
-                        ],
-                    ]);
-                }
-                Log::warning('via.factory.ai_dev_hub_failed', ['status' => $response->status(), 'user_id' => $request->user()->getAuthIdentifier()]);
-            } catch (Throwable $e) {
-                Log::warning('via.factory.ai_dev_hub_connection_failed', ['error' => $e->getMessage(), 'user_id' => $request->user()->getAuthIdentifier()]);
+        try {
+            $response = Http::timeout(75)
+                ->acceptJson()
+                ->asJson()
+                ->post($this->viaServiceUrl().'/api/via', [
+                    'message' => $message,
+                    'history' => $validated['history'] ?? [],
+                    'sessionId' => $validated['sessionId'] ?? null,
+                    'context' => $context,
+                ]);
+
+            $payload = $response->json();
+            if ($response->successful() && is_array($payload) && is_string($payload['answer'] ?? null)) {
+                return response()->json([
+                    'answer' => (string) $payload['answer'],
+                    'mode' => 'via-canonical',
+                    'factory_connected' => true,
+                    'operational_context' => $context,
+                    'provider' => $payload['provider'] ?? null,
+                    'model' => $payload['model'] ?? null,
+                    'sessionId' => $payload['sessionId'] ?? ($validated['sessionId'] ?? null),
+                    'persisted' => (bool) ($payload['persisted'] ?? false),
+                ]);
             }
-        } else {
-            Log::warning('via.factory.ai_dev_hub_token_missing', ['user_id' => $request->user()->getAuthIdentifier()]);
+
+            Log::warning('via.factory.canonical_via_failed', [
+                'status' => $response->status(),
+                'user_id' => $request->user()->getAuthIdentifier(),
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('via.factory.canonical_via_connection_failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->getAuthIdentifier(),
+            ]);
         }
-        return response()->json(['answer' => $this->fallbackAnswer($context), 'mode' => 'factory-fallback', 'factory_connected' => true]);
+
+        return response()->json([
+            'answer' => $this->fallbackAnswer($context),
+            'mode' => 'factory-fallback',
+            'factory_connected' => true,
+        ]);
     }
 
     public function transcribe(Request $request): JsonResponse
@@ -251,6 +250,11 @@ final class ViaFactoryController extends Controller
     private function answerOperationalIntent(string $message, array $context): ?array
     {
         $n = mb_strtolower($message,'UTF-8');
+        if (str_contains($n,'vendo') || str_contains($n,'tela atual')) return $this->answer($this->screenAnswer($context));
+        if (str_contains($n,'objetivo desta') || str_contains($n,'objetivo da tela') || str_contains($n,'para que serve')) return $this->answer($this->screenPurposeAnswer($context));
+        if (str_contains($n,'problema vis') || str_contains($n,'erro vis') || str_contains($n,'alerta') || str_contains($n,'pendencia') || str_contains($n,'pendência')) return $this->answer($this->screenRiskAnswer($context));
+        if (str_contains($n,'o que eu deveria fazer') || str_contains($n,'proximo passo') || str_contains($n,'próximo passo') || str_contains($n,'o que fazer agora')) return $this->answer($this->screenNextActionAnswer($context));
+        if (str_contains($n,'o que mudou') || str_contains($n,'mudou desde') || str_contains($n,'erro novo') || str_contains($n,'mudança na tela') || str_contains($n,'mudanca na tela')) return $this->answer($this->screenChangeAnswer($context));
         if (preg_match('/\b(status|sa[uú]de|situa[cç][aã]o)\b.*\bfactory\b|\bfactory\b.*\b(status|sa[uú]de|situa[cç][aã]o)\b/u',$n)) return $this->answer($this->factoryStatusAnswer($context));
         if (preg_match('/\b(projetos?|produto(?:s)?)\b/u',$n)) return $this->answer($this->projectsAnswer($context));
         if (preg_match('/\b(execu[cç][oõ]es?|tarefas?|jobs?)\b/u',$n)) return $this->answer($this->executionsAnswer($context));
@@ -303,10 +307,35 @@ final class ViaFactoryController extends Controller
         } catch (Throwable $e) { $factory['error']=$e->getMessage(); }
         $ecosystem=['status'=>'unavailable','summary'=>[],'services'=>[]];
         try { $r=Http::timeout(6)->acceptJson()->get($this->vaeBaseUrl().'/api/vae/ecosystem'); if($r->successful()) $ecosystem=$r->json(); } catch(Throwable $e){ $ecosystem['error']=$e->getMessage(); }
-        return ['source'=>'Vitrine IA Pro Factory','generated_at'=>now()->toISOString(),'user'=>['id'=>$request->user()->getAuthIdentifier(),'name'=>$request->user()->name,'role'=>$request->user()->role],'page'=>['url'=>$pageContext['url']??$request->headers->get('referer'),'path'=>$pageContext['path']??null,'title'=>$pageContext['title']??null,'module'=>$pageContext['module']??'Factory','resource'=>$pageContext['resource']??null],'factory'=>$factory,'ecosystem'=>$ecosystem];
+        return ['source'=>'Vitrine IA Pro Factory','generated_at'=>now()->toISOString(),'user'=>['id'=>$request->user()->getAuthIdentifier(),'name'=>$request->user()->name,'role'=>$request->user()->role],'page'=>['url'=>$pageContext['url']??$request->headers->get('referer'),'path'=>$pageContext['path']??null,'title'=>$pageContext['title']??null,'module'=>$pageContext['module']??'Factory','resource'=>$pageContext['resource']??null,'screen'=>is_array($pageContext['screen']??null)?$pageContext['screen']:[]],'factory'=>$factory,'ecosystem'=>$ecosystem];
     }
 
     private function factoryStatusAnswer(array $c): string { $f=$c['factory'];$e=$c['ecosystem'];$s=$e['summary']??[];return sprintf("A Factory está conectada.\nProjetos: %d.\nExecuções: %d.\nProdução: %s.\nEcossistema: %s (%d online, %d degradados, %d offline).",(int)($f['projects_total']??0),(int)($f['executions_total']??0),(string)($f['production']['status']??'não informado'),(string)($e['status']??'indisponível'),(int)($s['online']??0),(int)($s['degraded']??0),(int)($s['offline']??0)); }
+    private function screenAnswer(array $c): string { $p=$c['page']??[];$s=is_array($p['screen']??null)?$p['screen']:[];$parts=[];$title=trim((string)($p['title']??''));$path=trim((string)($p['path']??''));if($title!=='')$parts[]='Tela: '.$title;if($path!=='')$parts[]='Rota: '.$path;$headings=array_values(array_filter(array_slice(is_array($s['headings']??null)?$s['headings']:[],0,8),'is_string'));if($headings)$parts[]='Seções visíveis: '.implode(' | ',$headings);$controls=array_values(array_filter(array_slice(is_array($s['controls']??null)?$s['controls']:[],0,8),'is_string'));if($controls)$parts[]='Controles visíveis: '.implode(' | ',$controls);$alerts=array_values(array_filter(array_slice(is_array($s['alerts']??null)?$s['alerts']:[],0,5),'is_string'));if($alerts)$parts[]='Alertas: '.implode(' | ',$alerts);$tables=is_array($s['tables']??null)?$s['tables']:[];if($tables)$parts[]='Tabelas visíveis: '.count($tables);return $parts?"Estou lendo o contexto atual da interface.\n".implode("\n",$parts):'Consigo identificar a página atual, mas ainda não recebi elementos visíveis suficientes desta tela.'; }
+    private function screenPurposeAnswer(array $c): string { $p=$c['page']??[];$s=is_array($p['screen']??null)?$p['screen']:[];$title=trim((string)($p['title']??''));$headings=array_values(array_filter(array_slice(is_array($s['headings']??null)?$s['headings']:[],0,8),'is_string'));$cards=is_array($s['cards']??null)?array_slice($s['cards'],0,6):[];$signals=array_values(array_filter(array_merge($headings,array_map(fn($x)=>is_array($x)?trim((string)($x['title']??$x['text']??'')):'',$cards))));if(!$signals)return 'A tela atual ainda não trouxe contexto semântico suficiente para eu explicar seu objetivo com segurança.';return 'O objetivo aparente desta tela é operar '.($title!==''?$title:'o módulo atual').'. Os principais blocos visíveis são: '.implode(' | ',array_slice($signals,0,8)).'.'; }
+    private function screenRiskAnswer(array $c): string { $s=is_array(data_get($c,'page.screen'))?data_get($c,'page.screen'):[];$alerts=array_values(array_filter(array_slice(is_array($s['alerts']??null)?$s['alerts']:[],0,8),'is_string'));$badges=array_values(array_filter(array_slice(is_array($s['badges']??null)?$s['badges']:[],0,12),'is_string'));$riskBadges=array_values(array_filter($badges,fn($v)=>preg_match('/erro|falha|pendente|alerta|warning|offline|degrad|bloque|atras/i',$v)));if($alerts||$riskBadges)return 'Encontrei sinais que merecem atenção: '.implode(' | ',array_slice(array_merge($alerts,$riskBadges),0,10)).'.';return 'Não identifiquei alerta ou status de risco evidente entre os elementos visíveis desta tela. Isso não substitui uma auditoria técnica do backend.'; }
+    private function screenNextActionAnswer(array $c): string { $s=is_array(data_get($c,'page.screen'))?data_get($c,'page.screen'):[];$alerts=array_values(array_filter(array_slice(is_array($s['alerts']??null)?$s['alerts']:[],0,5),'is_string'));if($alerts)return 'O próximo passo recomendado é tratar primeiro o alerta visível: '.$alerts[0].'.';$controls=array_values(array_filter(array_slice(is_array($s['controls']??null)?$s['controls']:[],0,12),'is_string'));foreach($controls as $control){if(preg_match('/nova solicita|continuar|revisar|aprovar|configura|criar|iniciar/i',$control))return 'Pelo contexto visível, a próxima ação mais provável é usar o controle “'.$control.'”. Antes de executar algo sensível, eu confirmarei com você.';}return 'Não há uma ação prioritária inequívoca na tela. Posso interpretar os cards e status visíveis e recomendar a próxima ação com base neles.'; }
+    private function screenChangeAnswer(array $c): string
+    {
+        $memory = $c['page']['screen']['memory'] ?? null;
+        if (!is_array($memory) || empty($memory['hasPrevious'])) {
+            return 'Ainda não tenho um estado anterior confiável desta rota para comparar. A partir desta visita, vou manter um snapshot resumido da interface para detectar mudanças.';
+        }
+        $change = is_array($memory['lastChange'] ?? null) ? $memory['lastChange'] : null;
+        if (!$change) return 'Não detectei mudança relevante desde o snapshot anterior desta tela.';
+        $parts = [];
+        foreach (['headings'=>'seções','controls'=>'controles','alerts'=>'alertas','badges'=>'status'] as $key => $label) {
+            $diff = is_array($change[$key] ?? null) ? $change[$key] : [];
+            $added = is_array($diff['added'] ?? null) ? array_values(array_filter($diff['added'], 'is_string')) : [];
+            $removed = is_array($diff['removed'] ?? null) ? array_values(array_filter($diff['removed'], 'is_string')) : [];
+            if ($added) $parts[] = 'Novos '.$label.': '.implode(' | ', array_slice($added, 0, 8));
+            if ($removed) $parts[] = 'Removidos '.$label.': '.implode(' | ', array_slice($removed, 0, 8));
+        }
+        if (!empty($change['metricsChanged'])) $parts[] = 'As métricas visíveis mudaram.';
+        if (!empty($change['tablesChanged'])) $parts[] = 'O conteúdo das tabelas visíveis mudou.';
+        return $parts ? "Desde o último estado desta rota, identifiquei:\n".implode("\n", $parts) : 'O snapshot mudou, mas não encontrei diferença textual relevante entre os elementos monitorados.';
+    }
+
     private function projectsAnswer(array $c): string { $f=$c['factory'];$p=$f['recent_projects']??[];$l=[sprintf('A Factory possui %d projeto(s).',(int)($f['projects_total']??0))];if(!$p)$l[]='Ainda não há projetos registrados na tabela operacional.';else{ $l[]='Projetos mais recentes:';foreach($p as $x)$l[]=sprintf('• %s — %s',$x['name']?:$x['slug'],$x['status']?:'sem status');}return implode("\n",$l); }
     private function executionsAnswer(array $c): string { $f=$c['factory'];$p=$f['recent_executions']??[];$l=[sprintf('A Factory possui %d execução(ões) registrada(s).',(int)($f['executions_total']??0))];if(!$p)$l[]='Não há execuções recentes para apresentar.';else{ $l[]='Execuções mais recentes:';foreach($p as $x){$label=$x['name']?:($x['uuid']?:'Execução');$pr=$x['project']?' · '.$x['project']:'';$l[]=sprintf('• %s%s — %s',$label,$pr,$x['status']?:'sem status');}}return implode("\n",$l); }
     private function productionAnswer(array $c): string { $p=$c['factory']['production']??[];return sprintf("Motor de produção: %s.\nVersão: %s.\nStatus: %s.\nProdutos disponíveis: %s.\nArmazenamento: %s.",(string)($p['engine']??'não informado'),(string)($p['version']??'não informada'),(string)($p['status']??'não informado'),implode(', ',$p['products_available']??[])?:'nenhum informado',!empty($p['storage_ready'])?'pronto':'indisponível'); }
@@ -321,6 +350,6 @@ final class ViaFactoryController extends Controller
     private function coreAiHubUrl(): string { return rtrim((string) env('CORE_AI_HUB_URL', 'http://vitrine_core_web_hml/api/internal/ai-dev/chat'), '/'); }
     private function coreAiToken(): string { return trim((string) env('CENTRO_IA_INTERNAL_TOKEN', '')); }
     private function viaProjectId(): string { return trim((string) env('VIA_AI_PROJECT_ID', 'via-agent-hub')) ?: 'via-agent-hub'; }
-    private function viaServiceUrl(): string { return rtrim((string) env('VIA_SERVICE_URL', 'http://via_hml_v04:3000'), '/'); }
+    private function viaServiceUrl(): string { return rtrim((string) env('VIA_SERVICE_URL', 'http://via_hml:3000'), '/'); }
     private function vaeBaseUrl(): string { return rtrim((string)(config('services.vae_core.url')?:'http://vae_core:3091'),'/'); }
 }
