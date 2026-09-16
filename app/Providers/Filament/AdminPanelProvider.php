@@ -51,20 +51,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Vitrine AI Pro Enterprise')
-            ->navigationGroups([
-                NavigationGroup::make('01 · Centro Operacional'),
-                NavigationGroup::make('02 · Operação'),
-                NavigationGroup::make('03 · Comercial'),
-                NavigationGroup::make('04 · Produtos e Licenças'),
-                NavigationGroup::make('05 · Financeiro'),
-                NavigationGroup::make('06 · Factory Studio'),
-                NavigationGroup::make('07 · Projetos'),
-                NavigationGroup::make('08 · Marketplace'),
-                NavigationGroup::make('09 · Portal do Cliente'),
-                NavigationGroup::make('10 · IA Center'),
-                NavigationGroup::make('11 · Configurações'),
-            ])
+            ->homeUrl(fn (): string => MarketingDashboard::getUrl())
+            ->brandName('Vitrine Marketing IA')
             ->colors([
                 'primary' => Color::Sky,
             ])
@@ -79,39 +67,11 @@ class AdminPanelProvider extends PanelProvider
             */
 
             ->pages([
-                Dashboard::class,
-                FactoryStudioEnterprise::class,
-                GeneratedProjects::class,
-                MarketplaceEnterprise::class,
-                ClientPortalEnterprise::class,
-                AiCenterEnterprise::class,
                 MarketingDashboard::class,
             ])
 
-            ->resources([
-                CompanyResource::class,
-                ProductResource::class,
-                PlanResource::class,
-                LicenseResource::class,
-                LeadResource::class,
-                ContractResource::class,
-                PaymentResource::class,
-                SubscriptionResource::class,
-                ModuleResource::class,
-                PlanModuleResource::class,
-                CompanyModuleResource::class,
-                SupportTicketResource::class,
-                UserResource::class,
-                SettingResource::class,
-            ])
-
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                StatsOverviewWidget::class,
-                UltimosClientesWidget::class,
-                UltimasLicencasWidget::class,
-                UltimosLeadsWidget::class,
-            ])
+            ->resources([])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
