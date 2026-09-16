@@ -25,7 +25,9 @@
                     <h2>{{ $app['name'] }}</h2>
                     <p>{{ $app['description'] }}</p>
                     <div class="actions">
-                        @if(!empty($app['admin_url']))
+                        @if(($app['slug'] ?? null) === 'factory')
+                            <a class="button" href="{{ route('cockpit.open', ['slug' => 'factory']) }}">Abrir com SSO</a>
+                        @elseif(!empty($app['admin_url']))
                             <a class="button" href="{{ $app['admin_url'] }}" rel="noopener">Abrir Administracao</a>
                         @else
                             <span class="button disabled">Integracao pendente</span>
