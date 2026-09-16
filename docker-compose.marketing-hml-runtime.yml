@@ -41,6 +41,10 @@ services:
       DB_DATABASE: vitrine_marketing_hml
       DB_USERNAME: vitrine_marketing
       SESSION_DRIVER: file
+      SESSION_DOMAIN: marketing.hml.vitrineiapro.com.br
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+      SESSION_COOKIE: vitrine_marketing_hml_session
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
     volumes:
