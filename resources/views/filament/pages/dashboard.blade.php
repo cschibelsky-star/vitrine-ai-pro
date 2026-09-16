@@ -1,111 +1,100 @@
 <x-filament-panels::page>
-    <link rel="stylesheet" href="{{ asset('css/atlas-dashboard.css') }}?v=10.1.1">
+    <link rel="stylesheet" href="{{ asset('css/atlas-dashboard.css') }}?v=10.2.0">
+    @php($metrics = $this->metrics())
 
-    <div class="atlas-wrap">
+    <div class="atlas-wrap factory-cockpit">
         <div class="atlas-top">
-            <div class="atlas-search">Pesquisar clientes, licenças, produtos, cobranças e projetos...</div>
+            <div class="atlas-search">Factory · projetos, blueprints, capabilities e execuções</div>
             <div class="atlas-top-actions">
-                <div class="atlas-pill">● Operação saudável</div>
-                <a class="atlas-btn" href="/admin/factory-studio-enterprise">+ Novo</a>
+                <div class="atlas-pill">● Factory operacional</div>
+                <a class="atlas-btn" href="/admin/factory-studio-enterprise">Abrir Studio</a>
             </div>
         </div>
 
-        <section class="atlas-hero">
-            <div class="atlas-hero-content">
-                <div>
-                    <div class="atlas-eyebrow">Centro Operacional Inteligente</div>
-                    <h1>Central de Comando</h1>
-                    <p>
-                        Bom dia, Cristian. Sua operação está funcionando normalmente. Há duas licenças vencendo
-                        nos próximos dias e três oportunidades comerciais aguardando retorno.
-                    </p>
-                </div>
-                <div class="atlas-pulse">
-                    <div class="atlas-eyebrow">Pulso da operação</div>
-                    <strong>92%</strong>
-                    <div class="atlas-bar"><span></span></div>
-                    <p>Infraestrutura, IA, clientes, financeiro e publicações em situação estável.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="atlas-kpis">
-            <div class="atlas-kpi cyan"><div class="label">Clientes ativos</div><div class="num">148</div><small>+8 este mês</small></div>
-            <div class="atlas-kpi"><div class="label">Licenças</div><div class="num">186</div><small>3 vencem em 7 dias</small></div>
-            <div class="atlas-kpi green"><div class="label">Receita mensal</div><div class="num">R$ 52k</div><small>+12% previsto</small></div>
-            <div class="atlas-kpi violet"><div class="label">Agentes IA</div><div class="num">12</div><small>em operação</small></div>
-            <div class="atlas-kpi amber"><div class="label">Projetos Factory</div><div class="num">{{ $this->countProjects() }}</div><small>2 em homologação</small></div>
-        </section>
-
-        <section class="atlas-grid">
-            <div class="atlas-panel">
-                <div class="atlas-panel-head">
-                    <div><h2>Mapa do Ecossistema</h2><p>Produtos ativos, implantação e maturidade operacional.</p></div>
-                    <a class="atlas-pill" href="/admin/products">Ver produtos</a>
-                </div>
-                <div class="atlas-ecosystem">
-                    <div class="atlas-donut"><div><strong>86%</strong><span>base ativa</span></div></div>
-                    <div class="atlas-legend">
-                        @foreach ($this->getProducts() as $product)
-                            <div class="atlas-legend-row"><span>{{ $product['name'] }}</span><b>{{ $product['progress'] }}%</b></div>
-                            <div class="atlas-progress"><span style="width: {{ $product['progress'] }}%"></span></div>
-                        @endforeach
+        <section class="factory-shell">
+            <div class="factory-orbit-panel">
+                <div class="factory-orbit">
+                    <div class="factory-core-node">
+                        <span>Vitrine IA Pro</span>
+                        <strong>FACTORY</strong>
+                        <small>produção assistida</small>
                     </div>
-                </div>
-            </div>
 
-            <div class="atlas-panel">
-                <div class="atlas-panel-head"><div><h2>Fluxo Operacional</h2><p>Da venda à publicação.</p></div></div>
-                <div class="atlas-activity">
-                    @foreach ([
-                        ['icon' => '01', 'title' => 'Lead comercial', 'desc' => 'Entrada pelo site ou atendimento'],
-                        ['icon' => '02', 'title' => 'Cliente e licença', 'desc' => 'Plano, produto e valor vinculados'],
-                        ['icon' => '03', 'title' => 'Fábrica IA', 'desc' => 'Projeto base, módulos e instalação'],
-                        ['icon' => '04', 'title' => 'Homologação', 'desc' => 'Teste, ajuste e publicação'],
-                    ] as $item)
-                        <div class="atlas-step"><div class="atlas-ic">{{ $item['icon'] }}</div><div><b>{{ $item['title'] }}</b><span>{{ $item['desc'] }}</span></div><small>ativo</small></div>
+                    @foreach ($this->stages() as $index => $stage)
+                        <button type="button"
+                            class="factory-stage {{ $index === 0 ? 'is-selected' : '' }} stage-{{ $index + 1 }}"
+                            data-title="{{ $stage['title'] }}"
+                            data-detail="{{ $stage['detail'] }} Os detalhes operacionais aparecerão aqui conforme existirem registros reais.">
+                            <span>{{ $stage['code'] }}</span>
+                            <b>{{ $stage['title'] }}</b>
+                        </button>
                     @endforeach
                 </div>
             </div>
+
+            <aside class="factory-context-panel">
+                <div class="factory-context-head">
+                    <span class="factory-context-kicker">Contexto selecionado</span>
+                    <h1 id="factory-context-title">Intake & Demandas</h1>
+                    <p id="factory-context-detail">Necessidades registradas e entrada operacional. Os detalhes operacionais aparecerão aqui conforme existirem registros reais.</p>
+                </div>
+
+                <div class="factory-metrics-grid">
+                    <div class="factory-metric"><span>Projetos</span><strong>{{ $metrics['projects'] }}</strong><small>registrados</small></div>
+                    <div class="factory-metric"><span>Blueprints</span><strong>{{ $metrics['blueprints'] }}</strong><small>modelos técnicos</small></div>
+                    <div class="factory-metric"><span>Capabilities</span><strong>{{ $metrics['capabilities'] }}</strong><small>recursos mapeados</small></div>
+                    <div class="factory-metric"><span>Execuções</span><strong>{{ $metrics['executions'] }}</strong><small>histórico real</small></div>
+                </div>
+
+                <div class="factory-persistent">
+                    <div><b>Fonte dos indicadores</b><span>Tabelas reais da Factory: projetos, blueprints, capabilities e execuções.</span></div>
+                    <div><b>Execuções em andamento</b><span>{{ $metrics['running'] }} registro(s) com status running.</span></div>
+                    <div><b>Publicação controlada</b><span>Deploy continua sujeito à homologação e confirmação.</span></div>
+                </div>
+            </aside>
         </section>
 
-        <section class="atlas-bottom">
-            <div class="atlas-panel">
-                <h2>Agentes de IA</h2><p>Controle operacional dos agentes.</p>
-                <div class="atlas-cards-mini">
-                    <div class="atlas-mini"><b>IA Comercial</b><small>Online · 42 conversas</small></div>
-                    <div class="atlas-mini"><b>IA Factory</b><small>Online · 3 builds</small></div>
-                    <div class="atlas-mini"><b>IA QA</b><small>Online · 2 revisões</small></div>
-                    <div class="atlas-mini"><b>IA Suporte</b><small>Online · 5 chamados</small></div>
+        <section class="factory-bottom-grid">
+            <article class="factory-panel">
+                <div class="factory-panel-head"><div><h2>Execuções recentes</h2><p>Últimos registros reais da Factory.</p></div><span class="atlas-pill">{{ $metrics['finished'] }} concluídas</span></div>
+                <div class="factory-feed">
+                    @forelse ($this->recentExecutions() as $execution)
+                        <div class="factory-feed-row">
+                            <div class="factory-feed-icon">EX</div>
+                            <div><b>{{ $execution['name'] }}</b><span>{{ $execution['project'] }}</span></div>
+                            <div class="factory-feed-status"><strong>{{ $execution['status'] }}</strong><small>{{ $execution['duration'] }}</small></div>
+                        </div>
+                    @empty
+                        <div class="factory-empty">Nenhuma execução registrada.</div>
+                    @endforelse
                 </div>
-            </div>
+            </article>
 
-            <div class="atlas-panel">
-                <h2>Saúde da Plataforma</h2><p>Serviços principais.</p>
-                <div class="atlas-legend">
-                    <div class="atlas-legend-row"><span>Docker / PHP</span><b>100%</b></div><div class="atlas-progress"><span style="width:100%"></span></div>
-                    <div class="atlas-legend-row"><span>MariaDB / Redis</span><b>100%</b></div><div class="atlas-progress"><span style="width:100%"></span></div>
-                    <div class="atlas-legend-row"><span>GitHub Deploy</span><b>80%</b></div><div class="atlas-progress"><span style="width:80%"></span></div>
+            <article class="factory-panel">
+                <div class="factory-panel-head"><div><h2>Estado da produção</h2><p>Sem números demonstrativos.</p></div></div>
+                <div class="factory-status-list">
+                    <div><span>Em execução</span><strong>{{ $metrics['running'] }}</strong></div>
+                    <div><span>Concluídas</span><strong>{{ $metrics['finished'] }}</strong></div>
+                    <div><span>Falhas registradas</span><strong>{{ $metrics['failed'] }}</strong></div>
+                    <div><span>Total de execuções</span><strong>{{ $metrics['executions'] }}</strong></div>
                 </div>
-            </div>
-
-            <div class="atlas-panel">
-                <h2>Próximas ações</h2><p>Orientação executiva.</p>
-                <div class="atlas-activity">
-                    <div class="atlas-step"><div class="atlas-ic">!</div><div><b>Renovar 2 licenças</b><span>Vencimento nos próximos 7 dias</span></div><small>prioridade</small></div>
-                    <div class="atlas-step"><div class="atlas-ic">$</div><div><b>Enviar 3 propostas</b><span>Leads aguardando retorno</span></div><small>comercial</small></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="atlas-panel" style="margin-top:14px">
-            <div class="atlas-panel-head"><div><h2>Licenças recentes</h2><p>Exemplo de tabela Enterprise compacta.</p></div><a class="atlas-btn" href="/admin/licenses/create">Nova Licença</a></div>
-            <div class="atlas-table">
-                <div class="atlas-tr head"><div>Cliente</div><div>Produto</div><div>Plano</div><div>Situação</div></div>
-                <div class="atlas-tr"><div>Prefeitura Modelo</div><div>TV Digital Enterprise</div><div>Enterprise</div><div><span class="atlas-badge">Ativa</span></div></div>
-                <div class="atlas-tr"><div>Conheça Cidade</div><div>Guia Digital da Cidade</div><div>Start</div><div><span class="atlas-badge">Ativa</span></div></div>
-                <div class="atlas-tr"><div>AssessorGov IA</div><div>GovTech</div><div>Premium</div><div><span class="atlas-badge">Homologação</span></div></div>
-            </div>
+            </article>
         </section>
     </div>
+
+    <script>
+        (() => {
+            const stages = document.querySelectorAll('.factory-stage');
+            const title = document.getElementById('factory-context-title');
+            const detail = document.getElementById('factory-context-detail');
+            stages.forEach((stage) => {
+                stage.addEventListener('click', () => {
+                    stages.forEach((item) => item.classList.remove('is-selected'));
+                    stage.classList.add('is-selected');
+                    title.textContent = stage.dataset.title || 'Factory';
+                    detail.textContent = stage.dataset.detail || '';
+                });
+            });
+        })();
+    </script>
 </x-filament-panels::page>
