@@ -79,6 +79,29 @@ final class VideoPreviewController extends Controller
         return $response;
     }
 
+    public function publicImage(string $filename): BinaryFileResponse
+    {
+        $allowed = [
+            'vitrine-ia-pro-logo-master.png' => base_path('assets/img/logo-vitrine-ai-pro.png'),
+        ];
+
+        abort_unless(array_key_exists($filename, $allowed), 404);
+
+        $path = $allowed[$filename];
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+        $response->setPublic();
+        $response->setMaxAge(86400);
+        $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
     public function __invoke(Request $request, string $version): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);

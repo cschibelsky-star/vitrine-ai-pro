@@ -7,6 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nAllow: /marketing/media/image/\n", 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+});
+
 Route::get('/', function () {
     return redirect('/admin');
 });
@@ -24,6 +31,11 @@ Route::get('/marketing/media/reel-03/{version}', [VideoPreviewController::class,
     ->middleware(['throttle:30,1'])
     ->where('version', '[A-Za-z0-9._-]+\\.mp4')
     ->name('marketing.media.reel-03');
+
+Route::get('/marketing/media/image/{filename}', [VideoPreviewController::class, 'publicImage'])
+    ->middleware(['throttle:60,1'])
+    ->where('filename', '[A-Za-z0-9._-]+\\.png')
+    ->name('marketing.media.image');
 
 Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->middleware(['signed', 'throttle:30,1'])
