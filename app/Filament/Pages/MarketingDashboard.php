@@ -189,7 +189,12 @@ class MarketingDashboard extends Page
                 .'Sua função é preparar um pacote de produção para uso manual no Google Flow. '
                 .'Não afirme que abriu o Flow, gerou mídia, publicou ou consumiu créditos. '
                 .'Entregue um briefing implementável e objetivo, em português do Brasil, preservando fatos fornecidos e sem inventar logos, preços, depoimentos ou funcionalidades. '
+                .'Quando a campanha ou produto for Vitrine Social Mídia, a comunicação deve deixar explícito que o assunto é redes sociais, produção de conteúdo, calendário editorial, Instagram/Facebook ou presença digital. Não use metáforas ambíguas como "vitrine parada", "vitrine estagnada" ou equivalentes sem explicar imediatamente que se trata das redes sociais. '
+                .'O CTA deve ser exatamente o informado no briefing; se estiver vazio, marque CTA COMO NECESSÁRIO em vez de inventar "Assine agora" ou outra chamada. '
+                .'Não gere, redesenhe nem interprete o logo da Vitrine IA Pro. Em ASSETS NECESSÁRIOS, sempre registre "logo oficial Vitrine IA Pro". Se o logo precisar fazer parte da cena, exija o arquivo oficial como imagem de referência; para assinatura de marca/watermark, indique aplicação em pós-produção pelo Marketing IA. '
+                .'Não inclua marcas, logotipos ou produtos identificáveis de terceiros sem que tenham sido fornecidos como asset autorizado. Evite texto duplicado e determine uma única ocorrência por mensagem na tela. '
                 .'Estruture obrigatoriamente em: FLOW JOB, DIREÇÃO CRIATIVA, CENA 01, CENA 02 quando necessária, CÂMERA, ÁUDIO, TEXTO NA TELA, NEGATIVE PROMPT, ASSETS NECESSÁRIOS e QA CHECKLIST. '
+                .'No QA CHECKLIST, valide clareza sobre redes sociais, ausência de texto duplicado, ausência de marcas de terceiros, CTA fiel ao briefing e uso do logo oficial somente por asset/pós-produção. '
                 .'Os prompts visuais devem estar prontos para copiar no Google Flow e devem respeitar o formato solicitado.';
 
             $userPrompt = "Campanha: {$campaign}\n"
@@ -200,7 +205,9 @@ class MarketingDashboard extends Page
                 ."Mensagem principal: {$message}\n"
                 ."CTA: {$cta}\n"
                 ."Estilo: {$style}\n\n"
-                .'Prepare o pacote de produção para Google Flow. Se faltar algum asset de marca, marque como necessário em vez de inventar.';
+                .'Prepare o pacote de produção para Google Flow. Se faltar algum asset de marca, marque como necessário em vez de inventar. '
+                .'Para Vitrine Social Mídia, deixe evidente que o problema e a solução dizem respeito às redes sociais e à operação de conteúdo. '
+                .'O logo oficial será fornecido/aplicado pelo Marketing IA; não peça ao gerador para recriá-lo.';
 
             $package = '';
             $this->flowGenerationSource = '';
@@ -302,6 +309,7 @@ class MarketingDashboard extends Page
             'EM_GERACAO',
             'GERADO',
             'EM_QA',
+            'REPROVADO_QA',
             'APROVADO',
             'ENVIADO_DRIVE',
             'AGENDADO',
@@ -360,8 +368,10 @@ class MarketingDashboard extends Page
             ."2. Selecione o projeto Flow informado.\n"
             ."3. Preencha a ferramenta usando somente o pacote abaixo.\n"
             ."4. Revise formato, duração, texto, assets e identidade antes de consumir créditos.\n"
-            ."5. Gere a mídia. Não publique, não regenere e não altere campanha sem autorização.\n"
-            ."6. Ao concluir, registre evidência e retorne o job como GERADO.\n\n"
+            ."5. Para Vitrine Social Mídia, confirme que a copy fala explicitamente de redes sociais/conteúdo e não usa metáforas ambíguas.\n"
+            ."6. Não aceite logo recriado por IA, texto duplicado nem marcas de terceiros não fornecidas. O logo oficial entra por asset autorizado ou pós-produção do Marketing IA.\n"
+            ."7. Gere a mídia. Não publique, não regenere e não altere campanha sem autorização.\n"
+            ."8. Ao concluir, registre evidência e retorne o job como GERADO.\n\n"
             ."PACOTE DE PRODUÇÃO:\n{$this->flowPackage}";
     }
 

@@ -397,7 +397,7 @@
                                         <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar FLOW JOB</button>
                                         <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Novo rascunho</button>
                                     </div>
-                                    <div class="vm-note"><span>O Marketing IA prepara o job; a geração de mídia só ocorre dentro do Google Flow.</span><span>Nenhuma senha ou cookie Google é armazenado.</span></div>
+                                    <div class="vm-note"><span>O Marketing IA prepara o job; a geração de mídia só ocorre dentro do Google Flow.</span><span>Logo oficial: nunca gerado por IA; entra por asset autorizado ou na finalização técnica do Marketing IA.</span><span>Nenhuma senha ou cookie Google é armazenado.</span></div>
                                 </form>
                             </div>
 
@@ -412,6 +412,7 @@
                                             <button type="button" wire:click="setFlowJobStatus('EM_GERACAO')">Em geração</button>
                                             <button type="button" wire:click="setFlowJobStatus('GERADO')">Gerado</button>
                                             <button type="button" wire:click="setFlowJobStatus('EM_QA')">Enviar para QA</button>
+                                            <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
                                             <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovado</button>
                                         </div>
                                         @if($this->hasValidFlowToolUrl())
