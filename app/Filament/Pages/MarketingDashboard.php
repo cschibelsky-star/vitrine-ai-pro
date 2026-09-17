@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Marketing\Application\MarketingDashboardStateReader;
 use App\Marketing\Domain\Agents\AgentRegistry;
+use App\Marketing\Domain\Video\VideoProject;
+use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -41,6 +43,11 @@ class MarketingDashboard extends Page
     public string $flowGenerationSource = '';
     public array $flowJobs = [];
 
+    public string $nativeProductionStatus = 'RASCUNHO';
+    public string $nativeProductionJobRef = '';
+    public string $nativeProductionAssetUrl = '';
+    public ?string $nativeProductionError = null;
+
     public function mount(): void
     {
         $this->copilotSessionId = (string) session('marketing_copilot.session_id', 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3))));
@@ -64,6 +71,10 @@ class MarketingDashboard extends Page
         $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
         $this->flowGenerationSource = (string) ($workstation['generation_source'] ?? '');
         $this->flowJobs = array_values((array) ($workstation['jobs'] ?? []));
+        $this->nativeProductionStatus = (string) ($workstation['native_status'] ?? 'RASCUNHO');
+        $this->nativeProductionJobRef = (string) ($workstation['native_job_ref'] ?? '');
+        $this->nativeProductionAssetUrl = (string) ($workstation['native_asset_url'] ?? '');
+        $this->nativeProductionError = null;
 
         $flowBridge = (array) config('marketing_agents.flow_bridge', []);
         $this->flowToolName = trim((string) ($flowBridge['official_tool_name'] ?? 'Vitrine Content Studio')) ?: 'Vitrine Content Studio';
@@ -189,17 +200,17 @@ class MarketingDashboard extends Page
             $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
             $capability = trim((string) ($hub['capability'] ?? 'marketing_generation'));
 
-            $system = 'Você é o Creative Director da Google AI Workstation da Vitrine IA Pro. '
-                .'Sua função é preparar um pacote de produção para uso manual no Google Flow. '
-                .'Não afirme que abriu o Flow, gerou mídia, publicou ou consumiu créditos. '
+            $system = 'Você é o Creative Director do Fluxo de Produção nativo do Marketing IA da Vitrine IA Pro. '
+                .'Sua função é preparar um Job de Produção executável pelos motores nativos do Marketing IA, incluindo Gemini, Veo e finalização técnica. '
+                .'Não afirme que gerou mídia, publicou ou consumiu créditos sem execução operacional confirmada. '
                 .'Entregue um briefing implementável e objetivo, em português do Brasil, preservando fatos fornecidos e sem inventar logos, preços, depoimentos ou funcionalidades. '
                 .'Quando a campanha ou produto for Vitrine Social Mídia, a comunicação deve deixar explícito que o assunto é redes sociais, produção de conteúdo, calendário editorial, Instagram/Facebook ou presença digital. Não use metáforas ambíguas como "vitrine parada", "vitrine estagnada" ou equivalentes sem explicar imediatamente que se trata das redes sociais. '
                 .'O CTA deve ser exatamente o informado no briefing; se estiver vazio, marque CTA COMO NECESSÁRIO em vez de inventar "Assine agora" ou outra chamada. '
                 .'Não gere, redesenhe nem interprete o logo da Vitrine IA Pro. Em ASSETS NECESSÁRIOS, sempre registre "logo oficial Vitrine IA Pro". Se o logo precisar fazer parte da cena, exija o arquivo oficial como imagem de referência; para assinatura de marca/watermark, indique aplicação em pós-produção pelo Marketing IA. '
                 .'Não inclua marcas, logotipos ou produtos identificáveis de terceiros sem que tenham sido fornecidos como asset autorizado. Evite texto duplicado e determine uma única ocorrência por mensagem na tela. '
-                .'Estruture obrigatoriamente em: FLOW JOB, DIREÇÃO CRIATIVA, CENA 01, CENA 02 quando necessária, CÂMERA, ÁUDIO, TEXTO NA TELA, NEGATIVE PROMPT, ASSETS NECESSÁRIOS e QA CHECKLIST. '
+                .'Estruture obrigatoriamente em: JOB DE PRODUÇÃO, DIREÇÃO CRIATIVA, CENA 01, CENA 02 quando necessária, CÂMERA, ÁUDIO, TEXTO NA TELA, NEGATIVE PROMPT, ASSETS NECESSÁRIOS e QA CHECKLIST. '
                 .'No QA CHECKLIST, valide clareza sobre redes sociais, ausência de texto duplicado, ausência de marcas de terceiros, CTA fiel ao briefing e uso do logo oficial somente por asset/pós-produção. '
-                .'Os prompts visuais devem estar prontos para copiar no Google Flow e devem respeitar o formato solicitado.';
+                .'Os prompts visuais devem estar prontos para execução pelos motores nativos do Marketing IA e devem respeitar o formato solicitado.';
 
             $userPrompt = "Campanha: {$campaign}\n"
                 ."Objetivo: {$objective}\n"
@@ -209,7 +220,7 @@ class MarketingDashboard extends Page
                 ."Mensagem principal: {$message}\n"
                 ."CTA: {$cta}\n"
                 ."Estilo: {$style}\n\n"
-                .'Prepare o pacote de produção para Google Flow. Se faltar algum asset de marca, marque como necessário em vez de inventar. '
+                .'Prepare o Job de Produção para execução nativa no Marketing IA. Se faltar algum asset de marca, marque como necessário em vez de inventar. '
                 .'Para Vitrine Social Mídia, deixe evidente que o problema e a solução dizem respeito às redes sociais e à operação de conteúdo. '
                 .'O logo oficial será fornecido/aplicado pelo Marketing IA; não peça ao gerador para recriá-lo.';
 
@@ -240,7 +251,7 @@ class MarketingDashboard extends Page
                         $this->flowGenerationSource = 'Centro IA';
                     }
                 } else {
-                    logger()->warning('Flow Bridge: Centro IA indisponível; acionando fallback Gemini local.', [
+                    logger()->warning('Fluxo Marketing IA: Centro IA indisponível; acionando fallback Gemini local.', [
                         'http_status' => $response->status(),
                         'capability' => $capability,
                     ]);
@@ -253,7 +264,7 @@ class MarketingDashboard extends Page
             }
 
             if ($package === '') {
-                throw new \RuntimeException('Não foi possível gerar o pacote para o Google Flow.');
+                throw new \RuntimeException('Não foi possível gerar o Job de Produção do Marketing IA.');
             }
 
             $this->flowPackage = $package;
@@ -263,6 +274,99 @@ class MarketingDashboard extends Page
             report($exception);
             $this->flowError = $exception->getMessage();
         }
+    }
+
+    public function startNativeProduction(): void
+    {
+        $this->nativeProductionError = null;
+        $this->nativeProductionAssetUrl = '';
+
+        if ($this->flowJobId === '' || $this->flowPackage === '') {
+            $this->nativeProductionError = 'Gere primeiro o Job de Produção do Marketing IA.';
+            return;
+        }
+
+        if ($this->flowFormat === 'ad_1_1') {
+            $this->nativeProductionError = 'Criativos 1:1 usam o motor nativo de imagem no módulo Criativos. Este executor é dedicado a vídeo.';
+            return;
+        }
+
+        $aspectRatio = $this->flowFormat === 'video_16_9' ? '16:9' : '9:16';
+        $duration = $this->nativeDurationSeconds();
+        $prompt = 'Crie um vídeo publicitário profissional para o produto Vitrine Social Mídia. '
+            .'Público: '.trim($this->flowAudience).'. '
+            .'Objetivo: '.trim($this->flowObjective).'. '
+            .'Mensagem que a narrativa visual deve comunicar: '.trim($this->flowMessage).'. '
+            .'Direção visual: '.trim($this->flowStyle).'. '
+            .'Mostre de forma clara uma rotina real de produção e gestão de conteúdo para redes sociais. '
+            .'Gere somente a base visual limpa: não renderize palavras, legendas, CTA, logotipos, marcas de terceiros ou watermark. '
+            .'Preserve áreas seguras para headline, mensagem, CTA e logo que serão aplicados deterministicamente pelo Marketing IA na finalização técnica.';
+
+        try {
+            $project = new VideoProject(
+                projectId: $this->flowJobId,
+                productId: 'vitrine-social-midia',
+                campaignId: ((string) str($this->flowCampaign)->slug()) ?: 'marketing-ia',
+            );
+            $scene = $project->addScene('SCENE-01', 1, ['prompt' => $prompt]);
+
+            $job = app(GeminiVeoSceneRenderer::class)->dispatch($project, $scene, [
+                'aspect_ratio' => $aspectRatio,
+                'duration_seconds' => $duration,
+                'resolution' => $duration === 8 ? '1080p' : '720p',
+            ]);
+
+            $this->nativeProductionJobRef = (string) ($job['job_ref'] ?? '');
+            $this->nativeProductionStatus = 'EM_GERACAO';
+            $this->flowJobStatus = 'EM_GERACAO';
+            $this->upsertCurrentFlowJob();
+            $this->persistFlowWorkstation();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->nativeProductionStatus = 'ERRO';
+            $this->nativeProductionError = $exception->getMessage();
+            $this->persistFlowWorkstation();
+        }
+    }
+
+    public function refreshNativeProduction(): void
+    {
+        $this->nativeProductionError = null;
+
+        if ($this->nativeProductionJobRef === '') {
+            $this->nativeProductionError = 'Nenhuma geração nativa em andamento.';
+            return;
+        }
+
+        try {
+            $job = app(GeminiVeoSceneRenderer::class)->refresh($this->nativeProductionJobRef);
+            $status = (string) ($job['status'] ?? 'processing');
+
+            if ($status === 'completed') {
+                $this->nativeProductionAssetUrl = (string) ($job['render_ref'] ?? '');
+                $this->nativeProductionStatus = 'GERADO';
+                $this->flowJobStatus = 'GERADO';
+                $this->upsertCurrentFlowJob();
+            } elseif ($status === 'failed') {
+                $this->nativeProductionStatus = 'ERRO';
+                $this->nativeProductionError = 'O motor Veo informou falha na geração.';
+            } else {
+                $this->nativeProductionStatus = 'EM_GERACAO';
+            }
+
+            $this->persistFlowWorkstation();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->nativeProductionError = $exception->getMessage();
+            $this->persistFlowWorkstation();
+        }
+    }
+
+    private function nativeDurationSeconds(): int
+    {
+        $duration = (int) preg_replace('/[^0-9]/', '', $this->flowDuration);
+
+        return in_array($duration, [4, 6, 8], true) ? $duration : 8;
     }
 
     public function clearFlowPackage(): void
@@ -275,6 +379,10 @@ class MarketingDashboard extends Page
         $this->flowJobStatus = 'RASCUNHO';
         $this->flowGenerationSource = '';
         $this->flowError = null;
+        $this->nativeProductionStatus = 'RASCUNHO';
+        $this->nativeProductionJobRef = '';
+        $this->nativeProductionAssetUrl = '';
+        $this->nativeProductionError = null;
         $this->persistFlowWorkstation();
     }
 
@@ -306,6 +414,7 @@ class MarketingDashboard extends Page
             'RASCUNHO',
             'PREPARADO',
             'PRONTO_PARA_FLOW',
+            'PRONTO_PARA_PRODUCAO',
             'EM_GERACAO',
             'GERADO',
             'EM_QA',
@@ -456,10 +565,11 @@ class MarketingDashboard extends Page
 
     private function createFlowJob(string $status): void
     {
-        $this->flowJobId = 'FLOW-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
-        $this->flowJobStatus = $this->hasValidFlowToolUrl() && $status === 'PREPARADO'
-            ? 'PRONTO_PARA_FLOW'
-            : $status;
+        $this->flowJobId = 'MKT-PROD-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
+        $this->flowJobStatus = $status === 'PREPARADO' ? 'PRONTO_PARA_PRODUCAO' : $status;
+        $this->nativeProductionStatus = 'PRONTO_PARA_PRODUCAO';
+        $this->nativeProductionJobRef = '';
+        $this->nativeProductionAssetUrl = '';
         $this->upsertCurrentFlowJob();
     }
 
@@ -510,6 +620,9 @@ class MarketingDashboard extends Page
                 'job_status' => $this->flowJobStatus,
                 'generation_source' => $this->flowGenerationSource,
                 'jobs' => $this->flowJobs,
+                'native_status' => $this->nativeProductionStatus,
+                'native_job_ref' => $this->nativeProductionJobRef,
+                'native_asset_url' => $this->nativeProductionAssetUrl,
             ],
         ]);
     }

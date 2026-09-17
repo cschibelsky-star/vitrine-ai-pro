@@ -334,11 +334,11 @@
                             <span class="vm-version">V1.5 · HML</span>
                         </div>
 
-                        <div class="vm-modules" aria-label="Módulos da Google AI Workstation">
+                        <div class="vm-modules" aria-label="Módulos do Fluxo Marketing IA">
                             <div class="vm-module">
                                 <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-sparkles style="width:18px;height:18px"/></div><span class="vm-module-status active">ATIVO</span></div>
-                                <div class="vm-module-name">Creative Studio · Flow</div>
-                                <div class="vm-module-desc">Gera briefing, direção, cenas, prompts e checklist prontos para produção no Google Flow.</div>
+                                <div class="vm-module-name">Creative Studio · Marketing IA</div>
+                                <div class="vm-module-desc">Gera briefing, direção, cenas, prompts e checklist para execução direta pelos motores nativos.</div>
                             </div>
                             <div class="vm-module">
                                 <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-code-bracket style="width:18px;height:18px"/></div><span class="vm-module-status ready">GOVERNADO</span></div>
@@ -359,29 +359,21 @@
 
                         <div class="vm-flow-layout">
                             <div class="vm-flow-box">
-                                <div class="vm-flow-title"><strong>Flow Bridge · V1.6</strong><span>Marketing IA → handoff → Google Flow</span></div>
+                                <div class="vm-flow-title"><strong>Fluxo Marketing IA · Produção Nativa</strong><span>briefing → job → motor nativo → QA</span></div>
                                 @if($flowError)<div class="vm-error">{{ $flowError }}</div>@endif
 
                                 <div class="vm-bridge">
-                                    <div class="vm-bridge-head"><strong>Ferramenta Google Flow</strong><span class="vm-bridge-state">{{ $this->hasValidFlowToolUrl() ? 'CONFIGURADA' : 'AGUARDANDO URL' }}</span></div>
-                                    <form wire:submit="saveFlowBridgeConfiguration">
-                                        <div class="vm-flow-form">
-                                            <div class="vm-field"><label for="flow-tool-name">Ferramenta oficial</label><input id="flow-tool-name" wire:model="flowToolName" maxlength="160" readonly></div>
-                                            <div class="vm-field"><label for="flow-project-name">Projeto Flow oficial</label><input id="flow-project-name" wire:model="flowProjectName" maxlength="160" readonly></div>
-                                            <div class="vm-field full"><label for="flow-tool-url">URL compartilhada da ferramenta</label><input id="flow-tool-url" type="url" wire:model="flowToolUrl" maxlength="800" placeholder="https://flow.google.com/..."></div>
-                                        </div>
-                                        <div class="vm-flow-actions">
-                                            <button type="submit" class="vm-flow-secondary">Salvar Flow Bridge</button>
-                                            @if($this->hasValidFlowToolUrl())
-                                                <a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Abrir ferramenta no Flow ↗</a>
-                                            @else
-                                                <span class="vm-flow-open disabled">Abrir ferramenta no Flow</span>
-                                            @endif
-                                        </div>
-                                    </form>
+                                    <div class="vm-bridge-head"><strong>Motor de Produção Nativo</strong><span class="vm-bridge-state">OPERACIONAL</span></div>
+                                    <div class="vm-flow-form">
+                                        <div class="vm-field"><label>Direção / Copy</label><input value="Gemini · Marketing IA" readonly></div>
+                                        <div class="vm-field"><label>Vídeo</label><input value="Veo 3.1 · API nativa" readonly></div>
+                                        <div class="vm-field"><label>Imagem</label><input value="Gemini Image / Nano Banana" readonly></div>
+                                        <div class="vm-field"><label>Finalização</label><input value="FFmpeg + Logo oficial + QA" readonly></div>
+                                    </div>
+                                    <div class="vm-note"><span>Google Flow não é mais dependência do caminho principal.</span><span>O Marketing IA prepara, gera, finaliza e encaminha a peça para QA.</span></div>
                                 </div>
 
-                                <div class="vm-flow-title"><strong>Creative Studio · Criar FLOW JOB</strong><span>Gemini → pacote → job</span></div>
+                                <div class="vm-flow-title"><strong>Creative Studio · Criar Job de Produção</strong><span>Gemini → direção → job nativo</span></div>
                                 <form wire:submit="generateFlowPackage">
                                     <div class="vm-flow-form">
                                         <div class="vm-field full"><label for="flow-campaign">Campanha</label><input id="flow-campaign" wire:model="flowCampaign" maxlength="160" placeholder="Ex.: Vitrine Social Mídia"></div>
@@ -394,42 +386,45 @@
                                         <div class="vm-field"><label for="flow-style">Estilo visual</label><input id="flow-style" wire:model="flowStyle" maxlength="240"></div>
                                     </div>
                                     <div class="vm-flow-actions">
-                                        <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar FLOW JOB</button>
+                                        <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar Job de Produção</button>
                                         <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Novo rascunho</button>
                                     </div>
-                                    <div class="vm-note"><span>O Marketing IA prepara o job; a geração de mídia só ocorre dentro do Google Flow.</span><span>Logo oficial: nunca gerado por IA; entra por asset autorizado ou na finalização técnica do Marketing IA.</span><span>Nenhuma senha ou cookie Google é armazenado.</span></div>
+                                    <div class="vm-note"><span>O Marketing IA agora executa a geração diretamente pelos motores nativos.</span><span>Logo oficial: nunca gerado por IA; entra na finalização técnica controlada.</span><span>A geração consome API somente quando você clicar em Gerar mídia.</span></div>
                                 </form>
                             </div>
 
                             <div class="vm-flow-box">
-                                <div class="vm-flow-title"><strong>FLOW JOB</strong><span>governança e handoff</span></div>
+                                <div class="vm-flow-title"><strong>JOB DE PRODUÇÃO</strong><span>execução nativa e governança</span></div>
                                 @if($flowJobId !== '')
                                     <div class="vm-job">
                                         <div class="vm-job-head"><div class="vm-job-id">{{ $flowJobId }}</div><span class="vm-job-status">{{ $flowJobStatus }}</span></div>
-                                        <div class="vm-job-meta">{{ $flowCampaign }} · {{ $flowProjectName }} · {{ $flowToolName }} · Fonte: {{ $flowGenerationSource !== '' ? $flowGenerationSource : '—' }}</div>
+                                        <div class="vm-job-meta">{{ $flowCampaign }} · Motor nativo Marketing IA · Fonte: {{ $flowGenerationSource !== '' ? $flowGenerationSource : '—' }}</div>
                                         <div class="vm-job-actions">
-                                            <button type="button" wire:click="setFlowJobStatus('PRONTO_PARA_FLOW')">Pronto para Flow</button>
-                                            <button type="button" wire:click="setFlowJobStatus('EM_GERACAO')">Em geração</button>
-                                            <button type="button" wire:click="setFlowJobStatus('GERADO')">Gerado</button>
-                                            <button type="button" wire:click="setFlowJobStatus('EM_QA')">Enviar para QA</button>
+                                            <button type="button" wire:click="startNativeProduction" wire:loading.attr="disabled" wire:target="startNativeProduction">Gerar mídia</button>
+                                            @if($nativeProductionStatus === 'EM_GERACAO')
+                                                <button type="button" wire:click="refreshNativeProduction" wire:loading.attr="disabled" wire:target="refreshNativeProduction">Atualizar geração</button>
+                                            @endif
+                                            @if($nativeProductionStatus === 'GERADO')
+                                                <button type="button" wire:click="setFlowJobStatus('EM_QA')">Enviar para QA</button>
+                                            @endif
                                             <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
                                             <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovado</button>
                                         </div>
-                                        @if($this->hasValidFlowToolUrl())
-                                            <div class="vm-flow-actions"><a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Executar no Google Flow ↗</a></div>
-                                        @endif
+                                        @if($nativeProductionError)<div class="vm-error">{{ $nativeProductionError }}</div>@endif
+                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'GERADO')<span>Mídia-base gerada; próxima etapa: finalização técnica e QA.</span>@endif</div>
                                     </div>
 
-                                    <div class="vm-operator" x-data="{ copied: false }">
-                                        <div class="vm-flow-title"><strong>Handoff para o Flow · V1.6</strong><span>fonte da verdade</span></div>
-                                        <pre x-ref="handoff">{{ $this->getFlowHandoffPayload() }}</pre>
-                                        <div class="vm-flow-actions">
-                                            <button type="button" class="vm-flow-primary" x-on:click="navigator.clipboard.writeText($refs.handoff.innerText).then(() => { copied = true; setTimeout(() => copied = false, 1600); })"><span x-show="! copied">Copiar FLOW JOB</span><span x-show="copied" x-cloak>Copiado ✓</span></button>
-                                            @if($this->hasValidFlowToolUrl())
-                                                <a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Abrir Flow ↗</a>
-                                            @endif
-                                        </div>
-                                        <div class="vm-note"><span>Ao abrir o Flow, substitua os valores padrão ou herdados de Remix por este handoff antes de gerar.</span></div>
+                                    <div class="vm-operator">
+                                        <div class="vm-flow-title"><strong>Fluxo de Produção Marketing IA</strong><span>fonte da verdade</span></div>
+                                        <pre>JOB: {{ $flowJobId }}
+CAMPANHA: {{ $flowCampaign }}
+FORMATO: {{ $flowFormat }}
+DURAÇÃO: {{ $flowDuration }}
+MENSAGEM: {{ $flowMessage }}
+CTA: {{ $flowCta !== '' ? $flowCta : 'NÃO INFORMADO' }}
+MOTOR: Marketing IA / Veo 3.1
+FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
+                                        <div class="vm-note"><span>Este Job de Produção é executado dentro do próprio Marketing IA; nenhum handoff para Google Flow é necessário.</span></div>
                                     </div>
                                 @endif
 
@@ -437,16 +432,16 @@
                                 @if($flowPackage !== '')
                                     <div class="vm-flow-output">{{ $flowPackage }}</div>
                                     <div class="vm-operator">
-                                        <div class="vm-flow-title"><strong>Contrato · Vitrine Flow Operator</strong><span>Antigravity</span></div>
-                                        <pre>{{ $this->getAntigravityFlowInstruction() }}</pre>
+                                        <div class="vm-flow-title"><strong>Plano de Execução Nativa</strong><span>Marketing IA</span></div>
+                                        <pre>{{ $flowPackage }}</pre>
                                     </div>
                                 @else
-                                    <div class="vm-flow-empty">Preencha o briefing e gere o primeiro FLOW JOB. A Workstation devolverá direção criativa, cenas, câmera, áudio, texto na tela, negative prompt, assets, checklist de QA e o contrato para o operador Antigravity.</div>
+                                    <div class="vm-flow-empty">Preencha o briefing e gere o primeiro Job de Produção. O Marketing IA devolverá direção criativa, cenas, câmera, áudio, texto, negative prompt, assets e checklist de QA prontos para os motores nativos.</div>
                                 @endif
 
                                 @if(count($flowJobs) > 0)
                                     <div class="vm-history">
-                                        <div class="vm-flow-title"><strong>Últimos FLOW JOBs</strong><span>{{ count($flowJobs) }} em sessão</span></div>
+                                        <div class="vm-flow-title"><strong>Últimos Jobs de Produção</strong><span>{{ count($flowJobs) }} em sessão</span></div>
                                         @foreach($flowJobs as $job)
                                             <div class="vm-history-row"><div><strong>{{ $job['id'] ?? '' }}</strong><span>{{ $job['campaign'] ?? '' }} · {{ $job['project_name'] ?? '' }}</span></div><span>{{ $job['status'] ?? '' }}</span></div>
                                         @endforeach
