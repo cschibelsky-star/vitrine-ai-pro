@@ -404,7 +404,10 @@
                                                 <button type="button" wire:click="startNativeProduction" wire:loading.attr="disabled" wire:target="startNativeProduction">Gerar mídia</button>
                                             @endif
                                             @if($nativeProductionStatus === 'EM_GERACAO')
-                                                <button type="button" wire:click="refreshNativeProduction" wire:loading.attr="disabled" wire:target="refreshNativeProduction">Atualizar geração</button>
+                                                <button type="button" wire:click="refreshNativeProduction" wire:loading.attr="disabled" wire:target="refreshNativeProduction"><span wire:loading.remove wire:target="refreshNativeProduction">Atualizar geração</span><span wire:loading wire:target="refreshNativeProduction">Consultando Veo...</span></button>
+                                            @endif
+                                            @if($nativeProductionStatus === 'GERADO')
+                                                <button type="button" wire:click="finalizeNativeProduction" wire:loading.attr="disabled" wire:target="finalizeNativeProduction"><span wire:loading.remove wire:target="finalizeNativeProduction">Finalizar e enviar para QA</span><span wire:loading wire:target="finalizeNativeProduction">Finalizando vídeo...</span></button>
                                             @endif
                                             @if($nativeProductionStatus === 'EM_QA')
                                                 <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
@@ -417,7 +420,7 @@
                                                 <video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#000" src="{{ $nativeProductionPreviewUrl }}"></video>
                                             </div>
                                         @endif
-                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'EM_QA')<span>Veo retornou a mídia, o Marketing IA aplicou o logo oficial via FFmpeg e encaminhou automaticamente para QA.</span>@endif</div>
+                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'GERADO')<span>Mídia-base pronta. A finalização foi separada para evitar travar a interface durante download/FFmpeg.</span>@elseif($nativeProductionStatus === 'EM_QA')<span>Marketing IA aplicou o logo oficial via FFmpeg e a peça está pronta para QA.</span>@endif</div>
                                     </div>
 
                                     <div class="vm-operator">

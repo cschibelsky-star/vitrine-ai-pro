@@ -371,24 +371,8 @@ class MarketingDashboard extends Page
 
             if ($status === 'completed') {
                 $this->nativeProductionAssetUrl = (string) ($job['render_ref'] ?? '');
-                $versionId = 'NATIVE-'.strtoupper(substr(sha1($this->nativeProductionJobRef), 0, 10));
-                $logoPath = (string) config('marketing_video.finalization.official_logo_path', base_path('assets/img/logo-vitrine-ai-pro.png'));
-
-                $finalized = app(VideoFinalizationService::class)->finalizeFromUrl(
-                    $this->flowJobId,
-                    $versionId,
-                    $this->nativeProductionAssetUrl,
-                    $logoPath,
-                );
-
-                $this->nativeProductionFinalPath = (string) ($finalized['final_path'] ?? '');
-                $this->nativeProductionPreviewUrl = URL::temporarySignedRoute(
-                    'marketing.native-video-preview',
-                    now()->addHours(2),
-                    ['job' => $this->flowJobId, 'version' => $versionId],
-                );
-                $this->nativeProductionStatus = 'EM_QA';
-                $this->flowJobStatus = 'EM_QA';
+                $this->nativeProductionStatus = 'GERADO';
+                $this->flowJobStatus = 'GERADO';
                 $this->upsertCurrentFlowJob();
             } elseif ($status === 'failed') {
                 $this->nativeProductionStatus = 'ERRO';
@@ -401,6 +385,51 @@ class MarketingDashboard extends Page
         } catch (Throwable $exception) {
             report($exception);
             $this->nativeProductionError = $exception->getMessage();
+            $this->persistFlowWorkstation();
+        }
+    }
+
+    public function finalizeNativeProduction(): void
+    {
+        $this->nativeProductionError = null;
+
+        if ($this->nativeProductionAssetUrl === '' || $this->flowJobId === '') {
+            $this->nativeProductionError = 'A mídia-base ainda não está disponível para finalização.';
+            return;
+        }
+
+        try {
+            $versionId = 'NATIVE-'.strtoupper(substr(sha1($this->nativeProductionJobRef), 0, 10));
+            $logoPath = (string) config('marketing_video.finalization.official_logo_path', base_path('assets/img/logo-vitrine-ai-pro.png'));
+
+            $this->nativeProductionStatus = 'FINALIZANDO';
+            $this->flowJobStatus = 'FINALIZANDO';
+            $this->upsertCurrentFlowJob();
+            $this->persistFlowWorkstation();
+
+            $finalized = app(VideoFinalizationService::class)->finalizeFromUrl(
+                $this->flowJobId,
+                $versionId,
+                $this->nativeProductionAssetUrl,
+                $logoPath,
+            );
+
+            $this->nativeProductionFinalPath = (string) ($finalized['final_path'] ?? '');
+            $this->nativeProductionPreviewUrl = URL::temporarySignedRoute(
+                'marketing.native-video-preview',
+                now()->addHours(2),
+                ['job' => $this->flowJobId, 'version' => $versionId],
+            );
+            $this->nativeProductionStatus = 'EM_QA';
+            $this->flowJobStatus = 'EM_QA';
+            $this->upsertCurrentFlowJob();
+            $this->persistFlowWorkstation();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->nativeProductionStatus = 'GERADO';
+            $this->flowJobStatus = 'GERADO';
+            $this->nativeProductionError = 'A mídia foi gerada, mas a finalização técnica falhou: '.$exception->getMessage();
+            $this->upsertCurrentFlowJob();
             $this->persistFlowWorkstation();
         }
     }
