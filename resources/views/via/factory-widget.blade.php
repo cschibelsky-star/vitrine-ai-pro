@@ -3,6 +3,9 @@
         $viaFactoryConfig = [
             'contextUrl' => route('via.factory.context'),
             'chatUrl' => route('via.factory.chat'),
+            'agentStatusUrl' => route('via.factory.agent-status'),
+            'agentMissionUrl' => route('via.factory.agent-mission'),
+            'voiceUrl' => route('via.factory.voice'),
             'transcribeUrl' => route('via.factory.transcribe'),
             'actionUrl' => route('via.factory.action'),
             'csrfToken' => csrf_token(),
@@ -238,24 +241,38 @@
                     const isViaChat = requestUrl === '/api/via'
                         || requestUrl === `${config.viaOrigin}/api/via`
                         || requestUrl.endsWith('/api/via');
+                    const isAgentStatus = requestUrl.endsWith('/api/agent-hub/status');
+                    const isAgentMission = requestUrl.endsWith('/api/agent-hub/missions');
+                    const isViaVoice = requestUrl.endsWith('/api/voice');
 
-                    if (!isViaChat) return nativeFetch(input, init);
+                    if (!isViaChat && !isAgentStatus && !isAgentMission && !isViaVoice) return nativeFetch(input, init);
 
                     try {
+                        if (isAgentStatus) {
+                            return nativeFetch(config.agentStatusUrl, {
+                                method: 'GET',
+                                credentials: 'same-origin',
+                                headers: { 'Accept': 'application/json' },
+                            });
+                        }
+
                         const rawBody = typeof init?.body === 'string' ? init.body : '{}';
                         const payload = JSON.parse(rawBody || '{}');
-                        return nativeFetch(config.chatUrl, {
+                        const targetUrl = isAgentMission ? config.agentMissionUrl : isViaVoice ? config.voiceUrl : config.chatUrl;
+                        const forwardedPayload = isViaChat
+                            ? { ...payload, context: { ...currentContext(), ...(payload.context || {}) } }
+                            : isViaVoice
+                                ? { ...payload, text: naturalizeSpeech(payload.text || '') }
+                                : payload;
+                        return nativeFetch(targetUrl, {
                             method: 'POST',
                             credentials: 'same-origin',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Accept': 'application/json',
+                                'Accept': isViaVoice ? 'audio/mpeg' : 'application/json',
                                 'X-CSRF-TOKEN': config.csrfToken,
                             },
-                            body: JSON.stringify({
-                                ...payload,
-                                context: { ...currentContext(), ...(payload.context || {}) },
-                            }),
+                            body: JSON.stringify(forwardedPayload),
                         });
                     } catch (error) {
                         return new Response(JSON.stringify({
