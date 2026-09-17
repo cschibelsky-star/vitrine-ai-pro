@@ -28,6 +28,30 @@ class DomainKnowledgeBase
             return 'captacao_recursos';
         }
 
+        $schoolSignals = [
+            'escola',
+            'musica',
+            'artes',
+            'aluno',
+            'alunos',
+            'matricula',
+            'matriculas',
+            'turma',
+            'turmas',
+            'curso',
+            'cursos',
+            'professor',
+            'professores',
+        ];
+
+        $schoolScore = collect($schoolSignals)
+            ->filter(fn (string $signal): bool => str_contains($normalizedText, $signal))
+            ->count();
+
+        if ($schoolScore >= 2 && (str_contains($normalizedText, 'escola') || str_contains($normalizedText, 'aluno') || str_contains($normalizedText, 'matricula'))) {
+            return 'escola_musica_artes';
+        }
+
         if (str_contains($normalizedText, 'licitacao') || str_contains($normalizedText, 'licitações') || str_contains($normalizedText, 'licitacoes')) {
             return 'licitacoes';
         }
@@ -59,6 +83,7 @@ class DomainKnowledgeBase
     {
         return match ($domain) {
             'captacao_recursos' => $this->captacaoRecursos($prompt),
+            'escola_musica_artes' => $this->escolaMusicaArtes($prompt),
             'licitacoes' => $this->licitacoes($prompt),
             'patrimonio' => $this->patrimonio($prompt),
             'crm' => $this->crm($prompt),
@@ -313,6 +338,114 @@ class DomainKnowledgeBase
                 ['name' => 'Fornecedores', 'slug' => 'fornecedores', 'label' => 'Fornecedores', 'fields' => [$this->foreign('categoria_id', 'Categoria'), $this->field('nome', false), $this->field('documento'), $this->field('email'), $this->field('telefone'), $this->field('cidade'), $this->field('status', false)], 'dashboard_metrics' => ['total', 'ativos', 'inativos']],
                 ['name' => 'Contratos', 'slug' => 'contratos', 'label' => 'Contratos', 'fields' => [$this->foreign('fornecedor_id', 'Fornecedor'), $this->field('numero', false), $this->field('objeto', true, 'text'), $this->field('valor', true, 'decimal'), $this->field('status', false)], 'dashboard_metrics' => ['total', 'valor_total']],
                 ['name' => 'Documentos', 'slug' => 'documentos', 'label' => 'Documentos', 'fields' => [$this->foreign('fornecedor_id', 'Fornecedor'), $this->field('nome', false), $this->field('tipo'), $this->field('arquivo'), $this->field('status', false)], 'dashboard_metrics' => ['total']],
+            ],
+        ];
+    }
+
+    protected function escolaMusicaArtes(string $prompt): array
+    {
+        return [
+            'name' => 'Gestão de Escola de Música e Artes',
+            'slug' => 'gestao_escola_musica_artes',
+            'description' => $prompt,
+            'modules' => [
+                [
+                    'name' => 'Alunos',
+                    'slug' => 'alunos',
+                    'label' => 'Alunos',
+                    'fields' => [
+                        $this->field('nome', false),
+                        $this->field('documento'),
+                        $this->field('data_nascimento', true, 'date'),
+                        $this->field('telefone'),
+                        $this->field('email'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativos'],
+                ],
+                [
+                    'name' => 'Responsáveis',
+                    'slug' => 'responsaveis',
+                    'label' => 'Responsáveis',
+                    'fields' => [
+                        $this->foreign('aluno_id', 'Aluno'),
+                        $this->field('nome', false),
+                        $this->field('parentesco'),
+                        $this->field('telefone'),
+                        $this->field('email'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total'],
+                ],
+                [
+                    'name' => 'Professores',
+                    'slug' => 'professores',
+                    'label' => 'Professores',
+                    'fields' => [
+                        $this->field('nome', false),
+                        $this->field('especialidade'),
+                        $this->field('telefone'),
+                        $this->field('email'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativos'],
+                ],
+                [
+                    'name' => 'Cursos',
+                    'slug' => 'cursos',
+                    'label' => 'Cursos e Oficinas',
+                    'fields' => [
+                        $this->field('nome', false),
+                        $this->field('area'),
+                        $this->field('descricao', true, 'text'),
+                        $this->field('carga_horaria', true, 'integer'),
+                        $this->field('valor_mensal', true, 'decimal'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativos'],
+                ],
+                [
+                    'name' => 'Turmas',
+                    'slug' => 'turmas',
+                    'label' => 'Turmas',
+                    'fields' => [
+                        $this->foreign('curso_id', 'Curso'),
+                        $this->foreign('professor_id', 'Professor'),
+                        $this->field('nome', false),
+                        $this->field('dia_semana'),
+                        $this->field('horario'),
+                        $this->field('vagas', true, 'integer'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativas'],
+                ],
+                [
+                    'name' => 'Matrículas',
+                    'slug' => 'matriculas',
+                    'label' => 'Matrículas',
+                    'fields' => [
+                        $this->foreign('aluno_id', 'Aluno'),
+                        $this->foreign('turma_id', 'Turma'),
+                        $this->field('data_matricula', true, 'date'),
+                        $this->field('situacao'),
+                        $this->field('observacoes', true, 'text'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'ativas', 'pendentes'],
+                ],
+                [
+                    'name' => 'Atendimentos',
+                    'slug' => 'atendimentos',
+                    'label' => 'Atendimentos',
+                    'fields' => [
+                        $this->foreign('aluno_id', 'Aluno'),
+                        $this->field('data_atendimento', true, 'date'),
+                        $this->field('tipo'),
+                        $this->field('descricao', true, 'text'),
+                        $this->field('status', false),
+                    ],
+                    'dashboard_metrics' => ['total', 'hoje', 'pendentes'],
+                ],
             ],
         ];
     }
