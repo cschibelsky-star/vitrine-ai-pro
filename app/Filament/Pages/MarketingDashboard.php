@@ -38,6 +38,7 @@ class MarketingDashboard extends Page
     public string $flowProjectName = 'Vitrine Social Mídia';
     public string $flowJobId = '';
     public string $flowJobStatus = 'RASCUNHO';
+    public string $flowGenerationSource = '';
     public array $flowJobs = [];
 
     public function mount(): void
@@ -61,6 +62,7 @@ class MarketingDashboard extends Page
         $this->flowProjectName = (string) ($workstation['project_name'] ?? $this->flowProjectName);
         $this->flowJobId = (string) ($workstation['job_id'] ?? '');
         $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
+        $this->flowGenerationSource = (string) ($workstation['generation_source'] ?? '');
         $this->flowJobs = array_values((array) ($workstation['jobs'] ?? []));
     }
 
@@ -183,10 +185,6 @@ class MarketingDashboard extends Page
             $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
             $capability = trim((string) ($hub['capability'] ?? 'marketing_generation'));
 
-            if ($url === '' || $token === '') {
-                throw new \RuntimeException('Centro IA não configurado para a Google AI Workstation.');
-            }
-
             $system = 'Você é o Creative Director da Google AI Workstation da Vitrine IA Pro. '
                 .'Sua função é preparar um pacote de produção para uso manual no Google Flow. '
                 .'Não afirme que abriu o Flow, gerou mídia, publicou ou consumiu créditos. '
@@ -204,30 +202,47 @@ class MarketingDashboard extends Page
                 ."Estilo: {$style}\n\n"
                 .'Prepare o pacote de produção para Google Flow. Se faltar algum asset de marca, marque como necessário em vez de inventar.';
 
-            $response = Http::acceptJson()
-                ->asJson()
-                ->withToken($token)
-                ->withHeaders(['X-Vitrine-Project' => $projectId])
-                ->timeout(max(1, min((int) ($hub['timeout'] ?? 60), 120)))
-                ->retry(2, 250, throw: false)
-                ->post($url, [
-                    'project_id' => $projectId,
-                    'capability' => $capability,
-                    'input' => [
-                        'system' => $system,
-                        'user' => $userPrompt,
-                        'response_format' => 'text',
-                        'temperature' => 0.25,
-                    ],
-                ]);
+            $package = '';
+            $this->flowGenerationSource = '';
 
-            if (! $response->successful() || ! $response->json('ok')) {
-                throw new \RuntimeException('O Centro IA não concluiu o pacote para o Google Flow.');
+            if ($url !== '' && $token !== '') {
+                $response = Http::acceptJson()
+                    ->asJson()
+                    ->withToken($token)
+                    ->withHeaders(['X-Vitrine-Project' => $projectId])
+                    ->timeout(max(1, min((int) ($hub['timeout'] ?? 60), 120)))
+                    ->retry(2, 250, throw: false)
+                    ->post($url, [
+                        'project_id' => $projectId,
+                        'capability' => $capability,
+                        'input' => [
+                            'system' => $system,
+                            'user' => $userPrompt,
+                            'response_format' => 'text',
+                            'temperature' => 0.25,
+                        ],
+                    ]);
+
+                if ($response->successful() && $response->json('ok')) {
+                    $package = trim((string) $response->json('output_text'));
+                    if ($package !== '') {
+                        $this->flowGenerationSource = 'Centro IA';
+                    }
+                } else {
+                    logger()->warning('Flow Bridge: Centro IA indisponível; acionando fallback Gemini local.', [
+                        'http_status' => $response->status(),
+                        'capability' => $capability,
+                    ]);
+                }
             }
 
-            $package = trim((string) $response->json('output_text'));
             if ($package === '') {
-                throw new \RuntimeException('O Centro IA retornou um pacote vazio.');
+                $package = $this->generateFlowPackageWithGemini($system, $userPrompt);
+                $this->flowGenerationSource = 'Gemini direto (fallback)';
+            }
+
+            if ($package === '') {
+                throw new \RuntimeException('Não foi possível gerar o pacote para o Google Flow.');
             }
 
             $this->flowPackage = $package;
@@ -247,6 +262,7 @@ class MarketingDashboard extends Page
         $this->flowPackage = '';
         $this->flowJobId = '';
         $this->flowJobStatus = 'RASCUNHO';
+        $this->flowGenerationSource = '';
         $this->flowError = null;
         $this->persistFlowWorkstation();
     }
@@ -349,6 +365,46 @@ class MarketingDashboard extends Page
             ."PACOTE DE PRODUÇÃO:\n{$this->flowPackage}";
     }
 
+    private function generateFlowPackageWithGemini(string $system, string $userPrompt): string
+    {
+        $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
+        $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
+        $model = 'gemini-2.5-flash';
+
+        if ($apiKey === '') {
+            throw new \RuntimeException('Gemini local não está configurado para o Flow Bridge.');
+        }
+
+        $response = Http::acceptJson()
+            ->asJson()
+            ->withHeaders(['X-goog-api-key' => $apiKey])
+            ->timeout(60)
+            ->retry(2, 250, throw: false)
+            ->post("{$baseUrl}/models/{$model}:generateContent", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => "INSTRUÇÕES DO SISTEMA:\n{$system}\n\nSOLICITAÇÃO:\n{$userPrompt}"],
+                        ],
+                    ],
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.25,
+                ],
+            ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('O fallback Gemini não concluiu o pacote para o Google Flow.');
+        }
+
+        $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));
+        if ($text === '') {
+            throw new \RuntimeException('O fallback Gemini retornou um pacote vazio.');
+        }
+
+        return $text;
+    }
+
     private function createFlowJob(string $status): void
     {
         $this->flowJobId = 'FLOW-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
@@ -371,6 +427,7 @@ class MarketingDashboard extends Page
             'format' => $this->flowFormat,
             'tool_name' => $this->flowToolName,
             'project_name' => $this->flowProjectName,
+            'generation_source' => $this->flowGenerationSource,
             'updated_at' => now()->toISOString(),
         ];
 
@@ -402,6 +459,7 @@ class MarketingDashboard extends Page
                 'project_name' => $this->flowProjectName,
                 'job_id' => $this->flowJobId,
                 'job_status' => $this->flowJobStatus,
+                'generation_source' => $this->flowGenerationSource,
                 'jobs' => $this->flowJobs,
             ],
         ]);

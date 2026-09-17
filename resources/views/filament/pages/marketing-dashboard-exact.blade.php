@@ -406,7 +406,7 @@
                                 @if($flowJobId !== '')
                                     <div class="vm-job">
                                         <div class="vm-job-head"><div class="vm-job-id">{{ $flowJobId }}</div><span class="vm-job-status">{{ $flowJobStatus }}</span></div>
-                                        <div class="vm-job-meta">{{ $flowCampaign }} · {{ $flowProjectName }} · {{ $flowToolName }}</div>
+                                        <div class="vm-job-meta">{{ $flowCampaign }} · {{ $flowProjectName }} · {{ $flowToolName }} · Fonte: {{ $flowGenerationSource !== '' ? $flowGenerationSource : '—' }}</div>
                                         <div class="vm-job-actions">
                                             <button type="button" wire:click="setFlowJobStatus('PRONTO_PARA_FLOW')">Pronto para Flow</button>
                                             <button type="button" wire:click="setFlowJobStatus('EM_GERACAO')">Em geração</button>
