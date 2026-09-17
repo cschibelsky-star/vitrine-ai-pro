@@ -77,7 +77,18 @@ final class VideoFinalizationService
 
     private function download(string $url, string $target): void
     {
-        $response = Http::timeout(180)->retry(2, 750)->get($url);
+        $request = Http::timeout(180)->retry(2, 750);
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        if ($host === 'generativelanguage.googleapis.com' || str_ends_with($host, '.generativelanguage.googleapis.com')) {
+            $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
+            if ($apiKey === '') {
+                throw new RuntimeException('video_finalization_gemini_key_missing');
+            }
+            $request = $request->withHeaders(['x-goog-api-key' => $apiKey]);
+        }
+
+        $response = $request->get($url);
         if ($response->failed()) {
             throw new RuntimeException('video_finalization_download_failed:'.$response->status());
         }

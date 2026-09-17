@@ -3,11 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Marketing\Application\MarketingDashboardStateReader;
+use App\Marketing\Application\VideoFinalizationService;
 use App\Marketing\Domain\Agents\AgentRegistry;
 use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class MarketingDashboard extends Page
@@ -46,6 +48,8 @@ class MarketingDashboard extends Page
     public string $nativeProductionStatus = 'RASCUNHO';
     public string $nativeProductionJobRef = '';
     public string $nativeProductionAssetUrl = '';
+    public string $nativeProductionFinalPath = '';
+    public string $nativeProductionPreviewUrl = '';
     public ?string $nativeProductionError = null;
 
     public function mount(): void
@@ -54,7 +58,10 @@ class MarketingDashboard extends Page
         $this->copilotMessages = array_values((array) session('marketing_copilot.messages', []));
         $this->persistCopilot();
 
-        $workstation = (array) session('marketing_workstation.flow', []);
+        $productionState = (array) session('marketing_workstation.production', []);
+        $legacyState = (array) session('marketing_workstation.flow', []);
+        $workstation = $productionState !== [] ? $productionState : $legacyState;
+
         $this->flowCampaign = (string) ($workstation['campaign'] ?? $this->flowCampaign);
         $this->flowObjective = (string) ($workstation['objective'] ?? '');
         $this->flowAudience = (string) ($workstation['audience'] ?? $this->flowAudience);
@@ -70,11 +77,28 @@ class MarketingDashboard extends Page
         $this->flowJobId = (string) ($workstation['job_id'] ?? '');
         $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
         $this->flowGenerationSource = (string) ($workstation['generation_source'] ?? '');
-        $this->flowJobs = array_values((array) ($workstation['jobs'] ?? []));
+        $this->flowJobs = $this->normalizeProductionJobs(array_values((array) ($workstation['jobs'] ?? [])));
         $this->nativeProductionStatus = (string) ($workstation['native_status'] ?? 'RASCUNHO');
         $this->nativeProductionJobRef = (string) ($workstation['native_job_ref'] ?? '');
         $this->nativeProductionAssetUrl = (string) ($workstation['native_asset_url'] ?? '');
+        $this->nativeProductionFinalPath = (string) ($workstation['native_final_path'] ?? '');
+        $this->nativeProductionPreviewUrl = (string) ($workstation['native_preview_url'] ?? '');
         $this->nativeProductionError = null;
+
+        if (str_starts_with($this->flowJobId, 'FLOW-')) {
+            $this->flowJobId = '';
+            $this->flowJobStatus = 'RASCUNHO';
+            $this->nativeProductionStatus = 'RASCUNHO';
+            $this->nativeProductionJobRef = '';
+            $this->nativeProductionAssetUrl = '';
+            $this->nativeProductionFinalPath = '';
+            $this->nativeProductionPreviewUrl = '';
+        }
+
+        if ($productionState === [] && $legacyState !== []) {
+            $this->persistFlowWorkstation();
+            session()->forget('marketing_workstation.flow');
+        }
 
         $flowBridge = (array) config('marketing_agents.flow_bridge', []);
         $this->flowToolName = trim((string) ($flowBridge['official_tool_name'] ?? 'Vitrine Content Studio')) ?: 'Vitrine Content Studio';
@@ -97,6 +121,7 @@ class MarketingDashboard extends Page
 
         $history = array_slice($this->copilotMessages, -12);
         $this->copilotMessages[] = ['role' => 'user', 'content' => $message, 'at' => now()->toISOString()];
+        $this->syncProductionBriefFromText($message);
         $this->copilotMessage = '';
 
         try {
@@ -280,6 +305,8 @@ class MarketingDashboard extends Page
     {
         $this->nativeProductionError = null;
         $this->nativeProductionAssetUrl = '';
+        $this->nativeProductionFinalPath = '';
+        $this->nativeProductionPreviewUrl = '';
 
         if ($this->flowJobId === '' || $this->flowPackage === '') {
             $this->nativeProductionError = 'Gere primeiro o Job de Produção do Marketing IA.';
@@ -344,8 +371,24 @@ class MarketingDashboard extends Page
 
             if ($status === 'completed') {
                 $this->nativeProductionAssetUrl = (string) ($job['render_ref'] ?? '');
-                $this->nativeProductionStatus = 'GERADO';
-                $this->flowJobStatus = 'GERADO';
+                $versionId = 'NATIVE-'.strtoupper(substr(sha1($this->nativeProductionJobRef), 0, 10));
+                $logoPath = (string) config('marketing_video.finalization.official_logo_path', base_path('assets/img/logo-vitrine-ai-pro.png'));
+
+                $finalized = app(VideoFinalizationService::class)->finalizeFromUrl(
+                    $this->flowJobId,
+                    $versionId,
+                    $this->nativeProductionAssetUrl,
+                    $logoPath,
+                );
+
+                $this->nativeProductionFinalPath = (string) ($finalized['final_path'] ?? '');
+                $this->nativeProductionPreviewUrl = URL::temporarySignedRoute(
+                    'marketing.native-video-preview',
+                    now()->addHours(2),
+                    ['job' => $this->flowJobId, 'version' => $versionId],
+                );
+                $this->nativeProductionStatus = 'EM_QA';
+                $this->flowJobStatus = 'EM_QA';
                 $this->upsertCurrentFlowJob();
             } elseif ($status === 'failed') {
                 $this->nativeProductionStatus = 'ERRO';
@@ -382,6 +425,8 @@ class MarketingDashboard extends Page
         $this->nativeProductionStatus = 'RASCUNHO';
         $this->nativeProductionJobRef = '';
         $this->nativeProductionAssetUrl = '';
+        $this->nativeProductionFinalPath = '';
+        $this->nativeProductionPreviewUrl = '';
         $this->nativeProductionError = null;
         $this->persistFlowWorkstation();
     }
@@ -570,6 +615,8 @@ class MarketingDashboard extends Page
         $this->nativeProductionStatus = 'PRONTO_PARA_PRODUCAO';
         $this->nativeProductionJobRef = '';
         $this->nativeProductionAssetUrl = '';
+        $this->nativeProductionFinalPath = '';
+        $this->nativeProductionPreviewUrl = '';
         $this->upsertCurrentFlowJob();
     }
 
@@ -603,7 +650,7 @@ class MarketingDashboard extends Page
     private function persistFlowWorkstation(): void
     {
         session([
-            'marketing_workstation.flow' => [
+            'marketing_workstation.production' => [
                 'campaign' => $this->flowCampaign,
                 'objective' => $this->flowObjective,
                 'audience' => $this->flowAudience,
@@ -623,8 +670,25 @@ class MarketingDashboard extends Page
                 'native_status' => $this->nativeProductionStatus,
                 'native_job_ref' => $this->nativeProductionJobRef,
                 'native_asset_url' => $this->nativeProductionAssetUrl,
+                'native_final_path' => $this->nativeProductionFinalPath,
+                'native_preview_url' => $this->nativeProductionPreviewUrl,
             ],
         ]);
+    }
+
+    private function normalizeProductionJobs(array $jobs): array
+    {
+        return array_values(array_map(static function (array $job): array {
+            $id = (string) ($job['id'] ?? '');
+            if (str_starts_with($id, 'FLOW-')) {
+                $job['legacy'] = true;
+                $job['status'] = 'LEGADO_FLOW';
+            } else {
+                $job['legacy'] = false;
+            }
+
+            return $job;
+        }, $jobs));
     }
 
     public function newCopilotSession(): void
@@ -634,6 +698,45 @@ class MarketingDashboard extends Page
         $this->copilotMessage = '';
         $this->copilotError = null;
         $this->persistCopilot();
+    }
+
+    private function syncProductionBriefFromText(string $text): void
+    {
+        $patterns = [
+            'flowCampaign' => '/(?:^|\n)\s*CAMPANHA\s*:\s*(.+)$/imu',
+            'flowObjective' => '/(?:^|\n)\s*OBJETIVO\s*:\s*(.+)$/imu',
+            'flowAudience' => '/(?:^|\n)\s*P[ÚU]BLICO\s*:\s*(.+)$/imu',
+            'flowFormat' => '/(?:^|\n)\s*FORMATO\s*:\s*(.+)$/imu',
+            'flowDuration' => '/(?:^|\n)\s*DURA[CÇ][ÃA]O\s*:\s*(.+)$/imu',
+            'flowMessage' => '/(?:^|\n)\s*MENSAGEM(?:\s+PRINCIPAL)?\s*:\s*(.+)$/imu',
+            'flowCta' => '/(?:^|\n)\s*CTA\s*:\s*(.+)$/imu',
+            'flowStyle' => '/(?:^|\n)\s*ESTILO(?:\s+VISUAL)?\s*:\s*(.+)$/imu',
+        ];
+
+        $matched = false;
+        foreach ($patterns as $property => $pattern) {
+            if (! preg_match($pattern, $text, $matches)) {
+                continue;
+            }
+            $value = trim((string) ($matches[1] ?? ''));
+            if ($value === '') {
+                continue;
+            }
+
+            if ($property === 'flowFormat') {
+                $normalized = mb_strtolower($value);
+                $value = str_contains($normalized, '16:9') ? 'video_16_9'
+                    : (str_contains($normalized, '1:1') ? 'ad_1_1'
+                    : (str_contains($normalized, 'story') ? 'story_9_16' : 'reel_9_16'));
+            }
+
+            $this->{$property} = $value;
+            $matched = true;
+        }
+
+        if ($matched) {
+            $this->persistFlowWorkstation();
+        }
     }
 
     private function persistCopilot(): void

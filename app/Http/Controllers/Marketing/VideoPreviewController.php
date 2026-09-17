@@ -102,6 +102,31 @@ final class VideoPreviewController extends Controller
         return $response;
     }
 
+    public function nativePreview(Request $request, string $job, string $version): BinaryFileResponse
+    {
+        abort_unless($request->hasValidSignature(), 403);
+        abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/', $job), 404);
+        abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/', $version), 404);
+
+        $root = (string) config('marketing_video.finalization.working_directory', '');
+        $root = $root !== '' ? rtrim($root, '/') : storage_path('app/marketing/media');
+        $path = $root.'/'.$job.'/'.$version.'/final.mp4';
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="'.$job.'-'.$version.'-final.mp4"',
+            'Pragma' => 'no-cache',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPrivate();
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('no-store');
+
+        return $response;
+    }
+
     public function __invoke(Request $request, string $version): BinaryFileResponse
     {
         abort_unless($request->hasValidSignature(), 403);

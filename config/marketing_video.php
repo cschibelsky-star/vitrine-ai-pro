@@ -24,12 +24,13 @@ return [
         'working_directory' => env('MARKETING_VIDEO_MEDIA_ROOT'),
         'ffmpeg_binary' => env('FFMPEG_BINARY', 'ffmpeg'),
         'ffprobe_binary' => env('FFPROBE_BINARY', 'ffprobe'),
-        'official_logo_path' => env('MARKETING_VIDEO_OFFICIAL_LOGO'),
+        'official_logo_path' => env('MARKETING_VIDEO_OFFICIAL_LOGO', base_path('assets/img/logo-vitrine-ai-pro.png')),
         'allowed_hosts' => [
             'files2.heygen.ai',
             'resource2.heygen.ai',
             'resource.heygen.ai',
             'video.heygen.com',
+            'generativelanguage.googleapis.com',
         ],
     ],
 ];

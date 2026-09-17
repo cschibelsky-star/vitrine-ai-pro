@@ -327,11 +327,11 @@
                     <section id="workstation" class="vm-panel vm-workstation">
                         <div class="vm-workstation-head">
                             <div>
-                                <div class="vm-eyebrow">Google AI Workstation</div>
-                                <h2>Produção assistida da Vitrine IA Pro</h2>
-                                <p>Gemini organiza a inteligência, Flow recebe os pacotes criativos, Antigravity atua na engenharia com GitHub/HML e o Drive concentra os ativos aprovados.</p>
+                                <div class="vm-eyebrow">Marketing IA Workstation</div>
+                                <h2>Produção nativa da Vitrine IA Pro</h2>
+                                <p>O Diretor de Marketing IA organiza o briefing, Gemini estrutura a direção, Veo/Gemini Image geram a mídia, FFmpeg finaliza a marca e o QA governa a aprovação antes da distribuição.</p>
                             </div>
-                            <span class="vm-version">V1.5 · HML</span>
+                            <span class="vm-version">V2.0 · HML</span>
                         </div>
 
                         <div class="vm-modules" aria-label="Módulos do Fluxo Marketing IA">
@@ -400,18 +400,24 @@
                                         <div class="vm-job-head"><div class="vm-job-id">{{ $flowJobId }}</div><span class="vm-job-status">{{ $flowJobStatus }}</span></div>
                                         <div class="vm-job-meta">{{ $flowCampaign }} · Motor nativo Marketing IA · Fonte: {{ $flowGenerationSource !== '' ? $flowGenerationSource : '—' }}</div>
                                         <div class="vm-job-actions">
-                                            <button type="button" wire:click="startNativeProduction" wire:loading.attr="disabled" wire:target="startNativeProduction">Gerar mídia</button>
+                                            @if(in_array($nativeProductionStatus, ['PRONTO_PARA_PRODUCAO', 'RASCUNHO', 'ERRO'], true))
+                                                <button type="button" wire:click="startNativeProduction" wire:loading.attr="disabled" wire:target="startNativeProduction">Gerar mídia</button>
+                                            @endif
                                             @if($nativeProductionStatus === 'EM_GERACAO')
                                                 <button type="button" wire:click="refreshNativeProduction" wire:loading.attr="disabled" wire:target="refreshNativeProduction">Atualizar geração</button>
                                             @endif
-                                            @if($nativeProductionStatus === 'GERADO')
-                                                <button type="button" wire:click="setFlowJobStatus('EM_QA')">Enviar para QA</button>
+                                            @if($nativeProductionStatus === 'EM_QA')
+                                                <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
+                                                <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovar peça</button>
                                             @endif
-                                            <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
-                                            <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovado</button>
                                         </div>
                                         @if($nativeProductionError)<div class="vm-error">{{ $nativeProductionError }}</div>@endif
-                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'GERADO')<span>Mídia-base gerada; próxima etapa: finalização técnica e QA.</span>@endif</div>
+                                        @if($nativeProductionPreviewUrl !== '')
+                                            <div style="margin-top:12px;border-radius:16px;overflow:hidden;background:#080611;border:1px solid rgba(139,92,246,.22)">
+                                                <video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#000" src="{{ $nativeProductionPreviewUrl }}"></video>
+                                            </div>
+                                        @endif
+                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'EM_QA')<span>Veo retornou a mídia, o Marketing IA aplicou o logo oficial via FFmpeg e encaminhou automaticamente para QA.</span>@endif</div>
                                     </div>
 
                                     <div class="vm-operator">
@@ -443,7 +449,13 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                     <div class="vm-history">
                                         <div class="vm-flow-title"><strong>Últimos Jobs de Produção</strong><span>{{ count($flowJobs) }} em sessão</span></div>
                                         @foreach($flowJobs as $job)
-                                            <div class="vm-history-row"><div><strong>{{ $job['id'] ?? '' }}</strong><span>{{ $job['campaign'] ?? '' }} · {{ $job['project_name'] ?? '' }}</span></div><span>{{ $job['status'] ?? '' }}</span></div>
+                                            <div class="vm-history-row">
+                                                <div>
+                                                    <strong>{{ $job['id'] ?? '' }}</strong>
+                                                    <span>{{ $job['campaign'] ?? '' }} · {{ ($job['legacy'] ?? false) ? 'Histórico Google Flow' : 'Produção nativa Marketing IA' }}</span>
+                                                </div>
+                                                <span>{{ $job['status'] ?? '' }}</span>
+                                            </div>
                                         @endforeach
                                     </div>
                                 @endif
@@ -503,7 +515,7 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                             @endforelse
                         </div>
                         <form wire:submit="sendCopilotMessage" class="vm-form"><textarea wire:model="copilotMessage" rows="3" maxlength="4000" placeholder="Digite o que deseja criar ou continuar..."></textarea><button type="submit" class="vm-send">Enviar</button></form>
-                        <div class="vm-note"><span id="distribuicao">Metricool: publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
+                        <div class="vm-note"><span>Briefings estruturados com CAMPANHA, OBJETIVO, PÚBLICO, FORMATO, DURAÇÃO, MENSAGEM, CTA e ESTILO sincronizam automaticamente com o Job de Produção.</span><span id="distribuicao">Metricool: publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
                     </section>
 
                     <div style="height:1px;overflow:hidden"><span id="criativos"></span><span id="videos"></span><span id="calendario"></span><span id="pipeline"></span><span id="configuracoes"></span></div>
