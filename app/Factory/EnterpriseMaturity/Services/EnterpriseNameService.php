@@ -24,6 +24,13 @@ class EnterpriseNameService
         'locais' => 'Local',
         'movimentacoes' => 'Movimentacao',
         'registros' => 'Registro',
+        'alunos' => 'Aluno',
+        'responsaveis' => 'Responsavel',
+        'professores' => 'Professor',
+        'cursos' => 'Curso',
+        'turmas' => 'Turma',
+        'matriculas' => 'Matricula',
+        'atendimentos' => 'Atendimento',
     ];
 
     public function modelName(string $slug): string
