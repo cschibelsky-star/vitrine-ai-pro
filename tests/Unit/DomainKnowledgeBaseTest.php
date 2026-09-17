@@ -63,5 +63,11 @@ class DomainKnowledgeBaseTest extends TestCase
             $this->assertSame('Matricula', $names->modelName('matriculas'));
             $this->assertSame('Atendimento', $names->modelName('atendimentos'));
         }
+
+        $realBuilderNames = new RealBuilderNameService();
+        $this->assertSame('alunos', $realBuilderNames->relatedTable('aluno_id'));
+        $this->assertSame('professores', $realBuilderNames->relatedTable('professor_id'));
+        $this->assertSame('cursos', $realBuilderNames->relatedTable('curso_id'));
+        $this->assertSame('turmas', $realBuilderNames->relatedTable('turma_id'));
     }
 }
