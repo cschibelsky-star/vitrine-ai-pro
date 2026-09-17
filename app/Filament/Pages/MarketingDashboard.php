@@ -64,6 +64,10 @@ class MarketingDashboard extends Page
         $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
         $this->flowGenerationSource = (string) ($workstation['generation_source'] ?? '');
         $this->flowJobs = array_values((array) ($workstation['jobs'] ?? []));
+
+        $flowBridge = (array) config('marketing_agents.flow_bridge', []);
+        $this->flowToolName = trim((string) ($flowBridge['official_tool_name'] ?? 'Vitrine Content Studio')) ?: 'Vitrine Content Studio';
+        $this->flowProjectName = trim((string) ($flowBridge['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
     }
 
     public function sendCopilotMessage(): void
@@ -277,14 +281,10 @@ class MarketingDashboard extends Page
     public function saveFlowBridgeConfiguration(): void
     {
         $this->flowError = null;
-        $this->flowToolName = trim($this->flowToolName);
-        $this->flowProjectName = trim($this->flowProjectName);
+        $flowBridge = (array) config('marketing_agents.flow_bridge', []);
+        $this->flowToolName = trim((string) ($flowBridge['official_tool_name'] ?? 'Vitrine Content Studio')) ?: 'Vitrine Content Studio';
+        $this->flowProjectName = trim((string) ($flowBridge['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
         $this->flowToolUrl = trim($this->flowToolUrl);
-
-        if ($this->flowToolName === '' || $this->flowProjectName === '') {
-            $this->flowError = 'Informe o nome da ferramenta e o projeto do Google Flow.';
-            return;
-        }
 
         if (! $this->hasValidFlowToolUrl()) {
             $this->flowError = 'Informe uma URL oficial do Google Flow em flow.google.com ou labs.google.';
@@ -349,6 +349,47 @@ class MarketingDashboard extends Page
         return $scheme === 'https' && in_array($host, ['flow.google.com', 'labs.google'], true);
     }
 
+    public function getFlowHandoffPayload(): string
+    {
+        if ($this->flowJobId === '' || $this->flowPackage === '') {
+            return '';
+        }
+
+        $formats = [
+            'reel_9_16' => 'Reel vertical 9:16',
+            'story_9_16' => 'Story vertical 9:16',
+            'video_16_9' => 'Vídeo horizontal 16:9',
+            'ad_1_1' => 'Criativo quadrado 1:1',
+        ];
+        $flowBridge = (array) config('marketing_agents.flow_bridge', []);
+        $version = trim((string) ($flowBridge['handoff_version'] ?? '1.6')) ?: '1.6';
+        $logoAsset = trim((string) ($flowBridge['official_logo_asset'] ?? 'LOGO_OFICIAL_VITRINE_IA_PRO')) ?: 'LOGO_OFICIAL_VITRINE_IA_PRO';
+        $format = $formats[$this->flowFormat] ?? $this->flowFormat;
+        $cta = trim($this->flowCta) !== '' ? trim($this->flowCta) : '[SEM CTA INFORMADO]';
+
+        return "VITRINE_FLOW_HANDOFF_V{$version}\n"
+            ."FONTE_DA_VERDADE: MARKETING_IA\n"
+            ."JOB_ID: {$this->flowJobId}\n"
+            ."FERRAMENTA_OFICIAL: {$this->flowToolName}\n"
+            ."PROJETO_FLOW: {$this->flowProjectName}\n"
+            ."CAMPANHA: {$this->flowCampaign}\n"
+            ."OBJETIVO: {$this->flowObjective}\n"
+            ."PUBLICO: {$this->flowAudience}\n"
+            ."FORMATO: {$format}\n"
+            ."DURACAO: {$this->flowDuration}\n"
+            ."MENSAGEM_PRINCIPAL: {$this->flowMessage}\n"
+            ."CTA_EXATO: {$cta}\n"
+            ."ESTILO: {$this->flowStyle}\n"
+            ."LOGO_ASSET: {$logoAsset}\n\n"
+            ."REGRAS_DE_IMPORTACAO:\n"
+            ."- Ignore e substitua qualquer valor padrão, histórico ou preenchido pelo Remix/Ferramenta do Flow.\n"
+            ."- Use este handoff do Marketing IA como única fonte de campanha, objetivo, público, formato, duração, mensagem e CTA.\n"
+            ."- Não invente outro CTA, slogan, marca, logo ou texto.\n"
+            ."- Use somente o asset {$logoAsset} quando o logo fizer parte da cena; para assinatura/watermark, preserve a pós-produção do Marketing IA.\n"
+            ."- Não gere enquanto os campos visíveis do Flow divergirem deste handoff.\n\n"
+            ."PACOTE_CRIATIVO:\n{$this->flowPackage}";
+    }
+
     public function getAntigravityFlowInstruction(): string
     {
         if ($this->flowJobId === '' || $this->flowPackage === '') {
@@ -359,20 +400,20 @@ class MarketingDashboard extends Page
 
         return "VITRINE FLOW OPERATOR\n"
             ."Job: {$this->flowJobId}\n"
-            ."Ferramenta: {$this->flowToolName}\n"
+            ."Ferramenta oficial: {$this->flowToolName}\n"
             ."Projeto Flow: {$this->flowProjectName}\n"
             ."URL: {$url}\n"
             ."Status esperado ao iniciar: PRONTO_PARA_FLOW\n\n"
             ."Instruções:\n"
             ."1. Abra a URL cadastrada no Chrome autenticado da conta Google autorizada.\n"
-            ."2. Selecione o projeto Flow informado.\n"
-            ."3. Preencha a ferramenta usando somente o pacote abaixo.\n"
-            ."4. Revise formato, duração, texto, assets e identidade antes de consumir créditos.\n"
-            ."5. Para Vitrine Social Mídia, confirme que a copy fala explicitamente de redes sociais/conteúdo e não usa metáforas ambíguas.\n"
-            ."6. Não aceite logo recriado por IA, texto duplicado nem marcas de terceiros não fornecidas. O logo oficial entra por asset autorizado ou pós-produção do Marketing IA.\n"
-            ."7. Gere a mídia. Não publique, não regenere e não altere campanha sem autorização.\n"
+            ."2. Selecione o projeto Flow informado e a ferramenta oficial. Se o Google abrir uma cópia/Remix, não use os valores herdados.\n"
+            ."3. Aplique o HANDOFF V1.6 abaixo e substitua todos os campos padrão ou históricos antes da geração.\n"
+            ."4. Confirme visualmente que campanha, objetivo, público, formato, duração, mensagem e CTA coincidem com o handoff.\n"
+            ."5. Revise texto, assets e identidade antes de consumir créditos.\n"
+            ."6. Não aceite logo recriado por IA, texto duplicado nem marcas de terceiros não fornecidas.\n"
+            ."7. Gere a mídia somente depois da conferência. Não publique, não regenere e não altere campanha sem autorização.\n"
             ."8. Ao concluir, registre evidência e retorne o job como GERADO.\n\n"
-            ."PACOTE DE PRODUÇÃO:\n{$this->flowPackage}";
+            ."HANDOFF V1.6:\n{$this->getFlowHandoffPayload()}";
     }
 
     private function generateFlowPackageWithGemini(string $system, string $userPrompt): string

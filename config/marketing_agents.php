@@ -17,6 +17,10 @@ return [
     ],
     'flow_bridge' => [
         'gemini_model' => env('MARKETING_FLOW_GEMINI_MODEL', 'gemini-3.5-flash'),
+        'handoff_version' => '1.6',
+        'official_tool_name' => env('MARKETING_FLOW_TOOL_NAME', 'Vitrine Content Studio'),
+        'official_project_name' => env('MARKETING_FLOW_PROJECT_NAME', 'Vitrine Social Mídia'),
+        'official_logo_asset' => env('MARKETING_FLOW_LOGO_ASSET', 'LOGO_OFICIAL_VITRINE_IA_PRO'),
     ],
     'agents' => [
         'marketing_director' => ['name' => 'Marketing Director', 'type' => AgentType::Orchestrator->value, 'version' => '1.0.0', 'enabled' => true, 'depends_on' => [], 'may_publish' => false, 'may_spend' => false, 'may_block_pipeline' => true, 'next_agents' => ['product_market_strategist']],

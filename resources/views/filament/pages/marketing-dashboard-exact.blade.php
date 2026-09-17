@@ -359,15 +359,15 @@
 
                         <div class="vm-flow-layout">
                             <div class="vm-flow-box">
-                                <div class="vm-flow-title"><strong>Flow Bridge · V1.5</strong><span>Marketing IA → Google Flow</span></div>
+                                <div class="vm-flow-title"><strong>Flow Bridge · V1.6</strong><span>Marketing IA → handoff → Google Flow</span></div>
                                 @if($flowError)<div class="vm-error">{{ $flowError }}</div>@endif
 
                                 <div class="vm-bridge">
                                     <div class="vm-bridge-head"><strong>Ferramenta Google Flow</strong><span class="vm-bridge-state">{{ $this->hasValidFlowToolUrl() ? 'CONFIGURADA' : 'AGUARDANDO URL' }}</span></div>
                                     <form wire:submit="saveFlowBridgeConfiguration">
                                         <div class="vm-flow-form">
-                                            <div class="vm-field"><label for="flow-tool-name">Ferramenta</label><input id="flow-tool-name" wire:model="flowToolName" maxlength="160" placeholder="Vitrine Content Studio"></div>
-                                            <div class="vm-field"><label for="flow-project-name">Projeto Flow</label><input id="flow-project-name" wire:model="flowProjectName" maxlength="160" placeholder="Vitrine Social Mídia"></div>
+                                            <div class="vm-field"><label for="flow-tool-name">Ferramenta oficial</label><input id="flow-tool-name" wire:model="flowToolName" maxlength="160" readonly></div>
+                                            <div class="vm-field"><label for="flow-project-name">Projeto Flow oficial</label><input id="flow-project-name" wire:model="flowProjectName" maxlength="160" readonly></div>
                                             <div class="vm-field full"><label for="flow-tool-url">URL compartilhada da ferramenta</label><input id="flow-tool-url" type="url" wire:model="flowToolUrl" maxlength="800" placeholder="https://flow.google.com/..."></div>
                                         </div>
                                         <div class="vm-flow-actions">
@@ -418,6 +418,18 @@
                                         @if($this->hasValidFlowToolUrl())
                                             <div class="vm-flow-actions"><a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Executar no Google Flow ↗</a></div>
                                         @endif
+                                    </div>
+
+                                    <div class="vm-operator" x-data="{ copied: false }">
+                                        <div class="vm-flow-title"><strong>Handoff para o Flow · V1.6</strong><span>fonte da verdade</span></div>
+                                        <pre x-ref="handoff">{{ $this->getFlowHandoffPayload() }}</pre>
+                                        <div class="vm-flow-actions">
+                                            <button type="button" class="vm-flow-primary" x-on:click="navigator.clipboard.writeText($refs.handoff.innerText).then(() => { copied = true; setTimeout(() => copied = false, 1600); })"><span x-show="! copied">Copiar FLOW JOB</span><span x-show="copied" x-cloak>Copiado ✓</span></button>
+                                            @if($this->hasValidFlowToolUrl())
+                                                <a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Abrir Flow ↗</a>
+                                            @endif
+                                        </div>
+                                        <div class="vm-note"><span>Ao abrir o Flow, substitua os valores padrão ou herdados de Remix por este handoff antes de gerar.</span></div>
                                     </div>
                                 @endif
 
