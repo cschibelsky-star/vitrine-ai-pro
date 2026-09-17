@@ -369,7 +369,7 @@ class MarketingDashboard extends Page
     {
         $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
         $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
-        $model = 'gemini-2.5-flash';
+        $model = trim((string) config('marketing_agents.flow_bridge.gemini_model', 'gemini-3.5-flash'));
 
         if ($apiKey === '') {
             throw new \RuntimeException('Gemini local não está configurado para o Flow Bridge.');
@@ -388,13 +388,11 @@ class MarketingDashboard extends Page
                         ],
                     ],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.25,
-                ],
             ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('O fallback Gemini não concluiu o pacote para o Google Flow.');
+            $errorStatus = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($response->json(), 'error.status', '')) ?: 'UNKNOWN';
+            throw new \RuntimeException('O fallback Gemini falhou: HTTP '.$response->status().' '.$errorStatus.'.');
         }
 
         $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));

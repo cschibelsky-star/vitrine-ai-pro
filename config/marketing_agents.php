@@ -15,6 +15,9 @@ return [
         'capability' => env('CENTRO_IA_CAPABILITY', 'marketing_generation'),
         'timeout' => (int) env('CENTRO_IA_TIMEOUT', 60),
     ],
+    'flow_bridge' => [
+        'gemini_model' => env('MARKETING_FLOW_GEMINI_MODEL', 'gemini-3.5-flash'),
+    ],
     'agents' => [
         'marketing_director' => ['name' => 'Marketing Director', 'type' => AgentType::Orchestrator->value, 'version' => '1.0.0', 'enabled' => true, 'depends_on' => [], 'may_publish' => false, 'may_spend' => false, 'may_block_pipeline' => true, 'next_agents' => ['product_market_strategist']],
         'product_market_strategist' => ['name' => 'Product & Market Strategist', 'type' => AgentType::Specialist->value, 'version' => '1.0.0', 'enabled' => true, 'depends_on' => [], 'may_publish' => false, 'may_spend' => false, 'may_block_pipeline' => false, 'next_agents' => ['campaign_planner']],
