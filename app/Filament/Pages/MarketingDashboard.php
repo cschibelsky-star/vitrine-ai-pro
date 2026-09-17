@@ -33,6 +33,13 @@ class MarketingDashboard extends Page
     public string $flowPackage = '';
     public ?string $flowError = null;
 
+    public string $flowToolName = 'Vitrine Content Studio';
+    public string $flowToolUrl = '';
+    public string $flowProjectName = 'Vitrine Social Mídia';
+    public string $flowJobId = '';
+    public string $flowJobStatus = 'RASCUNHO';
+    public array $flowJobs = [];
+
     public function mount(): void
     {
         $this->copilotSessionId = (string) session('marketing_copilot.session_id', 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3))));
@@ -49,6 +56,12 @@ class MarketingDashboard extends Page
         $this->flowCta = (string) ($workstation['cta'] ?? '');
         $this->flowStyle = (string) ($workstation['style'] ?? $this->flowStyle);
         $this->flowPackage = (string) ($workstation['package'] ?? '');
+        $this->flowToolName = (string) ($workstation['tool_name'] ?? $this->flowToolName);
+        $this->flowToolUrl = (string) ($workstation['tool_url'] ?? '');
+        $this->flowProjectName = (string) ($workstation['project_name'] ?? $this->flowProjectName);
+        $this->flowJobId = (string) ($workstation['job_id'] ?? '');
+        $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
+        $this->flowJobs = array_values((array) ($workstation['jobs'] ?? []));
     }
 
     public function sendCopilotMessage(): void
@@ -218,6 +231,7 @@ class MarketingDashboard extends Page
             }
 
             $this->flowPackage = $package;
+            $this->createFlowJob('PREPARADO');
             $this->persistFlowWorkstation();
         } catch (Throwable $exception) {
             report($exception);
@@ -231,8 +245,143 @@ class MarketingDashboard extends Page
         $this->flowMessage = '';
         $this->flowCta = '';
         $this->flowPackage = '';
+        $this->flowJobId = '';
+        $this->flowJobStatus = 'RASCUNHO';
         $this->flowError = null;
         $this->persistFlowWorkstation();
+    }
+
+    public function saveFlowBridgeConfiguration(): void
+    {
+        $this->flowError = null;
+        $this->flowToolName = trim($this->flowToolName);
+        $this->flowProjectName = trim($this->flowProjectName);
+        $this->flowToolUrl = trim($this->flowToolUrl);
+
+        if ($this->flowToolName === '' || $this->flowProjectName === '') {
+            $this->flowError = 'Informe o nome da ferramenta e o projeto do Google Flow.';
+            return;
+        }
+
+        if (! $this->hasValidFlowToolUrl()) {
+            $this->flowError = 'Informe uma URL oficial do Google Flow em flow.google.com ou labs.google.';
+            return;
+        }
+
+        if ($this->flowJobId !== '' && $this->flowPackage !== '' && $this->flowJobStatus === 'PREPARADO') {
+            $this->flowJobStatus = 'PRONTO_PARA_FLOW';
+            $this->upsertCurrentFlowJob();
+        }
+
+        $this->persistFlowWorkstation();
+    }
+
+    public function setFlowJobStatus(string $status): void
+    {
+        $this->flowError = null;
+        $allowed = [
+            'RASCUNHO',
+            'PREPARADO',
+            'PRONTO_PARA_FLOW',
+            'EM_GERACAO',
+            'GERADO',
+            'EM_QA',
+            'APROVADO',
+            'ENVIADO_DRIVE',
+            'AGENDADO',
+            'PUBLICADO',
+        ];
+
+        if (! in_array($status, $allowed, true)) {
+            $this->flowError = 'Status de FLOW JOB inválido.';
+            return;
+        }
+
+        if ($this->flowJobId === '') {
+            $this->flowError = 'Gere um pacote para criar o FLOW JOB antes de alterar o status.';
+            return;
+        }
+
+        if (in_array($status, ['PRONTO_PARA_FLOW', 'EM_GERACAO'], true) && ! $this->hasValidFlowToolUrl()) {
+            $this->flowError = 'Cadastre uma URL oficial do Google Flow antes de enviar o job para geração.';
+            return;
+        }
+
+        $this->flowJobStatus = $status;
+        $this->upsertCurrentFlowJob();
+        $this->persistFlowWorkstation();
+    }
+
+    public function hasValidFlowToolUrl(): bool
+    {
+        $url = trim($this->flowToolUrl);
+        if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        return $scheme === 'https' && in_array($host, ['flow.google.com', 'labs.google'], true);
+    }
+
+    public function getAntigravityFlowInstruction(): string
+    {
+        if ($this->flowJobId === '' || $this->flowPackage === '') {
+            return '';
+        }
+
+        $url = $this->hasValidFlowToolUrl() ? $this->flowToolUrl : '[URL DO FLOW AINDA NÃO CONFIGURADA]';
+
+        return "VITRINE FLOW OPERATOR\n"
+            ."Job: {$this->flowJobId}\n"
+            ."Ferramenta: {$this->flowToolName}\n"
+            ."Projeto Flow: {$this->flowProjectName}\n"
+            ."URL: {$url}\n"
+            ."Status esperado ao iniciar: PRONTO_PARA_FLOW\n\n"
+            ."Instruções:\n"
+            ."1. Abra a URL cadastrada no Chrome autenticado da conta Google autorizada.\n"
+            ."2. Selecione o projeto Flow informado.\n"
+            ."3. Preencha a ferramenta usando somente o pacote abaixo.\n"
+            ."4. Revise formato, duração, texto, assets e identidade antes de consumir créditos.\n"
+            ."5. Gere a mídia. Não publique, não regenere e não altere campanha sem autorização.\n"
+            ."6. Ao concluir, registre evidência e retorne o job como GERADO.\n\n"
+            ."PACOTE DE PRODUÇÃO:\n{$this->flowPackage}";
+    }
+
+    private function createFlowJob(string $status): void
+    {
+        $this->flowJobId = 'FLOW-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
+        $this->flowJobStatus = $this->hasValidFlowToolUrl() && $status === 'PREPARADO'
+            ? 'PRONTO_PARA_FLOW'
+            : $status;
+        $this->upsertCurrentFlowJob();
+    }
+
+    private function upsertCurrentFlowJob(): void
+    {
+        if ($this->flowJobId === '') {
+            return;
+        }
+
+        $job = [
+            'id' => $this->flowJobId,
+            'status' => $this->flowJobStatus,
+            'campaign' => $this->flowCampaign,
+            'format' => $this->flowFormat,
+            'tool_name' => $this->flowToolName,
+            'project_name' => $this->flowProjectName,
+            'updated_at' => now()->toISOString(),
+        ];
+
+        $jobs = collect($this->flowJobs)
+            ->reject(fn (array $item): bool => (string) ($item['id'] ?? '') === $this->flowJobId)
+            ->prepend($job)
+            ->take(12)
+            ->values()
+            ->all();
+
+        $this->flowJobs = $jobs;
     }
 
     private function persistFlowWorkstation(): void
@@ -248,6 +397,12 @@ class MarketingDashboard extends Page
                 'cta' => $this->flowCta,
                 'style' => $this->flowStyle,
                 'package' => $this->flowPackage,
+                'tool_name' => $this->flowToolName,
+                'tool_url' => $this->flowToolUrl,
+                'project_name' => $this->flowProjectName,
+                'job_id' => $this->flowJobId,
+                'job_status' => $this->flowJobStatus,
+                'jobs' => $this->flowJobs,
             ],
         ]);
     }

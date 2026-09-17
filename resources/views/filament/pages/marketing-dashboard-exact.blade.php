@@ -229,6 +229,25 @@
         .vm-flow-secondary { padding:10px 13px;border-radius:10px;background:#19142f;border:1px solid rgba(139,92,246,.18);color:#c9c3dc;font-size:11px;font-weight:700; }
         .vm-flow-output { min-height:338px;max-height:520px;overflow:auto;white-space:pre-wrap;padding:13px;border-radius:11px;background:#090718;border:1px solid rgba(139,92,246,.1);color:#ddd7ec;font-size:11px;line-height:1.55; }
         .vm-flow-empty { min-height:338px;display:grid;place-items:center;text-align:center;padding:26px;border-radius:11px;background:#090718;border:1px dashed rgba(139,92,246,.18);color:#746e87;font-size:11px;line-height:1.55; }
+        .vm-bridge { margin-bottom:14px;padding:13px;border-radius:12px;background:#13102a;border:1px solid rgba(96,165,250,.14); }
+        .vm-bridge-head { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px; }
+        .vm-bridge-head strong { color:white;font-size:12px; }
+        .vm-bridge-state { padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.1);color:#93c5fd;font-size:9px;font-weight:800; }
+        .vm-flow-open { display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;background:#eef2ff;color:#312e81!important;font-size:11px;font-weight:850;text-decoration:none; }
+        .vm-flow-open.disabled { pointer-events:none;opacity:.45; }
+        .vm-job { margin-top:12px;padding:12px;border-radius:12px;background:#0b091b;border:1px solid rgba(52,211,153,.14); }
+        .vm-job-head { display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap; }
+        .vm-job-id { color:#f5f3ff;font-size:11px;font-weight:800;letter-spacing:.03em; }
+        .vm-job-status { padding:5px 8px;border-radius:999px;background:rgba(52,211,153,.11);color:#6ee7b7;font-size:9px;font-weight:850; }
+        .vm-job-meta { margin-top:7px;color:#817b92;font-size:10px;line-height:1.45; }
+        .vm-job-actions { display:flex;gap:7px;flex-wrap:wrap;margin-top:10px; }
+        .vm-job-actions button { padding:7px 9px;border-radius:9px;background:#19142f;border:1px solid rgba(139,92,246,.16);color:#c9c3dc;font-size:9px;font-weight:760; }
+        .vm-operator { margin-top:12px; }
+        .vm-operator pre { margin:8px 0 0;max-height:260px;overflow:auto;white-space:pre-wrap;padding:11px;border-radius:10px;background:#080615;border:1px solid rgba(139,92,246,.1);color:#bdb6cc;font-size:10px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+        .vm-history { margin-top:12px;display:grid;gap:7px; }
+        .vm-history-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 10px;border-radius:10px;background:#100d24;border:1px solid rgba(139,92,246,.08); }
+        .vm-history-row strong { display:block;color:#eee9fa;font-size:10px; }
+        .vm-history-row span { color:#746e87;font-size:9px; }
 
         @media (max-width:1180px){
             .vm-layout{grid-template-columns:220px minmax(0,1fr)}
@@ -312,7 +331,7 @@
                                 <h2>Produção assistida da Vitrine IA Pro</h2>
                                 <p>Gemini organiza a inteligência, Flow recebe os pacotes criativos, Antigravity atua na engenharia com GitHub/HML e o Drive concentra os ativos aprovados.</p>
                             </div>
-                            <span class="vm-version">V1 · HML</span>
+                            <span class="vm-version">V1.5 · HML</span>
                         </div>
 
                         <div class="vm-modules" aria-label="Módulos da Google AI Workstation">
@@ -340,8 +359,29 @@
 
                         <div class="vm-flow-layout">
                             <div class="vm-flow-box">
-                                <div class="vm-flow-title"><strong>Creative Studio · Preparar para Flow</strong><span>Gemini → Flow</span></div>
+                                <div class="vm-flow-title"><strong>Flow Bridge · V1.5</strong><span>Marketing IA → Google Flow</span></div>
                                 @if($flowError)<div class="vm-error">{{ $flowError }}</div>@endif
+
+                                <div class="vm-bridge">
+                                    <div class="vm-bridge-head"><strong>Ferramenta Google Flow</strong><span class="vm-bridge-state">{{ $this->hasValidFlowToolUrl() ? 'CONFIGURADA' : 'AGUARDANDO URL' }}</span></div>
+                                    <form wire:submit="saveFlowBridgeConfiguration">
+                                        <div class="vm-flow-form">
+                                            <div class="vm-field"><label for="flow-tool-name">Ferramenta</label><input id="flow-tool-name" wire:model="flowToolName" maxlength="160" placeholder="Vitrine Content Studio"></div>
+                                            <div class="vm-field"><label for="flow-project-name">Projeto Flow</label><input id="flow-project-name" wire:model="flowProjectName" maxlength="160" placeholder="Vitrine Social Mídia"></div>
+                                            <div class="vm-field full"><label for="flow-tool-url">URL compartilhada da ferramenta</label><input id="flow-tool-url" type="url" wire:model="flowToolUrl" maxlength="800" placeholder="https://flow.google.com/..."></div>
+                                        </div>
+                                        <div class="vm-flow-actions">
+                                            <button type="submit" class="vm-flow-secondary">Salvar Flow Bridge</button>
+                                            @if($this->hasValidFlowToolUrl())
+                                                <a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Abrir ferramenta no Flow ↗</a>
+                                            @else
+                                                <span class="vm-flow-open disabled">Abrir ferramenta no Flow</span>
+                                            @endif
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="vm-flow-title"><strong>Creative Studio · Criar FLOW JOB</strong><span>Gemini → pacote → job</span></div>
                                 <form wire:submit="generateFlowPackage">
                                     <div class="vm-flow-form">
                                         <div class="vm-field full"><label for="flow-campaign">Campanha</label><input id="flow-campaign" wire:model="flowCampaign" maxlength="160" placeholder="Ex.: Vitrine Social Mídia"></div>
@@ -354,19 +394,50 @@
                                         <div class="vm-field"><label for="flow-style">Estilo visual</label><input id="flow-style" wire:model="flowStyle" maxlength="240"></div>
                                     </div>
                                     <div class="vm-flow-actions">
-                                        <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar pacote para Flow</button>
-                                        <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Limpar</button>
+                                        <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar FLOW JOB</button>
+                                        <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Novo rascunho</button>
                                     </div>
-                                    <div class="vm-note"><span>Não abre o Flow automaticamente.</span><span>Não consome créditos até você executar a criação dentro do Google Flow.</span></div>
+                                    <div class="vm-note"><span>O Marketing IA prepara o job; a geração de mídia só ocorre dentro do Google Flow.</span><span>Nenhuma senha ou cookie Google é armazenado.</span></div>
                                 </form>
                             </div>
 
                             <div class="vm-flow-box">
-                                <div class="vm-flow-title"><strong>Pacote de produção</strong><span>pronto para copiar</span></div>
+                                <div class="vm-flow-title"><strong>FLOW JOB</strong><span>governança e handoff</span></div>
+                                @if($flowJobId !== '')
+                                    <div class="vm-job">
+                                        <div class="vm-job-head"><div class="vm-job-id">{{ $flowJobId }}</div><span class="vm-job-status">{{ $flowJobStatus }}</span></div>
+                                        <div class="vm-job-meta">{{ $flowCampaign }} · {{ $flowProjectName }} · {{ $flowToolName }}</div>
+                                        <div class="vm-job-actions">
+                                            <button type="button" wire:click="setFlowJobStatus('PRONTO_PARA_FLOW')">Pronto para Flow</button>
+                                            <button type="button" wire:click="setFlowJobStatus('EM_GERACAO')">Em geração</button>
+                                            <button type="button" wire:click="setFlowJobStatus('GERADO')">Gerado</button>
+                                            <button type="button" wire:click="setFlowJobStatus('EM_QA')">Enviar para QA</button>
+                                            <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovado</button>
+                                        </div>
+                                        @if($this->hasValidFlowToolUrl())
+                                            <div class="vm-flow-actions"><a class="vm-flow-open" href="{{ $flowToolUrl }}" target="_blank" rel="noopener noreferrer">Executar no Google Flow ↗</a></div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <div class="vm-flow-title" style="margin-top:12px"><strong>Pacote de produção</strong><span>fonte do job</span></div>
                                 @if($flowPackage !== '')
                                     <div class="vm-flow-output">{{ $flowPackage }}</div>
+                                    <div class="vm-operator">
+                                        <div class="vm-flow-title"><strong>Contrato · Vitrine Flow Operator</strong><span>Antigravity</span></div>
+                                        <pre>{{ $this->getAntigravityFlowInstruction() }}</pre>
+                                    </div>
                                 @else
-                                    <div class="vm-flow-empty">Preencha o briefing e gere o primeiro pacote. A Workstation devolverá direção criativa, cenas, câmera, áudio, texto na tela, negative prompt, assets e checklist de QA.</div>
+                                    <div class="vm-flow-empty">Preencha o briefing e gere o primeiro FLOW JOB. A Workstation devolverá direção criativa, cenas, câmera, áudio, texto na tela, negative prompt, assets, checklist de QA e o contrato para o operador Antigravity.</div>
+                                @endif
+
+                                @if(count($flowJobs) > 0)
+                                    <div class="vm-history">
+                                        <div class="vm-flow-title"><strong>Últimos FLOW JOBs</strong><span>{{ count($flowJobs) }} em sessão</span></div>
+                                        @foreach($flowJobs as $job)
+                                            <div class="vm-history-row"><div><strong>{{ $job['id'] ?? '' }}</strong><span>{{ $job['campaign'] ?? '' }} · {{ $job['project_name'] ?? '' }}</span></div><span>{{ $job['status'] ?? '' }}</span></div>
+                                        @endforeach
+                                    </div>
                                 @endif
                             </div>
                         </div>
