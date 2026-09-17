@@ -198,15 +198,47 @@
         .vm-note { margin-top:10px;font-size:10px;color:#817b92;display:flex;gap:16px;flex-wrap:wrap; }
         .vm-error { margin-bottom:8px;color:#fda4af;font-size:11px; }
 
+        .vm-workstation { margin-top:18px;scroll-margin-top:90px; }
+        .vm-workstation-head { display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px; }
+        .vm-workstation-head h2 { margin:4px 0 0;font-size:22px;color:white;letter-spacing:-.025em; }
+        .vm-workstation-head p { margin:6px 0 0;max-width:720px;font-size:12px;line-height:1.55;color:#9b95ae; }
+        .vm-version { padding:6px 10px;border-radius:999px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#6ee7b7;font-size:10px;font-weight:800;white-space:nowrap; }
+        .vm-modules { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px; }
+        .vm-module { padding:14px;border-radius:14px;background:#100d25;border:1px solid rgba(139,92,246,.12);min-width:0; }
+        .vm-module-top { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+        .vm-module-icon { width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#21183d;color:#c4b5fd; }
+        .vm-module-status { padding:4px 7px;border-radius:999px;font-size:9px;font-weight:800; }
+        .vm-module-status.active { background:rgba(52,211,153,.12);color:#6ee7b7; }
+        .vm-module-status.ready { background:rgba(96,165,250,.12);color:#93c5fd; }
+        .vm-module-name { margin-top:10px;font-size:12px;font-weight:780;color:white; }
+        .vm-module-desc { margin-top:4px;font-size:10px;line-height:1.45;color:#7f7992; }
+        .vm-flow-layout { display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px; }
+        .vm-flow-box { border-radius:14px;background:#0e0b20;border:1px solid rgba(139,92,246,.12);padding:15px;min-width:0; }
+        .vm-flow-title { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px; }
+        .vm-flow-title strong { font-size:13px;color:white; }
+        .vm-flow-title span { font-size:9px;color:#8d87a0;text-transform:uppercase;letter-spacing:.12em; }
+        .vm-flow-form { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+        .vm-field { min-width:0; }
+        .vm-field.full { grid-column:1/-1; }
+        .vm-field label { display:block;margin-bottom:5px;font-size:10px;color:#aaa4b9; }
+        .vm-field input,.vm-field select,.vm-field textarea { width:100%;min-height:42px;border-radius:10px;background:#15112b!important;border:1px solid rgba(139,92,246,.2)!important;color:#f6f2ff!important;padding:9px 11px;font-size:12px;outline:none; }
+        .vm-field textarea { min-height:76px;resize:vertical;line-height:1.45; }
+        .vm-field input:focus,.vm-field select:focus,.vm-field textarea:focus { border-color:rgba(168,85,247,.68)!important;box-shadow:0 0 0 3px rgba(168,85,247,.1); }
+        .vm-flow-actions { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px; }
+        .vm-flow-primary { padding:10px 15px;border-radius:10px;border:0;background:linear-gradient(135deg,#6d28d9,#a855f7);color:white;font-size:11px;font-weight:800; }
+        .vm-flow-secondary { padding:10px 13px;border-radius:10px;background:#19142f;border:1px solid rgba(139,92,246,.18);color:#c9c3dc;font-size:11px;font-weight:700; }
+        .vm-flow-output { min-height:338px;max-height:520px;overflow:auto;white-space:pre-wrap;padding:13px;border-radius:11px;background:#090718;border:1px solid rgba(139,92,246,.1);color:#ddd7ec;font-size:11px;line-height:1.55; }
+        .vm-flow-empty { min-height:338px;display:grid;place-items:center;text-align:center;padding:26px;border-radius:11px;background:#090718;border:1px dashed rgba(139,92,246,.18);color:#746e87;font-size:11px;line-height:1.55; }
+
         @media (max-width:1180px){
             .vm-layout{grid-template-columns:220px minmax(0,1fr)}
             .vm-logo-title{font-size:17px}.vm-hero h1{font-size:46px}.vm-stats{grid-template-columns:repeat(2,1fr)}
-            .vm-grid{grid-template-columns:1fr}.vm-hero{grid-template-columns:1fr}.vm-hero-brand{display:none}
+            .vm-grid{grid-template-columns:1fr}.vm-hero{grid-template-columns:1fr}.vm-hero-brand{display:none}.vm-modules{grid-template-columns:repeat(2,1fr)}.vm-flow-layout{grid-template-columns:1fr}
         }
         @media (max-width:760px){
             .vm-layout{display:block}.vm-sidebar{position:relative;height:auto;padding:14px}.vm-nav{grid-template-columns:repeat(2,1fr)}.vm-side-card{display:none}
             .vm-logo{padding-bottom:10px}.vm-main{width:100%}.vm-topbar{padding:10px 14px;height:64px}.vm-search{display:none}.vm-user-name,.vm-user-role{display:none}
-            .vm-content{padding:14px}.vm-hero{min-height:auto;padding:25px 20px}.vm-hero h1{font-size:42px}.vm-hero-lead{font-size:20px}.vm-stats{grid-template-columns:1fr 1fr;gap:10px}.vm-stat{padding:15px}.vm-grid{gap:10px}.vm-campaign-row{grid-template-columns:48px 1fr auto}.vm-time{display:none}.vm-quote{align-items:flex-start;flex-direction:column}.vm-form{grid-template-columns:1fr}
+            .vm-content{padding:14px}.vm-hero{min-height:auto;padding:25px 20px}.vm-hero h1{font-size:42px}.vm-hero-lead{font-size:20px}.vm-stats{grid-template-columns:1fr 1fr;gap:10px}.vm-stat{padding:15px}.vm-grid{gap:10px}.vm-campaign-row{grid-template-columns:48px 1fr auto}.vm-time{display:none}.vm-quote{align-items:flex-start;flex-direction:column}.vm-form{grid-template-columns:1fr}.vm-modules{grid-template-columns:1fr}.vm-flow-form{grid-template-columns:1fr}.vm-field.full{grid-column:auto}.vm-workstation-head{flex-direction:column}
         }
         @media (max-width:470px){ .vm-nav{grid-template-columns:1fr 1fr}.vm-stats{grid-template-columns:1fr}.vm-logo-title{font-size:16px}.vm-hero h1{font-size:36px}.vm-content{padding:10px}.vm-campaign-row{grid-template-columns:46px 1fr}.vm-status{display:none} }
     </style>
@@ -224,6 +256,7 @@
 
                 <nav class="vm-nav" aria-label="Marketing IA">
                     <a class="active" href="#inicio"><x-heroicon-o-home/> <span>Início</span></a>
+                    <a href="#workstation"><x-heroicon-o-squares-2x2/> <span>AI Workstation</span></a>
                     <a href="#agentes"><x-heroicon-o-user-group/> <span>Agentes IA</span></a>
                     <a href="#campanhas"><x-heroicon-o-megaphone/> <span>Campanhas</span></a>
                     <a href="#criativos"><x-heroicon-o-photo/> <span>Criativos</span></a>
@@ -269,6 +302,73 @@
                             <svg class="vm-big-mark" viewBox="0 0 120 110" aria-hidden="true"><defs><linearGradient id="v1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e879f9"/><stop offset=".46" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4f46e5"/></linearGradient><linearGradient id="v2" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#c084fc"/><stop offset="1" stop-color="#5b21b6"/></linearGradient></defs><path fill="url(#v1)" d="M10 12h50l-25 82z"/><path fill="url(#v2)" d="M55 12h55L73 89 51 49z"/><path fill="#17102f" opacity=".5" d="M35 30h38L53 72z"/></svg>
                             <div class="vm-big-brand">VITRINE IA <span>PRO</span></div>
                             <div class="vm-big-tag">Marketing que vende<br>com inteligência.</div>
+                        </div>
+                    </section>
+
+                    <section id="workstation" class="vm-panel vm-workstation">
+                        <div class="vm-workstation-head">
+                            <div>
+                                <div class="vm-eyebrow">Google AI Workstation</div>
+                                <h2>Produção assistida da Vitrine IA Pro</h2>
+                                <p>Gemini organiza a inteligência, Flow recebe os pacotes criativos, Antigravity atua na engenharia com GitHub/HML e o Drive concentra os ativos aprovados.</p>
+                            </div>
+                            <span class="vm-version">V1 · HML</span>
+                        </div>
+
+                        <div class="vm-modules" aria-label="Módulos da Google AI Workstation">
+                            <div class="vm-module">
+                                <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-sparkles style="width:18px;height:18px"/></div><span class="vm-module-status active">ATIVO</span></div>
+                                <div class="vm-module-name">Creative Studio · Flow</div>
+                                <div class="vm-module-desc">Gera briefing, direção, cenas, prompts e checklist prontos para produção no Google Flow.</div>
+                            </div>
+                            <div class="vm-module">
+                                <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-code-bracket style="width:18px;height:18px"/></div><span class="vm-module-status ready">GOVERNADO</span></div>
+                                <div class="vm-module-name">Engineering Studio · Antigravity</div>
+                                <div class="vm-module-desc">Fluxo oficial: GitHub → branch → testes → HML → QA. Sem alteração livre em produção.</div>
+                            </div>
+                            <div class="vm-module">
+                                <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-beaker style="width:18px;height:18px"/></div><span class="vm-module-status ready">PRONTO</span></div>
+                                <div class="vm-module-name">AI Lab · Gemini / AI Studio</div>
+                                <div class="vm-module-desc">Laboratório para validar prompts, modelos e respostas antes de promover para os produtos.</div>
+                            </div>
+                            <div class="vm-module">
+                                <div class="vm-module-top"><div class="vm-module-icon"><x-heroicon-o-folder-open style="width:18px;height:18px"/></div><span class="vm-module-status ready">ESTRUTURADO</span></div>
+                                <div class="vm-module-name">Asset Library · Drive</div>
+                                <div class="vm-module-desc">Destino oficial para marca, campanhas, referências, Reels, Stories, Feed e entregáveis aprovados.</div>
+                            </div>
+                        </div>
+
+                        <div class="vm-flow-layout">
+                            <div class="vm-flow-box">
+                                <div class="vm-flow-title"><strong>Creative Studio · Preparar para Flow</strong><span>Gemini → Flow</span></div>
+                                @if($flowError)<div class="vm-error">{{ $flowError }}</div>@endif
+                                <form wire:submit="generateFlowPackage">
+                                    <div class="vm-flow-form">
+                                        <div class="vm-field full"><label for="flow-campaign">Campanha</label><input id="flow-campaign" wire:model="flowCampaign" maxlength="160" placeholder="Ex.: Vitrine Social Mídia"></div>
+                                        <div class="vm-field full"><label for="flow-objective">Objetivo</label><input id="flow-objective" wire:model="flowObjective" maxlength="240" placeholder="Ex.: apresentar o produto e gerar interesse"></div>
+                                        <div class="vm-field full"><label for="flow-audience">Público</label><input id="flow-audience" wire:model="flowAudience" maxlength="240"></div>
+                                        <div class="vm-field"><label for="flow-format">Formato</label><select id="flow-format" wire:model="flowFormat"><option value="reel_9_16">Reel 9:16</option><option value="story_9_16">Story 9:16</option><option value="video_16_9">Vídeo 16:9</option><option value="ad_1_1">Criativo 1:1</option></select></div>
+                                        <div class="vm-field"><label for="flow-duration">Duração</label><input id="flow-duration" wire:model="flowDuration" maxlength="80" placeholder="Ex.: 8 segundos"></div>
+                                        <div class="vm-field full"><label for="flow-message">Mensagem principal</label><textarea id="flow-message" wire:model="flowMessage" maxlength="900" placeholder="O que essa peça precisa comunicar?"></textarea></div>
+                                        <div class="vm-field"><label for="flow-cta">CTA</label><input id="flow-cta" wire:model="flowCta" maxlength="180" placeholder="Ex.: Conheça agora"></div>
+                                        <div class="vm-field"><label for="flow-style">Estilo visual</label><input id="flow-style" wire:model="flowStyle" maxlength="240"></div>
+                                    </div>
+                                    <div class="vm-flow-actions">
+                                        <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar pacote para Flow</button>
+                                        <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Limpar</button>
+                                    </div>
+                                    <div class="vm-note"><span>Não abre o Flow automaticamente.</span><span>Não consome créditos até você executar a criação dentro do Google Flow.</span></div>
+                                </form>
+                            </div>
+
+                            <div class="vm-flow-box">
+                                <div class="vm-flow-title"><strong>Pacote de produção</strong><span>pronto para copiar</span></div>
+                                @if($flowPackage !== '')
+                                    <div class="vm-flow-output">{{ $flowPackage }}</div>
+                                @else
+                                    <div class="vm-flow-empty">Preencha o briefing e gere o primeiro pacote. A Workstation devolverá direção criativa, cenas, câmera, áudio, texto na tela, negative prompt, assets e checklist de QA.</div>
+                                @endif
+                            </div>
                         </div>
                     </section>
 
