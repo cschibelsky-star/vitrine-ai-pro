@@ -117,6 +117,57 @@ final class ViaFactoryController extends Controller
         ]);
     }
 
+    public function agentHubStatus(Request $request)
+    {
+        $this->assertAdmin($request);
+        try {
+            $response = Http::timeout(20)->acceptJson()->get($this->viaServiceUrl().'/api/agent-hub/status');
+            $payload = $response->json();
+            if (! $response->successful() || ! is_array($payload)) {
+                return response()->json(['error'=>'via_agent_status_failed'], 502);
+            }
+            return response()->json($payload, $response->status());
+        } catch (Throwable $e) {
+            Log::warning('via.factory.agent_status_failed', ['error'=>$e->getMessage(),'user_id'=>$request->user()->getAuthIdentifier()]);
+            return response()->json(['error'=>'via_agent_status_unreachable'], 502);
+        }
+    }
+
+    public function agentHubMission(Request $request)
+    {
+        $this->assertAdmin($request);
+        try {
+            $response = Http::timeout(90)->acceptJson()->asJson()->post($this->viaServiceUrl().'/api/agent-hub/missions', $request->all());
+            $payload = $response->json();
+            if (! is_array($payload)) {
+                return response()->json(['error'=>'via_agent_mission_invalid_response'], 502);
+            }
+            return response()->json($payload, $response->status());
+        } catch (Throwable $e) {
+            Log::warning('via.factory.agent_mission_failed', ['error'=>$e->getMessage(),'user_id'=>$request->user()->getAuthIdentifier()]);
+            return response()->json(['error'=>'via_agent_mission_unreachable'], 502);
+        }
+    }
+
+    public function voice(Request $request)
+    {
+        $this->assertAdmin($request);
+        $validated = $request->validate(['text'=>['required','string','max:5000']]);
+        try {
+            $response = Http::timeout(90)->accept('audio/mpeg')->asJson()->post($this->viaServiceUrl().'/api/voice', ['text'=>$validated['text']]);
+            if (! $response->successful()) {
+                return response()->json(['error'=>'via_voice_failed'], 502);
+            }
+            return response($response->body(), 200, [
+                'Content-Type'=>$response->header('Content-Type') ?: 'audio/mpeg',
+                'Cache-Control'=>'no-store',
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('via.factory.voice_failed', ['error'=>$e->getMessage(),'user_id'=>$request->user()->getAuthIdentifier()]);
+            return response()->json(['error'=>'via_voice_unreachable'], 502);
+        }
+    }
+
     public function transcribe(Request $request): JsonResponse
     {
         $this->assertAdmin($request);
