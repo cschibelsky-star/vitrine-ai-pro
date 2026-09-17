@@ -61,7 +61,18 @@ class RealBuilderNameService
     public function relatedTable(string $field): string
     {
         $base = str_replace('_id', '', $field);
-        return Str::plural($base);
+
+        $tableMap = [
+            'aluno' => 'alunos',
+            'responsavel' => 'responsaveis',
+            'professor' => 'professores',
+            'curso' => 'cursos',
+            'turma' => 'turmas',
+            'matricula' => 'matriculas',
+            'atendimento' => 'atendimentos',
+        ];
+
+        return $tableMap[$base] ?? Str::plural($base);
     }
 
     public function relatedModelFromField(string $field): string
