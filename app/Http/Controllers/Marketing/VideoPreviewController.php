@@ -167,7 +167,9 @@ final class VideoPreviewController extends Controller
         abort_unless(hash_equals(self::REEL_01_VERSION, $version), 404);
 
         $filename = self::REEL_01_VERSION.'.mp4';
-        $path = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
+        $mountedPath = '/var/www/video-previews/reel-01-vitrine-social-midia/'.$filename;
+        $localPath = storage_path('app/video-previews/reel-01-vitrine-social-midia/'.$filename);
+        $path = is_file($mountedPath) && is_readable($mountedPath) ? $mountedPath : $localPath;
         abort_unless(is_file($path) && is_readable($path), 404);
 
         $response = response()->file($path, [
