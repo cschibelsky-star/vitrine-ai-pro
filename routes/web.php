@@ -68,6 +68,11 @@ Route::middleware(['auth'])->group(function () {
         ->where('version', '[A-Za-z0-9._-]+')
         ->name('marketing.native-video-preview');
 
+    Route::get('/marketing/native-image-preview/{generation}', [VideoPreviewController::class, 'nativeImagePreview'])
+        ->middleware(['signed', 'throttle:30,1'])
+        ->whereNumber('generation')
+        ->name('marketing.native-image-preview');
+
     Route::get('/cliente', [ClientPortalController::class, 'index'])->name('client.portal');
 
     Route::post('/cliente/logout', function (Request $request) {

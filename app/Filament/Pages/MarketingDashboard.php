@@ -5,6 +5,9 @@ namespace App\Filament\Pages;
 use App\Marketing\Application\MarketingDashboardStateReader;
 use App\Marketing\Application\VideoFinalizationService;
 use App\Marketing\Domain\Agents\AgentRegistry;
+use App\Models\AiAgent;
+use App\Models\AiProvider;
+use App\Services\Ai\AiMediaGenerationService;
 use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use Filament\Pages\Page;
@@ -100,9 +103,9 @@ class MarketingDashboard extends Page
             session()->forget('marketing_workstation.flow');
         }
 
-        $flowBridge = (array) config('marketing_agents.flow_bridge', []);
-        $this->flowToolName = trim((string) ($flowBridge['official_tool_name'] ?? 'Vitrine Content Studio')) ?: 'Vitrine Content Studio';
-        $this->flowProjectName = trim((string) ($flowBridge['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
+        $nativeStudio = (array) config('marketing_agents.native_studio', []);
+        $this->flowToolName = 'Marketing IA Native Studio';
+        $this->flowProjectName = trim((string) ($nativeStudio['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
     }
 
     public function sendCopilotMessage(): void
@@ -314,7 +317,7 @@ class MarketingDashboard extends Page
         }
 
         if ($this->flowFormat === 'ad_1_1') {
-            $this->nativeProductionError = 'Criativos 1:1 usam o motor nativo de imagem no módulo Criativos. Este executor é dedicado a vídeo.';
+            $this->startNativeImageProduction();
             return;
         }
 
@@ -352,6 +355,61 @@ class MarketingDashboard extends Page
             report($exception);
             $this->nativeProductionStatus = 'ERRO';
             $this->nativeProductionError = $exception->getMessage();
+            $this->persistFlowWorkstation();
+        }
+    }
+
+    private function startNativeImageProduction(): void
+    {
+        try {
+            $agent = AiAgent::query()->where('slug', 'marketing-ia')->first();
+            $provider = AiProvider::query()
+                ->whereIn('slug', ['google', 'gemini', 'google-gemini'])
+                ->where('status', 'ativo')
+                ->first();
+
+            if (! $agent || ! $provider) {
+                throw new \RuntimeException('Marketing IA ou provider Google/Gemini não está disponível para geração de imagem.');
+            }
+
+            $prompt = 'Crie um criativo publicitário quadrado 1:1 profissional para a campanha '.trim($this->flowCampaign).'. '
+                .'Público: '.trim($this->flowAudience).'. '
+                .'Objetivo: '.trim($this->flowObjective).'. '
+                .'Mensagem principal: '.trim($this->flowMessage).'. '
+                .'Direção visual: '.trim($this->flowStyle).'. '
+                .'Não gere logotipo, watermark, marcas de terceiros ou texto duplicado. '
+                .'Preserve composição limpa e área segura para aplicação determinística da marca oficial pelo Marketing IA.';
+
+            $generation = app(AiMediaGenerationService::class)->generate(
+                $agent,
+                $provider,
+                'image_generation',
+                $prompt,
+                (string) config('marketing_agents.native_studio.image_model', 'gemini-3.1-flash-image'),
+            );
+
+            if ((string) $generation->status !== 'Concluído' || ! $generation->asset_path) {
+                throw new \RuntimeException((string) ($generation->error_message ?: $generation->output ?: 'A geração de imagem não foi concluída.'));
+            }
+
+            $this->nativeProductionJobRef = 'IMAGE-'.$generation->id;
+            $this->nativeProductionFinalPath = (string) $generation->asset_path;
+            $this->nativeProductionAssetUrl = (string) ($generation->asset_url ?? '');
+            $this->nativeProductionPreviewUrl = URL::temporarySignedRoute(
+                'marketing.native-image-preview',
+                now()->addHours(2),
+                ['generation' => $generation->id],
+            );
+            $this->nativeProductionStatus = 'EM_QA';
+            $this->flowJobStatus = 'EM_QA';
+            $this->upsertCurrentFlowJob();
+            $this->persistFlowWorkstation();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->nativeProductionStatus = 'ERRO';
+            $this->flowJobStatus = 'ERRO';
+            $this->nativeProductionError = $exception->getMessage();
+            $this->upsertCurrentFlowJob();
             $this->persistFlowWorkstation();
         }
     }
@@ -603,7 +661,7 @@ class MarketingDashboard extends Page
     {
         $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
         $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
-        $model = trim((string) config('marketing_agents.flow_bridge.gemini_model', 'gemini-3.5-flash'));
+        $model = trim((string) config('marketing_agents.native_studio.director_model', 'gemini-3.5-flash'));
 
         if ($apiKey === '') {
             throw new \RuntimeException('Gemini local não está configurado para o Flow Bridge.');

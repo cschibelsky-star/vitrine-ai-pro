@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiMediaGeneration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -98,6 +100,38 @@ final class VideoPreviewController extends Controller
         $response->setPublic();
         $response->setMaxAge(86400);
         $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
+    public function nativeImagePreview(Request $request, string $generation): BinaryFileResponse
+    {
+        abort_unless($request->hasValidSignature(), 403);
+        abort_unless(ctype_digit($generation), 404);
+
+        $media = AiMediaGeneration::query()->findOrFail((int) $generation);
+        abort_unless((string) $media->capability === 'image_generation', 404);
+        abort_unless((string) $media->status === 'Concluído', 404);
+
+        $path = trim((string) $media->asset_path);
+        abort_unless($path !== '', 404);
+
+        $disk = (string) data_get($media->metadata, 'storage_disk', config('filesystems.default', 'local'));
+        abort_unless(Storage::disk($disk)->exists($path), 404);
+
+        $absolutePath = Storage::disk($disk)->path($path);
+        abort_unless(is_file($absolutePath) && is_readable($absolutePath), 404);
+
+        $response = response()->file($absolutePath, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="marketing-ia-criativo-'.$generation.'.png"',
+            'Pragma' => 'no-cache',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPrivate();
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('no-store');
 
         return $response;
     }

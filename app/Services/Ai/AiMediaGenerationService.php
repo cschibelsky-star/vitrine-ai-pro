@@ -135,6 +135,9 @@ class AiMediaGenerationService
             throw new RuntimeException('Gemini Image retornou base64 inválido.');
         }
 
+        $binary = $this->applyOfficialLogoToImage($binary);
+        $mimeType = 'image/png';
+
         $extension = match ($mimeType) {
             'image/jpeg', 'image/jpg' => 'jpg',
             'image/webp' => 'webp',
@@ -170,8 +173,64 @@ class AiMediaGenerationService
                 'storage_disk' => $disk,
                 'prompt_length' => mb_strlen($prompt),
                 'synthid_expected' => true,
+                'branding' => 'official_logo_top_right',
+                'flow_dependency' => false,
             ],
         ];
+    }
+
+    protected function applyOfficialLogoToImage(string $binary): string
+    {
+        if (! function_exists('imagecreatefromstring')) {
+            throw new RuntimeException('Extensão GD indisponível para branding da imagem.');
+        }
+
+        $base = @imagecreatefromstring($binary);
+        $logoPath = (string) config('marketing_video.finalization.official_logo_path', base_path('assets/img/logo-vitrine-ai-pro.png'));
+        $logo = is_file($logoPath) ? @imagecreatefrompng($logoPath) : false;
+
+        if ($base === false || $logo === false) {
+            throw new RuntimeException('Não foi possível aplicar o logo oficial ao criativo.');
+        }
+
+        imagealphablending($base, true);
+        imagesavealpha($base, true);
+
+        $baseWidth = imagesx($base);
+        $baseHeight = imagesy($base);
+        $logoWidth = imagesx($logo);
+        $logoHeight = imagesy($logo);
+        $targetWidth = max(96, (int) round($baseWidth * 0.18));
+        $targetHeight = max(1, (int) round($logoHeight * ($targetWidth / max(1, $logoWidth))));
+        $margin = max(24, (int) round($baseWidth * 0.045));
+        $x = max(0, $baseWidth - $targetWidth - $margin);
+        $y = $margin;
+
+        imagecopyresampled(
+            $base,
+            $logo,
+            $x,
+            $y,
+            0,
+            0,
+            $targetWidth,
+            $targetHeight,
+            $logoWidth,
+            $logoHeight,
+        );
+
+        ob_start();
+        imagepng($base, null, 6);
+        $result = ob_get_clean();
+
+        imagedestroy($logo);
+        imagedestroy($base);
+
+        if (! is_string($result) || $result === '') {
+            throw new RuntimeException('Falha ao serializar o criativo final com branding.');
+        }
+
+        return $result;
     }
 
     protected function generateGoogleVideo(AiProvider $provider, string $prompt, ?string $model): array

@@ -417,10 +417,14 @@
                                         @if($nativeProductionError)<div class="vm-error">{{ $nativeProductionError }}</div>@endif
                                         @if($nativeProductionPreviewUrl !== '')
                                             <div style="margin-top:12px;border-radius:16px;overflow:hidden;background:#080611;border:1px solid rgba(139,92,246,.22)">
-                                                <video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#000" src="{{ $nativeProductionPreviewUrl }}"></video>
+                                                @if($flowFormat === 'ad_1_1')
+                                                    <img src="{{ $nativeProductionPreviewUrl }}" alt="Criativo gerado pelo Marketing IA" style="display:block;width:100%;max-height:620px;object-fit:contain;background:#000">
+                                                @else
+                                                    <video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#000" src="{{ $nativeProductionPreviewUrl }}"></video>
+                                                @endif
                                             </div>
                                         @endif
-                                        <div class="vm-note"><span>Motor: Veo 3.1 via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'GERADO')<span>Mídia-base pronta. A finalização foi separada para evitar travar a interface durante download/FFmpeg.</span>@elseif($nativeProductionStatus === 'EM_QA')<span>Marketing IA aplicou o logo oficial via FFmpeg e a peça está pronta para QA.</span>@endif</div>
+                                        <div class="vm-note"><span>Motor: {{ $flowFormat === 'ad_1_1' ? 'Gemini Image / Nano Banana' : 'Veo 3.1' }} via API nativa.</span><span>Status: {{ $nativeProductionStatus }}</span>@if($nativeProductionStatus === 'GERADO')<span>Mídia-base pronta. A finalização foi separada para evitar travar a interface durante download/FFmpeg.</span>@elseif($nativeProductionStatus === 'EM_QA')<span>Marketing IA aplicou o logo oficial de forma determinística e a peça está pronta para QA.</span>@endif</div>
                                     </div>
 
                                     <div class="vm-operator">
