@@ -17,6 +17,8 @@ return [
     ],
     'native_studio' => [
         'enabled' => env('MARKETING_NATIVE_STUDIO_ENABLED', true),
+        'role' => 'creation_machine',
+        'source_of_truth' => 'marketing_ia',
         'director_model' => env('MARKETING_STUDIO_DIRECTOR_MODEL', 'gemini-3.5-flash'),
         'image_provider' => env('MARKETING_STUDIO_IMAGE_PROVIDER', 'google'),
         'image_model' => env('MARKETING_STUDIO_IMAGE_MODEL', 'gemini-3.1-flash-image'),
@@ -26,6 +28,20 @@ return [
         'official_project_name' => env('MARKETING_STUDIO_PROJECT_NAME', 'Vitrine Social Mídia'),
         'official_logo_asset' => env('MARKETING_STUDIO_LOGO_ASSET', 'LOGO_OFICIAL_VITRINE_IA_PRO'),
         'flow_dependency' => false,
+        'approval_gates' => [
+            'brief' => true,
+            'voice_preview' => true,
+            'avatar_selection' => true,
+            'video_render' => true,
+        ],
+        'render_policy' => [
+            'require_explicit_avatar' => true,
+            'require_explicit_voice' => true,
+            'allow_automatic_avatar_selection' => false,
+            'allow_voice_speed_adjustment' => false,
+            'default_voice_speed' => 1.0,
+            'test_resolution' => '720p',
+        ],
     ],
     'agents' => [
         'marketing_director' => ['name' => 'Marketing Director', 'type' => AgentType::Orchestrator->value, 'version' => '1.0.0', 'enabled' => true, 'depends_on' => [], 'may_publish' => false, 'may_spend' => false, 'may_block_pipeline' => true, 'next_agents' => ['product_market_strategist']],

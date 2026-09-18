@@ -5,6 +5,23 @@ declare(strict_types=1);
 return [
     'provider' => env('MARKETING_VIDEO_PROVIDER', 'gemini_veo'),
 
+    'routing' => [
+        'creation_machine' => 'marketing_ia',
+        'image' => 'google',
+        'video' => 'gemini_veo',
+        'avatar' => 'heygen',
+        'flow_dependency' => false,
+    ],
+
+    'heygen' => [
+        'require_explicit_avatar' => true,
+        'require_explicit_voice' => true,
+        'allow_automatic_avatar_selection' => false,
+        'voice_speed' => 1.0,
+        'engine' => env('MARKETING_HEYGEN_ENGINE', 'avatar_v'),
+        'test_resolution' => env('MARKETING_HEYGEN_TEST_RESOLUTION', '720p'),
+    ],
+
     'gemini_veo' => [
         'api_key' => env('GEMINI_API_KEY'),
         'base_url' => env('GEMINI_VEO_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),

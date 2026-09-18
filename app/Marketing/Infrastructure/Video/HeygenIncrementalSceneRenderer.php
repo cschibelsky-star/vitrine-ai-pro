@@ -22,6 +22,16 @@ final class HeygenIncrementalSceneRenderer implements VideoSceneRenderer
             throw new InvalidArgumentException('video_scene_script_required:'.$scene->sceneId);
         }
 
+        $avatarRecordId = $context['heygen_avatar_id'] ?? null;
+        if ($avatarRecordId === null || $avatarRecordId === '') {
+            throw new InvalidArgumentException('heygen_avatar_approval_required:'.$scene->sceneId);
+        }
+
+        if ((bool) config('marketing_agents.native_studio.approval_gates.voice_preview', true)
+            && ! (bool) ($context['voice_preview_approved'] ?? false)) {
+            throw new InvalidArgumentException('heygen_voice_preview_approval_required:'.$scene->sceneId);
+        }
+
         $job = new HeygenVideoJob();
         $job->forceFill([
             'company_id' => $context['company_id'] ?? null,
