@@ -71,6 +71,10 @@ class AiMediaGenerationService
             return $this->generateGoogleImage($provider, $prompt, $model);
         }
 
+        if ($capability === 'video_generation' && in_array($providerSlug, ['gemini', 'google', 'google-gemini'], true)) {
+            return $this->generateGoogleVideo($provider, $prompt, $model);
+        }
+
         return [
             'status' => 'Pendente',
             'output' => sprintf(
@@ -166,6 +170,66 @@ class AiMediaGenerationService
                 'storage_disk' => $disk,
                 'prompt_length' => mb_strlen($prompt),
                 'synthid_expected' => true,
+            ],
+        ];
+    }
+
+    protected function generateGoogleVideo(AiProvider $provider, string $prompt, ?string $model): array
+    {
+        $apiKey = $this->resolveGeminiApiKey($provider);
+        $model = $model
+            ?: data_get($provider->config, 'models.video_generation')
+            ?: config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview');
+
+        if (! $apiKey) {
+            throw new RuntimeException('API Key Gemini ausente para geração de vídeo.');
+        }
+
+        $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
+        $aspectRatio = (string) config('marketing_video.gemini_veo.aspect_ratio', '9:16');
+        $resolution = (string) config('marketing_video.gemini_veo.resolution', '720p');
+        $duration = (int) config('marketing_video.gemini_veo.duration_seconds', 8);
+
+        $response = Http::baseUrl($baseUrl)
+            ->acceptJson()
+            ->withHeaders(['x-goog-api-key' => $apiKey])
+            ->timeout((int) config('marketing_video.gemini_veo.timeout_seconds', 30))
+            ->retry((int) config('marketing_video.gemini_veo.http_retries', 2), (int) config('marketing_video.gemini_veo.http_retry_delay_ms', 500), throw: false)
+            ->post('/models/'.$model.':predictLongRunning', [
+                'instances' => [[
+                    'prompt' => $prompt,
+                ]],
+                'parameters' => [
+                    'aspectRatio' => $aspectRatio,
+                    'resolution' => $resolution,
+                    'durationSeconds' => $duration,
+                    'sampleCount' => 1,
+                ],
+            ]);
+
+        if ($response->failed()) {
+            throw new RuntimeException('Gemini Veo erro HTTP '.$response->status().'.');
+        }
+
+        $operation = trim((string) $response->json('name', ''));
+
+        if ($operation === '') {
+            throw new RuntimeException('Gemini Veo não retornou operation id.');
+        }
+
+        return [
+            'status' => 'Processando',
+            'output' => 'Vídeo enviado diretamente ao Google Veo pelo Marketing IA.',
+            'operation_id' => $operation,
+            'metadata' => [
+                'adapter_ready' => true,
+                'adapter' => 'google_veo_predict_long_running',
+                'model' => $model,
+                'aspect_ratio' => $aspectRatio,
+                'resolution' => $resolution,
+                'duration_seconds' => $duration,
+                'flow_dependency' => false,
+                'prompt_length' => mb_strlen($prompt),
             ],
         ];
     }

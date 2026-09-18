@@ -15,12 +15,17 @@ return [
         'capability' => env('CENTRO_IA_CAPABILITY', 'marketing_generation'),
         'timeout' => (int) env('CENTRO_IA_TIMEOUT', 60),
     ],
-    'flow_bridge' => [
-        'gemini_model' => env('MARKETING_FLOW_GEMINI_MODEL', 'gemini-3.5-flash'),
-        'handoff_version' => '1.6',
-        'official_tool_name' => env('MARKETING_FLOW_TOOL_NAME', 'Vitrine Content Studio'),
-        'official_project_name' => env('MARKETING_FLOW_PROJECT_NAME', 'Vitrine Social Mídia'),
-        'official_logo_asset' => env('MARKETING_FLOW_LOGO_ASSET', 'LOGO_OFICIAL_VITRINE_IA_PRO'),
+    'native_studio' => [
+        'enabled' => env('MARKETING_NATIVE_STUDIO_ENABLED', true),
+        'director_model' => env('MARKETING_STUDIO_DIRECTOR_MODEL', 'gemini-3.5-flash'),
+        'image_provider' => env('MARKETING_STUDIO_IMAGE_PROVIDER', 'google'),
+        'image_model' => env('MARKETING_STUDIO_IMAGE_MODEL', 'gemini-3.1-flash-image'),
+        'video_provider' => env('MARKETING_STUDIO_VIDEO_PROVIDER', 'gemini_veo'),
+        'video_model' => env('MARKETING_STUDIO_VIDEO_MODEL', 'veo-3.1-generate-preview'),
+        'avatar_provider' => env('MARKETING_STUDIO_AVATAR_PROVIDER', 'heygen'),
+        'official_project_name' => env('MARKETING_STUDIO_PROJECT_NAME', 'Vitrine Social Mídia'),
+        'official_logo_asset' => env('MARKETING_STUDIO_LOGO_ASSET', 'LOGO_OFICIAL_VITRINE_IA_PRO'),
+        'flow_dependency' => false,
     ],
     'agents' => [
         'marketing_director' => ['name' => 'Marketing Director', 'type' => AgentType::Orchestrator->value, 'version' => '1.0.0', 'enabled' => true, 'depends_on' => [], 'may_publish' => false, 'may_spend' => false, 'may_block_pipeline' => true, 'next_agents' => ['product_market_strategist']],
