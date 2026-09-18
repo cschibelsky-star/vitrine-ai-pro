@@ -16,7 +16,7 @@ class ModuleResource extends Resource
     protected static ?string $model = Module::class;
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     protected static ?string $navigationLabel = 'Módulos';
-    protected static ?string $navigationGroup = 'Centro Operacional';
+    protected static ?string $navigationGroup = '01 · Centro Operacional';
     protected static ?int $navigationSort = 10;
     protected static ?string $modelLabel = 'Módulo';
     protected static ?string $pluralModelLabel = 'Módulos';

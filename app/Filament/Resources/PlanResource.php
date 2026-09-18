@@ -16,7 +16,7 @@ class PlanResource extends Resource
     protected static ?string $model = Plan::class;
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Planos';
-    protected static ?string $navigationGroup = 'Produtos e Licenças';
+    protected static ?string $navigationGroup = '04 · Produtos e Licenças';
     protected static ?int $navigationSort = 2;
     protected static ?string $modelLabel = 'Plano';
     protected static ?string $pluralModelLabel = 'Planos';

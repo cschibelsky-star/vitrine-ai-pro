@@ -16,7 +16,7 @@ class PlanModuleResource extends Resource
     protected static ?string $model = PlanModule::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Módulos por Plano';
-    protected static ?string $navigationGroup = 'Produtos e Licenças';
+    protected static ?string $navigationGroup = '04 · Produtos e Licenças';
     protected static ?int $navigationSort = 2;
     protected static ?string $modelLabel = 'Módulo por Plano';
     protected static ?string $pluralModelLabel = 'Módulos por Plano';

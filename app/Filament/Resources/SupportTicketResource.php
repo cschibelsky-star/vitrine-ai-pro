@@ -21,7 +21,7 @@ class SupportTicketResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-lifebuoy';
 
-    protected static ?string $navigationGroup = 'Centro Operacional';
+    protected static ?string $navigationGroup = '02 · Operação';
 
     protected static ?string $navigationLabel = 'Chamados';
 

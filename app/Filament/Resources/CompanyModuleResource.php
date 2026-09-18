@@ -16,7 +16,7 @@ class CompanyModuleResource extends Resource
     protected static ?string $model = CompanyModule::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
     protected static ?string $navigationLabel = 'Módulos por Cliente';
-    protected static ?string $navigationGroup = 'Centro Operacional';
+    protected static ?string $navigationGroup = '01 · Centro Operacional';
     protected static ?int $navigationSort = 11;
     protected static ?string $modelLabel = 'Módulo por Cliente';
     protected static ?string $pluralModelLabel = 'Módulos por Cliente';
