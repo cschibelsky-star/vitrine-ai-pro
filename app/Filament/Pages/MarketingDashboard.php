@@ -372,6 +372,10 @@ class MarketingDashboard extends Page
             $this->flowPackage = $package;
             $this->createFlowJob('PREPARADO');
             $this->persistFlowWorkstation();
+
+            // Jobs criados pelo Creative Studio seguem direto para o motor nativo.
+            // O botão Gerar mídia permanece apenas como fallback/retry em caso de falha.
+            $this->startNativeProduction();
         } catch (Throwable $exception) {
             report($exception);
             $this->flowError = $exception->getMessage();

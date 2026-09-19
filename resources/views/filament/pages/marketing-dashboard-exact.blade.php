@@ -417,7 +417,7 @@
                                         <button type="submit" class="vm-flow-primary" wire:loading.attr="disabled" wire:target="generateFlowPackage">Gerar Job de Produção</button>
                                         <button type="button" class="vm-flow-secondary" wire:click="clearFlowPackage">Novo rascunho</button>
                                     </div>
-                                    <div class="vm-note"><span>O Marketing IA agora executa a geração diretamente pelos motores nativos.</span><span>Logo oficial: nunca gerado por IA; entra na finalização técnica controlada.</span><span>A geração consome API somente quando você clicar em Gerar mídia.</span></div>
+                                    <div class="vm-note"><span>O Marketing IA executa a geração diretamente pelos motores nativos assim que o Job é criado.</span><span>Logo oficial: nunca gerado por IA; entra na finalização técnica controlada.</span><span>Gerar mídia fica disponível apenas como fallback/retry se uma execução automática falhar.</span></div>
                                 </form>
                             </div>
 
