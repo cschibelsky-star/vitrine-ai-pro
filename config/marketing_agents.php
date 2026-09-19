@@ -7,6 +7,24 @@ use App\Marketing\Domain\Agents\AgentType;
 return [
     'schema_version' => '1.0.0',
     'approval_mode' => 'assisted',
+    'contexts' => [
+        'tv_digital_engine' => [
+            'mode' => 'engine',
+            'label' => 'Motor TV Digital',
+            'tenant_key' => 'tv_digital_enterprise',
+            'client_key' => null,
+            'brand' => 'TV Digital Enterprise',
+            'purpose' => 'Capacidade interna do produto TV Digital para transformar conteúdo editorial em peças, vídeos e distribuição.',
+        ],
+        'tv_sumare_client' => [
+            'mode' => 'client',
+            'label' => 'Cliente TV Sumaré',
+            'tenant_key' => 'marketing_ia',
+            'client_key' => 'tv_sumare',
+            'brand' => 'TV Sumaré',
+            'purpose' => 'Operação de marketing e redes sociais da marca TV Sumaré como cliente independente do Marketing IA.',
+        ],
+    ],
     'hub' => [
         'strategy_enabled' => env('MARKETING_HUB_STRATEGY_ENABLED', false),
         'url' => env('CENTRO_IA_URL', 'http://vitrine_core_web_hml/api/internal/centro-ia/execute'),

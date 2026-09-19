@@ -29,7 +29,9 @@ class MarketingDashboard extends Page
     public array $copilotMessages = [];
     public ?string $copilotError = null;
 
-    public string $flowCampaign = 'Vitrine Social Mídia';
+    public string $marketingContextKey = 'tv_sumare_client';
+
+    public string $flowCampaign = 'TV Sumaré';
     public string $flowObjective = '';
     public string $flowAudience = 'Pequenos negócios, criadores e influenciadores';
     public string $flowFormat = 'reel_9_16';
@@ -57,12 +59,17 @@ class MarketingDashboard extends Page
 
     public function mount(): void
     {
-        $this->copilotSessionId = (string) session('marketing_copilot.session_id', 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3))));
-        $this->copilotMessages = array_values((array) session('marketing_copilot.messages', []));
+        $availableContexts = array_keys((array) config('marketing_agents.contexts', []));
+        $storedContext = (string) session('marketing_context.key', $this->marketingContextKey);
+        $this->marketingContextKey = in_array($storedContext, $availableContexts, true) ? $storedContext : 'tv_sumare_client';
+
+        $copilotSessionKey = 'marketing_copilot.'.$this->marketingContextKey;
+        $this->copilotSessionId = (string) session($copilotSessionKey.'.session_id', 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3))));
+        $this->copilotMessages = array_values((array) session($copilotSessionKey.'.messages', []));
         $this->persistCopilot();
 
-        $productionState = (array) session('marketing_workstation.production', []);
-        $legacyState = (array) session('marketing_workstation.flow', []);
+        $productionState = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
+        $legacyState = [];
         $workstation = $productionState !== [] ? $productionState : $legacyState;
 
         $this->flowCampaign = (string) ($workstation['campaign'] ?? $this->flowCampaign);
@@ -104,8 +111,19 @@ class MarketingDashboard extends Page
         }
 
         $nativeStudio = (array) config('marketing_agents.native_studio', []);
+        $context = $this->getMarketingContext();
         $this->flowToolName = 'Marketing IA Native Studio';
-        $this->flowProjectName = trim((string) ($nativeStudio['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
+        $this->flowProjectName = trim((string) ($context['brand'] ?? $nativeStudio['official_project_name'] ?? 'Vitrine Social Mídia')) ?: 'Vitrine Social Mídia';
+
+        if ($productionState === []) {
+            $this->flowCampaign = (string) ($context['brand'] ?? 'TV Sumaré');
+            $this->flowAudience = ($context['mode'] ?? 'client') === 'engine'
+                ? 'Audiência editorial da TV Digital e público do veículo atendido'
+                : 'Moradores de Sumaré e região, audiência local e comunidade';
+            $this->flowStyle = ($context['mode'] ?? 'client') === 'engine'
+                ? 'Jornalístico, claro, confiável e adaptado à identidade do veículo'
+                : 'Local, jornalístico, humano, próximo da comunidade e visualmente consistente com a TV Sumaré';
+        }
     }
 
     public function sendCopilotMessage(): void
@@ -142,7 +160,12 @@ class MarketingDashboard extends Page
                 ->map(static fn (array $item): string => strtoupper((string) ($item['role'] ?? 'user')).': '.(string) ($item['content'] ?? ''))
                 ->implode("\n\n");
 
-            $system = 'Você é o Diretor de Marketing IA da Vitrine IA Pro dentro do Centro Operacional de Marketing. '
+            $context = $this->getMarketingContext();
+            $contextInstruction = ($context['mode'] ?? 'client') === 'engine'
+                ? 'CONTEXTO OPERACIONAL: MOTOR TV DIGITAL. Você está atuando como capacidade interna do produto TV Digital Enterprise. Não trate a TV Sumaré como cliente de marketing neste contexto. Trabalhe somente em funções de apoio editorial, transformação de conteúdo, vídeo, criativos e distribuição vinculadas ao produto TV Digital. '
+                : 'CONTEXTO OPERACIONAL: CLIENTE TV SUMARÉ. Você está atendendo a marca TV Sumaré como cliente independente do Marketing IA. Crie estratégia e conteúdo para as redes sociais da TV Sumaré, incluindo conteúdos próprios de marca, comunidade, agenda, curiosidades, engajamento, bastidores e campanhas. Notícias do portal podem ser matéria-prima, mas não são a única origem. Não confunda este contexto com o motor interno da TV Digital. ';
+
+            $system = $contextInstruction.'Você é o Diretor de Marketing IA da Vitrine IA Pro dentro do Centro Operacional de Marketing. '
                 .'Atue como copiloto operacional, em português do Brasil. Organize estratégia, campanha, copy, criativos, vídeo, distribuição e QA. '
                 .'Para vídeo, trate Veo como padrão de produção. HeyGen só deve ser proposto quando o pedido exigir explicitamente o avatar de Cristian Schibelsky e sua voz clonada como apresentador do Vitrine Social Mídia. '
                 .'Nunca afirme que publicou, agendou, ativou campanha ou gastou verba sem uma ação operacional confirmada. '
@@ -229,14 +252,19 @@ class MarketingDashboard extends Page
             $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
             $capability = trim((string) ($hub['capability'] ?? 'marketing_generation'));
 
-            $system = 'Você é o Creative Director do Fluxo de Produção nativo do Marketing IA da Vitrine IA Pro. '
+            $context = $this->getMarketingContext();
+            $contextInstruction = ($context['mode'] ?? 'client') === 'engine'
+                ? 'CONTEXTO OPERACIONAL: MOTOR TV DIGITAL. Produza ativos como capacidade interna da TV Digital Enterprise, preservando a identidade do veículo atendido e sem tratar a TV Sumaré como cliente de marketing neste contexto. '
+                : 'CONTEXTO OPERACIONAL: CLIENTE TV SUMARÉ. Produza conteúdo para as redes sociais e presença digital da marca TV Sumaré como cliente independente do Marketing IA. O conteúdo pode ser próprio de marca, comunidade, agenda, curiosidades, engajamento, bastidores ou derivado de notícias, sem depender exclusivamente do portal. ';
+
+            $system = $contextInstruction.'Você é o Creative Director do Fluxo de Produção nativo do Marketing IA da Vitrine IA Pro. '
                 .'Sua função é preparar um Job de Produção executável pelos motores nativos do Marketing IA, incluindo Gemini, Veo e finalização técnica. '
                 .'POLÍTICA DE VÍDEO: use Veo como motor padrão para vídeos de campanha, demonstração, conceito e narrativa visual. HeyGen não faz parte da produção padrão: reserve HeyGen exclusivamente para jobs de apresentação em que o briefing peça explicitamente o avatar de Cristian Schibelsky junto com sua voz clonada. Nunca selecione HeyGen automaticamente para um vídeo comum. '
                 .'Não afirme que gerou mídia, publicou ou consumiu créditos sem execução operacional confirmada. '
                 .'Entregue um briefing implementável e objetivo, em português do Brasil, preservando fatos fornecidos e sem inventar logos, preços, depoimentos ou funcionalidades. '
                 .'Quando a campanha ou produto for Vitrine Social Mídia, a comunicação deve deixar explícito que o assunto é redes sociais, produção de conteúdo, calendário editorial, Instagram/Facebook ou presença digital. Não use metáforas ambíguas como "vitrine parada", "vitrine estagnada" ou equivalentes sem explicar imediatamente que se trata das redes sociais. '
                 .'O CTA deve ser exatamente o informado no briefing; se estiver vazio, marque CTA COMO NECESSÁRIO em vez de inventar "Assine agora" ou outra chamada. '
-                .'Não gere, redesenhe nem interprete o logo da Vitrine IA Pro. Em ASSETS NECESSÁRIOS, sempre registre "logo oficial Vitrine IA Pro". Se o logo precisar fazer parte da cena, exija o arquivo oficial como imagem de referência; para assinatura de marca/watermark, indique aplicação em pós-produção pelo Marketing IA. '
+                .'Não gere, redesenhe nem interprete logotipos. Em ASSETS NECESSÁRIOS, sempre registre o logo oficial da marca ativa no contexto. Se o logo precisar fazer parte da cena, exija o arquivo oficial como imagem de referência; para assinatura de marca/watermark, indique aplicação em pós-produção pelo Marketing IA. '
                 .'Não inclua marcas, logotipos ou produtos identificáveis de terceiros sem que tenham sido fornecidos como asset autorizado. Evite texto duplicado e determine uma única ocorrência por mensagem na tela. '
                 .'Estruture obrigatoriamente em: JOB DE PRODUÇÃO, DIREÇÃO CRIATIVA, CENA 01, CENA 02 quando necessária, CÂMERA, ÁUDIO, TEXTO NA TELA, NEGATIVE PROMPT, ASSETS NECESSÁRIOS e QA CHECKLIST. '
                 .'No QA CHECKLIST, valide clareza sobre redes sociais, ausência de texto duplicado, ausência de marcas de terceiros, CTA fiel ao briefing e uso do logo oficial somente por asset/pós-produção. '
@@ -252,7 +280,7 @@ class MarketingDashboard extends Page
                 ."Estilo: {$style}\n\n"
                 .'Prepare o Job de Produção para execução nativa no Marketing IA. Se faltar algum asset de marca, marque como necessário em vez de inventar. '
                 .'Para Vitrine Social Mídia, deixe evidente que o problema e a solução dizem respeito às redes sociais e à operação de conteúdo. '
-                .'O logo oficial será fornecido/aplicado pelo Marketing IA; não peça ao gerador para recriá-lo.';
+                .'O logo oficial da marca ativa será fornecido/aplicado pelo Marketing IA; não peça ao gerador para recriá-lo.';
 
             $package = '';
             $this->flowGenerationSource = '';
@@ -723,6 +751,7 @@ class MarketingDashboard extends Page
             'tool_name' => $this->flowToolName,
             'project_name' => $this->flowProjectName,
             'generation_source' => $this->flowGenerationSource,
+            'marketing_context' => $this->marketingContextKey,
             'updated_at' => now()->toISOString(),
         ];
 
@@ -739,7 +768,7 @@ class MarketingDashboard extends Page
     private function persistFlowWorkstation(): void
     {
         session([
-            'marketing_workstation.production' => [
+            'marketing_workstation.production.'.$this->marketingContextKey => [
                 'campaign' => $this->flowCampaign,
                 'objective' => $this->flowObjective,
                 'audience' => $this->flowAudience,
@@ -761,7 +790,9 @@ class MarketingDashboard extends Page
                 'native_asset_url' => $this->nativeProductionAssetUrl,
                 'native_final_path' => $this->nativeProductionFinalPath,
                 'native_preview_url' => $this->nativeProductionPreviewUrl,
+                'marketing_context' => $this->marketingContextKey,
             ],
+            'marketing_context.key' => $this->marketingContextKey,
         ]);
     }
 
@@ -830,10 +861,36 @@ class MarketingDashboard extends Page
 
     private function persistCopilot(): void
     {
+        $key = 'marketing_copilot.'.$this->marketingContextKey;
         session([
-            'marketing_copilot.session_id' => $this->copilotSessionId,
-            'marketing_copilot.messages' => $this->copilotMessages,
+            $key.'.session_id' => $this->copilotSessionId,
+            $key.'.messages' => $this->copilotMessages,
         ]);
+    }
+
+    public function switchMarketingContext(string $contextKey): void
+    {
+        $contexts = (array) config('marketing_agents.contexts', []);
+        if (! array_key_exists($contextKey, $contexts)) {
+            $this->copilotError = 'Contexto de Marketing IA inválido.';
+            return;
+        }
+
+        $this->marketingContextKey = $contextKey;
+        session(['marketing_context.key' => $contextKey]);
+        $this->redirect(static::getUrl());
+    }
+
+    public function getMarketingContext(): array
+    {
+        $contexts = (array) config('marketing_agents.contexts', []);
+
+        return (array) ($contexts[$this->marketingContextKey] ?? $contexts['tv_sumare_client'] ?? []);
+    }
+
+    public function getMarketingContexts(): array
+    {
+        return (array) config('marketing_agents.contexts', []);
     }
 
     public function getAgents(): array

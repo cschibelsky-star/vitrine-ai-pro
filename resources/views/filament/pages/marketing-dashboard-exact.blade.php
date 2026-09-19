@@ -9,6 +9,8 @@
         $enabledAgents = collect($agents)->filter(fn (array $agent) => (bool) ($agent['enabled'] ?? false))->count();
         $activeCampaigns = $campaign ? 1 : 0;
         $taskCount = count($tasks);
+        $marketingContext = $this->getMarketingContext();
+        $marketingContexts = $this->getMarketingContexts();
     @endphp
 
     <style>
@@ -197,6 +199,12 @@
         .vm-send { align-self:end;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#a855f7);color:white;font-weight:750;font-size:12px;border:0;box-shadow:0 10px 24px rgba(124,58,237,.28); }
         .vm-note { margin-top:10px;font-size:10px;color:#817b92;display:flex;gap:16px;flex-wrap:wrap; }
         .vm-error { margin-bottom:8px;color:#fda4af;font-size:11px; }
+        .vm-context-bar { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:#100d25;border:1px solid rgba(139,92,246,.16); }
+        .vm-context-copy strong { display:block;color:white;font-size:12px; }
+        .vm-context-copy span { display:block;margin-top:3px;color:#8f89a3;font-size:10px;line-height:1.45; }
+        .vm-context-actions { display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end; }
+        .vm-context-btn { padding:8px 11px;border-radius:10px;background:#19142f;border:1px solid rgba(139,92,246,.2);color:#bdb6cf;font-size:10px;font-weight:800; }
+        .vm-context-btn.active { background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:white;border-color:transparent;box-shadow:0 8px 22px rgba(124,58,237,.24); }
 
         .vm-workstation { margin-top:18px;scroll-margin-top:90px; }
         .vm-workstation-head { display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px; }
@@ -309,12 +317,26 @@
                 </header>
 
                 <div class="vm-content">
+                    <div class="vm-context-bar" aria-label="Contexto operacional do Marketing IA">
+                        <div class="vm-context-copy">
+                            <strong>{{ $marketingContext['label'] ?? 'Marketing IA' }}</strong>
+                            <span>{{ $marketingContext['purpose'] ?? '' }}</span>
+                        </div>
+                        <div class="vm-context-actions">
+                            @foreach($marketingContexts as $contextKey => $context)
+                                <button type="button" class="vm-context-btn {{ $marketingContextKey === $contextKey ? 'active' : '' }}" wire:click="switchMarketingContext('{{ $contextKey }}')">
+                                    {{ $context['label'] ?? $contextKey }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <section id="inicio" class="vm-hero">
                         <div class="vm-hero-copy">
-                            <div class="vm-eyebrow">Vitrine IA Pro</div>
+                            <div class="vm-eyebrow">{{ ($marketingContext['mode'] ?? 'client') === 'engine' ? 'TV Digital Enterprise · Motor interno' : 'Cliente · TV Sumaré' }}</div>
                             <h1>Marketing <span class="vm-gradient">IA</span></h1>
-                            <div class="vm-hero-lead">Estratégia. Criatividade. Resultados.</div>
-                            <div class="vm-hero-sub">Agentes de IA, campanhas inteligentes e conteúdo com controle humano.</div>
+                            <div class="vm-hero-lead">{{ ($marketingContext['mode'] ?? 'client') === 'engine' ? 'Motor da TV Digital.' : 'Marketing da TV Sumaré.' }}</div>
+                            <div class="vm-hero-sub">{{ $marketingContext['purpose'] ?? 'Agentes de IA, campanhas inteligentes e conteúdo com controle humano.' }}</div>
                             <a href="#copilot" class="vm-cta">Criar nova campanha <span>→</span></a>
                         </div>
                         <div class="vm-hero-brand">
