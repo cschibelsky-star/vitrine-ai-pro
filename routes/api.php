@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\CentroIaBrokerController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\MarketingDashboardStateController;
+use App\Marketing\Domain\Video\VideoProject;
+use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use App\Models\AiAgent;
 use App\Models\AiProvider;
 use App\Services\Ai\AiMediaGenerationService;
@@ -90,6 +92,85 @@ Route::middleware('throttle:30,1')->group(function () {
             'image_base64' => base64_encode($binary),
         ]);
     })->name('api.internal.marketing.media.image');
+
+    Route::post('/internal/marketing/media/video', function (Request $request, GeminiVeoSceneRenderer $renderer) {
+        $expectedToken = trim((string) env('MARKETING_ENGINE_TOKEN', ''));
+        $receivedToken = trim((string) $request->bearerToken());
+
+        if ($expectedToken === '' || $receivedToken === '' || ! hash_equals($expectedToken, $receivedToken)) {
+            return response()->json(['ok' => false, 'error' => 'unauthorized'], 401);
+        }
+
+        $data = $request->validate([
+            'project_id' => ['required', 'string', 'max:120'],
+            'brand' => ['required', 'string', 'max:160'],
+            'idea' => ['required', 'string', 'max:4000'],
+            'objective' => ['nullable', 'string', 'max:120'],
+            'channel' => ['nullable', 'string', 'max:80'],
+            'format' => ['nullable', 'string', 'max:80'],
+            'title' => ['nullable', 'string', 'max:300'],
+            'caption' => ['nullable', 'string', 'max:8000'],
+            'cta' => ['nullable', 'string', 'max:1000'],
+            'aspect_ratio' => ['nullable', 'in:9:16,16:9'],
+            'duration_seconds' => ['nullable', 'integer', 'in:4,6,8'],
+        ]);
+
+        $prompt = 'Crie um vídeo curto profissional para redes sociais da marca '.trim($data['brand']).'. '
+            .'Tema: '.trim($data['idea']).'. '
+            .'Objetivo: '.trim((string) ($data['objective'] ?? 'engagement')).'. '
+            .'Canal: '.trim((string) ($data['channel'] ?? 'instagram')).'. '
+            .'Formato: '.trim((string) ($data['format'] ?? 'reels')).'. '
+            .'Título de referência: '.trim((string) ($data['title'] ?? '')).'. '
+            .'Mensagem de referência: '.trim((string) ($data['caption'] ?? '')).'. '
+            .'CTA de referência: '.trim((string) ($data['cta'] ?? '')).'. '
+            .'Produza uma narrativa visual coerente com a marca e o briefing. '
+            .'Não invente dados factuais, não recrie logotipo, não use marcas de terceiros e não renderize textos legíveis. '
+            .'Reserve área segura para identidade visual e CTA na finalização.';
+
+        $project = new VideoProject(
+            projectId: 'SOCIAL-'.strtoupper(substr(sha1((string) $data['project_id'].'|'.microtime(true)), 0, 12)),
+            productId: 'marketing-ia-engine',
+            campaignId: (string) str($data['brand'])->slug(),
+        );
+        $scene = $project->addScene('SCENE-01', 1, ['prompt' => $prompt]);
+
+        $job = $renderer->dispatch($project, $scene, [
+            'aspect_ratio' => (string) ($data['aspect_ratio'] ?? '9:16'),
+            'duration_seconds' => (int) ($data['duration_seconds'] ?? 8),
+            'resolution' => '720p',
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'provider' => 'gemini_veo',
+            'status' => (string) ($job['status'] ?? 'processing'),
+            'job_ref' => (string) ($job['job_ref'] ?? ''),
+            'model' => (string) config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview'),
+        ]);
+    })->name('api.internal.marketing.media.video');
+
+    Route::post('/internal/marketing/media/video/refresh', function (Request $request, GeminiVeoSceneRenderer $renderer) {
+        $expectedToken = trim((string) env('MARKETING_ENGINE_TOKEN', ''));
+        $receivedToken = trim((string) $request->bearerToken());
+
+        if ($expectedToken === '' || $receivedToken === '' || ! hash_equals($expectedToken, $receivedToken)) {
+            return response()->json(['ok' => false, 'error' => 'unauthorized'], 401);
+        }
+
+        $data = $request->validate([
+            'job_ref' => ['required', 'string', 'max:500'],
+        ]);
+
+        $job = $renderer->refresh((string) $data['job_ref']);
+
+        return response()->json([
+            'ok' => true,
+            'provider' => 'gemini_veo',
+            'status' => (string) ($job['status'] ?? 'processing'),
+            'job_ref' => (string) ($job['job_ref'] ?? ''),
+            'asset_url' => $job['render_ref'] ?? null,
+        ]);
+    })->name('api.internal.marketing.media.video.refresh');
 });
 
 require __DIR__.'/site_factory_api.php';
