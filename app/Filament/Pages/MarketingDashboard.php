@@ -219,6 +219,10 @@ class MarketingDashboard extends Page
                 'model' => $model,
                 'execution_id' => $executionId,
             ];
+
+            if ($this->shouldAutoProduceFromDirector($message)) {
+                $this->autoProduceDirectorCampaign($message, $reply);
+            }
         } catch (Throwable $exception) {
             report($exception);
             $this->copilotError = $exception->getMessage();
@@ -868,6 +872,176 @@ class MarketingDashboard extends Page
         if ($matched) {
             $this->persistFlowWorkstation();
         }
+    }
+
+    private function shouldAutoProduceFromDirector(string $message): bool
+    {
+        $normalized = mb_strtolower($message);
+
+        return str_contains($normalized, 'campanha')
+            || str_contains($normalized, 'crie')
+            || str_contains($normalized, 'criar')
+            || str_contains($normalized, 'gere')
+            || str_contains($normalized, 'gerar')
+            || str_contains($normalized, 'produza');
+    }
+
+    private function autoProduceDirectorCampaign(string $message, string $directorReply): void
+    {
+        try {
+            $context = $this->getMarketingContext();
+            $brand = trim((string) ($context['brand'] ?? $this->flowProjectName ?? 'Marca do cliente'));
+
+            $system = 'Retorne APENAS JSON valido, sem markdown, com esta estrutura: '
+                .'{"campaign":{"name":"","objective":"","audience":"","message":"","cta":"","style":""},'
+                .'"jobs":[{"type":"image|video","format":"ad_1_1|story_9_16|reel_9_16|video_16_9","title":"","idea":"","caption":"","cta":"","duration_seconds":8}]}. '
+                .'Crie de 2 a 5 jobs. Inclua pelo menos uma imagem e um reel quando fizer sentido. '
+                .'Nao invente fatos, metricas, depoimentos ou precos. Video usa Veo.';
+
+            $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
+            $raw = trim($this->generateFlowPackageWithGemini($system, $userPrompt));
+            $plan = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+
+            $campaign = (array) ($plan['campaign'] ?? []);
+            $jobs = array_values(array_filter((array) ($plan['jobs'] ?? []), 'is_array'));
+
+            if ($jobs === []) {
+                throw new \RuntimeException('O Diretor nao retornou pecas executaveis.');
+            }
+
+            $this->flowCampaign = trim((string) ($campaign['name'] ?? $brand)) ?: $brand;
+            $this->flowObjective = trim((string) ($campaign['objective'] ?? 'Divulgacao'));
+            $this->flowAudience = trim((string) ($campaign['audience'] ?? $this->flowAudience));
+            $this->flowMessage = trim((string) ($campaign['message'] ?? $message));
+            $this->flowCta = trim((string) ($campaign['cta'] ?? ''));
+            $this->flowStyle = trim((string) ($campaign['style'] ?? $this->flowStyle));
+            $this->flowGenerationSource = 'Diretor Auto Campaign Builder';
+
+            $generatedJobs = [];
+            foreach (array_slice($jobs, 0, 5) as $index => $job) {
+                $generatedJobs[] = $this->dispatchDirectorJob($job, $brand, $index + 1);
+            }
+
+            $this->flowJobs = array_values(array_slice(array_merge($generatedJobs, $this->flowJobs), 0, 12));
+            $this->flowPackage = json_encode($plan, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?: $directorReply;
+
+            if ($generatedJobs !== []) {
+                $first = $generatedJobs[0];
+                $this->flowJobId = (string) ($first['id'] ?? '');
+                $this->flowJobStatus = (string) ($first['status'] ?? 'PRONTO_PARA_PRODUCAO');
+                $this->nativeProductionStatus = $this->flowJobStatus;
+                $this->flowFormat = (string) ($first['format'] ?? $this->flowFormat);
+                $this->nativeProductionJobRef = (string) ($first['provider_job_ref'] ?? '');
+                $this->nativeProductionAssetUrl = (string) ($first['asset_url'] ?? '');
+                $this->nativeProductionPreviewUrl = (string) ($first['preview_url'] ?? '');
+            }
+
+            $this->persistFlowWorkstation();
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'Producao iniciada automaticamente: '.count($generatedJobs).' Jobs materializados. Imagens seguem para QA e videos Veo ficam em geracao.',
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'A estrategia foi criada, mas a automacao de producao falhou: '.$exception->getMessage(),
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+        }
+    }
+
+    private function dispatchDirectorJob(array $job, string $brand, int $sequence): array
+    {
+        $type = strtolower(trim((string) ($job['type'] ?? 'image')));
+        $format = trim((string) ($job['format'] ?? ($type === 'video' ? 'reel_9_16' : 'ad_1_1')));
+        if (! in_array($format, ['ad_1_1', 'story_9_16', 'reel_9_16', 'video_16_9'], true)) {
+            $format = $type === 'video' ? 'reel_9_16' : 'ad_1_1';
+        }
+
+        $id = 'MKT-AUTO-'.now()->format('Ymd-His').'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'-'.strtoupper(bin2hex(random_bytes(2)));
+        $title = trim((string) ($job['title'] ?? 'Peca '.$sequence));
+        $idea = trim((string) ($job['idea'] ?? $this->flowMessage));
+        $caption = trim((string) ($job['caption'] ?? ''));
+        $cta = trim((string) ($job['cta'] ?? $this->flowCta));
+
+        $base = [
+            'id' => $id,
+            'campaign' => $this->flowCampaign,
+            'title' => $title,
+            'format' => $format,
+            'type' => $type,
+            'status' => 'PRONTO_PARA_PRODUCAO',
+            'project_name' => $brand,
+            'generation_source' => 'Diretor Auto Campaign Builder',
+            'marketing_context' => $this->marketingContextKey,
+            'updated_at' => now()->toISOString(),
+            'asset_url' => '',
+            'preview_url' => '',
+            'provider_job_ref' => '',
+        ];
+
+        $prompt = 'Marca: '.$brand.'. Ideia: '.$idea.'. Objetivo: '.$this->flowObjective.'. Publico: '.$this->flowAudience.'. '
+            .'Titulo de referencia: '.$title.'. Legenda de referencia: '.$caption.'. CTA: '.$cta.'. Estilo: '.$this->flowStyle.'. '
+            .'Nao invente fatos, nao use marcas de terceiros, nao recrie logotipo e nao renderize texto legivel na midia-base.';
+
+        if ($type === 'video') {
+            $aspectRatio = $format === 'video_16_9' ? '16:9' : '9:16';
+            $duration = (int) ($job['duration_seconds'] ?? 8);
+            $duration = in_array($duration, [4, 6, 8], true) ? $duration : 8;
+
+            $project = new VideoProject(
+                projectId: $id,
+                productId: 'marketing-ia-engine',
+                campaignId: ((string) str($this->flowCampaign)->slug()) ?: 'marketing-ia',
+            );
+            $scene = $project->addScene('SCENE-01', 1, ['prompt' => $prompt]);
+            $result = app(GeminiVeoSceneRenderer::class)->dispatch($project, $scene, [
+                'aspect_ratio' => $aspectRatio,
+                'duration_seconds' => $duration,
+                'resolution' => '720p',
+            ]);
+
+            $base['status'] = 'EM_GERACAO';
+            $base['provider_job_ref'] = (string) ($result['job_ref'] ?? '');
+
+            return $base;
+        }
+
+        $agent = AiAgent::query()->where('slug', 'marketing-ia')->first();
+        $provider = AiProvider::query()->whereIn('slug', ['google', 'gemini', 'google-gemini'])->where('status', 'ativo')->first();
+
+        if (! $agent || ! $provider) {
+            throw new \RuntimeException('Provider Google/Gemini indisponivel.');
+        }
+
+        $generation = app(AiMediaGenerationService::class)->generate(
+            $agent,
+            $provider,
+            'image_generation',
+            $prompt,
+            (string) config('marketing_agents.native_studio.image_model', 'gemini-3.1-flash-image'),
+        );
+
+        if ((string) $generation->status !== 'Concluído' || ! $generation->asset_path) {
+            throw new \RuntimeException((string) ($generation->error_message ?: 'Falha ao gerar imagem.'));
+        }
+
+        $base['status'] = 'EM_QA';
+        $base['asset_url'] = (string) ($generation->asset_url ?? '');
+        $base['preview_url'] = URL::temporarySignedRoute(
+            'marketing.native-image-preview',
+            now()->addHours(2),
+            ['generation' => $generation->id],
+        );
+        $base['provider_job_ref'] = 'IMAGE-'.$generation->id;
+
+        return $base;
     }
 
     private function persistCopilot(): void
