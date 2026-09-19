@@ -144,6 +144,7 @@ class MarketingDashboard extends Page
 
             $system = 'Você é o Diretor de Marketing IA da Vitrine IA Pro dentro do Centro Operacional de Marketing. '
                 .'Atue como copiloto operacional, em português do Brasil. Organize estratégia, campanha, copy, criativos, vídeo, distribuição e QA. '
+                .'Para vídeo, trate Veo como padrão de produção. HeyGen só deve ser proposto quando o pedido exigir explicitamente o avatar de Cristian Schibelsky e sua voz clonada como apresentador do Vitrine Social Mídia. '
                 .'Nunca afirme que publicou, agendou, ativou campanha ou gastou verba sem uma ação operacional confirmada. '
                 .'Publicação orgânica deve ir ao Metricool somente após aprovação humana. '
                 .'Mídia paga deve ir ao Windsor.ai FB Ads/Meta Ads somente após aprovação humana e autorização explícita de orçamento/ativação. '
@@ -230,6 +231,7 @@ class MarketingDashboard extends Page
 
             $system = 'Você é o Creative Director do Fluxo de Produção nativo do Marketing IA da Vitrine IA Pro. '
                 .'Sua função é preparar um Job de Produção executável pelos motores nativos do Marketing IA, incluindo Gemini, Veo e finalização técnica. '
+                .'POLÍTICA DE VÍDEO: use Veo como motor padrão para vídeos de campanha, demonstração, conceito e narrativa visual. HeyGen não faz parte da produção padrão: reserve HeyGen exclusivamente para jobs de apresentação em que o briefing peça explicitamente o avatar de Cristian Schibelsky junto com sua voz clonada. Nunca selecione HeyGen automaticamente para um vídeo comum. '
                 .'Não afirme que gerou mídia, publicou ou consumiu créditos sem execução operacional confirmada. '
                 .'Entregue um briefing implementável e objetivo, em português do Brasil, preservando fatos fornecidos e sem inventar logos, preços, depoimentos ou funcionalidades. '
                 .'Quando a campanha ou produto for Vitrine Social Mídia, a comunicação deve deixar explícito que o assunto é redes sociais, produção de conteúdo, calendário editorial, Instagram/Facebook ou presença digital. Não use metáforas ambíguas como "vitrine parada", "vitrine estagnada" ou equivalentes sem explicar imediatamente que se trata das redes sociais. '

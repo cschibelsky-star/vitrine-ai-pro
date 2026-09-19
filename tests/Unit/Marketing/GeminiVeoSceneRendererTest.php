@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Marketing;
 
+use App\Marketing\Application\VideoSceneRenderer;
 use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Domain\Video\VideoScene;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
@@ -12,6 +13,17 @@ use Tests\TestCase;
 
 final class GeminiVeoSceneRendererTest extends TestCase
 {
+    public function test_default_marketing_video_renderer_remains_veo_even_if_legacy_provider_env_requests_heygen(): void
+    {
+        config()->set('marketing_video.provider', 'heygen');
+
+        $renderer = app(VideoSceneRenderer::class);
+
+        $this->assertInstanceOf(GeminiVeoSceneRenderer::class, $renderer);
+        $this->assertSame('gemini_veo', config('marketing_video.routing.video_default'));
+        $this->assertSame('presenter_avatar_voice_only', config('marketing_video.routing.heygen_usage'));
+    }
+
     public function test_dispatches_vertical_veo_generation_without_spending_live_credits(): void
     {
         config()->set('marketing_video.gemini_veo.api_key', 'test-key');

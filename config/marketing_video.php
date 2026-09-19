@@ -9,7 +9,10 @@ return [
         'creation_machine' => 'marketing_ia',
         'image' => 'google',
         'video' => 'gemini_veo',
+        'video_default' => 'gemini_veo',
         'avatar' => 'heygen',
+        'presenter_avatar' => 'heygen',
+        'heygen_usage' => 'presenter_avatar_voice_only',
         'flow_dependency' => false,
     ],
 
