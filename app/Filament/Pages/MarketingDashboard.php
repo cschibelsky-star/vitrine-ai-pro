@@ -70,6 +70,31 @@ class MarketingDashboard extends Page
         $this->copilotMessages = array_values((array) session($copilotSessionKey.'.messages', []));
         $this->copilotArchives = array_values((array) session($copilotSessionKey.'.archives', []));
         $this->copilotActiveArchiveId = session($copilotSessionKey.'.active_archive_id');
+        $legacyCleanupDone = (bool) session($copilotSessionKey.'.legacy_cleanup_done', false);
+
+        if (! $legacyCleanupDone && $this->copilotMessages !== []) {
+            $archiveId = 'ARCH-LEGACY-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
+            $this->copilotArchives = collect($this->copilotArchives)
+                ->prepend([
+                    'id' => $archiveId,
+                    'campaign' => 'Histórico legado',
+                    'message' => '',
+                    'director_reply' => '',
+                    'summary' => 'Conversa anterior preservada durante a limpeza do chat ativo.',
+                    'jobs' => [],
+                    'messages' => $this->copilotMessages,
+                    'created_at' => now()->toISOString(),
+                ])
+                ->take(20)
+                ->values()
+                ->all();
+            $this->copilotMessages = [];
+            $this->copilotMessage = '';
+            $this->copilotActiveArchiveId = null;
+            $this->copilotSessionId = 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3)));
+            session([$copilotSessionKey.'.legacy_cleanup_done' => true]);
+        }
+
         $this->persistCopilot();
 
         $productionState = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
