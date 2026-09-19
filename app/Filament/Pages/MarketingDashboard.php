@@ -27,6 +27,8 @@ class MarketingDashboard extends Page
     public string $copilotMessage = '';
     public string $copilotSessionId = '';
     public array $copilotMessages = [];
+    public array $copilotArchives = [];
+    public ?string $copilotActiveArchiveId = null;
     public ?string $copilotError = null;
 
     public string $marketingContextKey = 'tv_sumare_client';
@@ -66,6 +68,8 @@ class MarketingDashboard extends Page
         $copilotSessionKey = 'marketing_copilot.'.$this->marketingContextKey;
         $this->copilotSessionId = (string) session($copilotSessionKey.'.session_id', 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3))));
         $this->copilotMessages = array_values((array) session($copilotSessionKey.'.messages', []));
+        $this->copilotArchives = array_values((array) session($copilotSessionKey.'.archives', []));
+        $this->copilotActiveArchiveId = session($copilotSessionKey.'.active_archive_id');
         $this->persistCopilot();
 
         $productionState = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
@@ -937,13 +941,18 @@ class MarketingDashboard extends Page
             }
 
             $this->persistFlowWorkstation();
-            $this->copilotMessages[] = [
+
+            $summary = 'Produção iniciada: '.count($generatedJobs).' Jobs materializados para '.$this->flowCampaign.'. Imagens seguem para QA e vídeos Veo ficam em geração.';
+            $this->archiveCompletedCopilotRequest($message, $directorReply, $summary, $generatedJobs);
+            $this->copilotMessages = [[
                 'role' => 'assistant',
-                'content' => 'Producao iniciada automaticamente: '.count($generatedJobs).' Jobs materializados. Imagens seguem para QA e videos Veo ficam em geracao.',
+                'content' => $summary,
                 'at' => now()->toISOString(),
                 'model' => 'marketing-ia-orchestrator',
                 'execution_id' => null,
-            ];
+                'kind' => 'production_summary',
+            ]];
+            $this->copilotSessionId = 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3)));
         } catch (Throwable $exception) {
             report($exception);
             $this->copilotMessages[] = [
@@ -1044,12 +1053,85 @@ class MarketingDashboard extends Page
         return $base;
     }
 
+    private function archiveCompletedCopilotRequest(string $message, string $directorReply, string $summary, array $jobs): void
+    {
+        $archiveId = 'ARCH-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
+        $archive = [
+            'id' => $archiveId,
+            'campaign' => $this->flowCampaign,
+            'message' => $message,
+            'director_reply' => $directorReply,
+            'summary' => $summary,
+            'jobs' => $jobs,
+            'messages' => $this->copilotMessages,
+            'created_at' => now()->toISOString(),
+        ];
+
+        $this->copilotArchives = collect($this->copilotArchives)
+            ->reject(fn (array $item): bool => (string) ($item['id'] ?? '') === $archiveId)
+            ->prepend($archive)
+            ->take(20)
+            ->values()
+            ->all();
+        $this->copilotActiveArchiveId = null;
+    }
+
+    public function viewCopilotArchive(string $archiveId): void
+    {
+        $archive = collect($this->copilotArchives)
+            ->first(fn (array $item): bool => (string) ($item['id'] ?? '') === $archiveId);
+
+        if (! is_array($archive)) {
+            return;
+        }
+
+        $this->copilotActiveArchiveId = $archiveId;
+        $this->copilotMessages = array_values((array) ($archive['messages'] ?? []));
+        $this->copilotMessage = '';
+        $this->persistCopilot();
+    }
+
+    public function continueCopilotArchive(string $archiveId): void
+    {
+        $archive = collect($this->copilotArchives)
+            ->first(fn (array $item): bool => (string) ($item['id'] ?? '') === $archiveId);
+
+        if (! is_array($archive)) {
+            return;
+        }
+
+        $this->copilotSessionId = 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3)));
+        $this->copilotActiveArchiveId = $archiveId;
+        $this->copilotMessages = array_values((array) ($archive['messages'] ?? []));
+        $this->copilotMessages[] = [
+            'role' => 'assistant',
+            'content' => 'Contexto da campanha '.$archive['campaign'].' reaberto. Pode continuar a partir daqui.',
+            'at' => now()->toISOString(),
+            'model' => 'marketing-ia-orchestrator',
+            'execution_id' => null,
+        ];
+        $this->copilotMessage = '';
+        $this->persistCopilot();
+    }
+
+    public function releaseCopilotChat(): void
+    {
+        $this->copilotSessionId = 'MKT-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(3)));
+        $this->copilotMessages = [];
+        $this->copilotMessage = '';
+        $this->copilotActiveArchiveId = null;
+        $this->copilotError = null;
+        $this->persistCopilot();
+    }
+
     private function persistCopilot(): void
     {
         $key = 'marketing_copilot.'.$this->marketingContextKey;
         session([
             $key.'.session_id' => $this->copilotSessionId,
             $key.'.messages' => $this->copilotMessages,
+            $key.'.archives' => $this->copilotArchives,
+            $key.'.active_archive_id' => $this->copilotActiveArchiveId,
         ]);
     }
 

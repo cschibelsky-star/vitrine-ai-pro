@@ -199,6 +199,12 @@
         .vm-send { align-self:end;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#a855f7);color:white;font-weight:750;font-size:12px;border:0;box-shadow:0 10px 24px rgba(124,58,237,.28); }
         .vm-note { margin-top:10px;font-size:10px;color:#817b92;display:flex;gap:16px;flex-wrap:wrap; }
         .vm-error { margin-bottom:8px;color:#fda4af;font-size:11px; }
+        .vm-chat-archives { margin-top:12px;display:grid;gap:8px; }
+        .vm-chat-archive { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:11px;background:#100d24;border:1px solid rgba(139,92,246,.1); }
+        .vm-chat-archive strong { display:block;color:#eee9fa;font-size:11px; }
+        .vm-chat-archive span { display:block;margin-top:3px;color:#7f7893;font-size:9px; }
+        .vm-chat-archive-actions { display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end; }
+        .vm-chat-archive-actions button { padding:7px 9px;border-radius:8px;background:#19142f;border:1px solid rgba(139,92,246,.18);color:#c9c3dc;font-size:9px;font-weight:750; }
         .vm-context-bar { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:#100d25;border:1px solid rgba(139,92,246,.16); }
         .vm-context-copy strong { display:block;color:white;font-size:12px; }
         .vm-context-copy span { display:block;margin-top:3px;color:#8f89a3;font-size:10px;line-height:1.45; }
@@ -534,17 +540,36 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                     <section class="vm-quote"><div class="vm-quote-text">✦ &nbsp;“A combinação de IA e criatividade é o novo motor do crescimento.”</div><div class="vm-quote-brand"><span class="vm-quote-line"></span>Vitrine IA Pro</div></section>
 
                     <section id="copilot" class="vm-panel vm-copilot">
-                        <div class="vm-copilot-head"><div><div class="vm-eyebrow">Diretor de Marketing IA</div><h2>Sessão de criação</h2><div style="margin-top:4px;font-size:10px;color:#706a82">{{ $copilotSessionId }}</div></div><button type="button" wire:click="newCopilotSession" class="vm-secondary">Nova sessão</button></div>
+                        <div class="vm-copilot-head"><div><div class="vm-eyebrow">Diretor de Marketing IA</div><h2>Nova solicitação</h2><div style="margin-top:4px;font-size:10px;color:#706a82">{{ $copilotSessionId }}</div></div><button type="button" wire:click="releaseCopilotChat" class="vm-secondary">Limpar chat ativo</button></div>
                         @if($copilotError)<div class="vm-error">{{ $copilotError }}</div>@endif
                         <div class="vm-chat">
                             @forelse($copilotMessages as $message)
                                 <div class="vm-msg {{ ($message['role'] ?? '') === 'user' ? 'user' : 'ai' }}">{{ $message['content'] ?? '' }}</div>
                             @empty
-                                <div class="vm-chat-empty">Converse com o Marketing IA para planejar campanhas, conteúdo, Reels e anúncios.</div>
+                                <div class="vm-chat-empty">Digite apenas o que deseja criar. Quando a produção for iniciada, a conversa será arquivada e este chat ficará livre para a próxima solicitação.</div>
                             @endforelse
                         </div>
-                        <form wire:submit="sendCopilotMessage" class="vm-form"><textarea wire:model="copilotMessage" rows="3" maxlength="4000" placeholder="Digite o que deseja criar ou continuar..."></textarea><button type="submit" class="vm-send">Enviar</button></form>
-                        <div class="vm-note"><span>Briefings estruturados com CAMPANHA, OBJETIVO, PÚBLICO, FORMATO, DURAÇÃO, MENSAGEM, CTA e ESTILO sincronizam automaticamente com o Job de Produção.</span><span id="distribuicao">Metricool: publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
+                        <form wire:submit="sendCopilotMessage" class="vm-form"><textarea wire:model="copilotMessage" rows="3" maxlength="4000" placeholder="Ex.: crie uma campanha de divulgação da TV Sumaré para Instagram"></textarea><button type="submit" class="vm-send">Enviar</button></form>
+
+                        @if(count($copilotArchives) > 0)
+                            <div class="vm-chat-archives">
+                                <div class="vm-flow-title" style="margin-bottom:0"><strong>Histórico de campanhas</strong><span>{{ count($copilotArchives) }} arquivada(s)</span></div>
+                                @foreach($copilotArchives as $archive)
+                                    <div class="vm-chat-archive">
+                                        <div>
+                                            <strong>{{ $archive['campaign'] ?? 'Campanha' }}</strong>
+                                            <span>{{ $archive['summary'] ?? '' }}</span>
+                                        </div>
+                                        <div class="vm-chat-archive-actions">
+                                            <button type="button" wire:click="viewCopilotArchive('{{ $archive['id'] ?? '' }}')">Ver conversa</button>
+                                            <button type="button" wire:click="continueCopilotArchive('{{ $archive['id'] ?? '' }}')">Continuar campanha</button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="vm-note"><span>Após materializar a campanha, o chat ativo é liberado automaticamente e o histórico fica disponível aqui.</span><span id="distribuicao">Metricool: publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
                     </section>
 
                     <div style="height:1px;overflow:hidden"><span id="criativos"></span><span id="videos"></span><span id="calendario"></span><span id="pipeline"></span><span id="configuracoes"></span></div>
