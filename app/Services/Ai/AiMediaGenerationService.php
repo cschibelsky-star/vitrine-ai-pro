@@ -135,8 +135,7 @@ class AiMediaGenerationService
             throw new RuntimeException('Gemini Image retornou base64 inválido.');
         }
 
-        $binary = $this->applyOfficialLogoToImage($binary);
-        $mimeType = 'image/png';
+        // O Marketing IA gera a base visual neutra. Branding deve ser aplicado pela camada do cliente/Brand Kit.
 
         $extension = match ($mimeType) {
             'image/jpeg', 'image/jpg' => 'jpg',
@@ -173,7 +172,7 @@ class AiMediaGenerationService
                 'storage_disk' => $disk,
                 'prompt_length' => mb_strlen($prompt),
                 'synthid_expected' => true,
-                'branding' => 'official_logo_top_right',
+                'branding' => 'client_branding_pending',
                 'flow_dependency' => false,
             ],
         ];
