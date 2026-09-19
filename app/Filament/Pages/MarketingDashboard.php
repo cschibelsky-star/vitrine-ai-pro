@@ -156,12 +156,12 @@ class MarketingDashboard extends Page
                 throw new \RuntimeException('Centro IA não configurado para o Marketing IA.');
             }
 
-            $context = collect($history)
+            $historyText = collect($history)
                 ->map(static fn (array $item): string => strtoupper((string) ($item['role'] ?? 'user')).': '.(string) ($item['content'] ?? ''))
                 ->implode("\n\n");
 
-            $context = $this->getMarketingContext();
-            $contextInstruction = ($context['mode'] ?? 'client') === 'engine'
+            $marketingContext = $this->getMarketingContext();
+            $contextInstruction = ($marketingContext['mode'] ?? 'client') === 'engine'
                 ? 'CONTEXTO OPERACIONAL: MOTOR TV DIGITAL. Você está atuando como capacidade interna do produto TV Digital Enterprise. Não trate a TV Sumaré como cliente de marketing neste contexto. Trabalhe somente em funções de apoio editorial, transformação de conteúdo, vídeo, criativos e distribuição vinculadas ao produto TV Digital. '
                 : 'CONTEXTO OPERACIONAL: CLIENTE TV SUMARÉ. Você está atendendo a marca TV Sumaré como cliente independente do Marketing IA. Crie estratégia e conteúdo para as redes sociais da TV Sumaré, incluindo conteúdos próprios de marca, comunidade, agenda, curiosidades, engajamento, bastidores e campanhas. Notícias do portal podem ser matéria-prima, mas não são a única origem. Não confunda este contexto com o motor interno da TV Digital. ';
 
@@ -173,7 +173,7 @@ class MarketingDashboard extends Page
                 .'Mídia paga deve ir ao Windsor.ai FB Ads/Meta Ads somente após aprovação humana e autorização explícita de orçamento/ativação. '
                 .'Não invente preços, clientes, depoimentos, métricas ou funcionalidades.';
 
-            $userPrompt = $context === '' ? $message : "Histórico recente:\n{$context}\n\nNova mensagem:\n{$message}";
+            $userPrompt = $historyText === '' ? $message : "Histórico recente:\n{$historyText}\n\nNova mensagem:\n{$message}";
 
             $response = Http::acceptJson()
                 ->asJson()
