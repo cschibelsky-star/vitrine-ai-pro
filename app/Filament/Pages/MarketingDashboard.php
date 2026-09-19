@@ -152,10 +152,6 @@ class MarketingDashboard extends Page
             $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
             $capability = trim((string) ($hub['capability'] ?? 'marketing_generation'));
 
-            if ($url === '' || $token === '') {
-                throw new \RuntimeException('Centro IA não configurado para o Marketing IA.');
-            }
-
             $historyText = collect($history)
                 ->map(static fn (array $item): string => strtoupper((string) ($item['role'] ?? 'user')).': '.(string) ($item['content'] ?? ''))
                 ->implode("\n\n");
@@ -175,38 +171,53 @@ class MarketingDashboard extends Page
 
             $userPrompt = $historyText === '' ? $message : "Histórico recente:\n{$historyText}\n\nNova mensagem:\n{$message}";
 
-            $response = Http::acceptJson()
-                ->asJson()
-                ->withToken($token)
-                ->withHeaders(['X-Vitrine-Project' => $projectId])
-                ->timeout(max(1, min((int) ($hub['timeout'] ?? 60), 120)))
-                ->retry(2, 250, throw: false)
-                ->post($url, [
-                    'project_id' => $projectId,
-                    'capability' => $capability,
-                    'input' => [
-                        'system' => $system,
-                        'user' => $userPrompt,
-                        'response_format' => 'text',
-                        'temperature' => 0.3,
-                    ],
-                ]);
+            $reply = '';
+            $model = '';
+            $executionId = null;
 
-            if (! $response->successful() || ! $response->json('ok')) {
-                throw new \RuntimeException('O Centro IA não concluiu a solicitação.');
+            if ($url !== '' && $token !== '') {
+                $response = Http::acceptJson()
+                    ->asJson()
+                    ->withToken($token)
+                    ->withHeaders(['X-Vitrine-Project' => $projectId])
+                    ->timeout(max(1, min((int) ($hub['timeout'] ?? 60), 120)))
+                    ->retry(2, 250, throw: false)
+                    ->post($url, [
+                        'project_id' => $projectId,
+                        'capability' => $capability,
+                        'input' => [
+                            'system' => $system,
+                            'user' => $userPrompt,
+                            'response_format' => 'text',
+                            'temperature' => 0.3,
+                        ],
+                    ]);
+
+                if ($response->successful() && $response->json('ok')) {
+                    $reply = trim((string) $response->json('output_text'));
+                    $model = (string) ($response->json('model') ?: 'hub-routed');
+                    $executionId = $response->json('execution_id');
+                } else {
+                    logger()->warning('Diretor Marketing IA: Centro IA indisponível; acionando Gemini direto.', [
+                        'http_status' => $response->status(),
+                        'error' => (string) ($response->json('error') ?? 'unknown'),
+                        'capability' => $capability,
+                    ]);
+                }
             }
 
-            $reply = trim((string) $response->json('output_text'));
             if ($reply === '') {
-                throw new \RuntimeException('O Centro IA retornou uma resposta vazia.');
+                $reply = $this->generateFlowPackageWithGemini($system, $userPrompt);
+                $model = (string) config('marketing_agents.native_studio.director_model', 'gemini-3.5-flash').' (fallback direto)';
+                $executionId = null;
             }
 
             $this->copilotMessages[] = [
                 'role' => 'assistant',
                 'content' => $reply,
                 'at' => now()->toISOString(),
-                'model' => (string) ($response->json('model') ?: 'hub-routed'),
-                'execution_id' => $response->json('execution_id'),
+                'model' => $model,
+                'execution_id' => $executionId,
             ];
         } catch (Throwable $exception) {
             report($exception);
