@@ -4,7 +4,7 @@ namespace App\Services\Ai;
 
 use App\Models\AiAgent;
 use App\Models\AiExecution;
-use App\Models\AiProvider;
+use App\Shared\AI\Models\AiProvider;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
