@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiAgent;
+use App\Models\Subscription;
 use App\Services\Ai\AiRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -93,6 +94,124 @@ class CentroIaBrokerController extends Controller
             'model' => $execution->model_name ?? null,
             'output_text' => $output,
         ]);
+    }
+
+    public function entitlements(Request $request): JsonResponse
+    {
+        if (! $this->isAuthorized($request)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'unauthorized',
+            ], 401);
+        }
+
+        $data = $request->validate([
+            'project_id' => ['required', 'string', 'max:120'],
+            'core_subscription_id' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $projectHeader = trim((string) $request->header('X-Vitrine-Project', ''));
+        if ($projectHeader === '' || ! hash_equals((string) $data['project_id'], $projectHeader)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'project_identity_mismatch',
+            ], 422);
+        }
+
+        $subscription = Subscription::query()
+            ->with(['plan.product', 'license', 'company'])
+            ->find((int) $data['core_subscription_id']);
+
+        if (! $subscription || ! $subscription->plan) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'subscription_not_found',
+            ], 404);
+        }
+
+        $status = (string) $subscription->status;
+        $isActive = $status === 'Ativa';
+
+        $plan = $subscription->plan;
+        $limits = $this->parsePlanEntitlements((string) ($plan->recursos ?? ''));
+        [$periodStart, $periodEnd] = $this->resolveEntitlementPeriod($subscription, (string) $plan->ciclo_cobranca);
+
+        return response()->json([
+            'ok' => true,
+            'project_id' => $data['project_id'],
+            'subscription' => [
+                'id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'license_id' => $subscription->license_id,
+                'product' => $plan->product?->nome,
+                'plan_code' => $plan->nome,
+                'status' => $isActive ? 'active' : 'inactive',
+                'source_status' => $status,
+                'starts_at' => $periodStart,
+                'ends_at' => $periodEnd,
+            ],
+            'balances' => $isActive ? $limits : [],
+        ]);
+    }
+
+    private function parsePlanEntitlements(string $resources): array
+    {
+        $resources = trim($resources);
+        if ($resources === '') {
+            return [];
+        }
+
+        $allowed = ['content_credit', 'video_second', 'avatar_second'];
+        $decoded = json_decode($resources, true);
+        $raw = is_array($decoded) ? $decoded : [];
+
+        if (! is_array($decoded)) {
+            foreach (preg_split('/\R+/', $resources) ?: [] as $line) {
+                $line = trim((string) $line);
+                if ($line === '' || ! preg_match('/^([a-z_]+)\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)$/i', $line, $matches)) {
+                    continue;
+                }
+
+                $raw[strtolower($matches[1])] = (float) $matches[2];
+            }
+        }
+
+        $limits = [];
+        foreach ($allowed as $key) {
+            if (array_key_exists($key, $raw) && is_numeric($raw[$key]) && (float) $raw[$key] >= 0) {
+                $limits[$key] = round((float) $raw[$key], 2);
+            }
+        }
+
+        return $limits;
+    }
+
+    private function resolveEntitlementPeriod(Subscription $subscription, string $cycle): array
+    {
+        $periodEnd = $subscription->next_due_date?->copy()->startOfDay();
+        $periodStart = null;
+
+        if ($periodEnd) {
+            $periodStart = match ($cycle) {
+                'anual' => $periodEnd->copy()->subYear(),
+                'trial' => $periodEnd->copy()->subDays(30),
+                default => $periodEnd->copy()->subMonth(),
+            };
+        } else {
+            $periodStart = $subscription->activated_at?->copy()->startOfDay() ?? now()->startOfMonth();
+
+            $periodEnd = match ($cycle) {
+                'anual' => $periodStart->copy()->addYear(),
+                'trial' => $periodStart->copy()->addDays(30),
+                'cortesia', 'implantacao' => null,
+                default => $periodStart->copy()->addMonth(),
+            };
+        }
+
+        return [
+            $periodStart?->toIso8601String(),
+            $periodEnd?->toIso8601String(),
+        ];
     }
 
     private function isAuthorized(Request $request): bool
