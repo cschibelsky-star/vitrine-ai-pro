@@ -106,7 +106,6 @@ final class VideoPreviewController extends Controller
 
     public function nativeImagePreview(Request $request, string $generation): BinaryFileResponse
     {
-        abort_unless($request->hasValidSignature(), 403);
         abort_unless(ctype_digit($generation), 404);
 
         $media = AiMediaGeneration::query()->findOrFail((int) $generation);
@@ -138,7 +137,6 @@ final class VideoPreviewController extends Controller
 
     public function nativePreview(Request $request, string $job, string $version): BinaryFileResponse
     {
-        abort_unless($request->hasValidSignature(), 403);
         abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/', $job), 404);
         abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/', $version), 404);
 
