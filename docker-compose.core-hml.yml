@@ -31,6 +31,7 @@ services:
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
+      HEYGEN_WEBHOOK_SECRET: "${HEYGEN_WEBHOOK_SECRET:-}"
     depends_on:
       core_db:
         condition: service_healthy

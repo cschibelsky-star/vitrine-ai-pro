@@ -2,6 +2,7 @@
 
 return [
     'internal_token' => env('CENTRO_IA_INTERNAL_TOKEN'),
+    'heygen_webhook_secret' => env('HEYGEN_WEBHOOK_SECRET'),
 
     'service_identities' => [
         'vitrine-ai-social-enterprise' => [

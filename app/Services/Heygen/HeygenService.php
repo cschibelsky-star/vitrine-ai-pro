@@ -129,14 +129,27 @@ class HeygenService
 
     public function handleCallback(array $payload): ?HeygenVideoJob
     {
-        $callbackId = data_get($payload, 'callback_id') ?: data_get($payload, 'data.callback_id');
-        $videoId = data_get($payload, 'video_id') ?: data_get($payload, 'data.video_id') ?: data_get($payload, 'data.id');
+        $callbackId = data_get($payload, 'callback_id')
+            ?: data_get($payload, 'data.callback_id')
+            ?: data_get($payload, 'event_data.callback_id');
+
+        $videoId = data_get($payload, 'video_id')
+            ?: data_get($payload, 'data.video_id')
+            ?: data_get($payload, 'data.id')
+            ?: data_get($payload, 'event_data.video_id')
+            ?: data_get($payload, 'event_data.id');
 
         $job = $callbackId ? HeygenVideoJob::query()->find($callbackId) : null;
-        if (!$job && $videoId) $job = HeygenVideoJob::query()->where('heygen_video_id', $videoId)->first();
+        if (!$job && $videoId) {
+            $job = HeygenVideoJob::query()->where('heygen_video_id', $videoId)->first();
+        }
+
         if (!$job) return null;
 
-        return $this->applyVideoData($job, data_get($payload, 'data', $payload), $payload);
+        // Per-job callback_url deliveries are not signed by HeyGen.
+        // Never trust status/URLs from an unsigned payload: use it only as a
+        // notification trigger, then fetch the authoritative state via API.
+        return $this->refreshStatus($job);
     }
 
     protected function applyVideoData(HeygenVideoJob $job, array $data, array $raw): HeygenVideoJob

@@ -59,6 +59,3 @@ if (file_exists(__DIR__.'/master_2_0.php')) {
     require __DIR__.'/master_2_0.php';
 }
 
-if (file_exists(__DIR__.'/heygen_callback.php')) {
-    require __DIR__.'/heygen_callback.php';
-}
