@@ -20,6 +20,7 @@ return [
         ],
         'social_content_generation' => [
             'agent_slug' => env('CENTRO_IA_SOCIAL_CONTENT_AGENT_SLUG', 'marketing-ia'),
+            'routing_capability' => 'copy',
         ],
         'marketing_generation' => [
             'agent_slug' => env('CENTRO_IA_MARKETING_AGENT_SLUG', 'marketing-ia'),

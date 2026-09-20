@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiAgent;
-use App\Services\Ai\AiExecutionService;
+use App\Services\Ai\AiRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +15,7 @@ use Throwable;
 
 class CentroIaBrokerController extends Controller
 {
-    public function execute(Request $request, AiExecutionService $service): JsonResponse
+    public function execute(Request $request, AiRoutingService $service): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
             return response()->json([
@@ -69,7 +69,8 @@ class CentroIaBrokerController extends Controller
             ? "INSTRUCOES DO SISTEMA:\n{$system}\n\nSOLICITACAO:\n{$user}"
             : $user;
 
-        $execution = $service->execute($agent, $prompt);
+        $routingCapability = trim((string) ($capabilityConfig['routing_capability'] ?? ''));
+        $execution = $service->execute($agent, $prompt, $routingCapability !== '' ? $routingCapability : null);
         $status = (string) ($execution->status ?? '');
         $output = (string) ($execution->output ?? '');
 
