@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Marketing;
 
-use App\Marketing\Application\GeminiStrategyAgent;
-use App\Marketing\Application\MarketingAgentExecutor;
 use App\Marketing\Application\MarketingOrchestrator;
+use App\Marketing\Application\ResilientMarketingAgentExecutor;
 use App\Marketing\Application\SchemaContractValidator;
-use App\Marketing\Application\SimulatedMarketingAgentExecutor;
 use Tests\TestCase;
 use Throwable;
 
@@ -21,14 +19,18 @@ final class MarketingGeminiLiveHomologationTest extends TestCase
         }
 
         $campaign = $this->campaign();
-        $strategyAgent = app(GeminiStrategyAgent::class);
+        $executor = app(ResilientMarketingAgentExecutor::class);
 
         try {
-            $strategy = $strategyAgent->execute($campaign);
+            $result = app(MarketingOrchestrator::class)->runOperationalCampaign(
+                $campaign,
+                $executor,
+                app(SchemaContractValidator::class),
+            );
         } catch (Throwable $exception) {
             $previous = $exception->getPrevious();
             $this->fail(sprintf(
-                'Gemini live request failed: %s: %s; previous=%s: %s',
+                'Marketing live pipeline failed: %s: %s; previous=%s: %s',
                 $exception::class,
                 $exception->getMessage(),
                 $previous ? $previous::class : 'none',
@@ -36,43 +38,15 @@ final class MarketingGeminiLiveHomologationTest extends TestCase
             ));
         }
 
-        $metadata = $strategyAgent->metadata();
-        $this->assertSame('gemini', $metadata['provider'] ?? null);
-        $this->assertFalse($metadata['fallback'] ?? true);
+        foreach (['product_market_strategist', 'campaign_planner', 'copy_content', 'creative_director', 'social_distribution', 'qa_brand_guardian'] as $agentId) {
+            $metadata = $result['execution_metadata'][$agentId] ?? [];
+            $this->assertSame('centro-ia', $metadata['provider'] ?? null, "{$agentId} must execute via Centro IA. Metadata: ".json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $this->assertFalse($metadata['fallback'] ?? true, "{$agentId} must not use fallback.");
+        }
 
-        $simulated = app(SimulatedMarketingAgentExecutor::class);
-        $executor = new class($strategy, $metadata, $simulated) implements MarketingAgentExecutor {
-            public function __construct(
-                private readonly array $strategy,
-                private readonly array $strategyMetadata,
-                private readonly SimulatedMarketingAgentExecutor $simulated,
-            ) {
-            }
-
-            public function execute(string $agentId, array $campaign, array $inputs): array
-            {
-                if ($agentId === 'product_market_strategist') {
-                    return $this->strategy;
-                }
-
-                return $this->simulated->execute($agentId, $campaign, $inputs);
-            }
-
-            public function metadataFor(string $agentId): array
-            {
-                if ($agentId === 'product_market_strategist') {
-                    return $this->strategyMetadata;
-                }
-
-                return $this->simulated->metadataFor($agentId);
-            }
-        };
-
-        $result = app(MarketingOrchestrator::class)->runOperationalCampaign(
-            $campaign,
-            $executor,
-            app(SchemaContractValidator::class),
-        );
+        $videoMetadata = $result['execution_metadata']['video_producer'] ?? [];
+        $this->assertSame('video-engine-plan', $videoMetadata['provider'] ?? null);
+        $this->assertSame('explicit', $videoMetadata['generation_mode'] ?? null);
 
         $this->assertSame('completed', $result['status']);
         $this->assertSame('approved', $result['qa_result']);
