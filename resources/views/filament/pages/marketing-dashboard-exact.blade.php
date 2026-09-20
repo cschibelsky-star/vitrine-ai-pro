@@ -11,6 +11,12 @@
         $taskCount = count($tasks);
         $marketingContext = $this->getMarketingContext();
         $marketingContexts = $this->getMarketingContexts();
+        $clientJobs = collect($flowJobs)->reject(fn (array $job) => (bool) ($job['legacy'] ?? false))->values();
+        $imageJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'image'))->values();
+        $videoJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'video'))->values();
+        $workingJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','EM_GERACAO','GERADO','FINALIZANDO'], true))->count();
+        $reviewJobs = $clientJobs->filter(fn (array $job) => (string) ($job['status'] ?? '') === 'EM_QA')->count();
+        $readyJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true))->count();
     @endphp
 
     <style>
@@ -158,6 +164,31 @@
 
         .vm-grid { display:grid;grid-template-columns:1.08fr .92fr;gap:16px;margin-top:16px; }
         .vm-panel { border-radius:18px;background:linear-gradient(145deg,#1a1732,#121026);border:1px solid rgba(139,92,246,.1);box-shadow:0 14px 38px rgba(0,0,0,.18);padding:20px; }
+        .vm-results { margin-top:18px;display:grid;gap:16px; }
+        .vm-results-head { display:flex;align-items:flex-end;justify-content:space-between;gap:16px; }
+        .vm-results-head h2 { margin:4px 0 0;font-size:24px;letter-spacing:-.035em; }
+        .vm-results-head p { margin:6px 0 0;color:#9f9ab9;font-size:12px; }
+        .vm-result-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px; }
+        .vm-result-card { border:1px solid rgba(139,92,246,.16);border-radius:16px;overflow:hidden;background:#100d22; }
+        .vm-result-media { aspect-ratio:1/1;background:#07050e;display:flex;align-items:center;justify-content:center;overflow:hidden; }
+        .vm-result-media.video { aspect-ratio:9/16;max-height:360px; }
+        .vm-result-media img,.vm-result-media video { width:100%;height:100%;object-fit:contain;display:block; }
+        .vm-result-body { padding:12px; }
+        .vm-result-title { font-size:12px;font-weight:760;color:#fff; }
+        .vm-result-meta { margin-top:5px;font-size:10px;color:#8f879f; }
+        .vm-machine { display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center; }
+        .vm-machine-track { display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px; }
+        .vm-machine-step { padding:12px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(139,92,246,.12);font-size:10px;color:#837c98;text-align:center; }
+        .vm-machine-step.active { color:#fff;border-color:rgba(139,92,246,.45);background:rgba(124,58,237,.16);box-shadow:0 0 22px rgba(124,58,237,.12); }
+        .vm-machine-orb { width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8b4fe,#8b5cf6 38%,#312e81 72%,#0b0716);box-shadow:0 0 34px rgba(139,92,246,.45);animation:vmPulse 2.2s ease-in-out infinite; }
+        @keyframes vmPulse { 0%,100%{transform:scale(.96);opacity:.84}50%{transform:scale(1.04);opacity:1} }
+        .vm-tech details,.vm-tech summary { color:#8f879f; }
+        .vm-tech summary { cursor:pointer;font-size:11px;list-style:none; }
+        .vm-tech summary::-webkit-details-marker { display:none; }
+        .vm-tech summary::before { content:"›";display:inline-block;margin-right:8px;transition:.18s; }
+        .vm-tech[open] summary::before { transform:rotate(90deg); }
+        .vm-section-empty { padding:24px;border:1px dashed rgba(139,92,246,.2);border-radius:14px;text-align:center;color:#817a92;font-size:12px; }
+        .vm-action-link { display:inline-flex;margin-top:10px;padding:8px 12px;border-radius:999px;background:rgba(124,58,237,.16);color:#d8b4fe;text-decoration:none;font-size:11px;font-weight:700; }
         .vm-panel-title { display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px; }
         .vm-panel-title h2 { margin:0;font-size:17px;color:white;font-weight:780;letter-spacing:-.02em; }
         .vm-link { color:#a855f7;font-size:12px;text-decoration:none; }
@@ -289,8 +320,8 @@
 
                 <nav class="vm-nav" aria-label="Marketing IA">
                     <a class="active" href="#inicio"><x-heroicon-o-home/> <span>Início</span></a>
-                    <a href="#workstation"><x-heroicon-o-squares-2x2/> <span>AI Workstation</span></a>
-                    <a href="#agentes"><x-heroicon-o-user-group/> <span>Agentes IA</span></a>
+                    <a href="#resultados"><x-heroicon-o-squares-2x2/> <span>Resultados</span></a>
+                    <a href="#agentes"><x-heroicon-o-user-group/> <span>Equipe IA</span></a>
                     <a href="#campanhas"><x-heroicon-o-megaphone/> <span>Campanhas</span></a>
                     <a href="#criativos"><x-heroicon-o-photo/> <span>Criativos</span></a>
                     <a href="#videos"><x-heroicon-o-video-camera/> <span>Vídeos</span></a>
@@ -352,7 +383,188 @@
                         </div>
                     </section>
 
-                    <section id="workstation" class="vm-panel vm-workstation">
+                    <section id="resultados" class="vm-results" wire:poll.15s="refreshProductionBoard">
+                        <div class="vm-panel">
+                            <div class="vm-results-head">
+                                <div>
+                                    <div class="vm-eyebrow">Resultado primeiro</div>
+                                    <h2>O que o Marketing IA entregou</h2>
+                                    <p>Veja conteúdos, aprove peças e peça correções pelo chat. A operação técnica permanece em segundo plano.</p>
+                                </div>
+                                <a href="#copilot" class="vm-cta" style="margin-top:0">Pedir criação ou ajuste <span>→</span></a>
+                            </div>
+
+                            <div class="vm-stats" style="margin-top:16px">
+                                <div class="vm-stat"><div class="vm-stat-label">Em produção</div><div class="vm-stat-value">{{ $workingJobs }}</div><div class="vm-stat-meta">A máquina está trabalhando</div></div>
+                                <div class="vm-stat"><div class="vm-stat-label">Para revisar</div><div class="vm-stat-value">{{ $reviewJobs }}</div><div class="vm-stat-meta">Aguardando sua decisão</div></div>
+                                <div class="vm-stat"><div class="vm-stat-label">Prontos</div><div class="vm-stat-value">{{ $readyJobs }}</div><div class="vm-stat-meta">Aprovados, agendados ou publicados</div></div>
+                                <div class="vm-stat"><div class="vm-stat-label">Conteúdos recentes</div><div class="vm-stat-value">{{ $clientJobs->count() }}</div><div class="vm-stat-meta">Nesta operação</div></div>
+                            </div>
+                        </div>
+
+                        <div class="vm-panel vm-machine">
+                            <div>
+                                <div class="vm-eyebrow">Marketing IA trabalhando</div>
+                                <h2 style="margin:5px 0 0;font-size:18px">Sua equipe de IA está processando a operação</h2>
+                                <div class="vm-machine-track">
+                                    <div class="vm-machine-step {{ $clientJobs->count() > 0 ? 'active' : '' }}">Entendendo</div>
+                                    <div class="vm-machine-step {{ $clientJobs->count() > 0 ? 'active' : '' }}">Planejando</div>
+                                    <div class="vm-machine-step {{ $workingJobs > 0 ? 'active' : '' }}">Produzindo</div>
+                                    <div class="vm-machine-step {{ $reviewJobs > 0 ? 'active' : '' }}">Revisando</div>
+                                    <div class="vm-machine-step {{ $readyJobs > 0 ? 'active' : '' }}">Pronto</div>
+                                </div>
+                                <div class="vm-note" style="margin-top:12px">
+                                    <span>{{ $workingJobs > 0 ? $workingJobs.' conteúdo(s) em produção.' : 'Nenhuma produção ativa neste momento.' }}</span>
+                                    <span>Para corrigir qualquer peça, descreva o ajuste no chat.</span>
+                                </div>
+                            </div>
+                            <div class="vm-machine-orb" aria-hidden="true"></div>
+                        </div>
+
+                        <div id="criativos" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Criativos</h2><a href="#copilot" class="vm-link">Pedir novo criativo →</a></div>
+                            @if($imageJobs->count())
+                                <div class="vm-result-grid">
+                                    @foreach($imageJobs as $job)
+                                        @php $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''))); @endphp
+                                        <article class="vm-result-card">
+                                            <div class="vm-result-media">
+                                                @if($media !== '')
+                                                    <img src="{{ $media }}" alt="Criativo produzido pelo Marketing IA">
+                                                @else
+                                                    <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">{{ ($job['status'] ?? '') === 'EM_GERACAO' ? 'Criando seu conteúdo...' : 'Prévia ainda não disponível' }}</div>
+                                                @endif
+                                            </div>
+                                            <div class="vm-result-body">
+                                                <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Criativo') }}</div>
+                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }} · {{ $job['status'] ?? '' }}</div>
+                                                <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="vm-section-empty">Nenhum criativo disponível ainda. Quando uma imagem for produzida, ela aparecerá aqui.</div>
+                            @endif
+                        </div>
+
+                        <div id="videos" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Vídeos</h2><a href="#copilot" class="vm-link">Pedir novo vídeo →</a></div>
+                            @if($videoJobs->count())
+                                <div class="vm-result-grid">
+                                    @foreach($videoJobs as $job)
+                                        @php $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''))); @endphp
+                                        <article class="vm-result-card">
+                                            <div class="vm-result-media video">
+                                                @if($media !== '')
+                                                    <video controls playsinline preload="metadata" src="{{ $media }}"></video>
+                                                @else
+                                                    <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">{{ ($job['status'] ?? '') === 'EM_GERACAO' ? 'Produzindo seu vídeo...' : 'Vídeo ainda não disponível' }}</div>
+                                                @endif
+                                            </div>
+                                            <div class="vm-result-body">
+                                                <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Vídeo') }}</div>
+                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }} · {{ $job['status'] ?? '' }}</div>
+                                                <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="vm-section-empty">Nenhum vídeo disponível ainda. Os vídeos aparecem aqui conforme forem concluídos.</div>
+                            @endif
+                        </div>
+
+                        <div id="calendario" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Calendário</h2><span class="vm-secondary">Conteúdo aprovado e programação</span></div>
+                            @php $calendarJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true)); @endphp
+                            @if($calendarJobs->count())
+                                <div class="vm-campaigns">
+                                    @foreach($calendarJobs as $job)
+                                        <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">{{ $job['status'] ?? '' }}</span><span class="vm-time">atual</span></div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="vm-section-empty">Nenhum conteúdo aprovado para o calendário ainda.</div>
+                            @endif
+                        </div>
+
+                        <div id="agentes" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Equipe IA</h2><span class="vm-secondary">Trabalhando em segundo plano</span></div>
+                            <div class="vm-campaigns">
+                                <div class="vm-campaign-row"><div class="vm-thumb">✦</div><div><div class="vm-campaign-name">Direção de Marketing</div><div class="vm-campaign-type">Transforma seu pedido em campanha e conteúdo</div></div><span class="vm-status purple">Ativa</span><span class="vm-time">IA</span></div>
+                                <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">Revisão e qualidade</div><div class="vm-campaign-type">Confere o conteúdo antes da aprovação</div></div><span class="vm-status blue">Ativa</span><span class="vm-time">IA</span></div>
+                                <div class="vm-campaign-row"><div class="vm-thumb">↗</div><div><div class="vm-campaign-name">Distribuição</div><div class="vm-campaign-type">Organiza o conteúdo aprovado para publicação</div></div><span class="vm-status yellow">Governada</span><span class="vm-time">IA</span></div>
+                            </div>
+                        </div>
+
+                        <div id="qa" class="vm-panel">
+                            <div class="vm-panel-title"><h2>QA e Aprovação</h2><a href="#copilot" class="vm-link">Pedir correção →</a></div>
+                            @php $qaJobs = $clientJobs->filter(fn (array $job) => (string) ($job['status'] ?? '') === 'EM_QA'); @endphp
+                            @if($qaJobs->count())
+                                <div class="vm-result-grid">
+                                    @foreach($qaJobs as $job)
+                                        @php $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''))); @endphp
+                                        <article class="vm-result-card">
+                                            <div class="vm-result-media {{ (($job['type'] ?? '') === 'video') ? 'video' : '' }}">
+                                                @if($media !== '' && (($job['type'] ?? '') === 'video'))
+                                                    <video controls playsinline preload="metadata" src="{{ $media }}"></video>
+                                                @elseif($media !== '')
+                                                    <img src="{{ $media }}" alt="Conteúdo aguardando aprovação">
+                                                @else
+                                                    <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">Prévia em preparação</div>
+                                                @endif
+                                            </div>
+                                            <div class="vm-result-body">
+                                                <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div>
+                                                <div class="vm-result-meta">Aguardando sua revisão</div>
+                                                <a href="#copilot" class="vm-action-link">Pedir alteração pelo chat</a>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="vm-section-empty">Nenhum conteúdo aguardando aprovação agora.</div>
+                            @endif
+                        </div>
+
+                        <div id="distribuicao" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Distribuição</h2><span class="vm-secondary">Somente conteúdo aprovado</span></div>
+                            @php $distributionJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true)); @endphp
+                            @if($distributionJobs->count())
+                                <div class="vm-campaigns">
+                                    @foreach($distributionJobs as $job)
+                                        <div class="vm-campaign-row"><div class="vm-thumb">↗</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">{{ $job['status'] ?? '' }}</span><span class="vm-time">fila</span></div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="vm-section-empty">Nada para distribuir ainda. Os conteúdos aprovados aparecerão aqui.</div>
+                            @endif
+                        </div>
+
+                        <div id="pipeline" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Andamento</h2><span class="vm-secondary">Visão simples do trabalho</span></div>
+                            <div class="vm-machine-track">
+                                <div class="vm-machine-step {{ $clientJobs->count() > 0 ? 'active' : '' }}">Pedido recebido</div>
+                                <div class="vm-machine-step {{ $workingJobs > 0 ? 'active' : '' }}">Em produção</div>
+                                <div class="vm-machine-step {{ $reviewJobs > 0 ? 'active' : '' }}">Para revisar</div>
+                                <div class="vm-machine-step {{ $readyJobs > 0 ? 'active' : '' }}">Aprovado</div>
+                                <div class="vm-machine-step {{ $clientJobs->contains(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['AGENDADO','PUBLICADO'], true)) ? 'active' : '' }}">Distribuição</div>
+                            </div>
+                        </div>
+
+                        <div id="configuracoes" class="vm-panel">
+                            <div class="vm-panel-title"><h2>Preferências</h2><a href="#copilot" class="vm-link">Solicitar alteração →</a></div>
+                            <div class="vm-campaigns">
+                                <div class="vm-campaign-row"><div class="vm-thumb">◎</div><div><div class="vm-campaign-name">Marca ativa</div><div class="vm-campaign-type">{{ $marketingContext['brand'] ?? 'Marketing IA' }}</div></div><span class="vm-status purple">Ativa</span><span class="vm-time">contexto</span></div>
+                                <div class="vm-campaign-row"><div class="vm-thumb">✦</div><div><div class="vm-campaign-name">Correções e preferências</div><div class="vm-campaign-type">Faça pedidos e ajustes pelo Diretor de Marketing IA</div></div><span class="vm-status blue">Via chat</span><span class="vm-time">sempre</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <details class="vm-tech" style="margin-top:16px">
+                        <summary>Área técnica e diagnóstico</summary>
+                        <section id="workstation" class="vm-panel vm-workstation" style="margin-top:10px">
                         <div class="vm-workstation-head">
                             <div>
                                 <div class="vm-eyebrow">Marketing IA Workstation</div>
@@ -549,7 +761,8 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                 @endif
                             </div>
                         </div>
-                    </section>
+                        </section>
+                    </details>
 
                     <section class="vm-stats" aria-label="Indicadores">
                         <div class="vm-stat"><div class="vm-stat-head"><div class="vm-stat-icon"><x-heroicon-o-megaphone style="width:24px;height:24px"/></div><div class="vm-stat-label">Campanhas Ativas</div></div><div class="vm-stat-value">{{ $activeCampaigns }}</div><div class="vm-stat-meta">Estado persistido atual</div></div>
@@ -568,8 +781,8 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                 @else
                                     <div class="vm-campaign-row"><div class="vm-thumb">+</div><div><div class="vm-campaign-name">Nenhuma campanha persistida</div><div class="vm-campaign-type">Crie a primeira campanha pelo Marketing IA</div></div><span class="vm-status blue">Pronto</span><span class="vm-time">—</span></div>
                                 @endif
-                                <div id="agentes" class="vm-campaign-row"><div class="vm-thumb">{{ $enabledAgents }}</div><div><div class="vm-campaign-name">Agentes IA habilitados</div><div class="vm-campaign-type">{{ count($agents) }} agentes registrados no Core</div></div><span class="vm-status blue">Operacional</span><span class="vm-time">runtime</span></div>
-                                <div id="qa" class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">QA e Aprovação</div><div class="vm-campaign-type">Modo: {{ $runtime['approval_mode'] }}</div></div><span class="vm-status yellow">Controle humano</span><span class="vm-time">ativo</span></div>
+                                <div class="vm-campaign-row"><div class="vm-thumb">{{ $enabledAgents }}</div><div><div class="vm-campaign-name">Agentes IA habilitados</div><div class="vm-campaign-type">{{ count($agents) }} agentes registrados no Core</div></div><span class="vm-status blue">Operacional</span><span class="vm-time">runtime</span></div>
+                                <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">QA e Aprovação</div><div class="vm-campaign-type">Modo: {{ $runtime['approval_mode'] }}</div></div><span class="vm-status yellow">Controle humano</span><span class="vm-time">ativo</span></div>
                             </div>
                         </div>
 
@@ -622,7 +835,7 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                             </div>
                         @endif
 
-                        <div class="vm-note"><span>Após materializar a campanha, o chat ativo é liberado automaticamente e o histórico fica disponível aqui.</span><span id="distribuicao">Metricool: publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
+                        <div class="vm-note"><span>Após materializar a campanha, o chat ativo é liberado automaticamente e o histórico fica disponível aqui.</span><span>Publicação orgânica somente após aprovação humana.</span><span>Windsor.ai / Meta Ads: ativação somente após autorização explícita de orçamento.</span></div>
                     </section>
 
                     <div style="height:1px;overflow:hidden"><span id="criativos"></span><span id="videos"></span><span id="calendario"></span><span id="pipeline"></span><span id="configuracoes"></span></div>
