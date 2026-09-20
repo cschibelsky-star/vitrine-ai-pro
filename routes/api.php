@@ -44,14 +44,45 @@ Route::middleware('throttle:30,1')->group(function () {
             'cta' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $agent = AiAgent::query()->where('slug', 'marketing-ia')->first();
         $provider = AiProvider::query()
             ->whereIn('slug', ['google', 'gemini', 'google-gemini'])
             ->where('status', 'ativo')
             ->first();
 
-        if (! $agent || ! $provider) {
-            return response()->json(['ok' => false, 'error' => 'image_engine_not_configured'], 503);
+        if (! $provider) {
+            $provider = AiProvider::query()->create([
+                'name' => 'Gemini',
+                'slug' => 'gemini',
+                'provider_type' => 'gemini',
+                'status' => 'ativo',
+                'notes' => 'Google Gemini para estratégia, conteúdo e geração de mídia.',
+                'config' => [
+                    'model_default' => 'gemini-2.5-flash',
+                    'capabilities' => ['marketing_strategy', 'copy', 'critical_review', 'image_generation'],
+                    'models' => [
+                        'image_generation' => (string) config('marketing_agents.native_studio.image_model', 'gemini-3.1-flash-image'),
+                    ],
+                ],
+            ]);
+        }
+
+        $agent = AiAgent::query()->where('slug', 'marketing-ia')->first();
+
+        if (! $agent) {
+            $agent = AiAgent::query()->create([
+                'ai_provider_id' => $provider->id,
+                'name' => 'Marketing IA',
+                'slug' => 'marketing-ia',
+                'type' => 'corporativo',
+                'product_scope' => 'Marketing',
+                'version' => '1.0',
+                'status' => 'online',
+                'is_internal' => true,
+                'description' => 'Campanhas, criativos, vídeos e conteúdo para redes sociais.',
+                'config' => [],
+            ]);
+        } elseif (! $agent->ai_provider_id) {
+            $agent->update(['ai_provider_id' => $provider->id]);
         }
 
         $prompt = 'Crie uma imagem publicitária profissional para redes sociais da marca '.trim($data['brand']).'. '
