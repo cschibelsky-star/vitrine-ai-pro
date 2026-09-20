@@ -94,6 +94,19 @@ class AiRoutingService
                 continue;
             }
 
+            // Não seleciona o gateway Roteia enquanto o runtime não estiver
+            // efetivamente configurado. Assim o Core mantém fallback operacional
+            // para os provedores seguintes sem quebrar os consumidores.
+            if (
+                $slug === 'roteia'
+                && (
+                    trim((string) env('ROTEIA_API_KEY', '')) === ''
+                    || trim((string) env('ROTEIA_BASE_URL', '')) === ''
+                )
+            ) {
+                continue;
+            }
+
             $capabilities = (array) data_get($provider->config, 'capabilities', []);
 
             if ($capabilities === [] || in_array('*', $capabilities, true) || in_array($capability, $capabilities, true)) {
