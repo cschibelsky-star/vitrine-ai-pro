@@ -89,6 +89,13 @@ class AiRoutingService
 
             $capabilities = (array) data_get($provider->config, 'capabilities', []);
 
+            // Compatibilidade operacional: o adapter Google/VEO já suporta vídeo.
+            // Mantém o roteamento funcional mesmo antes de o registro persistido
+            // do provider ser atualizado pelo seeder/migração.
+            if ($capability === 'video_generation' && in_array($slug, ['google', 'gemini', 'google-gemini'], true)) {
+                return $provider;
+            }
+
             if ($capabilities === [] || in_array('*', $capabilities, true) || in_array($capability, $capabilities, true)) {
                 return $provider;
             }
