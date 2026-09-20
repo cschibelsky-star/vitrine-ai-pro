@@ -18,3 +18,4 @@ error_log
 /public/storage
 /storage/framework/
 /data/leads/*.json
+/.recovery/
