@@ -30,5 +30,13 @@ return [
         'editorial_generation' => [
             'agent_slug' => env('CENTRO_IA_EDITORIAL_AGENT_SLUG', 'editorial-ia'),
         ],
+        'video_generation' => [
+            'agent_slug' => env('CENTRO_IA_VIDEO_AGENT_SLUG', 'marketing-ia'),
+            'routing_capability' => 'video_generation',
+        ],
+        'avatar_video' => [
+            'agent_slug' => env('CENTRO_IA_AVATAR_VIDEO_AGENT_SLUG', 'marketing-ia'),
+            'routing_capability' => 'avatar_video',
+        ],
     ],
 ];

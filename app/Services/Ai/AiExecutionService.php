@@ -144,6 +144,7 @@ class AiExecutionService
             'openai' => env('OPENAI_API_KEY') ?: env('OPENAI_KEY') ?: null,
             'gemini', 'google', 'google-gemini' => env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY') ?: env('GOOGLE_GEMINI_API_KEY') ?: null,
             'heygen' => env('HEYGEN_API_KEY') ?: env('HEYGEN_KEY') ?: null,
+            'roteia' => env('ROTEIA_API_KEY') ?: null,
             default => null,
         };
     }
@@ -215,6 +216,36 @@ class AiExecutionService
             }
 
             return (string) data_get($response->json(), 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
+        }
+
+        if ($providerIdentity === 'roteia') {
+            if (! $apiKey) {
+                throw new \RuntimeException('API Key Roteia ausente.');
+            }
+
+            $baseUrl = rtrim((string) env('ROTEIA_BASE_URL', ''), '/');
+            if ($baseUrl === '') {
+                throw new \RuntimeException('ROTEIA_BASE_URL ausente.');
+            }
+
+            $routeModel = trim((string) env('ROTEIA_CHAT_MODEL', '')) ?: $model;
+            $response = Http::withToken($apiKey)
+                ->acceptJson()
+                ->timeout(90)
+                ->post($baseUrl.'/v1/chat/completions', [
+                    'model' => $routeModel,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $agent->description ?: 'Você é um agente da Vitrine IA Pro.'],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'temperature' => 0.4,
+                ]);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('Roteia erro HTTP '.$response->status().': '.$response->body());
+            }
+
+            return (string) data_get($response->json(), 'choices.0.message.content', 'Sem resposta do Roteia.');
         }
 
         if ($providerIdentity === 'heygen') {

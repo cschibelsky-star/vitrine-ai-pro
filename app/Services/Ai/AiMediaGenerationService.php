@@ -67,6 +67,10 @@ class AiMediaGenerationService
     {
         $providerSlug = strtolower((string) $provider->slug);
 
+        if ($providerSlug === 'roteia') {
+            return $this->generateRoteiaMedia($provider, $capability, $prompt, $model);
+        }
+
         if ($capability === 'image_generation' && in_array($providerSlug, ['gemini', 'google', 'google-gemini'], true)) {
             return $this->generateGoogleImage($provider, $prompt, $model);
         }
@@ -82,6 +86,53 @@ class AiMediaGenerationService
             'metadata' => [
                 'adapter_ready' => false,
                 'prompt_length' => mb_strlen($prompt),
+            ],
+        ];
+    }
+
+    protected function generateRoteiaMedia(AiProvider $provider, string $capability, string $prompt, ?string $model): array
+    {
+        $apiKey = trim((string) ($provider->api_key ?? '')) ?: trim((string) env('ROTEIA_API_KEY', ''));
+        $baseUrl = rtrim(trim((string) env('ROTEIA_BASE_URL', '')), '/');
+
+        if ($apiKey === '' || $baseUrl === '') {
+            throw new RuntimeException('Roteia não configurado no runtime do Core.');
+        }
+
+        // Contrato central do Core. O path pode ser ajustado no cadastro do provedor
+        // quando a documentação/conta Roteia definir um endpoint de mídia específico.
+        $path = trim((string) data_get($provider->config, 'endpoints.'.$capability, ''));
+        if ($path === '') {
+            throw new RuntimeException('Endpoint Roteia para '.$capability.' ainda não configurado.');
+        }
+
+        $response = Http::withToken($apiKey)
+            ->acceptJson()
+            ->timeout(120)
+            ->post($baseUrl.'/'.ltrim($path, '/'), [
+                'model' => $model,
+                'prompt' => $prompt,
+                'capability' => $capability,
+            ]);
+
+        if ($response->failed()) {
+            throw new RuntimeException('Roteia mídia erro HTTP '.$response->status().': '.$response->body());
+        }
+
+        $payload = (array) $response->json();
+        $statusRaw = strtolower((string) ($payload['status'] ?? 'pending'));
+        $done = in_array($statusRaw, ['completed', 'concluido', 'concluído', 'done', 'success'], true);
+
+        return [
+            'status' => $done ? 'Concluído' : 'Pendente',
+            'output' => (string) ($payload['message'] ?? 'Geração encaminhada ao Roteia.'),
+            'operation_id' => (string) ($payload['operation_id'] ?? $payload['job_id'] ?? $payload['id'] ?? ''),
+            'asset_url' => $payload['asset_url'] ?? $payload['url'] ?? null,
+            'metadata' => [
+                'adapter_ready' => true,
+                'adapter' => 'roteia_media',
+                'provider_status' => $statusRaw,
+                'model' => $model,
             ],
         ];
     }

@@ -73,12 +73,12 @@ class AiRoutingService
     public function resolveRoute(string $capability): array
     {
         return match ($capability) {
-            'image_generation' => ['providers' => ['google', 'gemini'], 'capability' => $capability],
-            'video_generation' => ['providers' => ['google', 'gemini'], 'capability' => $capability],
-            'avatar_video' => ['providers' => ['heygen'], 'capability' => $capability],
-            'critical_review' => ['providers' => ['openai', 'gemini'], 'capability' => $capability],
-            'marketing_strategy', 'copy' => ['providers' => ['gemini', 'openai'], 'capability' => $capability],
-            default => ['providers' => ['gemini', 'openai'], 'capability' => $capability],
+            'image_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
+            'video_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
+            'avatar_video' => ['providers' => ['roteia', 'heygen'], 'capability' => $capability],
+            'critical_review' => ['providers' => ['roteia', 'openai', 'gemini'], 'capability' => $capability],
+            'marketing_strategy', 'copy' => ['providers' => ['roteia', 'gemini', 'openai'], 'capability' => $capability],
+            default => ['providers' => ['roteia', 'gemini', 'openai'], 'capability' => $capability],
         };
     }
 

@@ -12,6 +12,16 @@ class AiProviderSeeder extends Seeder
     {
         $providers = [
             [
+                'name' => 'Roteia',
+                'provider_type' => 'roteia',
+                'status' => 'ativo',
+                'notes' => 'Gateway central preferencial do IA Center. Credenciais e endpoint são fornecidos exclusivamente pelo runtime.',
+                'config' => [
+                    'model_default' => env('ROTEIA_CHAT_MODEL', 'roteia-default'),
+                    'capabilities' => ['marketing_strategy', 'copy', 'critical_review', 'image_generation', 'video_generation', 'avatar_video'],
+                ],
+            ],
+            [
                 'name' => 'Gemini',
                 'provider_type' => 'gemini',
                 'status' => 'ativo',
