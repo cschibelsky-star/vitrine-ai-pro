@@ -226,44 +226,54 @@ class AiExecutionService
 
     protected function registerConsumption($provider, AiAgent $agent, string $model, string $input, string $output, string $status, int $durationMs = 0): void
     {
-        if (! DB::getSchemaBuilder()->hasTable('ai_consumptions')) {
-            return;
-        }
+        try {
+            if (! DB::getSchemaBuilder()->hasTable('ai_consumptions')) {
+                return;
+            }
 
-        DB::table('ai_consumptions')->insert($this->safeData('ai_consumptions', [
-            'name' => 'Consumo - '.$agent->name,
-            'slug' => 'consumo-'.Str::slug($agent->name).'-'.time(),
-            'ai_provider_id' => $provider->id ?? null,
-            'ai_agent_id' => $agent->id,
-            'resource_type' => 'texto',
-            'quantity' => max(1, intval((strlen($input) + strlen($output)) / 4)),
-            'estimated_cost' => 0,
-            'consumption_date' => now()->toDateString(),
-            'model_name' => $model,
-            'tokens' => max(1, intval((strlen($input) + strlen($output)) / 4)),
-            'cost' => 0,
-            'duration_ms' => $durationMs,
-            'status' => $status,
-            'notes' => 'Modelo: '.$model.' | Status: '.$status.' | Latência: '.$durationMs.' ms. Custo aguardando tarifário do provedor.',
-            'description' => 'Registro automático de consumo da execução IA.',
-        ]));
+            DB::table('ai_consumptions')->insert($this->safeData('ai_consumptions', [
+                'name' => 'Consumo - '.$agent->name,
+                'slug' => 'consumo-'.Str::slug($agent->name).'-'.time(),
+                'ai_provider_id' => $provider->id ?? null,
+                'ai_agent_id' => $agent->id,
+                'resource_type' => 'texto',
+                'quantity' => max(1, intval((strlen($input) + strlen($output)) / 4)),
+                'estimated_cost' => 0,
+                'consumption_date' => now()->toDateString(),
+                'model_name' => $model,
+                'tokens' => max(1, intval((strlen($input) + strlen($output)) / 4)),
+                'cost' => 0,
+                'duration_ms' => $durationMs,
+                'status' => $status,
+                'notes' => 'Modelo: '.$model.' | Status: '.$status.' | Latência: '.$durationMs.' ms. Custo aguardando tarifário do provedor.',
+                'description' => 'Registro automático de consumo da execução IA.',
+            ]));
+        } catch (Throwable) {
+            // Telemetria não pode interromper a execução principal.
+        }
     }
 
     protected function registerAlert(AiAgent $agent, string $message): void
     {
-        if (! DB::getSchemaBuilder()->hasTable('ai_alerts')) {
-            return;
-        }
+        try {
+            if (! DB::getSchemaBuilder()->hasTable('ai_alerts')) {
+                return;
+            }
 
-        DB::table('ai_alerts')->insert($this->safeData('ai_alerts', [
-            'name' => 'Falha na execução - '.$agent->name,
-            'title' => 'Falha na execução - '.$agent->name,
-            'slug' => 'falha-'.Str::slug($agent->name).'-'.time(),
-            'status' => 'Aberto',
-            'level' => 'Erro',
-            'message' => $message,
-            'description' => 'Erro registrado automaticamente pelo executor IA.',
-        ]));
+            DB::table('ai_alerts')->insert($this->safeData('ai_alerts', [
+                'name' => 'Falha na execução - '.$agent->name,
+                'type' => 'execution_failure',
+                'severity' => 'alta',
+                'title' => 'Falha na execução - '.$agent->name,
+                'slug' => 'falha-'.Str::slug($agent->name).'-'.time(),
+                'status' => 'aberto',
+                'level' => 'Erro',
+                'message' => $message,
+                'description' => 'Erro registrado automaticamente pelo executor IA.',
+            ]));
+        } catch (Throwable) {
+            // O alerta é secundário e não deve mascarar o erro original.
+        }
     }
 
     protected function safeData(string $table, array $data, bool $withTimestamps = true): array
