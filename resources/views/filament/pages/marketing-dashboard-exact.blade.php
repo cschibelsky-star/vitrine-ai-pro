@@ -399,7 +399,7 @@
                         </div>
                     </section>
 
-                    <section id="resultados" class="vm-results" wire:poll.15s="refreshProductionBoard">
+                    <section id="resultados" class="vm-results" wire:poll.5s="refreshProductionBoard">
                         <div class="vm-panel">
                             <div class="vm-results-head">
                                 <div>

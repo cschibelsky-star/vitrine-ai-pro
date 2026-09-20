@@ -826,12 +826,51 @@ class MarketingDashboard extends Page
 
         $changed = false;
 
+        $startedPreparedJob = false;
+
         foreach ($this->flowJobs as $index => $job) {
             if (($job['legacy'] ?? false) === true) {
                 continue;
             }
 
-            if ((string) ($job['status'] ?? '') !== 'EM_GERACAO') {
+            $jobStatus = (string) ($job['status'] ?? '');
+
+            if ($jobStatus === 'PRONTO_PARA_PRODUCAO' && ! $startedPreparedJob) {
+                $startedPreparedJob = true;
+
+                try {
+                    $directorJob = (array) ($job['director_job'] ?? []);
+                    $brand = trim((string) ($job['project_name'] ?? $this->flowProjectName)) ?: $this->flowProjectName;
+                    $produced = $this->dispatchDirectorJob(
+                        $directorJob,
+                        $brand,
+                        $index + 1,
+                        (string) ($job['id'] ?? '')
+                    );
+                    $produced['director_job'] = $directorJob;
+                    $this->flowJobs[$index] = $produced;
+                    $changed = true;
+
+                    if ((string) ($job['id'] ?? '') === $this->flowJobId) {
+                        $this->flowJobStatus = (string) ($produced['status'] ?? 'EM_GERACAO');
+                        $this->nativeProductionStatus = $this->flowJobStatus;
+                        $this->flowFormat = (string) ($produced['format'] ?? $this->flowFormat);
+                        $this->nativeProductionJobRef = (string) ($produced['provider_job_ref'] ?? '');
+                        $this->nativeProductionAssetUrl = (string) ($produced['asset_url'] ?? '');
+                        $this->nativeProductionPreviewUrl = (string) ($produced['preview_url'] ?? '');
+                    }
+                } catch (Throwable $exception) {
+                    report($exception);
+                    $this->flowJobs[$index]['status'] = 'ERRO';
+                    $this->flowJobs[$index]['error'] = $exception->getMessage();
+                    $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+                    $changed = true;
+                }
+
+                continue;
+            }
+
+            if ($jobStatus !== 'EM_GERACAO') {
                 continue;
             }
 
@@ -1018,29 +1057,51 @@ class MarketingDashboard extends Page
             $this->flowStyle = trim((string) ($campaign['style'] ?? $this->flowStyle));
             $this->flowGenerationSource = 'Diretor Auto Campaign Builder';
 
-            $generatedJobs = [];
+            $preparedJobs = [];
             foreach (array_slice($jobs, 0, 5) as $index => $job) {
-                $generatedJobs[] = $this->dispatchDirectorJob($job, $brand, $index + 1);
+                $type = strtolower(trim((string) ($job['type'] ?? 'image')));
+                $format = trim((string) ($job['format'] ?? ($type === 'video' ? 'reel_9_16' : 'ad_1_1')));
+                if (! in_array($format, ['ad_1_1', 'story_9_16', 'reel_9_16', 'video_16_9'], true)) {
+                    $format = $type === 'video' ? 'reel_9_16' : 'ad_1_1';
+                }
+
+                $preparedJobs[] = [
+                    'id' => 'MKT-AUTO-'.now()->format('Ymd-His').'-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT).'-'.strtoupper(bin2hex(random_bytes(2))),
+                    'campaign' => $this->flowCampaign,
+                    'title' => trim((string) ($job['title'] ?? 'Peça '.($index + 1))),
+                    'format' => $format,
+                    'type' => $type,
+                    'status' => 'PRONTO_PARA_PRODUCAO',
+                    'project_name' => $brand,
+                    'generation_source' => 'Diretor Auto Campaign Builder',
+                    'marketing_context' => $this->marketingContextKey,
+                    'updated_at' => now()->toISOString(),
+                    'asset_url' => '',
+                    'preview_url' => '',
+                    'provider_job_ref' => '',
+                    'error' => null,
+                    'director_job' => $job,
+                ];
             }
 
-            $this->flowJobs = array_values(array_slice(array_merge($generatedJobs, $this->flowJobs), 0, 12));
+            $this->flowJobs = array_values(array_slice(array_merge($preparedJobs, $this->flowJobs), 0, 12));
             $this->flowPackage = json_encode($plan, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?: $directorReply;
 
-            if ($generatedJobs !== []) {
-                $first = $generatedJobs[0];
+            if ($preparedJobs !== []) {
+                $first = $preparedJobs[0];
                 $this->flowJobId = (string) ($first['id'] ?? '');
-                $this->flowJobStatus = (string) ($first['status'] ?? 'PRONTO_PARA_PRODUCAO');
-                $this->nativeProductionStatus = $this->flowJobStatus;
+                $this->flowJobStatus = 'PRONTO_PARA_PRODUCAO';
+                $this->nativeProductionStatus = 'PRONTO_PARA_PRODUCAO';
                 $this->flowFormat = (string) ($first['format'] ?? $this->flowFormat);
-                $this->nativeProductionJobRef = (string) ($first['provider_job_ref'] ?? '');
-                $this->nativeProductionAssetUrl = (string) ($first['asset_url'] ?? '');
-                $this->nativeProductionPreviewUrl = (string) ($first['preview_url'] ?? '');
+                $this->nativeProductionJobRef = '';
+                $this->nativeProductionAssetUrl = '';
+                $this->nativeProductionPreviewUrl = '';
             }
 
             $this->persistFlowWorkstation();
 
-            $summary = 'Produção iniciada: '.count($generatedJobs).' Jobs materializados para '.$this->flowCampaign.'. Imagens seguem para QA e vídeos Veo ficam em geração.';
-            $this->archiveCompletedCopilotRequest($message, $directorReply, $summary, $generatedJobs);
+            $summary = 'Produção preparada: '.count($preparedJobs).' conteúdos já estão visíveis e entrarão em produção automaticamente.';
+            $this->archiveCompletedCopilotRequest($message, $directorReply, $summary, $preparedJobs);
             $this->copilotMessages = [[
                 'role' => 'assistant',
                 'content' => $summary,
@@ -1062,7 +1123,7 @@ class MarketingDashboard extends Page
         }
     }
 
-    private function dispatchDirectorJob(array $job, string $brand, int $sequence): array
+    private function dispatchDirectorJob(array $job, string $brand, int $sequence, ?string $existingId = null): array
     {
         $type = strtolower(trim((string) ($job['type'] ?? 'image')));
         $format = trim((string) ($job['format'] ?? ($type === 'video' ? 'reel_9_16' : 'ad_1_1')));
@@ -1070,7 +1131,7 @@ class MarketingDashboard extends Page
             $format = $type === 'video' ? 'reel_9_16' : 'ad_1_1';
         }
 
-        $id = 'MKT-AUTO-'.now()->format('Ymd-His').'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'-'.strtoupper(bin2hex(random_bytes(2)));
+        $id = $existingId ?: 'MKT-AUTO-'.now()->format('Ymd-His').'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'-'.strtoupper(bin2hex(random_bytes(2)));
         $title = trim((string) ($job['title'] ?? 'Peca '.$sequence));
         $idea = trim((string) ($job['idea'] ?? $this->flowMessage));
         $caption = trim((string) ($job['caption'] ?? ''));
