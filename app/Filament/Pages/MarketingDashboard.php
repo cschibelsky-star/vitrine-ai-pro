@@ -796,10 +796,15 @@ class MarketingDashboard extends Page
             'status' => $this->flowJobStatus,
             'campaign' => $this->flowCampaign,
             'format' => $this->flowFormat,
+            'type' => $this->flowFormat === 'ad_1_1' ? 'image' : 'video',
             'tool_name' => $this->flowToolName,
             'project_name' => $this->flowProjectName,
             'generation_source' => $this->flowGenerationSource,
             'marketing_context' => $this->marketingContextKey,
+            'asset_url' => $this->nativeProductionAssetUrl,
+            'preview_url' => $this->nativeProductionPreviewUrl,
+            'provider_job_ref' => $this->nativeProductionJobRef,
+            'error' => $this->nativeProductionError,
             'updated_at' => now()->toISOString(),
         ];
 
@@ -811,6 +816,69 @@ class MarketingDashboard extends Page
             ->all();
 
         $this->flowJobs = $jobs;
+    }
+
+    public function refreshProductionBoard(): void
+    {
+        if ($this->flowJobs === []) {
+            return;
+        }
+
+        $changed = false;
+
+        foreach ($this->flowJobs as $index => $job) {
+            if (($job['legacy'] ?? false) === true) {
+                continue;
+            }
+
+            if ((string) ($job['status'] ?? '') !== 'EM_GERACAO') {
+                continue;
+            }
+
+            $jobRef = trim((string) ($job['provider_job_ref'] ?? ''));
+            if ($jobRef === '') {
+                continue;
+            }
+
+            try {
+                $result = app(GeminiVeoSceneRenderer::class)->refresh($jobRef);
+                $status = (string) ($result['status'] ?? 'processing');
+
+                if ($status === 'completed') {
+                    $this->flowJobs[$index]['status'] = 'GERADO';
+                    $this->flowJobs[$index]['asset_url'] = (string) ($result['render_ref'] ?? '');
+                    $this->flowJobs[$index]['error'] = null;
+                    $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+                    $changed = true;
+
+                    if ((string) ($job['id'] ?? '') === $this->flowJobId) {
+                        $this->flowJobStatus = 'GERADO';
+                        $this->nativeProductionStatus = 'GERADO';
+                        $this->nativeProductionAssetUrl = (string) ($result['render_ref'] ?? '');
+                    }
+                } elseif ($status === 'failed') {
+                    $this->flowJobs[$index]['status'] = 'ERRO';
+                    $this->flowJobs[$index]['error'] = 'O motor Veo informou falha na geração.';
+                    $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+                    $changed = true;
+
+                    if ((string) ($job['id'] ?? '') === $this->flowJobId) {
+                        $this->flowJobStatus = 'ERRO';
+                        $this->nativeProductionStatus = 'ERRO';
+                        $this->nativeProductionError = 'O motor Veo informou falha na geração.';
+                    }
+                }
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->flowJobs[$index]['error'] = $exception->getMessage();
+                $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            $this->persistFlowWorkstation();
+        }
     }
 
     private function persistFlowWorkstation(): void

@@ -481,18 +481,71 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                 @endif
 
                                 @if(count($flowJobs) > 0)
-                                    <div class="vm-history">
-                                        <div class="vm-flow-title"><strong>Últimos Jobs de Produção</strong><span>{{ count($flowJobs) }} em sessão</span></div>
-                                        @foreach($flowJobs as $job)
-                                            <div class="vm-history-row">
-                                                <div>
-                                                    <strong>{{ $job['id'] ?? '' }}</strong>
-                                                    <span>{{ $job['campaign'] ?? '' }} · {{ ($job['legacy'] ?? false) ? 'Histórico Google Flow' : 'Produção nativa Marketing IA' }}</span>
-                                                </div>
-                                                <span>{{ $job['status'] ?? '' }}</span>
-                                            </div>
-                                        @endforeach
+                                    <div class="vm-history" wire:poll.15s="refreshProductionBoard">
+                                        <div class="vm-flow-title">
+                                            <strong>Produção em andamento / Conteúdos gerados</strong>
+                                            <span>{{ count($flowJobs) }} job(s) · atualização automática</span>
+                                        </div>
+
+                                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px">
+                                            @foreach($flowJobs as $job)
+                                                @php
+                                                    $jobStatus = (string) ($job['status'] ?? '');
+                                                    $jobType = (string) ($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video'));
+                                                    $jobPreview = trim((string) ($job['preview_url'] ?? ''));
+                                                    $jobAsset = trim((string) ($job['asset_url'] ?? ''));
+                                                    $jobMedia = $jobPreview !== '' ? $jobPreview : $jobAsset;
+                                                @endphp
+                                                <article style="border:1px solid rgba(139,92,246,.22);border-radius:16px;padding:12px;background:rgba(12,9,24,.72)">
+                                                    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+                                                        <div style="min-width:0">
+                                                            <strong style="display:block;font-size:12px;word-break:break-all">{{ $job['id'] ?? '' }}</strong>
+                                                            <span style="display:block;margin-top:4px;font-size:11px;color:#918aa8">{{ $job['title'] ?? ($job['campaign'] ?? 'Campanha') }}</span>
+                                                        </div>
+                                                        <span class="vm-job-status">{{ $jobStatus }}</span>
+                                                    </div>
+
+                                                    <div style="margin-top:10px;aspect-ratio:{{ $jobType === 'image' ? '1 / 1' : '9 / 16' }};max-height:380px;border-radius:12px;overflow:hidden;background:#05040a;display:flex;align-items:center;justify-content:center">
+                                                        @if($jobMedia !== '')
+                                                            @if($jobType === 'image')
+                                                                <img src="{{ $jobMedia }}" alt="Conteúdo gerado pelo Marketing IA" style="display:block;width:100%;height:100%;object-fit:contain">
+                                                            @else
+                                                                <video controls playsinline preload="metadata" src="{{ $jobMedia }}" style="display:block;width:100%;height:100%;object-fit:contain"></video>
+                                                            @endif
+                                                        @elseif($jobStatus === 'EM_GERACAO')
+                                                            <div style="padding:18px;text-align:center;color:#b7afc9;font-size:12px">
+                                                                <div style="font-size:24px;margin-bottom:8px">✦</div>
+                                                                Gerando conteúdo no {{ $jobType === 'image' ? 'Gemini Image' : 'Veo 3.1' }}...
+                                                            </div>
+                                                        @elseif($jobStatus === 'ERRO')
+                                                            <div style="padding:18px;text-align:center;color:#f0a7a7;font-size:12px">Falha na geração. Consulte a mensagem abaixo.</div>
+                                                        @else
+                                                            <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">Aguardando mídia.</div>
+                                                        @endif
+                                                    </div>
+
+                                                    <div style="margin-top:10px;font-size:11px;color:#8f879f">
+                                                        {{ $job['campaign'] ?? '' }} · {{ $job['format'] ?? '' }}
+                                                    </div>
+
+                                                    @if(!empty($job['error']))
+                                                        <div class="vm-error" style="margin-top:8px">{{ $job['error'] }}</div>
+                                                    @endif
+
+                                                    @if($jobMedia !== '')
+                                                        <div class="vm-note" style="margin-top:8px">
+                                                            <span>Conteúdo disponível para visualização.</span>
+                                                            @if(in_array($jobStatus, ['EM_QA', 'GERADO', 'APROVADO'], true))
+                                                                <span>Status atual: {{ $jobStatus }}</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </article>
+                                            @endforeach
+                                        </div>
                                     </div>
+                                @else
+                                    <div class="vm-flow-empty">Nenhum Job de produção nesta sessão. Quando o Diretor materializar uma campanha, os conteúdos aparecerão aqui automaticamente.</div>
                                 @endif
                             </div>
                         </div>
