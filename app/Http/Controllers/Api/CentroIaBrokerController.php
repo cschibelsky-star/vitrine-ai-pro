@@ -9,15 +9,15 @@ use App\Models\AiAgent;
 use App\Services\Ai\AiExecutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class CentroIaBrokerController extends Controller
 {
     public function execute(Request $request, AiExecutionService $service): JsonResponse
     {
-        $expectedToken = (string) config('centro_ia.internal_token', '');
-        $receivedToken = (string) $request->bearerToken();
-
-        if ($expectedToken === '' || $receivedToken === '' || ! hash_equals($expectedToken, $receivedToken)) {
+        if (! $this->isAuthorized($request)) {
             return response()->json([
                 'ok' => false,
                 'error' => 'unauthorized',
@@ -92,6 +92,124 @@ class CentroIaBrokerController extends Controller
             'model' => $execution->model_name ?? null,
             'output_text' => $output,
         ]);
+    }
+
+    private function isAuthorized(Request $request): bool
+    {
+        $expectedToken = trim((string) config('centro_ia.internal_token', ''));
+        $receivedToken = trim((string) $request->bearerToken());
+
+        if ($expectedToken !== '' && $receivedToken !== '' && hash_equals($expectedToken, $receivedToken)) {
+            return true;
+        }
+
+        return $this->verifyServiceSignature($request);
+    }
+
+    private function verifyServiceSignature(Request $request): bool
+    {
+        if (! function_exists('sodium_crypto_sign_verify_detached')) {
+            return false;
+        }
+
+        $projectId = trim((string) $request->header('X-Vitrine-Project', ''));
+        $timestamp = trim((string) $request->header('X-Vitrine-Timestamp', ''));
+        $nonce = trim((string) $request->header('X-Vitrine-Nonce', ''));
+        $signatureEncoded = trim((string) $request->header('X-Vitrine-Signature', ''));
+        $algorithm = trim((string) $request->header('X-Vitrine-Signature-Alg', ''));
+
+        if (
+            $projectId === ''
+            || $timestamp === ''
+            || $nonce === ''
+            || $signatureEncoded === ''
+            || $algorithm !== 'Ed25519'
+            || ! ctype_digit($timestamp)
+            || strlen($nonce) !== 32
+            || ! ctype_xdigit($nonce)
+        ) {
+            return false;
+        }
+
+        $identity = config('centro_ia.service_identities.' . $projectId);
+
+        if (! is_array($identity)) {
+            return false;
+        }
+
+        $maxClockSkew = max(30, (int) ($identity['max_clock_skew'] ?? 90));
+
+        if (abs(now()->timestamp - (int) $timestamp) > $maxClockSkew) {
+            return false;
+        }
+
+        $publicKeyUrl = trim((string) ($identity['public_key_url'] ?? ''));
+
+        if ($publicKeyUrl === '' || ! str_starts_with($publicKeyUrl, 'https://')) {
+            return false;
+        }
+
+        try {
+            $publicKeyEncoded = Cache::remember(
+                'centro-ia:service-public-key:' . hash('sha256', $projectId),
+                3600,
+                function () use ($publicKeyUrl, $projectId): ?string {
+                    $response = Http::acceptJson()
+                        ->timeout(5)
+                        ->get($publicKeyUrl);
+
+                    if (
+                        ! $response->successful()
+                        || ! $response->json('ok')
+                        || ! hash_equals($projectId, trim((string) $response->json('project_id', '')))
+                        || $response->json('algorithm') !== 'Ed25519'
+                    ) {
+                        return null;
+                    }
+
+                    $publicKey = trim((string) $response->json('public_key', ''));
+
+                    return $publicKey !== '' ? $publicKey : null;
+                }
+            );
+
+            if (! is_string($publicKeyEncoded) || $publicKeyEncoded === '') {
+                return false;
+            }
+
+            $publicKey = base64_decode($publicKeyEncoded, true);
+            $signature = base64_decode($signatureEncoded, true);
+
+            if (
+                ! is_string($publicKey)
+                || strlen($publicKey) !== SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES
+                || ! is_string($signature)
+                || strlen($signature) !== SODIUM_CRYPTO_SIGN_BYTES
+            ) {
+                return false;
+            }
+
+            $canonical = implode("\n", [
+                'POST',
+                $request->getPathInfo(),
+                $projectId,
+                $timestamp,
+                strtolower($nonce),
+                hash('sha256', $request->getContent()),
+            ]);
+
+            if (! sodium_crypto_sign_verify_detached($signature, $canonical, $publicKey)) {
+                return false;
+            }
+
+            return Cache::add(
+                'centro-ia:service-nonce:' . hash('sha256', $projectId . '|' . strtolower($nonce)),
+                true,
+                120
+            );
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     private function resolveAgent(array $config): ?AiAgent
