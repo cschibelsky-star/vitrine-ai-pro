@@ -14,7 +14,7 @@
         $clientJobs = collect($flowJobs)->reject(fn (array $job) => (bool) ($job['legacy'] ?? false))->values();
         $imageJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'image'))->values();
         $videoJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'video'))->values();
-        $workingJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','EM_GERACAO','GERADO','FINALIZANDO'], true))->count();
+        $workingJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','CORRECAO_SOLICITADA','EM_GERACAO','GERADO','FINALIZANDO'], true))->count();
         $reviewJobs = $clientJobs->filter(fn (array $job) => (string) ($job['status'] ?? '') === 'EM_QA')->count();
         $readyJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true))->count();
     @endphp
@@ -399,7 +399,7 @@
                         </div>
                     </section>
 
-                    <section id="resultados" class="vm-results" wire:poll.5s="refreshProductionBoard">
+                    <section id="resultados" class="vm-results" wire:init="recoverPendingRevision" wire:poll.5s="refreshProductionBoard">
                         <div class="vm-panel">
                             <div class="vm-results-head">
                                 <div>

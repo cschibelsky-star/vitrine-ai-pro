@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Marketing;
 
+use App\Filament\Pages\MarketingDashboard;
 use App\Marketing\Application\MarketingAgentExecutor;
 use App\Marketing\Application\MarketingOrchestrator;
 use App\Marketing\Application\SchemaContractValidator;
@@ -91,6 +92,29 @@ class MarketingOperationalE2ETest extends TestCase
         $this->assertFalse($result['spent']);
         $this->assertSame('blocked', $result['state']['tasks']['qa_brand_guardian']['status']);
         $this->assertSame('QA did not approve the campaign.', $result['state']['blocked_reason']);
+    }
+
+    public function test_marketing_dashboard_recognizes_revision_language_and_targets_existing_piece(): void
+    {
+        $page = app(MarketingDashboard::class);
+        $page->flowJobs = [
+            [
+                'id' => 'MKT-AUTO-REV-001',
+                'title' => 'Card Lista VIP',
+                'status' => 'EM_QA',
+                'type' => 'image',
+                'format' => 'ad_1_1',
+            ],
+        ];
+
+        $revisionDetector = new \ReflectionMethod($page, 'isRevisionRequest');
+        $revisionDetector->setAccessible(true);
+        $this->assertTrue($revisionDetector->invoke($page, 'Corrija o Card Lista VIP e aumente o destaque do CTA.'));
+        $this->assertFalse($revisionDetector->invoke($page, 'Crie uma nova campanha para amanhã.'));
+
+        $targetResolver = new \ReflectionMethod($page, 'resolveRevisionTargetIndex');
+        $targetResolver->setAccessible(true);
+        $this->assertSame(0, $targetResolver->invoke($page, 'Ajustar o Card Lista VIP.'));
     }
 
     /** @return array<string, mixed> */

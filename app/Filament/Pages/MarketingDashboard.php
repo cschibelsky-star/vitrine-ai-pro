@@ -249,7 +249,9 @@ class MarketingDashboard extends Page
                 'execution_id' => $executionId,
             ];
 
-            if ($this->shouldAutoProduceFromDirector($message)) {
+            if ($this->isRevisionRequest($message)) {
+                $this->reviseProductionJobFromDirector($message, $reply);
+            } elseif ($this->shouldAutoProduceFromDirector($message)) {
                 $this->autoProduceDirectorCampaign($message, $reply);
             }
         } catch (Throwable $exception) {
@@ -1027,6 +1029,164 @@ class MarketingDashboard extends Page
         if ($matched) {
             $this->persistFlowWorkstation();
         }
+    }
+
+    public function recoverPendingRevision(): void
+    {
+        if ($this->flowJobs === [] || $this->copilotMessages === []) {
+            return;
+        }
+
+        $pendingMessage = null;
+        for ($index = count($this->copilotMessages) - 1; $index >= 0; $index--) {
+            $item = (array) $this->copilotMessages[$index];
+            if (($item['role'] ?? '') !== 'user') {
+                continue;
+            }
+
+            $content = trim((string) ($item['content'] ?? ''));
+            if ($content !== '' && $this->isRevisionRequest($content)) {
+                $pendingMessage = $content;
+                break;
+            }
+        }
+
+        if ($pendingMessage === null) {
+            return;
+        }
+
+        foreach ($this->flowJobs as $job) {
+            if (trim((string) ($job['revision_reason'] ?? '')) === $pendingMessage) {
+                return;
+            }
+        }
+
+        $this->reviseProductionJobFromDirector($pendingMessage, '');
+        $this->persistCopilot();
+    }
+
+    private function isRevisionRequest(string $message): bool
+    {
+        $normalized = mb_strtolower($message);
+
+        foreach (['corrigir', 'corrija', 'correção', 'correcao', 'ajustar', 'ajuste', 'refazer', 'refaça', 'revisar', 'revisão', 'revisao', 'alterar', 'alteração', 'alteracao', 'não aprovado', 'nao aprovado'] as $needle) {
+            if (str_contains($normalized, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function reviseProductionJobFromDirector(string $message, string $directorReply): void
+    {
+        if ($this->flowJobs === []) {
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'A correção foi entendida, mas não há uma peça produzida nesta sessão para vincular à revisão.',
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+            return;
+        }
+
+        $targetIndex = $this->resolveRevisionTargetIndex($message);
+        if ($targetIndex === null || ! isset($this->flowJobs[$targetIndex])) {
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'A correção foi registrada, mas não consegui identificar com segurança qual peça deve ser revisada.',
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+            return;
+        }
+
+        $current = (array) $this->flowJobs[$targetIndex];
+        $jobId = (string) ($current['id'] ?? '');
+        $brand = trim((string) ($current['project_name'] ?? ($this->getMarketingContext()['brand'] ?? 'Marca do cliente')));
+        $directorJob = (array) ($current['director_job'] ?? []);
+        $originalIdea = trim((string) ($directorJob['idea'] ?? $current['title'] ?? $this->flowMessage));
+        $directorJob['idea'] = $originalIdea.". CORREÇÃO SOLICITADA PELO USUÁRIO: ".$message.'. Preserve o objetivo, a identidade e o formato da peça anterior; altere somente o necessário para atender a correção.';
+        $directorJob['title'] = (string) ($directorJob['title'] ?? $current['title'] ?? 'Peça revisada');
+        $directorJob['type'] = (string) ($directorJob['type'] ?? $current['type'] ?? 'image');
+        $directorJob['format'] = (string) ($directorJob['format'] ?? $current['format'] ?? 'ad_1_1');
+
+        $current['status'] = 'CORRECAO_SOLICITADA';
+        $current['revision_reason'] = $message;
+        $current['revision_count'] = ((int) ($current['revision_count'] ?? 0)) + 1;
+        $current['previous_asset_url'] = (string) ($current['asset_url'] ?? '');
+        $current['previous_preview_url'] = (string) ($current['preview_url'] ?? '');
+        $current['supersedes_provider_job_ref'] = (string) ($current['provider_job_ref'] ?? '');
+        $current['updated_at'] = now()->toISOString();
+        $this->flowJobs[$targetIndex] = $current;
+        $this->persistFlowWorkstation();
+
+        try {
+            $revised = $this->dispatchDirectorJob($directorJob, $brand, $targetIndex + 1, $jobId);
+            $revised['revision_reason'] = $message;
+            $revised['revision_count'] = (int) $current['revision_count'];
+            $revised['previous_asset_url'] = (string) $current['previous_asset_url'];
+            $revised['previous_preview_url'] = (string) $current['previous_preview_url'];
+            $revised['supersedes_provider_job_ref'] = (string) $current['supersedes_provider_job_ref'];
+            $revised['director_job'] = $directorJob;
+            $revised['updated_at'] = now()->toISOString();
+            $this->flowJobs[$targetIndex] = $revised;
+
+            $this->flowJobId = (string) ($revised['id'] ?? $jobId);
+            $this->flowJobStatus = (string) ($revised['status'] ?? 'PRONTO_PARA_PRODUCAO');
+            $this->flowFormat = (string) ($revised['format'] ?? $this->flowFormat);
+            $this->nativeProductionStatus = $this->flowJobStatus;
+            $this->nativeProductionJobRef = (string) ($revised['provider_job_ref'] ?? '');
+            $this->nativeProductionAssetUrl = (string) ($revised['asset_url'] ?? '');
+            $this->nativeProductionPreviewUrl = (string) ($revised['preview_url'] ?? '');
+            $this->persistFlowWorkstation();
+
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'Correção enviada para produção na mesma peça '.$this->flowJobId.'. Versão de revisão #'.((int) $revised['revision_count']).' criada e encaminhada novamente para QA.',
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+        } catch (Throwable $exception) {
+            report($exception);
+            $current['status'] = 'ERRO';
+            $current['error'] = 'Falha ao gerar a correção: '.$exception->getMessage();
+            $current['updated_at'] = now()->toISOString();
+            $this->flowJobs[$targetIndex] = $current;
+            $this->persistFlowWorkstation();
+            $this->copilotMessages[] = [
+                'role' => 'assistant',
+                'content' => 'A correção foi vinculada à peça '.$jobId.', mas a nova versão não foi concluída: '.$exception->getMessage(),
+                'at' => now()->toISOString(),
+                'model' => 'marketing-ia-orchestrator',
+                'execution_id' => null,
+            ];
+        }
+    }
+
+    private function resolveRevisionTargetIndex(string $message): ?int
+    {
+        $normalized = mb_strtolower($message);
+        $fallback = null;
+
+        foreach ($this->flowJobs as $index => $job) {
+            $id = mb_strtolower((string) ($job['id'] ?? ''));
+            $title = mb_strtolower((string) ($job['title'] ?? ''));
+            $status = (string) ($job['status'] ?? '');
+
+            if (($id !== '' && str_contains($normalized, $id)) || ($title !== '' && mb_strlen($title) >= 4 && str_contains($normalized, $title))) {
+                return $index;
+            }
+
+            if ($fallback === null && in_array($status, ['EM_QA', 'GERADO', 'APROVADO', 'REPROVADO_QA', 'ERRO'], true)) {
+                $fallback = $index;
+            }
+        }
+
+        return $fallback ?? (array_key_exists(0, $this->flowJobs) ? 0 : null);
     }
 
     private function shouldAutoProduceFromDirector(string $message): bool
