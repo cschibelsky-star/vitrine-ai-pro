@@ -165,7 +165,7 @@ class AiExecutionService
 
         return match ($providerIdentity) {
             'openai' => 'gpt-4o-mini',
-            'gemini', 'google', 'google-gemini' => 'gemini-2.5-flash',
+            'gemini', 'google', 'google-gemini' => 'gemini-3.6-flash',
             default => 'manual',
         };
     }

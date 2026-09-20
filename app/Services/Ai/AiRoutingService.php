@@ -29,6 +29,13 @@ class AiRoutingService
         $model = data_get($provider->config, 'models.'.$capability)
             ?: data_get($provider->config, 'model_default');
 
+        if (
+            in_array(strtolower((string) ($provider->slug ?? '')), ['gemini', 'google', 'google-gemini'], true)
+            && $model === 'gemini-2.5-flash'
+        ) {
+            $model = 'gemini-3.6-flash';
+        }
+
         if ($this->isMediaCapability($capability)) {
             return $this->mediaGenerator->generate($agent, $provider, $capability, $prompt, $model);
         }
