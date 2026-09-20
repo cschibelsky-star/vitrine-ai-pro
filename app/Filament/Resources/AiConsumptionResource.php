@@ -20,7 +20,7 @@ class AiConsumptionResource extends Resource
     protected static ?string $model = AiConsumption::class;
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
     protected static ?string $navigationLabel = 'Consumo';
-    protected static ?string $navigationGroup = 'Inteligência Artificial';
+    protected static ?string $navigationGroup = '10 · IA Center';
     protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form

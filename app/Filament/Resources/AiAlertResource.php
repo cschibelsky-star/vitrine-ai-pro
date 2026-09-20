@@ -18,7 +18,7 @@ class AiAlertResource extends Resource
     protected static ?string $model = AiAlert::class;
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
     protected static ?string $navigationLabel = 'Alertas';
-    protected static ?string $navigationGroup = 'Inteligência Artificial';
+    protected static ?string $navigationGroup = '10 · IA Center';
     protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form

@@ -9,6 +9,9 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FactoryStudioEnterprise;
 use App\Filament\Pages\GeneratedProjects;
 use App\Filament\Pages\MarketplaceEnterprise;
+use App\Filament\Resources\AiAlertResource;
+use App\Filament\Resources\AiConsumptionResource;
+use App\Filament\Resources\AiProviderResource;
 use App\Filament\Resources\CompanyModuleResource;
 use App\Filament\Resources\CompanyResource;
 use App\Filament\Resources\ContractResource;
@@ -23,6 +26,8 @@ use App\Filament\Resources\SettingResource;
 use App\Filament\Resources\SubscriptionResource;
 use App\Filament\Resources\SupportTicketResource;
 use App\Filament\Resources\UserResource;
+use App\Filament\Widgets\AiAlertsWidget;
+use App\Filament\Widgets\AiConsumptionWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\UltimasLicencasWidget;
 use App\Filament\Widgets\UltimosClientesWidget;
@@ -96,6 +101,9 @@ class AdminPanelProvider extends PanelProvider
                 SupportTicketResource::class,
                 UserResource::class,
                 SettingResource::class,
+                AiProviderResource::class,
+                AiConsumptionResource::class,
+                AiAlertResource::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -103,6 +111,8 @@ class AdminPanelProvider extends PanelProvider
                 UltimosClientesWidget::class,
                 UltimasLicencasWidget::class,
                 UltimosLeadsWidget::class,
+                AiConsumptionWidget::class,
+                AiAlertsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

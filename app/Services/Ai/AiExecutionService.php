@@ -235,11 +235,16 @@ class AiExecutionService
             'slug' => 'consumo-'.Str::slug($agent->name).'-'.time(),
             'ai_provider_id' => $provider->id ?? null,
             'ai_agent_id' => $agent->id,
+            'resource_type' => 'texto',
+            'quantity' => max(1, intval((strlen($input) + strlen($output)) / 4)),
+            'estimated_cost' => 0,
+            'consumption_date' => now()->toDateString(),
             'model_name' => $model,
             'tokens' => max(1, intval((strlen($input) + strlen($output)) / 4)),
             'cost' => 0,
             'duration_ms' => $durationMs,
             'status' => $status,
+            'notes' => 'Modelo: '.$model.' | Status: '.$status.' | Latência: '.$durationMs.' ms. Custo aguardando tarifário do provedor.',
             'description' => 'Registro automático de consumo da execução IA.',
         ]));
     }
