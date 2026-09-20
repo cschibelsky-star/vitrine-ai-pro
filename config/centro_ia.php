@@ -7,7 +7,7 @@ return [
         'vitrine-ai-social-enterprise' => [
             'public_key_url' => env(
                 'CENTRO_IA_SOCIAL_PUBLIC_KEY_URL',
-                'https://social.hml.vitrineiapro.com.br/.well-known/vitrine-service-key'
+                'https://social.hml.vitrineiapro.com.br/service-identity/public-key'
             ),
             'max_clock_skew' => (int) env('CENTRO_IA_SERVICE_MAX_CLOCK_SKEW', 90),
         ],
