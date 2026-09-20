@@ -180,8 +180,24 @@
         .vm-machine-track { display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px; }
         .vm-machine-step { padding:12px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(139,92,246,.12);font-size:10px;color:#837c98;text-align:center; }
         .vm-machine-step.active { color:#fff;border-color:rgba(139,92,246,.45);background:rgba(124,58,237,.16);box-shadow:0 0 22px rgba(124,58,237,.12); }
-        .vm-machine-orb { width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8b4fe,#8b5cf6 38%,#312e81 72%,#0b0716);box-shadow:0 0 34px rgba(139,92,246,.45);animation:vmPulse 2.2s ease-in-out infinite; }
+        .vm-machine-orb { position:relative;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8b4fe,#8b5cf6 38%,#312e81 72%,#0b0716);box-shadow:0 0 34px rgba(139,92,246,.45);animation:vmPulse 2.2s ease-in-out infinite; }
+        .vm-machine-orb::after { content:"";position:absolute;inset:-10px;border-radius:50%;border:1px solid rgba(196,181,253,.24);animation:vmOrbit 2.8s linear infinite; }
         @keyframes vmPulse { 0%,100%{transform:scale(.96);opacity:.84}50%{transform:scale(1.04);opacity:1} }
+        @keyframes vmOrbit { 0%{transform:scale(.92);opacity:.22}50%{transform:scale(1.12);opacity:.72}100%{transform:scale(.92);opacity:.22} }
+        .vm-machine-step.active { position:relative;overflow:hidden; }
+        .vm-machine-step.active::after { content:"";position:absolute;inset:0;transform:translateX(-120%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:vmStepSweep 2.4s ease-in-out infinite; }
+        @keyframes vmStepSweep { 60%,100%{transform:translateX(120%)} }
+        .vm-skeleton { position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015)); }
+        .vm-skeleton::after { content:"";position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.05) 40%,rgba(196,181,253,.18) 50%,rgba(255,255,255,.05) 60%,transparent 100%);animation:vmShimmer 1.8s ease-in-out infinite; }
+        @keyframes vmShimmer { 100%{transform:translateX(110%)} }
+        .vm-loading-copy { position:relative;z-index:2;padding:18px;text-align:center;color:#b8b1c9;font-size:11px;line-height:1.55; }
+        .vm-loading-copy strong { display:block;margin-bottom:6px;color:#f5f3ff;font-size:12px;font-weight:800; }
+        .vm-status-badge { display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 9px;border-radius:999px;font-size:9px;font-weight:800; }
+        .vm-status-badge.processing { background:rgba(96,165,250,.12);color:#93c5fd; }
+        .vm-status-badge.review { background:rgba(251,191,36,.12);color:#fde68a; }
+        .vm-status-badge.ready { background:rgba(52,211,153,.12);color:#6ee7b7; }
+        .vm-status-badge.error { background:rgba(248,113,113,.12);color:#fda4af; }
+        @media (prefers-reduced-motion:reduce){.vm-machine-orb,.vm-machine-orb::after,.vm-machine-step.active::after,.vm-skeleton::after{animation:none!important}}
         .vm-tech details,.vm-tech summary { color:#8f879f; }
         .vm-tech summary { cursor:pointer;font-size:11px;list-style:none; }
         .vm-tech summary::-webkit-details-marker { display:none; }
@@ -426,18 +442,35 @@
                             @if($imageJobs->count())
                                 <div class="vm-result-grid">
                                     @foreach($imageJobs as $job)
-                                        @php $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''))); @endphp
+                                        @php
+                                            $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? '')));
+                                            $rawStatus = (string) ($job['status'] ?? '');
+                                            $statusView = match ($rawStatus) {
+                                                'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
+                                                'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
+                                                'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
+                                                default => ['label' => 'Aguardando', 'class' => 'processing'],
+                                            };
+                                        @endphp
                                         <article class="vm-result-card">
                                             <div class="vm-result-media">
                                                 @if($media !== '')
                                                     <img src="{{ $media }}" alt="Criativo produzido pelo Marketing IA">
+                                                @elseif(in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','EM_GERACAO','FINALIZANDO'], true))
+                                                    <div class="vm-result-media vm-skeleton">
+                                                        <div class="vm-loading-copy"><strong>Criando seu conteúdo…</strong>A IA está preparando esta peça para sua campanha.</div>
+                                                    </div>
+                                                @elseif((string) ($job['status'] ?? '') === 'EM_QA')
+                                                    <div class="vm-loading-copy"><strong>Em revisão</strong>O conteúdo foi gerado e está aguardando validação.</div>
                                                 @else
-                                                    <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">{{ ($job['status'] ?? '') === 'EM_GERACAO' ? 'Criando seu conteúdo...' : 'Prévia ainda não disponível' }}</div>
+                                                    <div class="vm-loading-copy"><strong>Prévia ainda não disponível</strong>Assim que a peça estiver pronta, ela aparecerá aqui.</div>
                                                 @endif
                                             </div>
                                             <div class="vm-result-body">
                                                 <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Criativo') }}</div>
-                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }} · {{ $job['status'] ?? '' }}</div>
+                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }}</div>
+                                                <span class="vm-status-badge {{ $statusView['class'] }}">{{ $statusView['label'] }}</span>
                                                 <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
                                             </div>
                                         </article>
@@ -453,18 +486,35 @@
                             @if($videoJobs->count())
                                 <div class="vm-result-grid">
                                     @foreach($videoJobs as $job)
-                                        @php $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''))); @endphp
+                                        @php
+                                            $media = trim((string) (($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? '')));
+                                            $rawStatus = (string) ($job['status'] ?? '');
+                                            $statusView = match ($rawStatus) {
+                                                'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
+                                                'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
+                                                'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
+                                                default => ['label' => 'Aguardando', 'class' => 'processing'],
+                                            };
+                                        @endphp
                                         <article class="vm-result-card">
                                             <div class="vm-result-media video">
                                                 @if($media !== '')
                                                     <video controls playsinline preload="metadata" src="{{ $media }}"></video>
+                                                @elseif(in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','EM_GERACAO','FINALIZANDO'], true))
+                                                    <div class="vm-result-media video vm-skeleton">
+                                                        <div class="vm-loading-copy"><strong>Seu vídeo está sendo produzido…</strong>O Marketing IA está montando esta peça agora.</div>
+                                                    </div>
+                                                @elseif((string) ($job['status'] ?? '') === 'EM_QA')
+                                                    <div class="vm-loading-copy"><strong>Vídeo em revisão</strong>A geração terminou e a peça está aguardando aprovação.</div>
                                                 @else
-                                                    <div style="padding:18px;text-align:center;color:#8f879f;font-size:12px">{{ ($job['status'] ?? '') === 'EM_GERACAO' ? 'Produzindo seu vídeo...' : 'Vídeo ainda não disponível' }}</div>
+                                                    <div class="vm-loading-copy"><strong>Vídeo ainda não disponível</strong>Ele aparecerá aqui quando a produção terminar.</div>
                                                 @endif
                                             </div>
                                             <div class="vm-result-body">
                                                 <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Vídeo') }}</div>
-                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }} · {{ $job['status'] ?? '' }}</div>
+                                                <div class="vm-result-meta">{{ $job['campaign'] ?? '' }}</div>
+                                                <span class="vm-status-badge {{ $statusView['class'] }}">{{ $statusView['label'] }}</span>
                                                 <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
                                             </div>
                                         </article>
