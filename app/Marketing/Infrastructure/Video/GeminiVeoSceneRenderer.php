@@ -9,6 +9,7 @@ use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Domain\Video\VideoScene;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -59,7 +60,7 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
         $response = $this->client()->post(sprintf('/models/%s:predictLongRunning', $model), $payload);
         if (! $response->successful()) {
             if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
-                throw new RuntimeException('gemini_veo_quota_exhausted');
+                return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
             }
 
             throw new RuntimeException('gemini_veo_dispatch_failed:'.$response->status());
@@ -241,6 +242,119 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
             'status' => $status === 'completed' ? 'completed' : ($status === 'failed' ? 'failed' : 'processing'),
             'job_ref' => $jobRef,
             'render_ref' => $assetUrl !== '' ? $assetUrl : null,
+        ];
+    }
+
+    private function renderLocalMotionFallback(
+        VideoProject $project,
+        string $prompt,
+        string $aspectRatio,
+        int $duration
+    ): array {
+        $hub = (array) config('marketing_agents.hub', []);
+        $url = trim((string) ($hub['url'] ?? ''));
+        $token = trim((string) ($hub['token'] ?? ''));
+        $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
+
+        if ($url === '' || $token === '') {
+            throw new RuntimeException('local_motion_fallback_centro_ia_unavailable');
+        }
+
+        $imageResponse = Http::acceptJson()
+            ->asJson()
+            ->withToken($token)
+            ->withHeaders(['X-Vitrine-Project' => $projectId])
+            ->timeout(150)
+            ->retry(1, 300, throw: false)
+            ->post($url, [
+                'project_id' => $projectId,
+                'capability' => 'image_generation',
+                'input' => [
+                    'user' => $prompt.' Gere um keyframe cinematografico limpo, sem texto legivel, adequado para animacao suave.',
+                    'material_type' => 'video_keyframe',
+                    'quality_profile' => 'balanced',
+                ],
+            ]);
+
+        if (! $imageResponse->successful() || ! $imageResponse->json('ok')) {
+            throw new RuntimeException('local_motion_fallback_image_failed:'.(string) ($imageResponse->json('error') ?? $imageResponse->status()));
+        }
+
+        $binary = null;
+        $base64 = trim((string) $imageResponse->json('asset_base64', ''));
+        $assetUrl = trim((string) $imageResponse->json('asset_url', ''));
+
+        if ($base64 !== '') {
+            $decoded = base64_decode($base64, true);
+            if ($decoded !== false && $decoded !== '') {
+                $binary = $decoded;
+            }
+        }
+
+        if ($binary === null && $assetUrl !== '') {
+            $assetResponse = Http::timeout(90)->retry(1, 300, throw: false)->get($assetUrl);
+            if ($assetResponse->successful() && $assetResponse->body() !== '') {
+                $binary = $assetResponse->body();
+            }
+        }
+
+        if (! is_string($binary) || $binary === '') {
+            throw new RuntimeException('local_motion_fallback_image_payload_missing');
+        }
+
+        $safeProject = trim((string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $project->projectId), '-');
+        $version = 'LOCAL-'.now()->format('YmdHis');
+        $root = (string) config('marketing_video.finalization.working_directory', '');
+        $root = $root !== '' ? rtrim($root, '/') : storage_path('app/marketing/media');
+        $dir = $root.'/'.$safeProject.'/'.$version;
+
+        if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            throw new RuntimeException('local_motion_fallback_workdir_unavailable');
+        }
+
+        $imagePath = $dir.'/keyframe.jpg';
+        $outputPath = $dir.'/final.mp4';
+
+        if (file_put_contents($imagePath, $binary) === false || ! is_file($imagePath) || filesize($imagePath) === 0) {
+            throw new RuntimeException('local_motion_fallback_image_write_failed');
+        }
+
+        [$width, $height] = $aspectRatio === '16:9' ? [1280, 720] : [720, 1280];
+        $frames = max(1, $duration * 25);
+        $filter = sprintf(
+            'scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d,zoompan=z=\'min(zoom+0.0015,1.08)\':d=%d:s=%dx%d:fps=25,format=yuv420p',
+            $width,
+            $height,
+            $width,
+            $height,
+            $frames,
+            $width,
+            $height,
+        );
+        $command = sprintf(
+            'ffmpeg -hide_banner -loglevel error -y -loop 1 -i %s -vf %s -t %d -an -c:v libx264 -preset medium -crf 20 -movflags +faststart %s 2>&1',
+            escapeshellarg($imagePath),
+            escapeshellarg($filter),
+            $duration,
+            escapeshellarg($outputPath),
+        );
+        exec($command, $stdout, $exitCode);
+
+        if ($exitCode !== 0 || ! is_file($outputPath) || filesize($outputPath) === 0) {
+            throw new RuntimeException('local_motion_fallback_ffmpeg_failed:'.implode(' ', array_slice($stdout, -3)));
+        }
+
+        return [
+            'provider' => 'local_motion',
+            'model' => (string) $imageResponse->json('model', 'dynamic-image'),
+            'status' => 'completed',
+            'job_ref' => '',
+            'render_ref' => URL::temporarySignedRoute(
+                'marketing.native-video-preview',
+                now()->addHours(2),
+                ['job' => $safeProject, 'version' => $version],
+                false,
+            ),
         ];
     }
 
