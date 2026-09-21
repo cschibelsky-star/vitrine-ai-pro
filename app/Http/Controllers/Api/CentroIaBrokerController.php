@@ -525,6 +525,106 @@ class CentroIaBrokerController extends Controller
         return $candidates;
     }
 
+    public function orchestratorStatus(Request $request): JsonResponse
+    {
+        if (! $this->isAuthorized($request)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'unauthorized',
+            ], 401);
+        }
+
+        $data = $request->validate([
+            'project_id' => ['required', 'string', 'max:120'],
+            'quality_profile' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $projectHeader = trim((string) $request->header('X-Vitrine-Project', ''));
+        if ($projectHeader === '' || ! hash_equals((string) $data['project_id'], $projectHeader)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'project_identity_mismatch',
+            ], 422);
+        }
+
+        $profile = strtolower(trim((string) ($data['quality_profile'] ?? 'balanced')));
+        $catalog = $this->roteiaCatalog();
+        $items = (array) ($catalog['data'] ?? $catalog['models'] ?? $catalog);
+
+        $availability = [
+            'image' => ['available' => 0, 'unavailable' => 0],
+            'video' => ['available' => 0, 'unavailable' => 0],
+        ];
+
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $status = strtolower(trim((string) ($item['status'] ?? 'unavailable')));
+            $outputs = (array) data_get($item, 'modalities.output', []);
+            $modelType = strtolower(trim((string) ($item['modelType'] ?? '')));
+            $endpoint = strtolower(trim((string) ($item['endpoint'] ?? '')));
+
+            foreach (['image', 'video'] as $target) {
+                $matches = in_array($target, $outputs, true)
+                    || $modelType === $target
+                    || ($target === 'image' && $endpoint === 'images')
+                    || ($target === 'video' && $endpoint === 'videos');
+
+                if (! $matches) {
+                    continue;
+                }
+
+                $bucket = $status === 'available' ? 'available' : 'unavailable';
+                $availability[$target][$bucket]++;
+            }
+        }
+
+        $baseUrl = rtrim(trim((string) env('ROTEIA_BASE_URL', '')), '/');
+        $apiKey = trim((string) env('ROTEIA_API_KEY', ''));
+        $capabilities = [];
+        if ($baseUrl !== '' && $apiKey !== '') {
+            $apiBaseUrl = str_ends_with($baseUrl, '/v1') ? $baseUrl : $baseUrl.'/v1';
+            $capabilities = $this->roteiaCapabilities($apiBaseUrl, $apiKey);
+        }
+
+        $image = $this->rankMediaCandidates(
+            $catalog,
+            'image_generation',
+            'criativo visual social premium para campanha',
+            ['material_type' => 'social_creative', 'quality_profile' => $profile]
+        );
+
+        $video = $this->rankMediaCandidates(
+            $catalog,
+            'video_generation',
+            'video social dinamico institucional para campanha',
+            ['material_type' => 'social_video', 'quality_profile' => $profile]
+        );
+
+        $summarize = static fn (array $candidate): array => [
+            'model' => (string) ($candidate['model'] ?? ''),
+            'score' => (float) ($candidate['score'] ?? 0),
+            'reason' => (string) ($candidate['reason'] ?? ''),
+        ];
+
+        return response()->json([
+            'ok' => true,
+            'project_id' => (string) $data['project_id'],
+            'profile' => $profile,
+            'profiles' => (array) config('centro_ia.media_orchestrator.profiles', []),
+            'availability' => $availability,
+            'endpoints' => [
+                'images' => filled(data_get($capabilities, 'endpoints.images')),
+                'videos' => filled(data_get($capabilities, 'endpoints.videos')),
+            ],
+            'image_candidates' => array_map($summarize, array_slice($image, 0, 12)),
+            'video_candidates' => array_map($summarize, array_slice($video, 0, 12)),
+            'refreshed_at' => now()->toIso8601String(),
+        ]);
+    }
+
     public function entitlements(Request $request): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
