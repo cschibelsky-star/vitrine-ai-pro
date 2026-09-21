@@ -71,6 +71,11 @@ class CentroIaBrokerController extends Controller
             : $user;
 
         $routingCapability = trim((string) ($capabilityConfig['routing_capability'] ?? ''));
+
+        if ($routingCapability === 'image_generation') {
+            return $this->executeRoteiaImageFallback((string) $data['project_id'], $capability, $prompt);
+        }
+
         $execution = $service->execute($agent, $prompt, $routingCapability !== '' ? $routingCapability : null);
         $status = (string) ($execution->status ?? '');
         $output = (string) ($execution->output ?? '');
@@ -93,6 +98,64 @@ class CentroIaBrokerController extends Controller
             'agent_id' => $agent->id,
             'model' => $execution->model_name ?? null,
             'output_text' => $output,
+        ]);
+    }
+
+    private function executeRoteiaImageFallback(string $projectId, string $capability, string $prompt): JsonResponse
+    {
+        $apiKey = trim((string) env('ROTEIA_API_KEY', ''));
+        $baseUrl = rtrim(trim((string) env('ROTEIA_BASE_URL', '')), '/');
+
+        if ($apiKey === '' || $baseUrl === '') {
+            return response()->json([
+                'ok' => false,
+                'error' => 'roteia_runtime_not_configured',
+            ], 503);
+        }
+
+        $model = 'google/gemini-3.1-flash-image';
+        $apiBaseUrl = str_ends_with($baseUrl, '/v1') ? $baseUrl : $baseUrl.'/v1';
+        $response = Http::withToken($apiKey)
+            ->acceptJson()
+            ->timeout(120)
+            ->retry(1, 300, throw: false)
+            ->post($apiBaseUrl.'/images/generations', [
+                'model' => $model,
+                'prompt' => $prompt,
+            ]);
+
+        if (! $response->successful()) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'roteia_image_generation_failed',
+                'provider_status' => $response->status(),
+            ], 502);
+        }
+
+        $payload = (array) $response->json();
+        $assetUrl = data_get($payload, 'data.0.url')
+            ?? data_get($payload, 'asset_url')
+            ?? data_get($payload, 'url');
+        $assetBase64 = data_get($payload, 'data.0.b64_json')
+            ?? data_get($payload, 'output_image.data')
+            ?? data_get($payload, 'image_base64');
+
+        if ((! is_string($assetUrl) || trim($assetUrl) === '') && (! is_string($assetBase64) || trim($assetBase64) === '')) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'roteia_image_payload_missing',
+            ], 502);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'project_id' => $projectId,
+            'capability' => $capability,
+            'model' => $model,
+            'media_status' => 'completed',
+            'asset_url' => is_string($assetUrl) ? $assetUrl : null,
+            'asset_base64' => is_string($assetBase64) ? $assetBase64 : null,
+            'provider' => 'roteia',
         ]);
     }
 
