@@ -44,4 +44,41 @@ return [
             'routing_capability' => 'avatar_video',
         ],
     ],
+
+    'media_orchestrator' => [
+        'profiles' => [
+            'balanced' => ['quality' => 0.40, 'suitability' => 0.25, 'cost' => 0.20, 'speed' => 0.10, 'reliability' => 0.05],
+            'quality' => ['quality' => 0.50, 'suitability' => 0.30, 'cost' => 0.08, 'speed' => 0.07, 'reliability' => 0.05],
+            'economy' => ['quality' => 0.25, 'suitability' => 0.20, 'cost' => 0.35, 'speed' => 0.15, 'reliability' => 0.05],
+            'fast' => ['quality' => 0.25, 'suitability' => 0.20, 'cost' => 0.15, 'speed' => 0.35, 'reliability' => 0.05],
+        ],
+        'capabilities' => [
+            'image' => [
+                'preferred_patterns' => [
+                    'x-ai/grok-imagine-image' => ['bonus' => 18, 'use' => 'premium_visual'],
+                    'bytedance-seed/seedream' => ['bonus' => 16, 'use' => 'premium_visual'],
+                    'google/gemini-3.1-flash-image' => ['bonus' => 14, 'use' => 'balanced_visual'],
+                    'flux' => ['bonus' => 10, 'use' => 'creative_visual'],
+                ],
+            ],
+            'video' => [
+                'preferred_patterns' => [
+                    'google/veo' => ['bonus' => 20, 'use' => 'premium_institutional'],
+                    'x-ai/grok-imagine-video' => ['bonus' => 18, 'use' => 'dynamic_social'],
+                    'bytedance/seedance' => ['bonus' => 18, 'use' => 'social_motion'],
+                    'runway/' => ['bonus' => 17, 'use' => 'premium_motion'],
+                    'minimax/hailuo' => ['bonus' => 15, 'use' => 'dynamic_motion'],
+                ],
+            ],
+            'avatar' => [
+                'preferred_patterns' => [
+                    'heygen/' => ['bonus' => 30, 'use' => 'avatar_presenter'],
+                ],
+            ],
+        ],
+        'attempts' => [
+            'max_candidates' => 6,
+            'max_per_provider' => 2,
+        ],
+    ],
 ];

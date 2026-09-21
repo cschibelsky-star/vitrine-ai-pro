@@ -169,7 +169,9 @@ class CentroIaBrokerController extends Controller
         }
 
         $attempts = [];
-        $executionCandidates = $this->diversifyMediaCandidates($candidates, 6, 2);
+        $maxCandidates = (int) config('centro_ia.media_orchestrator.attempts.max_candidates', 6);
+        $maxPerProvider = (int) config('centro_ia.media_orchestrator.attempts.max_per_provider', 2);
+        $executionCandidates = $this->diversifyMediaCandidates($candidates, $maxCandidates, $maxPerProvider);
 
         foreach ($executionCandidates as $candidate) {
             $model = (string) $candidate['model'];
@@ -394,6 +396,17 @@ class CentroIaBrokerController extends Controller
         $material = strtolower(trim((string) ($input['material_type'] ?? '')));
         $qualityProfile = strtolower(trim((string) ($input['quality_profile'] ?? 'balanced')));
         $text = strtolower($prompt.' '.$material);
+        $weights = (array) config('centro_ia.media_orchestrator.profiles.'.$qualityProfile, []);
+        if ($weights === []) {
+            $weights = (array) config('centro_ia.media_orchestrator.profiles.balanced', [
+                'quality' => 0.40,
+                'suitability' => 0.25,
+                'cost' => 0.20,
+                'speed' => 0.10,
+                'reliability' => 0.05,
+            ]);
+        }
+        $preferredPatterns = (array) config('centro_ia.media_orchestrator.capabilities.'.$target.'.preferred_patterns', []);
         $items = (array) ($catalog['data'] ?? $catalog['models'] ?? $catalog);
         $candidates = [];
 
@@ -436,6 +449,16 @@ class CentroIaBrokerController extends Controller
             $cost = 10.0;
             $reliability = 10.0;
             $reason = [];
+
+            foreach ($preferredPatterns as $pattern => $policy) {
+                if ($pattern !== '' && str_contains($model, strtolower((string) $pattern))) {
+                    $suitability += (float) ($policy['bonus'] ?? 0);
+                    $use = trim((string) ($policy['use'] ?? ''));
+                    if ($use !== '') {
+                        $reason[] = 'matriz: '.$use;
+                    }
+                }
+            }
 
             if ($target === 'video') {
                 if ((str_contains($text, 'institucional') || str_contains($text, 'cinematic') || str_contains($text, 'premium'))
@@ -484,13 +507,11 @@ class CentroIaBrokerController extends Controller
                 $reason[] = 'custo conhecido no catálogo';
             }
 
-            if ($qualityProfile === 'quality') {
-                $score = ($quality * 0.50) + ($suitability * 0.30) + ($cost * 0.08) + ($speed * 0.07) + ($reliability * 0.05);
-            } elseif ($qualityProfile === 'economy') {
-                $score = ($quality * 0.25) + ($suitability * 0.20) + ($cost * 0.35) + ($speed * 0.15) + ($reliability * 0.05);
-            } else {
-                $score = ($quality * 0.40) + ($suitability * 0.25) + ($cost * 0.20) + ($speed * 0.10) + ($reliability * 0.05);
-            }
+            $score = ($quality * (float) ($weights['quality'] ?? 0.40))
+                + ($suitability * (float) ($weights['suitability'] ?? 0.25))
+                + ($cost * (float) ($weights['cost'] ?? 0.20))
+                + ($speed * (float) ($weights['speed'] ?? 0.10))
+                + ($reliability * (float) ($weights['reliability'] ?? 0.05));
 
             $candidates[] = [
                 'model' => $model,
