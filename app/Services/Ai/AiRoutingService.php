@@ -76,9 +76,9 @@ class AiRoutingService
             'image_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
             'video_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
             'avatar_video' => ['providers' => ['roteia', 'heygen'], 'capability' => $capability],
-            'critical_review' => ['providers' => ['roteia', 'openai', 'gemini'], 'capability' => $capability],
-            'marketing_strategy', 'copy' => ['providers' => ['roteia', 'gemini', 'openai'], 'capability' => $capability],
-            default => ['providers' => ['roteia', 'gemini', 'openai'], 'capability' => $capability],
+            'critical_review' => ['providers' => ['roteia', 'openrouter', 'openai', 'gemini'], 'capability' => $capability],
+            'marketing_strategy', 'copy' => ['providers' => ['roteia', 'openrouter', 'gemini', 'openai'], 'capability' => $capability],
+            default => ['providers' => ['roteia', 'openrouter', 'gemini', 'openai'], 'capability' => $capability],
         };
     }
 
@@ -104,6 +104,10 @@ class AiRoutingService
                     || trim((string) env('ROTEIA_BASE_URL', '')) === ''
                 )
             ) {
+                continue;
+            }
+
+            if ($slug === 'openrouter' && trim((string) env('OPENROUTER_API_KEY', '')) === '') {
                 continue;
             }
 
