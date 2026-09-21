@@ -19,9 +19,22 @@ class AiConsumption extends Model
 
     protected $casts = [
         'consumption_date' => 'date',
+        'occurred_at' => 'datetime',
         'quantity' => 'decimal:4',
+        'input_units' => 'decimal:4',
+        'output_units' => 'decimal:4',
         'estimated_cost' => 'decimal:4',
+        'actual_cost' => 'decimal:6',
+        'original_cost' => 'decimal:6',
+        'fx_rate' => 'decimal:6',
+        'cost_brl' => 'decimal:6',
+        'metadata' => 'array',
     ];
+
+    public function consumer(): BelongsTo
+    {
+        return $this->belongsTo(AiConsumer::class, 'ai_consumer_id');
+    }
 
     public function company(): BelongsTo
     {
