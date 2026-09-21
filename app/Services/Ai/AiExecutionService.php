@@ -5,6 +5,7 @@ namespace App\Services\Ai;
 use App\Models\AiAgent;
 use App\Models\AiExecution;
 use App\Shared\AI\Models\AiProvider;
+use App\Shared\AI\Services\AiUsageTelemetry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -12,6 +13,12 @@ use Throwable;
 
 class AiExecutionService
 {
+    private array $lastProviderUsage = [];
+
+    public function __construct(
+        private readonly AiUsageTelemetry $usageTelemetry,
+    ) {
+    }
     public function execute(
         AiAgent $agent,
         string $prompt,
@@ -48,7 +55,8 @@ class AiExecutionService
                 'finished_at' => now(),
             ], false));
 
-            $this->registerConsumption($provider, $agent, $model, $prompt, $output, 'Concluído', $durationMs);\n            $this->registerProviderTelemetry($provider, $agent, $model, $durationMs, 'completed');
+            $this->registerConsumption($provider, $agent, $model, $prompt, $output, 'Concluído', $durationMs);
+            $this->registerProviderTelemetry($provider, $agent, $model, $durationMs, 'completed');
         } catch (Throwable $e) {
             $durationMs = (int) round((microtime(true) - $started) * 1000);
 
@@ -144,7 +152,8 @@ class AiExecutionService
             'openai' => env('OPENAI_API_KEY') ?: env('OPENAI_KEY') ?: null,
             'gemini', 'google', 'google-gemini' => env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY') ?: env('GOOGLE_GEMINI_API_KEY') ?: null,
             'heygen' => env('HEYGEN_API_KEY') ?: env('HEYGEN_KEY') ?: null,
-            'roteia' => env('ROTEIA_API_KEY') ?: null,\n            'openrouter' => env('OPENROUTER_API_KEY') ?: null,
+            'roteia' => env('ROTEIA_API_KEY') ?: null,
+            'openrouter' => env('OPENROUTER_API_KEY') ?: null,
             default => null,
         };
     }
@@ -165,7 +174,8 @@ class AiExecutionService
         }
 
         return match ($providerIdentity) {
-            'openai' => 'gpt-4o-mini',\n            'openrouter' => env('OPENROUTER_CHAT_MODEL') ?: 'openrouter/free',
+            'openai' => 'gpt-4o-mini',
+            'openrouter' => env('OPENROUTER_CHAT_MODEL') ?: 'openrouter/free',
             'gemini', 'google', 'google-gemini' => 'gemini-3.6-flash',
             default => 'manual',
         };
@@ -228,7 +238,10 @@ class AiExecutionService
                 throw new \RuntimeException('OpenAI erro: '.$response->body());
             }
 
-            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta da OpenAI.');
+            $payload = (array) $response->json();
+            $this->lastProviderUsage = $payload;
+
+            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta da OpenAI.');
         }
 
         if (in_array($providerIdentity, ['gemini', 'google', 'google-gemini'], true)) {
@@ -250,7 +263,10 @@ class AiExecutionService
                 throw new \RuntimeException('Gemini erro: '.$response->body());
             }
 
-            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
+            $payload = (array) $response->json();
+            $this->lastProviderUsage = $payload;
+
+            return (string) data_get($payload, 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
         }
 
         if ($providerIdentity === 'roteia') {
@@ -280,14 +296,25 @@ class AiExecutionService
                 throw new \RuntimeException('Roteia erro HTTP '.$response->status().': '.$response->body());
             }
 
-            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta do Roteia.');
+            $payload = (array) $response->json();
+            $this->lastProviderUsage = $payload;
+
+            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta do Roteia.');
         }
 
         if ($providerIdentity === 'heygen') {
             return 'HEYGEN CENTRALIZADO: provedor reconhecido. A execução de vídeo será implementada no módulo premium separado.';
         }
 
-        return "EXECUÇÃO INTERNA\n\nAgente: {$agent->name}\nModelo: {$model}\n\nPrompt recebido:\n{$prompt}\n\nResultado: execução interna concluída. Configure OpenAI/Gemini para resposta externa real.";
+        return "EXECUÇÃO INTERNA
+
+Agente: {$agent->name}
+Modelo: {$model}
+
+Prompt recebido:
+{$prompt}
+
+Resultado: execução interna concluída. Configure OpenAI/Gemini para resposta externa real.";
     }
 
     protected function registerProviderTelemetry($provider, AiAgent $agent, string $model, int $durationMs, string $status): void
