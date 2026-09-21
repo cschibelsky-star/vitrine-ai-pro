@@ -107,6 +107,20 @@ Route::get('/cockpit', function () {
     return view('cockpit.index', compact('applications'));
 })->name('cockpit.index');
 
+Route::get('/cockpit/webmail', function () {
+    if (! Auth::check()) {
+        return redirect()->route('cockpit.login');
+    }
+
+    $user = Auth::user();
+    abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+    return view('cockpit.webmail', [
+        'enabled' => (bool) config('cockpit-webmail.enabled', false),
+        'accounts' => collect(config('cockpit-webmail.accounts', [])),
+    ]);
+})->name('cockpit.webmail');
+
 Route::post('/cockpit/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
