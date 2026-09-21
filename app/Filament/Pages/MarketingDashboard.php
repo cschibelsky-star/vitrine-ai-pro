@@ -1188,6 +1188,29 @@ class MarketingDashboard extends Page
             || str_contains($normalized, 'produza');
     }
 
+    private function decodeDirectorPlan(string $raw): array
+    {
+        $candidate = trim($raw);
+        $candidate = preg_replace('/^\x60\x60\x60(?:json)?\s*|\s*\x60\x60\x60$/iu', '', $candidate) ?? $candidate;
+
+        $decoded = json_decode($candidate, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        $start = strpos($candidate, '{');
+        $end = strrpos($candidate, '}');
+
+        if ($start !== false && $end !== false && $end > $start) {
+            $decoded = json_decode(substr($candidate, $start, $end - $start + 1), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        throw new \RuntimeException('O Diretor retornou um plano de campanha inválido. Tente novamente; o pedido foi preservado no chat.');
+    }
+
     private function autoProduceDirectorCampaign(string $message, string $directorReply): void
     {
         try {
@@ -1202,7 +1225,7 @@ class MarketingDashboard extends Page
 
             $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
             $raw = trim($this->generateFlowPackageWithGemini($system, $userPrompt));
-            $plan = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+            $plan = $this->decodeDirectorPlan($raw);
 
             $campaign = (array) ($plan['campaign'] ?? []);
             $jobs = array_values(array_filter((array) ($plan['jobs'] ?? []), 'is_array'));

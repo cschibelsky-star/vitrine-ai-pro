@@ -117,6 +117,18 @@ class MarketingOperationalE2ETest extends TestCase
         $this->assertSame(0, $targetResolver->invoke($page, 'Ajustar o Card Lista VIP.'));
     }
 
+    public function test_marketing_dashboard_accepts_director_json_wrapped_in_markdown(): void
+    {
+        $page = app(MarketingDashboard::class);
+        $decoder = new \ReflectionMethod($page, 'decodeDirectorPlan');
+        $decoder->setAccessible(true);
+
+        $plan = $decoder->invoke($page, "Resposta do Diretor:\n\x60\x60\x60json\n{\"campaign\":{\"name\":\"Teste\"},\"jobs\":[{\"type\":\"image\",\"format\":\"ad_1_1\"}]}\n\x60\x60\x60");
+
+        $this->assertSame('Teste', $plan['campaign']['name']);
+        $this->assertCount(1, $plan['jobs']);
+    }
+
     /** @return array<string, mixed> */
     private function campaign(): array
     {

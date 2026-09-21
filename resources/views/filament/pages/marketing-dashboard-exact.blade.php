@@ -176,7 +176,11 @@
         .vm-result-body { padding:12px; }
         .vm-result-title { font-size:12px;font-weight:760;color:#fff; }
         .vm-result-meta { margin-top:5px;font-size:10px;color:#8f879f; }
-        .vm-machine { display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center; }
+        .vm-machine { display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;transition:.2s ease; }
+        .vm-machine.is-requesting { border-color:rgba(168,85,247,.5);box-shadow:0 0 0 1px rgba(168,85,247,.12),0 18px 48px rgba(124,58,237,.16); }
+        .vm-live-request { margin-top:12px;align-items:center;gap:10px;color:#d8d4e8;font-size:11px;font-weight:700; }
+        .vm-live-dot { width:9px;height:9px;border-radius:50%;background:#a855f7;box-shadow:0 0 14px rgba(168,85,247,.9);animation:vmLiveDot 1s ease-in-out infinite; }
+        @keyframes vmLiveDot { 0%,100%{transform:scale(.72);opacity:.45}50%{transform:scale(1.18);opacity:1} }
         .vm-machine-track { display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px; }
         .vm-machine-step { padding:12px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(139,92,246,.12);font-size:10px;color:#837c98;text-align:center; }
         .vm-machine-step.active { color:#fff;border-color:rgba(139,92,246,.45);background:rgba(124,58,237,.16);box-shadow:0 0 22px rgba(124,58,237,.12); }
@@ -418,7 +422,7 @@
                             </div>
                         </div>
 
-                        <div class="vm-panel vm-machine">
+                        <div class="vm-panel vm-machine" wire:loading.class="is-requesting" wire:target="sendCopilotMessage">
                             <div>
                                 <div class="vm-eyebrow">Marketing IA trabalhando</div>
                                 <h2 style="margin:5px 0 0;font-size:18px">Sua equipe de IA está processando a operação</h2>
@@ -428,6 +432,10 @@
                                     <div class="vm-machine-step {{ $workingJobs > 0 ? 'active' : '' }}">Produzindo</div>
                                     <div class="vm-machine-step {{ $reviewJobs > 0 ? 'active' : '' }}">Revisando</div>
                                     <div class="vm-machine-step {{ $readyJobs > 0 ? 'active' : '' }}">Pronto</div>
+                                </div>
+                                <div class="vm-live-request" wire:loading.flex wire:target="sendCopilotMessage">
+                                    <span class="vm-live-dot" aria-hidden="true"></span>
+                                    <span>Entendendo seu pedido e montando a campanha...</span>
                                 </div>
                                 <div class="vm-note" style="margin-top:12px">
                                     <span>{{ $workingJobs > 0 ? $workingJobs.' conteúdo(s) em produção.' : 'Nenhuma produção ativa neste momento.' }}</span>
@@ -865,7 +873,7 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                 <div class="vm-chat-empty">Digite apenas o que deseja criar. Quando a produção for iniciada, a conversa será arquivada e este chat ficará livre para a próxima solicitação.</div>
                             @endforelse
                         </div>
-                        <form wire:submit="sendCopilotMessage" class="vm-form"><textarea wire:model="copilotMessage" rows="3" maxlength="4000" placeholder="Ex.: crie uma campanha de divulgação da TV Sumaré para Instagram"></textarea><button type="submit" class="vm-send">Enviar</button></form>
+                        <form wire:submit="sendCopilotMessage" class="vm-form"><textarea wire:model="copilotMessage" rows="3" maxlength="4000" placeholder="Ex.: crie uma campanha de divulgação da TV Sumaré para Instagram"></textarea><button type="submit" class="vm-send" wire:loading.attr="disabled" wire:target="sendCopilotMessage"><span wire:loading.remove wire:target="sendCopilotMessage">Enviar</span><span wire:loading wire:target="sendCopilotMessage">Criando campanha...</span></button></form>
 
                         @if(count($copilotArchives) > 0)
                             <div class="vm-chat-archives">
