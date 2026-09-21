@@ -32,6 +32,9 @@ services:
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
       HEYGEN_WEBHOOK_SECRET: "${HEYGEN_WEBHOOK_SECRET:-}"
+      ROTEIA_API_KEY: "${ROTEIA_API_KEY:-}"
+      ROTEIA_BASE_URL: "${ROTEIA_BASE_URL:-}"
+      ROTEIA_CHAT_MODEL: "${ROTEIA_CHAT_MODEL:-}"
     depends_on:
       core_db:
         condition: service_healthy
@@ -90,6 +93,9 @@ services:
     command: php artisan db:seed --class=AiProviderSeeder --force
     environment:
       <<: *core-db-env
+      ROTEIA_API_KEY: "${ROTEIA_API_KEY:-}"
+      ROTEIA_BASE_URL: "${ROTEIA_BASE_URL:-}"
+      ROTEIA_CHAT_MODEL: "${ROTEIA_CHAT_MODEL:-}"
     depends_on:
       core_migrate:
         condition: service_completed_successfully
