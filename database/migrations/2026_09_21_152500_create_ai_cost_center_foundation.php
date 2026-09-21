@@ -19,7 +19,11 @@ return new class extends Migration
         });
 
         Schema::table('ai_consumptions', function (Blueprint $table) {
-            $table->foreignId('ai_consumer_id')->nullable()->after('id')->constrained('ai_consumers')->nullOnDelete();
+            // Keep this column as a plain indexed bigint. Adding a foreign key in
+            // SQLite forces a table rebuild and can drop existing legacy columns
+            // during tests/pretend runs. Referential integrity is handled by the
+            // application while preserving portability across SQLite and MariaDB.
+            $table->unsignedBigInteger('ai_consumer_id')->nullable()->after('id')->index();
             $table->string('gateway', 80)->nullable()->after('ai_provider_id')->index();
             $table->string('model_name', 160)->nullable()->after('gateway')->index();
             $table->string('capability', 80)->nullable()->after('model_name')->index();
@@ -47,7 +51,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ai_consumptions', function (Blueprint $table) {
-            $table->dropForeign(['ai_consumer_id']);
             $table->dropIndex(['ai_consumer_id', 'billing_period']);
             $table->dropIndex(['gateway', 'billing_period']);
             $table->dropIndex(['model_name', 'billing_period']);
