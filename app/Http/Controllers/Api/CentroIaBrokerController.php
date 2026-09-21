@@ -169,7 +169,9 @@ class CentroIaBrokerController extends Controller
         }
 
         $attempts = [];
-        foreach (array_slice($candidates, 0, 4) as $candidate) {
+        $executionCandidates = $this->diversifyMediaCandidates($candidates, 6, 2);
+
+        foreach ($executionCandidates as $candidate) {
             $model = (string) $candidate['model'];
             $payload = [
                 'model' => $model,
@@ -185,11 +187,15 @@ class CentroIaBrokerController extends Controller
                 }
             }
 
+            $requestUrl = str_starts_with($endpoint, '/v1/')
+                ? preg_replace('#/v1$#', '', $apiBaseUrl).$endpoint
+                : $apiBaseUrl.'/'.ltrim($endpoint, '/');
+
             $response = Http::withToken($apiKey)
                 ->acceptJson()
                 ->timeout($routingCapability === 'video_generation' ? 180 : 120)
                 ->retry(1, 300, throw: false)
-                ->post($apiBaseUrl.'/'.ltrim($endpoint, '/'), $payload);
+                ->post($requestUrl, $payload);
 
             $attempts[] = [
                 'model' => $model,
@@ -355,6 +361,31 @@ class CentroIaBrokerController extends Controller
                 return [];
             }
         });
+    }
+
+    private function diversifyMediaCandidates(array $candidates, int $limit = 6, int $perProvider = 2): array
+    {
+        $selected = [];
+        $providerCounts = [];
+
+        foreach ($candidates as $candidate) {
+            $model = (string) ($candidate['model'] ?? '');
+            $provider = str_contains($model, '/') ? explode('/', $model, 2)[0] : $model;
+            $count = (int) ($providerCounts[$provider] ?? 0);
+
+            if ($count >= $perProvider) {
+                continue;
+            }
+
+            $selected[] = $candidate;
+            $providerCounts[$provider] = $count + 1;
+
+            if (count($selected) >= $limit) {
+                break;
+            }
+        }
+
+        return $selected;
     }
 
     private function rankMediaCandidates(array $catalog, string $routingCapability, string $prompt, array $input): array
