@@ -35,15 +35,23 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
         }
 
         try {
-            $dynamic = $this->dispatchThroughCentroIa($prompt, $aspectRatio, $duration);
+            $dynamic = $this->dispatchThroughCentroIa($prompt, $aspectRatio, $duration, $context);
             if ($dynamic !== null) {
                 return $dynamic;
             }
         } catch (\Throwable $routingException) {
-            logger()->warning('Marketing IA: orquestrador dinâmico de vídeo indisponível; tentando Veo direto.', [
+            logger()->warning('Marketing IA: orquestrador dinâmico de vídeo indisponível; usando fallback local sem custo de Veo.', [
                 'error' => $routingException->getMessage(),
             ]);
+
+            return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
         }
+
+        if (! (bool) config('marketing_video.gemini_veo.allow_direct_fallback', false)) {
+            return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
+        }
+
+        $this->assertPaidVideoAllowed($duration, $context);
 
         $payload = [
             'instances' => [[
@@ -129,7 +137,7 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
         ];
     }
 
-    private function dispatchThroughCentroIa(string $prompt, string $aspectRatio, int $duration): ?array
+    private function dispatchThroughCentroIa(string $prompt, string $aspectRatio, int $duration, array $context = []): ?array
     {
         $hub = (array) config('marketing_agents.hub', []);
         $url = trim((string) ($hub['url'] ?? ''));
@@ -155,6 +163,8 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
                     'quality_profile' => 'balanced',
                     'duration_seconds' => $duration,
                     'aspect_ratio' => $aspectRatio,
+                    'paid_video_authorized' => (bool) ($context['paid_video_authorized'] ?? false),
+                    'max_estimated_cost_brl' => (float) ($context['max_estimated_cost_brl'] ?? 0),
                 ],
             ]);
 
@@ -356,6 +366,28 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
                 false,
             ),
         ];
+    }
+
+    private function assertPaidVideoAllowed(int $duration, array $context = []): void
+    {
+        if (! (bool) config('marketing_video.gemini_veo.paid_generation_enabled', false)) {
+            throw new RuntimeException('paid_video_generation_disabled');
+        }
+
+        if ((bool) config('marketing_video.gemini_veo.require_explicit_authorization', true)
+            && ! (bool) ($context['paid_video_authorized'] ?? false)) {
+            throw new RuntimeException('paid_video_authorization_required');
+        }
+
+        $rate = max(0.0, (float) config('marketing_video.gemini_veo.estimated_cost_brl_per_second', 2.50));
+        $estimated = $rate * max(0, $duration);
+        $configuredMax = max(0.0, (float) config('marketing_video.gemini_veo.max_estimated_cost_brl_per_request', 20.00));
+        $requestMax = max(0.0, (float) ($context['max_estimated_cost_brl'] ?? 0));
+        $effectiveMax = $requestMax > 0 ? min($configuredMax, $requestMax) : $configuredMax;
+
+        if ($effectiveMax <= 0 || $estimated > $effectiveMax) {
+            throw new RuntimeException(sprintf('paid_video_budget_exceeded:estimated=%.2f,max=%.2f', $estimated, $effectiveMax));
+        }
     }
 
     private function client(): PendingRequest

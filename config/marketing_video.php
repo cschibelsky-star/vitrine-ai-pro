@@ -38,6 +38,11 @@ return [
         'max_wait_seconds' => (int) env('GEMINI_VEO_MAX_WAIT', 360),
         'http_retries' => (int) env('GEMINI_VEO_HTTP_RETRIES', 2),
         'http_retry_delay_ms' => (int) env('GEMINI_VEO_HTTP_RETRY_DELAY_MS', 500),
+        'paid_generation_enabled' => filter_var(env('MARKETING_VEO_PAID_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'allow_direct_fallback' => filter_var(env('MARKETING_VEO_ALLOW_DIRECT_FALLBACK', false), FILTER_VALIDATE_BOOL),
+        'require_explicit_authorization' => filter_var(env('MARKETING_VEO_REQUIRE_EXPLICIT_AUTH', true), FILTER_VALIDATE_BOOL),
+        'estimated_cost_brl_per_second' => (float) env('MARKETING_VEO_ESTIMATED_COST_BRL_PER_SECOND', 2.50),
+        'max_estimated_cost_brl_per_request' => (float) env('MARKETING_VEO_MAX_COST_BRL_PER_REQUEST', 20.00),
     ],
 
     'finalization' => [

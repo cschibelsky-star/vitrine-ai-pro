@@ -20,6 +20,10 @@ final class GeminiVeoVideoProviderTest extends TestCase
         config()->set('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview');
         config()->set('marketing_video.gemini_veo.poll_interval_seconds', 0);
         config()->set('marketing_video.gemini_veo.max_wait_seconds', 2);
+        config()->set('marketing_video.gemini_veo.paid_generation_enabled', true);
+        config()->set('marketing_video.gemini_veo.require_explicit_authorization', true);
+        config()->set('marketing_video.gemini_veo.estimated_cost_brl_per_second', 2.50);
+        config()->set('marketing_video.gemini_veo.max_estimated_cost_brl_per_request', 20.00);
 
         Http::fake([
             '*models/veo-3.1-generate-preview:predictLongRunning' => Http::response([
@@ -45,6 +49,10 @@ final class GeminiVeoVideoProviderTest extends TestCase
             script: 'Natural modern office, Brazilian entrepreneur using Vitrine Social Midia, cinematic camera movement, native Portuguese audio.',
             aspectRatios: ['9:16'],
             durationSeconds: 8,
+            metadata: [
+                'paid_video_authorized' => true,
+                'max_estimated_cost_brl' => 20.00,
+            ],
         );
         $session = new VideoSession('SESSION-REQ-1', 'REQ-1');
 

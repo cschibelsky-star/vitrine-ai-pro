@@ -29,6 +29,11 @@ final class GeminiVeoSceneRendererTest extends TestCase
         config()->set('marketing_video.gemini_veo.api_key', 'test-key');
         config()->set('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview');
         config()->set('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta');
+        config()->set('marketing_video.gemini_veo.allow_direct_fallback', true);
+        config()->set('marketing_video.gemini_veo.paid_generation_enabled', true);
+        config()->set('marketing_video.gemini_veo.require_explicit_authorization', true);
+        config()->set('marketing_video.gemini_veo.estimated_cost_brl_per_second', 2.50);
+        config()->set('marketing_video.gemini_veo.max_estimated_cost_brl_per_request', 20.00);
 
         Http::fake([
             'generativelanguage.googleapis.com/*' => Http::response(['name' => 'operations/test-operation'], 200),
@@ -44,6 +49,8 @@ final class GeminiVeoSceneRendererTest extends TestCase
         $result = app(GeminiVeoSceneRenderer::class)->dispatch($project, $scene, [
             'aspect_ratio' => '9:16',
             'duration_seconds' => 8,
+            'paid_video_authorized' => true,
+            'max_estimated_cost_brl' => 20.00,
         ]);
 
         $this->assertSame('gemini_veo', $result['provider']);

@@ -34,11 +34,12 @@ final class GeminiVeoVideoProvider implements VideoProvider
             throw new RuntimeException('Unsupported Veo 3.1 video request. Use one aspect ratio (16:9 or 9:16) and duration 4, 6 or 8 seconds.');
         }
 
+        $duration = $request->durationSeconds ?? (int) config('marketing_video.gemini_veo.duration_seconds', 8);
+
         $apiKey = (string) config('marketing_video.gemini_veo.api_key');
         $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url'), '/');
         $model = (string) config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview');
         $resolution = (string) ($request->metadata['resolution'] ?? config('marketing_video.gemini_veo.resolution', '720p'));
-        $duration = $request->durationSeconds ?? (int) config('marketing_video.gemini_veo.duration_seconds', 8);
 
         if ($apiKey === '') {
             throw new RuntimeException('GEMINI_API_KEY is not configured for the Video Producer.');
@@ -51,6 +52,8 @@ final class GeminiVeoVideoProvider implements VideoProvider
         if (in_array($resolution, ['1080p', '4k'], true) && $duration !== 8) {
             throw new RuntimeException('Veo 3.1 requires an 8-second duration for 1080p and 4k generation.');
         }
+
+        $this->assertPaidVideoAllowed($request, (int) $duration);
 
         $parameters = [
             'aspectRatio' => $request->aspectRatios[0],
@@ -111,6 +114,28 @@ final class GeminiVeoVideoProvider implements VideoProvider
                 'provider_retention_days' => 2,
             ],
         );
+    }
+
+    private function assertPaidVideoAllowed(VideoRequest $request, int $duration): void
+    {
+        if (! (bool) config('marketing_video.gemini_veo.paid_generation_enabled', false)) {
+            throw new RuntimeException('Paid Veo generation is disabled by policy.');
+        }
+
+        if ((bool) config('marketing_video.gemini_veo.require_explicit_authorization', true)
+            && ! (bool) ($request->metadata['paid_video_authorized'] ?? false)) {
+            throw new RuntimeException('Explicit paid video authorization is required.');
+        }
+
+        $rate = max(0.0, (float) config('marketing_video.gemini_veo.estimated_cost_brl_per_second', 2.50));
+        $estimated = $rate * max(0, $duration);
+        $configuredMax = max(0.0, (float) config('marketing_video.gemini_veo.max_estimated_cost_brl_per_request', 20.00));
+        $requestMax = max(0.0, (float) ($request->metadata['max_estimated_cost_brl'] ?? 0));
+        $effectiveMax = $requestMax > 0 ? min($configuredMax, $requestMax) : $configuredMax;
+
+        if ($effectiveMax <= 0 || $estimated > $effectiveMax) {
+            throw new RuntimeException(sprintf('Paid Veo budget exceeded: estimated R$ %.2f, limit R$ %.2f.', $estimated, $effectiveMax));
+        }
     }
 
     /** @return array<string, mixed> */

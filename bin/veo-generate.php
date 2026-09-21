@@ -19,6 +19,8 @@ $options = getopt('', [
     'duration:',
     'resolution:',
     'provider::',
+    'authorize-paid-video::',
+    'max-estimated-cost-brl::',
 ]);
 
 $required = ['request-id', 'title', 'prompt', 'aspect-ratio', 'duration', 'resolution'];
@@ -65,6 +67,8 @@ $request = new VideoRequest(
     durationSeconds: $duration,
     metadata: [
         'resolution' => $resolution,
+        'paid_video_authorized' => strtoupper(trim((string) ($options['authorize-paid-video'] ?? ''))) === 'EXECUTAR',
+        'max_estimated_cost_brl' => isset($options['max-estimated-cost-brl']) ? (float) $options['max-estimated-cost-brl'] : 0.0,
         'auto_regenerate' => false,
         'auto_publish' => false,
     ],
