@@ -47,6 +47,10 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
 
         $response = $this->client()->post(sprintf('/models/%s:predictLongRunning', $model), $payload);
         if (! $response->successful()) {
+            if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
+                throw new RuntimeException('gemini_veo_quota_exhausted');
+            }
+
             throw new RuntimeException('gemini_veo_dispatch_failed:'.$response->status());
         }
 

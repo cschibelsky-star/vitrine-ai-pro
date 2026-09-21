@@ -457,6 +457,7 @@
                                                 'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
                                                 'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
                                                 'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'BLOQUEADO_CREDITO' => ['label' => 'Crédito indisponível', 'class' => 'error'],
                                                 'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
                                                 default => ['label' => 'Aguardando', 'class' => 'processing'],
                                             };
@@ -479,6 +480,12 @@
                                                 <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Criativo') }}</div>
                                                 <div class="vm-result-meta">{{ $job['campaign'] ?? '' }}</div>
                                                 <span class="vm-status-badge {{ $statusView['class'] }}">{{ $statusView['label'] }}</span>
+                                                @if(!empty($job['error']))
+                                                    <div style="margin-top:8px;color:#fda4af;font-size:10px;line-height:1.45">{{ $job['error'] }}</div>
+                                                @endif
+                                                @if(in_array((string) ($job['status'] ?? ''), ['ERRO','BLOQUEADO_CREDITO'], true))
+                                                    <button type="button" class="vm-action-link" wire:click="retryProductionJob('{{ $job['id'] ?? '' }}')">Tentar novamente</button>
+                                                @endif
                                                 <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
                                             </div>
                                         </article>
@@ -501,6 +508,7 @@
                                                 'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
                                                 'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
                                                 'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'BLOQUEADO_CREDITO' => ['label' => 'Crédito indisponível', 'class' => 'error'],
                                                 'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
                                                 default => ['label' => 'Aguardando', 'class' => 'processing'],
                                             };
@@ -523,6 +531,12 @@
                                                 <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Vídeo') }}</div>
                                                 <div class="vm-result-meta">{{ $job['campaign'] ?? '' }}</div>
                                                 <span class="vm-status-badge {{ $statusView['class'] }}">{{ $statusView['label'] }}</span>
+                                                @if(!empty($job['error']))
+                                                    <div style="margin-top:8px;color:#fda4af;font-size:10px;line-height:1.45">{{ $job['error'] }}</div>
+                                                @endif
+                                                @if(in_array((string) ($job['status'] ?? ''), ['ERRO','BLOQUEADO_CREDITO'], true))
+                                                    <button type="button" class="vm-action-link" wire:click="retryProductionJob('{{ $job['id'] ?? '' }}')">Tentar novamente</button>
+                                                @endif
                                                 <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
                                             </div>
                                         </article>

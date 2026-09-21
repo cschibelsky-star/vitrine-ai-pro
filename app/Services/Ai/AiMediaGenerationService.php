@@ -119,6 +119,10 @@ class AiMediaGenerationService
             ]);
 
         if ($response->failed()) {
+            if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
+                return $this->generateImageThroughCentroIa($prompt);
+            }
+
             throw new RuntimeException('Gemini Image erro HTTP '.$response->status().': '.$response->body());
         }
 
@@ -172,6 +176,90 @@ class AiMediaGenerationService
                 'storage_disk' => $disk,
                 'prompt_length' => mb_strlen($prompt),
                 'synthid_expected' => true,
+                'branding' => 'client_branding_pending',
+                'flow_dependency' => false,
+            ],
+        ];
+    }
+
+    protected function generateImageThroughCentroIa(string $prompt): array
+    {
+        $hub = (array) config('marketing_agents.hub', []);
+        $url = trim((string) ($hub['url'] ?? ''));
+        $token = trim((string) ($hub['token'] ?? ''));
+        $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
+
+        if ($url === '' || $token === '') {
+            throw new RuntimeException('Google sem créditos e Centro IA indisponível para fallback de imagem.');
+        }
+
+        $response = Http::acceptJson()
+            ->asJson()
+            ->withToken($token)
+            ->withHeaders(['X-Vitrine-Project' => $projectId])
+            ->timeout(150)
+            ->retry(1, 300, throw: false)
+            ->post($url, [
+                'project_id' => $projectId,
+                'capability' => 'image_generation',
+                'input' => [
+                    'user' => $prompt,
+                ],
+            ]);
+
+        if (! $response->successful() || ! $response->json('ok')) {
+            throw new RuntimeException(
+                'Google sem créditos e fallback Roteia falhou: '.
+                (string) ($response->json('error') ?? ('HTTP '.$response->status()))
+            );
+        }
+
+        $base64 = trim((string) $response->json('asset_base64', ''));
+        $assetUrl = trim((string) $response->json('asset_url', ''));
+        $binary = null;
+        $mimeType = 'image/jpeg';
+
+        if ($base64 !== '') {
+            $decoded = base64_decode($base64, true);
+            if ($decoded !== false && $decoded !== '') {
+                $binary = $decoded;
+            }
+        }
+
+        if ($binary === null && $assetUrl !== '') {
+            $assetResponse = Http::timeout(90)->retry(1, 300, throw: false)->get($assetUrl);
+            if ($assetResponse->successful() && $assetResponse->body() !== '') {
+                $binary = $assetResponse->body();
+                $mimeType = trim((string) $assetResponse->header('Content-Type', 'image/jpeg')) ?: 'image/jpeg';
+            }
+        }
+
+        if (! is_string($binary) || $binary === '') {
+            throw new RuntimeException('Fallback Roteia concluiu, mas não retornou uma imagem utilizável.');
+        }
+
+        $extension = str_contains(strtolower($mimeType), 'png') ? 'png'
+            : (str_contains(strtolower($mimeType), 'webp') ? 'webp' : 'jpg');
+        $disk = config('filesystems.default', 'local');
+        $path = 'ai-generated/marketing/'.now()->format('Y/m/d').'/'.Str::uuid().'.'.$extension;
+
+        if (! Storage::disk($disk)->put($path, $binary)) {
+            throw new RuntimeException('Falha ao salvar a imagem recebida pelo fallback Roteia.');
+        }
+
+        return [
+            'status' => 'Concluído',
+            'output' => 'Imagem gerada via Centro IA / Roteia com Nano Banana 2.',
+            'operation_id' => null,
+            'asset_path' => $path,
+            'asset_url' => null,
+            'metadata' => [
+                'adapter_ready' => true,
+                'adapter' => 'centro_ia_roteia_image_fallback',
+                'model' => (string) $response->json('model', 'google/gemini-3.1-flash-image'),
+                'mime_type' => $mimeType,
+                'storage_disk' => $disk,
+                'prompt_length' => mb_strlen($prompt),
                 'branding' => 'client_branding_pending',
                 'flow_dependency' => false,
             ],

@@ -839,6 +839,21 @@ class MarketingDashboard extends Page
 
             $jobStatus = (string) ($job['status'] ?? '');
 
+            if (
+                in_array($jobStatus, ['ERRO', 'BLOQUEADO_CREDITO'], true)
+                && (string) ($job['type'] ?? '') === 'image'
+                && $this->isMediaQuotaBlocked((string) ($job['error'] ?? ''))
+                && empty($job['fallback_retry_attempted'])
+            ) {
+                $this->flowJobs[$index]['status'] = 'PRONTO_PARA_PRODUCAO';
+                $this->flowJobs[$index]['error'] = null;
+                $this->flowJobs[$index]['fallback_retry_attempted'] = true;
+                $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+                $job = $this->flowJobs[$index];
+                $jobStatus = 'PRONTO_PARA_PRODUCAO';
+                $changed = true;
+            }
+
             if ($jobStatus === 'PRONTO_PARA_PRODUCAO' && ! $startedPreparedJob) {
                 $startedPreparedJob = true;
 
@@ -865,10 +880,19 @@ class MarketingDashboard extends Page
                     }
                 } catch (Throwable $exception) {
                     report($exception);
-                    $this->flowJobs[$index]['status'] = 'ERRO';
-                    $this->flowJobs[$index]['error'] = $exception->getMessage();
+                    $quotaBlocked = $this->isMediaQuotaBlocked($exception->getMessage());
+                    $this->flowJobs[$index]['status'] = $quotaBlocked ? 'BLOQUEADO_CREDITO' : 'ERRO';
+                    $this->flowJobs[$index]['error'] = $quotaBlocked
+                        ? 'Crédito de geração indisponível no provedor atual. A peça foi preservada e pode ser tentada novamente.'
+                        : $exception->getMessage();
                     $this->flowJobs[$index]['updated_at'] = now()->toISOString();
                     $changed = true;
+
+                    if ((string) ($job['id'] ?? '') === $this->flowJobId) {
+                        $this->flowJobStatus = (string) $this->flowJobs[$index]['status'];
+                        $this->nativeProductionStatus = $this->flowJobStatus;
+                        $this->nativeProductionError = (string) $this->flowJobs[$index]['error'];
+                    }
                 }
 
                 continue;
@@ -922,6 +946,44 @@ class MarketingDashboard extends Page
         if ($changed) {
             $this->persistFlowWorkstation();
         }
+    }
+
+    public function retryProductionJob(string $jobId): void
+    {
+        foreach ($this->flowJobs as $index => $job) {
+            if ((string) ($job['id'] ?? '') !== $jobId) {
+                continue;
+            }
+
+            if (! in_array((string) ($job['status'] ?? ''), ['ERRO', 'BLOQUEADO_CREDITO'], true)) {
+                return;
+            }
+
+            $this->flowJobs[$index]['status'] = 'PRONTO_PARA_PRODUCAO';
+            $this->flowJobs[$index]['error'] = null;
+            $this->flowJobs[$index]['updated_at'] = now()->toISOString();
+
+            if ($jobId === $this->flowJobId) {
+                $this->flowJobStatus = 'PRONTO_PARA_PRODUCAO';
+                $this->nativeProductionStatus = 'PRONTO_PARA_PRODUCAO';
+                $this->nativeProductionError = null;
+            }
+
+            $this->persistFlowWorkstation();
+            return;
+        }
+    }
+
+    private function isMediaQuotaBlocked(string $message): bool
+    {
+        $normalized = strtoupper($message);
+
+        return str_contains($normalized, 'RESOURCE_EXHAUSTED')
+            || str_contains($normalized, 'HTTP 402')
+            || str_contains($normalized, ':402')
+            || str_contains($normalized, 'QUOTA_EXHAUSTED')
+            || str_contains($normalized, 'GEMINI_VEO_QUOTA_EXHAUSTED')
+            || str_contains($normalized, 'PREPAYMENT CREDITS ARE DEPLETED');
     }
 
     private function persistFlowWorkstation(): void
