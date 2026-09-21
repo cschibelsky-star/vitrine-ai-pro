@@ -16,6 +16,8 @@ Route::middleware('throttle:30,1')->group(function () {
         ->name('api.internal.centro-ia.orchestrator-status');
     Route::post('/internal/centro-ia/entitlements', [CentroIaBrokerController::class, 'entitlements'])
         ->name('api.internal.centro-ia.entitlements');
+    Route::post('/internal/media/avatar-video', [AvatarVideoController::class, 'store'])
+        ->name('api.internal.media.avatar-video.store');
 });
 
 require __DIR__.'/site_factory_api.php';
