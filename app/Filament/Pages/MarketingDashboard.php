@@ -966,19 +966,6 @@ class MarketingDashboard extends Page
                 $job['legacy'] = false;
             }
 
-            $providerJobRef = (string) ($job['provider_job_ref'] ?? '');
-            if (str_starts_with($providerJobRef, 'IMAGE-')) {
-                $generationId = substr($providerJobRef, 6);
-                if (ctype_digit($generationId)) {
-                    $job['preview_url'] = URL::temporarySignedRoute(
-                        'marketing.native-image-preview',
-                        now()->addHours(2),
-                        ['generation' => (int) $generationId],
-                        false,
-                    );
-                }
-            }
-
             return $job;
         }, $jobs));
     }
