@@ -22,6 +22,16 @@ class AiProviderSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'OpenRouter',
+                'provider_type' => 'gateway',
+                'status' => 'ativo',
+                'notes' => 'Gateway multi-provider para redundância e otimização de custo. Credencial fornecida exclusivamente pelo runtime.',
+                'config' => [
+                    'model_default' => env('OPENROUTER_CHAT_MODEL', 'openrouter/free'),
+                    'capabilities' => ['marketing_strategy', 'copy', 'critical_review'],
+                ],
+            ],
+            [
                 'name' => 'Gemini',
                 'provider_type' => 'gemini',
                 'status' => 'ativo',
