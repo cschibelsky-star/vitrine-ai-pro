@@ -1464,6 +1464,16 @@ class MarketingDashboard extends Page
                 'resolution' => '720p',
             ]);
 
+            $renderRef = trim((string) ($result['render_ref'] ?? ''));
+            $resultStatus = strtolower((string) ($result['status'] ?? 'processing'));
+
+            if ($resultStatus === 'completed' && $renderRef !== '') {
+                $base['status'] = 'GERADO';
+                $base['asset_url'] = $renderRef;
+                $base['provider_job_ref'] = '';
+                return $base;
+            }
+
             $base['status'] = 'EM_GERACAO';
             $base['provider_job_ref'] = (string) ($result['job_ref'] ?? '');
 

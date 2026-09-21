@@ -92,6 +92,14 @@ class AiMediaGenerationService
 
     protected function generateGoogleImage(AiProvider $provider, string $prompt, ?string $model): array
     {
+        try {
+            return $this->generateImageThroughCentroIa($prompt);
+        } catch (Throwable $routingException) {
+            logger()->warning('Marketing IA: orquestrador dinâmico de imagem indisponível; tentando Google direto.', [
+                'error' => $routingException->getMessage(),
+            ]);
+        }
+
         $apiKey = $this->resolveGeminiApiKey($provider);
         $model = $model
             ?: data_get($provider->config, 'models.image_generation')
@@ -190,7 +198,7 @@ class AiMediaGenerationService
         $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
 
         if ($url === '' || $token === '') {
-            throw new RuntimeException('Google sem créditos e Centro IA indisponível para fallback de imagem.');
+            throw new RuntimeException('Centro IA indisponível para roteamento dinâmico de imagem.');
         }
 
         $response = Http::acceptJson()
@@ -204,12 +212,14 @@ class AiMediaGenerationService
                 'capability' => 'image_generation',
                 'input' => [
                     'user' => $prompt,
+                    'material_type' => 'social_creative',
+                    'quality_profile' => 'balanced',
                 ],
             ]);
 
         if (! $response->successful() || ! $response->json('ok')) {
             throw new RuntimeException(
-                'Google sem créditos e fallback Roteia falhou: '.
+                'Orquestrador dinâmico de imagem falhou: '.
                 (string) ($response->json('error') ?? ('HTTP '.$response->status()))
             );
         }
@@ -249,7 +259,7 @@ class AiMediaGenerationService
 
         return [
             'status' => 'Concluído',
-            'output' => 'Imagem gerada via Centro IA / Roteia com Nano Banana 2.',
+            'output' => 'Imagem gerada pelo orquestrador dinâmico do Centro IA.',
             'operation_id' => null,
             'asset_path' => $path,
             'asset_url' => null,
