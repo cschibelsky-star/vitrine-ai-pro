@@ -33,6 +33,12 @@ class CentroIaBrokerController extends Controller
             'input.user' => ['required', 'string', 'min:5', 'max:120000'],
             'input.response_format' => ['nullable', 'string', 'max:30'],
             'input.temperature' => ['nullable', 'numeric', 'min:0', 'max:2'],
+            'input.material_type' => ['nullable', 'string', 'max:80'],
+            'input.quality_profile' => ['nullable', 'string', 'max:40'],
+            'input.duration_seconds' => ['nullable', 'integer', 'min:1', 'max:60'],
+            'input.aspect_ratio' => ['nullable', 'string', 'max:12'],
+            'input.operation' => ['nullable', 'string', 'max:30'],
+            'input.job_ref' => ['nullable', 'string', 'max:500'],
         ]);
 
         $projectHeader = trim((string) $request->header('X-Vitrine-Project', ''));
@@ -72,8 +78,14 @@ class CentroIaBrokerController extends Controller
 
         $routingCapability = trim((string) ($capabilityConfig['routing_capability'] ?? ''));
 
-        if ($routingCapability === 'image_generation') {
-            return $this->executeRoteiaImageFallback((string) $data['project_id'], $capability, $prompt);
+        if (in_array($routingCapability, ['image_generation', 'video_generation'], true)) {
+            return $this->executeDynamicMedia(
+                (string) $data['project_id'],
+                $capability,
+                $routingCapability,
+                $prompt,
+                (array) ($data['input'] ?? [])
+            );
         }
 
         $execution = $service->execute($agent, $prompt, $routingCapability !== '' ? $routingCapability : null);
@@ -101,8 +113,13 @@ class CentroIaBrokerController extends Controller
         ]);
     }
 
-    private function executeRoteiaImageFallback(string $projectId, string $capability, string $prompt): JsonResponse
-    {
+    private function executeDynamicMedia(
+        string $projectId,
+        string $capability,
+        string $routingCapability,
+        string $prompt,
+        array $input
+    ): JsonResponse {
         $apiKey = trim((string) env('ROTEIA_API_KEY', ''));
         $baseUrl = rtrim(trim((string) env('ROTEIA_BASE_URL', '')), '/');
 
@@ -113,50 +130,347 @@ class CentroIaBrokerController extends Controller
             ], 503);
         }
 
-        $model = 'google/gemini-3.1-flash-image';
         $apiBaseUrl = str_ends_with($baseUrl, '/v1') ? $baseUrl : $baseUrl.'/v1';
-        $response = Http::withToken($apiKey)
-            ->acceptJson()
-            ->timeout(120)
-            ->retry(1, 300, throw: false)
-            ->post($apiBaseUrl.'/images/generations', [
+
+        if ($routingCapability === 'video_generation'
+            && strtolower(trim((string) ($input['operation'] ?? ''))) === 'refresh') {
+            return $this->refreshDynamicVideo($projectId, $capability, $apiBaseUrl, $apiKey, (string) ($input['job_ref'] ?? ''));
+        }
+
+        $catalog = $this->roteiaCatalog();
+        $candidates = $this->rankMediaCandidates($catalog, $routingCapability, $prompt, $input);
+
+        if ($candidates === []) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'no_media_candidate_available',
+                'routing_capability' => $routingCapability,
+            ], 503);
+        }
+
+        $capabilities = $this->roteiaCapabilities($apiBaseUrl, $apiKey);
+        $endpointKey = $routingCapability === 'image_generation' ? 'images' : 'videos';
+        $endpoint = trim((string) data_get($capabilities, 'endpoints.'.$endpointKey, ''));
+
+        if ($endpoint === '') {
+            return response()->json([
+                'ok' => false,
+                'error' => 'media_endpoint_unavailable',
+                'routing_capability' => $routingCapability,
+                'ranked_models' => array_map(
+                    fn (array $candidate): array => [
+                        'model' => $candidate['model'],
+                        'score' => $candidate['score'],
+                        'reason' => $candidate['reason'],
+                    ],
+                    array_slice($candidates, 0, 4)
+                ),
+            ], 503);
+        }
+
+        $attempts = [];
+        foreach (array_slice($candidates, 0, 4) as $candidate) {
+            $model = (string) $candidate['model'];
+            $payload = [
                 'model' => $model,
                 'prompt' => $prompt,
+            ];
+
+            if ($routingCapability === 'video_generation') {
+                if (! empty($input['duration_seconds'])) {
+                    $payload['duration_seconds'] = (int) $input['duration_seconds'];
+                }
+                if (! empty($input['aspect_ratio'])) {
+                    $payload['aspect_ratio'] = (string) $input['aspect_ratio'];
+                }
+            }
+
+            $response = Http::withToken($apiKey)
+                ->acceptJson()
+                ->timeout($routingCapability === 'video_generation' ? 180 : 120)
+                ->retry(1, 300, throw: false)
+                ->post($apiBaseUrl.'/'.ltrim($endpoint, '/'), $payload);
+
+            $attempts[] = [
+                'model' => $model,
+                'status' => $response->status(),
+            ];
+
+            if (! $response->successful()) {
+                continue;
+            }
+
+            $providerPayload = (array) $response->json();
+
+            if ($routingCapability === 'image_generation') {
+                $assetUrl = data_get($providerPayload, 'data.0.url')
+                    ?? data_get($providerPayload, 'asset_url')
+                    ?? data_get($providerPayload, 'url');
+                $assetBase64 = data_get($providerPayload, 'data.0.b64_json')
+                    ?? data_get($providerPayload, 'output_image.data')
+                    ?? data_get($providerPayload, 'image_base64');
+
+                if ((! is_string($assetUrl) || trim($assetUrl) === '')
+                    && (! is_string($assetBase64) || trim($assetBase64) === '')) {
+                    continue;
+                }
+
+                return response()->json([
+                    'ok' => true,
+                    'project_id' => $projectId,
+                    'capability' => $capability,
+                    'model' => $model,
+                    'provider' => 'roteia',
+                    'media_status' => 'completed',
+                    'asset_url' => is_string($assetUrl) ? $assetUrl : null,
+                    'asset_base64' => is_string($assetBase64) ? $assetBase64 : null,
+                    'routing' => [
+                        'score' => $candidate['score'],
+                        'reason' => $candidate['reason'],
+                        'attempts' => $attempts,
+                    ],
+                ]);
+            }
+
+            $jobRef = trim((string) (
+                data_get($providerPayload, 'id')
+                ?? data_get($providerPayload, 'request_id')
+                ?? data_get($providerPayload, 'job_id')
+                ?? data_get($providerPayload, 'operation_id')
+                ?? ''
+            ));
+            $assetUrl = data_get($providerPayload, 'data.0.url')
+                ?? data_get($providerPayload, 'asset_url')
+                ?? data_get($providerPayload, 'url');
+
+            if ($jobRef === '' && (! is_string($assetUrl) || trim($assetUrl) === '')) {
+                continue;
+            }
+
+            return response()->json([
+                'ok' => true,
+                'project_id' => $projectId,
+                'capability' => $capability,
+                'model' => $model,
+                'provider' => 'roteia',
+                'media_status' => is_string($assetUrl) && trim($assetUrl) !== '' ? 'completed' : 'processing',
+                'job_ref' => $jobRef !== '' ? $jobRef : null,
+                'asset_url' => is_string($assetUrl) ? $assetUrl : null,
+                'routing' => [
+                    'score' => $candidate['score'],
+                    'reason' => $candidate['reason'],
+                    'attempts' => $attempts,
+                ],
             ]);
+        }
+
+        return response()->json([
+            'ok' => false,
+            'error' => 'all_media_candidates_failed',
+            'routing_capability' => $routingCapability,
+            'attempts' => $attempts,
+        ], 502);
+    }
+
+    private function refreshDynamicVideo(
+        string $projectId,
+        string $capability,
+        string $apiBaseUrl,
+        string $apiKey,
+        string $jobRef
+    ): JsonResponse {
+        $jobRef = trim($jobRef);
+        if ($jobRef === '') {
+            return response()->json([
+                'ok' => false,
+                'error' => 'media_job_ref_required',
+            ], 422);
+        }
+
+        $response = Http::withToken($apiKey)
+            ->acceptJson()
+            ->timeout(30)
+            ->get($apiBaseUrl.'/generations/'.rawurlencode($jobRef));
 
         if (! $response->successful()) {
             return response()->json([
                 'ok' => false,
-                'error' => 'roteia_image_generation_failed',
+                'error' => 'media_generation_refresh_failed',
                 'provider_status' => $response->status(),
             ], 502);
         }
 
         $payload = (array) $response->json();
+        $status = strtolower(trim((string) (
+            $payload['status']
+            ?? data_get($payload, 'data.status')
+            ?? 'processing'
+        )));
         $assetUrl = data_get($payload, 'data.0.url')
+            ?? data_get($payload, 'data.url')
             ?? data_get($payload, 'asset_url')
             ?? data_get($payload, 'url');
-        $assetBase64 = data_get($payload, 'data.0.b64_json')
-            ?? data_get($payload, 'output_image.data')
-            ?? data_get($payload, 'image_base64');
 
-        if ((! is_string($assetUrl) || trim($assetUrl) === '') && (! is_string($assetBase64) || trim($assetBase64) === '')) {
-            return response()->json([
-                'ok' => false,
-                'error' => 'roteia_image_payload_missing',
-            ], 502);
-        }
+        $failed = in_array($status, ['failed', 'error', 'erro', 'cancelled', 'canceled'], true);
+        $completed = in_array($status, ['completed', 'complete', 'done', 'success', 'succeeded', 'concluido', 'concluído'], true)
+            || (is_string($assetUrl) && trim($assetUrl) !== '');
 
         return response()->json([
             'ok' => true,
             'project_id' => $projectId,
             'capability' => $capability,
-            'model' => $model,
-            'media_status' => 'completed',
-            'asset_url' => is_string($assetUrl) ? $assetUrl : null,
-            'asset_base64' => is_string($assetBase64) ? $assetBase64 : null,
             'provider' => 'roteia',
+            'media_status' => $failed ? 'failed' : ($completed ? 'completed' : 'processing'),
+            'job_ref' => $jobRef,
+            'asset_url' => is_string($assetUrl) ? $assetUrl : null,
         ]);
+    }
+
+    private function roteiaCatalog(): array
+    {
+        return Cache::remember('centro-ia:roteia:catalog', 60, function (): array {
+            try {
+                $response = Http::acceptJson()
+                    ->timeout(15)
+                    ->get('https://api.roteia.ai/catalog/models');
+
+                return $response->successful() ? (array) $response->json() : [];
+            } catch (Throwable) {
+                return [];
+            }
+        });
+    }
+
+    private function roteiaCapabilities(string $apiBaseUrl, string $apiKey): array
+    {
+        return Cache::remember('centro-ia:roteia:capabilities', 60, function () use ($apiBaseUrl, $apiKey): array {
+            try {
+                $response = Http::withToken($apiKey)
+                    ->acceptJson()
+                    ->timeout(15)
+                    ->get($apiBaseUrl.'/capabilities');
+
+                return $response->successful() ? (array) $response->json() : [];
+            } catch (Throwable) {
+                return [];
+            }
+        });
+    }
+
+    private function rankMediaCandidates(array $catalog, string $routingCapability, string $prompt, array $input): array
+    {
+        $target = $routingCapability === 'video_generation' ? 'video' : 'image';
+        $material = strtolower(trim((string) ($input['material_type'] ?? '')));
+        $qualityProfile = strtolower(trim((string) ($input['quality_profile'] ?? 'balanced')));
+        $text = strtolower($prompt.' '.$material);
+        $items = (array) ($catalog['data'] ?? $catalog['models'] ?? $catalog);
+        $candidates = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $model = trim((string) ($item['id'] ?? $item['model'] ?? ''));
+            $status = strtolower(trim((string) ($item['status'] ?? '')));
+            $endpoint = strtolower(trim((string) ($item['endpoint'] ?? '')));
+            $outputs = (array) data_get($item, 'modalities.output', []);
+
+            if ($model === '' || $status !== 'available' || ! in_array($target, $outputs, true)) {
+                continue;
+            }
+
+            if ($target === 'image' && $endpoint !== 'images') {
+                continue;
+            }
+            if ($target === 'video' && $endpoint !== 'videos') {
+                continue;
+            }
+
+            if ($target === 'video' && str_contains($model, 'heygen/')
+                && ! str_contains($text, 'avatar')
+                && ! str_contains($text, 'apresentador')
+                && ! str_contains($text, 'porta-voz')) {
+                continue;
+            }
+
+            $quality = 50.0;
+            $marketRank = (int) ($item['marketRank'] ?? 0);
+            if ($marketRank > 0) {
+                $quality += max(0, 25 - min(25, $marketRank / 20));
+            }
+
+            $suitability = 20.0;
+            $speed = 10.0;
+            $cost = 10.0;
+            $reliability = 10.0;
+            $reason = [];
+
+            if ($target === 'video') {
+                if ((str_contains($text, 'institucional') || str_contains($text, 'cinematic') || str_contains($text, 'premium'))
+                    && (str_contains($model, 'veo') || str_contains($model, 'runway') || str_contains($model, 'sora'))) {
+                    $suitability += 18;
+                    $reason[] = 'forte para vídeo premium/institucional';
+                }
+
+                if ((str_contains($text, 'reel') || str_contains($text, 'social') || str_contains($text, 'instagram'))
+                    && str_contains($model, 'seedance')) {
+                    $suitability += 18;
+                    $reason[] = 'adequado para vídeo social';
+                }
+
+                if ((str_contains($text, 'movimento') || str_contains($text, 'dinâmico') || str_contains($text, 'dinamico'))
+                    && (str_contains($model, 'seedance') || str_contains($model, 'hailuo') || str_contains($model, 'grok'))) {
+                    $suitability += 12;
+                    $reason[] = 'bom ajuste para movimento';
+                }
+
+                if (str_contains($model, 'fast') || str_contains($model, 'mini') || str_contains($model, 'lite')) {
+                    $speed += 12;
+                    $reason[] = 'variante rápida/econômica';
+                }
+
+                if (str_contains($model, 'heygen/')) {
+                    $suitability += 25;
+                    $reason[] = 'especializado em avatar/apresentador';
+                }
+            } else {
+                if (str_contains($model, 'gemini') || str_contains($model, 'flux')) {
+                    $suitability += 12;
+                    $reason[] = 'forte para criativo visual';
+                }
+                if (str_contains($model, 'flash') || str_contains($model, 'fast')) {
+                    $speed += 8;
+                    $reason[] = 'boa velocidade';
+                }
+            }
+
+            $price = data_get($item, 'imagePriceEstimate.priceBrl')
+                ?? ($item['pricePerUnitBrl'] ?? null);
+            if (is_numeric($price)) {
+                $price = (float) $price;
+                $cost += max(0, 20 - min(20, $price * 5));
+                $reason[] = 'custo conhecido no catálogo';
+            }
+
+            if ($qualityProfile === 'quality') {
+                $score = ($quality * 0.50) + ($suitability * 0.30) + ($cost * 0.08) + ($speed * 0.07) + ($reliability * 0.05);
+            } elseif ($qualityProfile === 'economy') {
+                $score = ($quality * 0.25) + ($suitability * 0.20) + ($cost * 0.35) + ($speed * 0.15) + ($reliability * 0.05);
+            } else {
+                $score = ($quality * 0.40) + ($suitability * 0.25) + ($cost * 0.20) + ($speed * 0.10) + ($reliability * 0.05);
+            }
+
+            $candidates[] = [
+                'model' => $model,
+                'score' => round($score, 3),
+                'reason' => $reason !== [] ? implode('; ', $reason) : 'compatível e disponível',
+            ];
+        }
+
+        usort($candidates, fn (array $a, array $b): int => $b['score'] <=> $a['score']);
+
+        return $candidates;
     }
 
     public function entitlements(Request $request): JsonResponse
