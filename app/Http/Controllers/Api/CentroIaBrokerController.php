@@ -16,7 +16,7 @@ use Throwable;
 
 class CentroIaBrokerController extends Controller
 {
-    public function execute(Request $request, AiRoutingService $service): JsonResponse
+    public function execute(Request $request, AiRoutingService $service, AiUsageTelemetry $usageTelemetry): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
             return response()->json([
@@ -223,6 +223,19 @@ class CentroIaBrokerController extends Controller
                     continue;
                 }
 
+                $usageTelemetry->recordMedia(
+                    gateway: 'roteia',
+                    providerId: null,
+                    agentId: null,
+                    consumerKey: $projectId,
+                    model: $model,
+                    capability: $routingCapability,
+                    payload: $providerPayload,
+                    latencyMs: 0,
+                    status: 'completed',
+                    context: ['consumer_name' => $projectId],
+                );
+
                 return response()->json([
                     'ok' => true,
                     'project_id' => $projectId,
@@ -254,6 +267,23 @@ class CentroIaBrokerController extends Controller
             if ($jobRef === '' && (! is_string($assetUrl) || trim($assetUrl) === '')) {
                 continue;
             }
+
+            $usageTelemetry->recordMedia(
+                gateway: 'roteia',
+                providerId: null,
+                agentId: null,
+                consumerKey: $projectId,
+                model: $model,
+                capability: $routingCapability,
+                payload: $providerPayload,
+                latencyMs: 0,
+                status: is_string($assetUrl) && trim($assetUrl) !== '' ? 'completed' : 'processing',
+                context: [
+                    'consumer_name' => $projectId,
+                    'duration_seconds' => $input['duration_seconds'] ?? null,
+                    'request_id' => $jobRef !== '' ? $jobRef : null,
+                ],
+            );
 
             return response()->json([
                 'ok' => true,
