@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cockpit\WebmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -107,19 +108,16 @@ Route::get('/cockpit', function () {
     return view('cockpit.index', compact('applications'));
 })->name('cockpit.index');
 
-Route::get('/cockpit/webmail', function () {
-    if (! Auth::check()) {
-        return redirect()->route('cockpit.login');
-    }
-
-    $user = Auth::user();
-    abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
-
-    return view('cockpit.webmail', [
-        'enabled' => (bool) config('cockpit-webmail.enabled', false),
-        'accounts' => collect(config('cockpit-webmail.accounts', [])),
-    ]);
-})->name('cockpit.webmail');
+Route::get('/cockpit/webmail', [WebmailController::class, 'index'])->name('cockpit.webmail');
+Route::get('/cockpit/webmail/message/{uid}', [WebmailController::class, 'show'])
+    ->whereNumber('uid')
+    ->name('cockpit.webmail.message');
+Route::post('/cockpit/webmail/send', [WebmailController::class, 'send'])
+    ->middleware('throttle:20,1')
+    ->name('cockpit.webmail.send');
+Route::get('/cockpit/webmail/probe', [WebmailController::class, 'probe'])
+    ->middleware('throttle:10,1')
+    ->name('cockpit.webmail.probe');
 
 Route::post('/cockpit/logout', function (Request $request) {
     Auth::logout();
