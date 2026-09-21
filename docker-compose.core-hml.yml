@@ -35,6 +35,10 @@ services:
       ROTEIA_API_KEY: "${ROTEIA_API_KEY:-}"
       ROTEIA_BASE_URL: "${ROTEIA_BASE_URL:-}"
       ROTEIA_CHAT_MODEL: "${ROTEIA_CHAT_MODEL:-}"
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      OPENROUTER_CHAT_MODEL: "${OPENROUTER_CHAT_MODEL:-openrouter/free}"
+      OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-https://vitrineiapro.com.br}"
+      OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-Vitrine IA Pro}"
     depends_on:
       core_db:
         condition: service_healthy
