@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: plataforma_modular_hml
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8897:8788"
+    volumes:
+      - ../shared/data:/app/data
+    environment:
+      APP_ENV: homologation
+      APP_NAME: Plataforma Modular
+    networks:
+      - plataforma_modular_hml
+
+networks:
+  plataforma_modular_hml:
+    driver: bridge
