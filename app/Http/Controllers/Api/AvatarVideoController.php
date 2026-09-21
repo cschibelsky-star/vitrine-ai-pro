@@ -37,6 +37,16 @@ class AvatarVideoController extends Controller
             return response()->json(['ok' => false, 'error' => 'project_identity_mismatch'], 422);
         }
 
+        $idempotencyKey = 'avatar-video:event:'.hash('sha256', (string) $data['event_id']);
+        if (! Cache::add($idempotencyKey, true, now()->addDay())) {
+            return response()->json([
+                'ok' => true,
+                'duplicate' => true,
+                'event_id' => $data['event_id'],
+                'status' => 'already_accepted',
+            ], 202);
+        }
+
         $avatar = null;
         if (! empty($data['avatar_id'])) {
             $avatar = HeygenAvatar::query()->firstOrCreate(
