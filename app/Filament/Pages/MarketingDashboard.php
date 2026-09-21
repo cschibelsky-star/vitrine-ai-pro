@@ -841,7 +841,6 @@ class MarketingDashboard extends Page
 
             if (
                 in_array($jobStatus, ['ERRO', 'BLOQUEADO_CREDITO'], true)
-                && (string) ($job['type'] ?? '') === 'image'
                 && $this->isMediaQuotaBlocked((string) ($job['error'] ?? ''))
                 && empty($job['fallback_retry_attempted'])
             ) {
@@ -925,7 +924,7 @@ class MarketingDashboard extends Page
                     }
                 } elseif ($status === 'failed') {
                     $this->flowJobs[$index]['status'] = 'ERRO';
-                    $this->flowJobs[$index]['error'] = 'O motor Veo informou falha na geração.';
+                    $this->flowJobs[$index]['error'] = 'O motor de vídeo selecionado pelo orquestrador informou falha na geração.';
                     $this->flowJobs[$index]['updated_at'] = now()->toISOString();
                     $changed = true;
 
