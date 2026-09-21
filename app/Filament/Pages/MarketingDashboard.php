@@ -11,6 +11,7 @@ use App\Services\Ai\AiMediaGenerationService;
 use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Throwable;
@@ -192,7 +193,7 @@ class MarketingDashboard extends Page
 
             $system = $contextInstruction.'Você é o Diretor de Marketing IA da Vitrine IA Pro dentro do Centro Operacional de Marketing. '
                 .'Atue como copiloto operacional, em português do Brasil. Organize estratégia, campanha, copy, criativos, vídeo, distribuição e QA. '
-                .'Para vídeo, trate Veo como padrão de produção. HeyGen só deve ser proposto quando o pedido exigir explicitamente o avatar de Cristian Schibelsky e sua voz clonada como apresentador do Vitrine Social Mídia. '
+                .'Para mídia, use o Centro IA e seu roteamento dinâmico; não fixe Veo, Grok, Seedream, Seedance ou outro modelo. HeyGen só deve ser proposto quando o pedido exigir explicitamente o avatar de Cristian Schibelsky e sua voz clonada como apresentador do Vitrine Social Mídia. '
                 .'Nunca afirme que publicou, agendou, ativou campanha ou gastou verba sem uma ação operacional confirmada. '
                 .'Publicação orgânica deve ir ao Metricool somente após aprovação humana. '
                 .'Mídia paga deve ir ao Windsor.ai FB Ads/Meta Ads somente após aprovação humana e autorização explícita de orçamento/ativação. '
@@ -1325,7 +1326,7 @@ class MarketingDashboard extends Page
                 .'{"campaign":{"name":"","objective":"","audience":"","message":"","cta":"","style":""},'
                 .'"jobs":[{"type":"image|video","format":"ad_1_1|story_9_16|reel_9_16|video_16_9","title":"","idea":"","caption":"","cta":"","duration_seconds":8}]}. '
                 .'Crie de 2 a 5 jobs. Inclua pelo menos uma imagem e um reel quando fizer sentido. '
-                .'Nao invente fatos, metricas, depoimentos ou precos. Video usa Veo.';
+                .'Nao invente fatos, metricas, depoimentos ou precos. Video e imagem usam o orquestrador dinamico do Centro IA.';
 
             $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
             $raw = trim($this->generateDirectorCampaignPlan($system, $userPrompt));
@@ -1667,8 +1668,57 @@ class MarketingDashboard extends Page
             'schema_version' => (string) config('marketing_agents.schema_version', 'unknown'),
             'gemini_configured' => filled($hub['token'] ?? null),
             'strategy_enabled' => (bool) ($hub['strategy_enabled'] ?? false),
-            'model' => 'Centro IA / Gemini',
+            'model' => 'Centro IA / roteamento dinâmico',
         ];
+    }
+
+    public function getMediaOrchestratorStatus(): array
+    {
+        return Cache::remember('marketing:centro-ia:orchestrator-status', 60, function (): array {
+            $hub = (array) config('marketing_agents.hub', []);
+            $url = trim((string) ($hub['url'] ?? ''));
+            $token = trim((string) ($hub['token'] ?? ''));
+            $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
+
+            if ($url === '' || $token === '') {
+                return ['ok' => false, 'error' => 'centro_ia_not_configured'];
+            }
+
+            $statusUrl = preg_replace('#/execute/?$#', '/orchestrator-status', $url);
+            if (! is_string($statusUrl) || $statusUrl === $url) {
+                return ['ok' => false, 'error' => 'centro_ia_status_url_invalid'];
+            }
+
+            try {
+                $response = Http::acceptJson()
+                    ->asJson()
+                    ->withToken($token)
+                    ->withHeaders(['X-Vitrine-Project' => $projectId])
+                    ->timeout(20)
+                    ->retry(1, 250, throw: false)
+                    ->post($statusUrl, [
+                        'project_id' => $projectId,
+                        'quality_profile' => 'balanced',
+                    ]);
+
+                if (! $response->successful() || ! $response->json('ok')) {
+                    return [
+                        'ok' => false,
+                        'error' => (string) ($response->json('error') ?? 'orchestrator_status_failed'),
+                        'http_status' => $response->status(),
+                    ];
+                }
+
+                return (array) $response->json();
+            } catch (Throwable $exception) {
+                report($exception);
+
+                return [
+                    'ok' => false,
+                    'error' => 'orchestrator_status_exception',
+                ];
+            }
+        });
     }
 
     public function getCampaignState(): array

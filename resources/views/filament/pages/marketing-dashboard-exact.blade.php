@@ -11,6 +11,7 @@
         $taskCount = count($tasks);
         $marketingContext = $this->getMarketingContext();
         $marketingContexts = $this->getMarketingContexts();
+        $orchestrator = $this->getMediaOrchestratorStatus();
         $clientJobs = collect($flowJobs)->reject(fn (array $job) => (bool) ($job['legacy'] ?? false))->values();
         $imageJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'image'))->values();
         $videoJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'video'))->values();
@@ -641,9 +642,62 @@
                             <div>
                                 <div class="vm-eyebrow">Marketing IA Workstation</div>
                                 <h2>Produção nativa da Vitrine IA Pro</h2>
-                                <p>O Diretor de Marketing IA organiza o briefing, Gemini estrutura a direção, Veo/Gemini Image geram a mídia, FFmpeg finaliza a marca e o QA governa a aprovação antes da distribuição.</p>
+                                <p>O Diretor organiza o briefing, o Centro IA escolhe dinamicamente o melhor motor disponível por mídia, FFmpeg finaliza quando necessário e o QA governa a aprovação antes da distribuição.</p>
                             </div>
                             <span class="vm-version">V2.0 · HML</span>
+                        </div>
+
+                        <div class="vm-panel" style="margin:0 0 16px;background:#100d24;border-color:rgba(139,92,246,.2)">
+                            <div class="vm-panel-title" style="margin-bottom:10px">
+                                <h2>Orquestrador de mídia · Centro IA</h2>
+                                @if(($orchestrator['ok'] ?? false) === true)
+                                    <span class="vm-status green">SINCRONIZADO</span>
+                                @else
+                                    <span class="vm-status yellow">INDISPONÍVEL</span>
+                                @endif
+                            </div>
+
+                            @if(($orchestrator['ok'] ?? false) === true)
+                                @php
+                                    $imageAvailability = (array) data_get($orchestrator, 'availability.image', []);
+                                    $videoAvailability = (array) data_get($orchestrator, 'availability.video', []);
+                                    $imageCandidates = array_slice((array) ($orchestrator['image_candidates'] ?? []), 0, 5);
+                                    $videoCandidates = array_slice((array) ($orchestrator['video_candidates'] ?? []), 0, 5);
+                                @endphp
+                                <div class="vm-note" style="margin-bottom:10px">
+                                    <span>Perfil: {{ $orchestrator['profile'] ?? 'balanced' }}</span>
+                                    <span>Imagem: {{ $imageAvailability['available'] ?? 0 }} disponível(is)</span>
+                                    <span>Vídeo: {{ $videoAvailability['available'] ?? 0 }} disponível(is)</span>
+                                    <span>Endpoint imagem: {{ data_get($orchestrator, 'endpoints.images') ? 'ativo' : 'indisponível' }}</span>
+                                    <span>Endpoint vídeo: {{ data_get($orchestrator, 'endpoints.videos') ? 'ativo' : 'indisponível' }}</span>
+                                </div>
+
+                                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+                                    @foreach(['Imagem' => $imageCandidates, 'Vídeo' => $videoCandidates] as $mediaLabel => $candidates)
+                                        <div style="border:1px solid rgba(139,92,246,.14);border-radius:12px;padding:12px;background:#0b0918">
+                                            <strong style="font-size:12px;color:#f4f0ff">{{ $mediaLabel }}</strong>
+                                            <div style="display:grid;gap:7px;margin-top:9px">
+                                                @forelse($candidates as $index => $candidate)
+                                                    <div style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:10px">
+                                                        <span style="color:#8b5cf6;font-weight:800">#{{ $index + 1 }}</span>
+                                                        <span style="color:#c9c3dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ $candidate['reason'] ?? '' }}">{{ $candidate['model'] ?? '—' }}</span>
+                                                        <span style="color:#6ee7b7;font-weight:700">{{ number_format((float) ($candidate['score'] ?? 0), 2, ',', '.') }}</span>
+                                                    </div>
+                                                @empty
+                                                    <div style="font-size:10px;color:#8f879f">Nenhum candidato executável agora.</div>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="vm-note" style="margin-top:10px">
+                                    <span>Fonte: Centro IA/Core. Atualização com cache de 60 segundos.</span>
+                                    <span>O Marketing IA não fixa Veo, Grok, Seedream ou Seedance: o motor é selecionado pela matriz operacional.</span>
+                                </div>
+                            @else
+                                <div class="vm-error" style="margin:0">Centro IA não retornou o estado do orquestrador: {{ $orchestrator['error'] ?? 'erro desconhecido' }}.</div>
+                            @endif
                         </div>
 
                         <div class="vm-modules" aria-label="Módulos do Fluxo Marketing IA">
@@ -678,8 +732,8 @@
                                     <div class="vm-bridge-head"><strong>Motor de Produção Nativo</strong><span class="vm-bridge-state">OPERACIONAL</span></div>
                                     <div class="vm-flow-form">
                                         <div class="vm-field"><label>Direção / Copy</label><input value="Gemini · Marketing IA" readonly></div>
-                                        <div class="vm-field"><label>Vídeo</label><input value="Veo 3.1 · API nativa" readonly></div>
-                                        <div class="vm-field"><label>Imagem</label><input value="Gemini Image / Nano Banana" readonly></div>
+                                        <div class="vm-field"><label>Vídeo</label><input value="Centro IA · seleção dinâmica" readonly></div>
+                                        <div class="vm-field"><label>Imagem</label><input value="Centro IA · seleção dinâmica" readonly></div>
                                         <div class="vm-field"><label>Finalização</label><input value="FFmpeg + Logo oficial + QA" readonly></div>
                                     </div>
                                     <div class="vm-note"><span>Google Flow não é mais dependência do caminho principal.</span><span>O Marketing IA prepara, gera, finaliza e encaminha a peça para QA.</span></div>
@@ -799,7 +853,7 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
                                                         @elseif($jobStatus === 'EM_GERACAO')
                                                             <div style="padding:18px;text-align:center;color:#b7afc9;font-size:12px">
                                                                 <div style="font-size:24px;margin-bottom:8px">✦</div>
-                                                                Gerando conteúdo no {{ $jobType === 'image' ? 'Gemini Image' : 'Veo 3.1' }}...
+                                                                Gerando conteúdo no motor selecionado pelo Centro IA...
                                                             </div>
                                                         @elseif($jobStatus === 'ERRO')
                                                             <div style="padding:18px;text-align:center;color:#f0a7a7;font-size:12px">Falha na geração. Consulte a mensagem abaixo.</div>
