@@ -2,7 +2,13 @@
 
 return [
     'internal_token' => env('CENTRO_IA_INTERNAL_TOKEN'),
-    'heygen_webhook_secret' => env('HEYGEN_WEBHOOK_SECRET'),\n\n    'cost_center' => [\n        // Fixed operational FX reference used only when a gateway returns USD cost.\n        // Keep configurable so finance can update it without code changes.\n        'usd_brl_rate' => (float) env('AI_COST_USD_BRL_RATE', 5.50),\n    ],
+    'heygen_webhook_secret' => env('HEYGEN_WEBHOOK_SECRET'),
+
+    'cost_center' => [
+        // Fixed operational FX reference used only when a gateway returns USD cost.
+        // Keep configurable so finance can update it without code changes.
+        'usd_brl_rate' => (float) env('AI_COST_USD_BRL_RATE', 5.50),
+    ],
 
     'service_identities' => [
         'vitrine-ai-social-enterprise' => [
