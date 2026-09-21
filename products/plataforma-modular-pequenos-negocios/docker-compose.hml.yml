@@ -8,13 +8,34 @@ services:
     ports:
       - "127.0.0.1:8897:8788"
     volumes:
-      - ../shared/data:/app/data
+      - plataforma_modular_data:/app/data
     environment:
       APP_ENV: homologation
       APP_NAME: Plataforma Modular
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8788/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.plataforma-modular-hml.rule=Host(`modular.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.plataforma-modular-hml.entrypoints=websecure"
+      - "traefik.http.routers.plataforma-modular-hml.tls=true"
+      - "traefik.http.routers.plataforma-modular-hml.tls.certresolver=le"
+      - "traefik.http.services.plataforma-modular-hml.loadbalancer.server.port=8788"
     networks:
       - plataforma_modular_hml
+      - traefik_net
+
+volumes:
+  plataforma_modular_data:
 
 networks:
   plataforma_modular_hml:
     driver: bridge
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network
