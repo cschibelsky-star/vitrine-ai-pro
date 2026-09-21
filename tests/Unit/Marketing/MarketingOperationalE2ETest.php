@@ -7,6 +7,7 @@ use App\Marketing\Application\MarketingAgentExecutor;
 use App\Marketing\Application\MarketingOrchestrator;
 use App\Marketing\Application\SchemaContractValidator;
 use App\Marketing\Application\SimulatedMarketingAgentExecutor;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class MarketingOperationalE2ETest extends TestCase
@@ -115,6 +116,30 @@ class MarketingOperationalE2ETest extends TestCase
         $targetResolver = new \ReflectionMethod($page, 'resolveRevisionTargetIndex');
         $targetResolver->setAccessible(true);
         $this->assertSame(0, $targetResolver->invoke($page, 'Ajustar o Card Lista VIP.'));
+    }
+
+    public function test_marketing_dashboard_routes_structured_campaign_plan_through_centro_ia_first(): void
+    {
+        config()->set('marketing_agents.hub.url', 'https://centro-ia.test/execute');
+        config()->set('marketing_agents.hub.token', 'test-token');
+        config()->set('marketing_agents.hub.project_id', 'marketing-test');
+        config()->set('marketing_agents.hub.capability', 'marketing_generation');
+
+        Http::fake([
+            'https://centro-ia.test/execute' => Http::response([
+                'ok' => true,
+                'output_text' => '{"campaign":{"name":"Hub"},"jobs":[{"type":"image","format":"ad_1_1"}]}',
+                'model' => 'hub-test',
+            ], 200),
+        ]);
+
+        $page = app(MarketingDashboard::class);
+        $method = new \ReflectionMethod($page, 'generateDirectorCampaignPlan');
+        $method->setAccessible(true);
+        $raw = $method->invoke($page, 'system', 'user prompt');
+
+        $this->assertStringContainsString('"name":"Hub"', $raw);
+        Http::assertSentCount(1);
     }
 
     public function test_marketing_dashboard_accepts_director_json_wrapped_in_markdown(): void

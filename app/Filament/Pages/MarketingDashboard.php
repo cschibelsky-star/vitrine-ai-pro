@@ -1188,6 +1188,49 @@ class MarketingDashboard extends Page
             || str_contains($normalized, 'produza');
     }
 
+    private function generateDirectorCampaignPlan(string $system, string $userPrompt): string
+    {
+        $hub = (array) config('marketing_agents.hub', []);
+        $url = trim((string) ($hub['url'] ?? ''));
+        $token = trim((string) ($hub['token'] ?? ''));
+        $projectId = trim((string) ($hub['project_id'] ?? 'vitrine-marketing-agents-core'));
+        $capability = trim((string) ($hub['capability'] ?? 'marketing_generation'));
+
+        if ($url !== '' && $token !== '') {
+            $response = Http::acceptJson()
+                ->asJson()
+                ->withToken($token)
+                ->withHeaders(['X-Vitrine-Project' => $projectId])
+                ->timeout(max(1, min((int) ($hub['timeout'] ?? 60), 120)))
+                ->retry(2, 250, throw: false)
+                ->post($url, [
+                    'project_id' => $projectId,
+                    'capability' => $capability,
+                    'input' => [
+                        'system' => $system,
+                        'user' => $userPrompt,
+                        'response_format' => 'json',
+                        'temperature' => 0.2,
+                    ],
+                ]);
+
+            if ($response->successful() && $response->json('ok')) {
+                $output = trim((string) $response->json('output_text'));
+                if ($output !== '') {
+                    return $output;
+                }
+            }
+
+            logger()->warning('Diretor Marketing IA: planejamento estruturado via Centro IA falhou; usando fallback direto.', [
+                'http_status' => $response->status(),
+                'error' => (string) ($response->json('error') ?? 'unknown'),
+                'capability' => $capability,
+            ]);
+        }
+
+        return $this->generateFlowPackageWithGemini($system, $userPrompt);
+    }
+
     private function decodeDirectorPlan(string $raw): array
     {
         $candidate = trim($raw);
@@ -1224,7 +1267,7 @@ class MarketingDashboard extends Page
                 .'Nao invente fatos, metricas, depoimentos ou precos. Video usa Veo.';
 
             $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
-            $raw = trim($this->generateFlowPackageWithGemini($system, $userPrompt));
+            $raw = trim($this->generateDirectorCampaignPlan($system, $userPrompt));
             $plan = $this->decodeDirectorPlan($raw);
 
             $campaign = (array) ($plan['campaign'] ?? []);
