@@ -48,7 +48,7 @@ class AiExecutionService
                 'finished_at' => now(),
             ], false));
 
-            $this->registerConsumption($provider, $agent, $model, $prompt, $output, 'Concluído', $durationMs);
+            $this->registerConsumption($provider, $agent, $model, $prompt, $output, 'Concluído', $durationMs);\n            $this->registerProviderTelemetry($provider, $agent, $model, $durationMs, 'completed');
         } catch (Throwable $e) {
             $durationMs = (int) round((microtime(true) - $started) * 1000);
 
@@ -144,7 +144,7 @@ class AiExecutionService
             'openai' => env('OPENAI_API_KEY') ?: env('OPENAI_KEY') ?: null,
             'gemini', 'google', 'google-gemini' => env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY') ?: env('GOOGLE_GEMINI_API_KEY') ?: null,
             'heygen' => env('HEYGEN_API_KEY') ?: env('HEYGEN_KEY') ?: null,
-            'roteia' => env('ROTEIA_API_KEY') ?: null,
+            'roteia' => env('ROTEIA_API_KEY') ?: null,\n            'openrouter' => env('OPENROUTER_API_KEY') ?: null,
             default => null,
         };
     }
@@ -165,7 +165,7 @@ class AiExecutionService
         }
 
         return match ($providerIdentity) {
-            'openai' => 'gpt-4o-mini',
+            'openai' => 'gpt-4o-mini',\n            'openrouter' => env('OPENROUTER_CHAT_MODEL') ?: 'openrouter/free',
             'gemini', 'google', 'google-gemini' => 'gemini-3.6-flash',
             default => 'manual',
         };
@@ -173,6 +173,41 @@ class AiExecutionService
 
     protected function callProvider(string $providerIdentity, ?string $apiKey, string $model, string $prompt, AiAgent $agent): string
     {
+        $this->lastProviderUsage = [];
+
+        if ($providerIdentity === 'openrouter') {
+            if (! $apiKey) {
+                throw new \RuntimeException('API Key OpenRouter ausente.');
+            }
+
+            $routeModel = trim((string) env('OPENROUTER_CHAT_MODEL', '')) ?: $model ?: 'openrouter/free';
+            $response = Http::withToken($apiKey)
+                ->withHeaders([
+                    'HTTP-Referer' => env('OPENROUTER_SITE_URL', 'https://vitrineiapro.com.br'),
+                    'X-Title' => env('OPENROUTER_APP_NAME', 'Vitrine IA Pro'),
+                ])
+                ->acceptJson()
+                ->timeout(90)
+                ->post('https://openrouter.ai/api/v1/chat/completions', [
+                    'model' => $routeModel,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $agent->description ?: 'Você é um agente da Vitrine IA Pro.'],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'temperature' => 0.4,
+                    'usage' => ['include' => true],
+                ]);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('OpenRouter erro HTTP '.$response->status().': '.$response->body());
+            }
+
+            $payload = (array) $response->json();
+            $this->lastProviderUsage = $payload;
+
+            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta do OpenRouter.');
+        }
+
         if ($providerIdentity === 'openai') {
             if (! $apiKey) {
                 throw new \RuntimeException('API Key OpenAI ausente.');
@@ -193,7 +228,7 @@ class AiExecutionService
                 throw new \RuntimeException('OpenAI erro: '.$response->body());
             }
 
-            return (string) data_get($response->json(), 'choices.0.message.content', 'Sem resposta da OpenAI.');
+            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta da OpenAI.');
         }
 
         if (in_array($providerIdentity, ['gemini', 'google', 'google-gemini'], true)) {
@@ -215,7 +250,7 @@ class AiExecutionService
                 throw new \RuntimeException('Gemini erro: '.$response->body());
             }
 
-            return (string) data_get($response->json(), 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
+            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'candidates.0.content.parts.0.text', 'Sem resposta do Gemini.');
         }
 
         if ($providerIdentity === 'roteia') {
@@ -245,7 +280,7 @@ class AiExecutionService
                 throw new \RuntimeException('Roteia erro HTTP '.$response->status().': '.$response->body());
             }
 
-            return (string) data_get($response->json(), 'choices.0.message.content', 'Sem resposta do Roteia.');
+            $payload = (array) $response->json();\n            $this->lastProviderUsage = $payload;\n\n            return (string) data_get($payload, 'choices.0.message.content', 'Sem resposta do Roteia.');
         }
 
         if ($providerIdentity === 'heygen') {
@@ -253,6 +288,28 @@ class AiExecutionService
         }
 
         return "EXECUÇÃO INTERNA\n\nAgente: {$agent->name}\nModelo: {$model}\n\nPrompt recebido:\n{$prompt}\n\nResultado: execução interna concluída. Configure OpenAI/Gemini para resposta externa real.";
+    }
+
+    protected function registerProviderTelemetry($provider, AiAgent $agent, string $model, int $durationMs, string $status): void
+    {
+        $gateway = $this->providerIdentity($provider);
+
+        if (! in_array($gateway, ['roteia', 'openrouter'], true)) {
+            return;
+        }
+
+        $this->usageTelemetry->recordOpenAiCompatible(
+            gateway: $gateway,
+            providerId: isset($provider->id) ? (int) $provider->id : null,
+            agentId: isset($agent->id) ? (int) $agent->id : null,
+            consumerKey: 'core',
+            model: $model,
+            capability: 'text_generation',
+            payload: $this->lastProviderUsage,
+            latencyMs: $durationMs,
+            status: $status,
+            context: ['consumer_name' => 'Vitrine IA Pro Core'],
+        );
     }
 
     protected function registerConsumption($provider, AiAgent $agent, string $model, string $input, string $output, string $status, int $durationMs = 0): void
