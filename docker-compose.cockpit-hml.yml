@@ -9,6 +9,7 @@ services:
     working_dir: /var/www/html
     env_file:
       - /srv/projects/vitrine-ia-pro-core/repository/.env.runtime
+      - /srv/projects/cockpit-admin-v1-hml/.env.runtime
     command: >-
       sh -lc 'export APP_KEY="$$CORE_APP_KEY" DB_PASSWORD="$$CORE_DB_PASSWORD"; exec php-fpm'
     environment:
