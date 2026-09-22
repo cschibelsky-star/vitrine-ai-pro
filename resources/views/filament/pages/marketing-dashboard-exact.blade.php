@@ -693,6 +693,8 @@
 
                                 <div class="vm-note" style="margin-top:10px">
                                     <span>Fonte: Centro IA/Core. Atualização com cache de 60 segundos.</span>
+                                    <span>OpenRouter: {{ data_get($orchestrator, 'providers.openrouter.configured') ? 'configurado para texto/raciocínio' : 'sem runtime ativo' }}.</span>
+                                    <span>Rota de estratégia: {{ implode(' → ', (array) data_get($orchestrator, 'text_routes.marketing_strategy', [])) ?: 'não informada' }}.</span>
                                     <span>O Marketing IA não fixa Veo, Grok, Seedream ou Seedance: o motor é selecionado pela matriz operacional.</span>
                                 </div>
                             @else
