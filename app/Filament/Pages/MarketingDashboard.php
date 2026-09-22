@@ -1466,7 +1466,8 @@ class MarketingDashboard extends Page
         $this->persistFlowWorkstation();
 
         try {
-            $revised = $this->dispatchDirectorJob($directorJob, $brand, $targetIndex + 1, $jobId);
+            $revised = $this->dispatchDirectorJob($directorJob, $brand, $targetIndex + 1, $jobId,
+                (array) ($current['production_brief'] ?? ['campaign' => $current['campaign'] ?? $this->flowCampaign]));
             $revised['_gallery_etag'] = $current['_gallery_etag'];
             $revised['revision_history'] = $history;
             $revised['approved_version'] = null;
@@ -1780,8 +1781,16 @@ class MarketingDashboard extends Page
         return array_slice($normalized, 0, 5);
     }
 
-    private function dispatchDirectorJob(array $job, string $brand, int $sequence, ?string $existingId = null): array
+    private function dispatchDirectorJob(array $job, string $brand, int $sequence, ?string $existingId = null, array $brief = []): array
     {
+        $brief = array_replace([
+            'campaign' => $this->flowCampaign,
+            'message' => $this->flowMessage,
+            'objective' => $this->flowObjective,
+            'audience' => $this->flowAudience,
+            'cta' => $this->flowCta,
+            'style' => $this->flowStyle,
+        ], $brief);
         $type = strtolower(trim((string) ($job['type'] ?? 'image')));
         $format = trim((string) ($job['format'] ?? ($type === 'video' ? 'reel_9_16' : 'ad_1_1')));
         if (! in_array($format, ['ad_1_1', 'story_9_16', 'reel_9_16', 'video_16_9'], true)) {
@@ -1790,16 +1799,17 @@ class MarketingDashboard extends Page
 
         $id = $existingId ?: 'MKT-AUTO-'.now()->format('Ymd-His').'-'.str_pad((string) $sequence, 2, '0', STR_PAD_LEFT).'-'.strtoupper(bin2hex(random_bytes(2)));
         $title = trim((string) ($job['title'] ?? 'Peca '.$sequence));
-        $idea = trim((string) ($job['idea'] ?? $this->flowMessage));
+        $idea = trim((string) ($job['idea'] ?? $brief['message']));
         $caption = trim((string) ($job['caption'] ?? ''));
-        $cta = trim((string) ($job['cta'] ?? $this->flowCta));
+        $cta = trim((string) ($job['cta'] ?? $brief['cta']));
         $creativeConcept = (array) ($job['creative_concept'] ?? []);
-        $conceptId = trim((string) ($creativeConcept['id'] ?? '')) ?: 'CONCEPT-'.strtoupper(substr(sha1($this->flowCampaign.'|'.$this->flowMessage), 0, 10));
+        $conceptId = trim((string) ($creativeConcept['id'] ?? '')) ?: 'CONCEPT-'.strtoupper(substr(sha1($brief['campaign'].'|'.$brief['message']), 0, 10));
         $channelRole = trim((string) ($job['channel_role'] ?? 'support'));
 
         $base = [
             'id' => $id,
-            'campaign' => $this->flowCampaign,
+            'campaign' => $brief['campaign'],
+            'production_brief' => $brief,
             'title' => $title,
             'format' => $format,
             'type' => $type,
@@ -1823,9 +1833,9 @@ class MarketingDashboard extends Page
             implode('; ', array_map('strval', (array) ($creativeConcept['consistency_rules'] ?? []))),
         ])));
 
-        $prompt = 'Marca: '.$brand.'. Conceito compartilhado da campanha: '.($conceptSummary !== '' ? $conceptSummary : $this->flowMessage).'. '
-            .'Papel desta peca: '.$channelRole.'. Ideia adaptada ao formato: '.$idea.'. Objetivo: '.$this->flowObjective.'. Publico: '.$this->flowAudience.'. '
-            .'Titulo de referencia: '.$title.'. Legenda de referencia: '.$caption.'. CTA: '.$cta.'. Estilo: '.$this->flowStyle.'. '
+        $prompt = 'Marca: '.$brand.'. Conceito compartilhado da campanha: '.($conceptSummary !== '' ? $conceptSummary : $brief['message']).'. '
+            .'Papel desta peca: '.$channelRole.'. Ideia adaptada ao formato: '.$idea.'. Objetivo: '.$brief['objective'].'. Publico: '.$brief['audience'].'. '
+            .'Titulo de referencia: '.$title.'. Legenda de referencia: '.$caption.'. CTA: '.$cta.'. Estilo: '.$brief['style'].'. '
             .'Preserve o MESMO conceito, linguagem visual, tom e promessa das demais pecas; adapte apenas composicao, ritmo e enquadramento ao formato '.$format.'. '
             .'Nao invente fatos, nao use marcas de terceiros, nao recrie logotipo e nao renderize texto legivel na midia-base.';
 
@@ -1837,7 +1847,7 @@ class MarketingDashboard extends Page
             $project = new VideoProject(
                 projectId: $id,
                 productId: 'marketing-ia-engine',
-                campaignId: ((string) str($this->flowCampaign)->slug()) ?: 'marketing-ia',
+                campaignId: ((string) str($brief['campaign'])->slug()) ?: 'marketing-ia',
             );
             $scene = $project->addScene('SCENE-01', 1, ['prompt' => $prompt]);
             $result = app(GeminiVeoSceneRenderer::class)->dispatch($project, $scene, [
