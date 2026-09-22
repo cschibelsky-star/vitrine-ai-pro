@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Marketing\Application;
 
 use DomainException;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 final class SocialDistributionHandoff
 {
@@ -76,6 +78,148 @@ final class SocialDistributionHandoff
             ],
             'idempotency_key' => $idempotencyKey,
             'status' => 'ready_for_review',
+        ];
+    }
+
+    /**
+     * Execute an explicitly requested organic publication through Meta Graph.
+     * Never marks an item as published without a provider confirmation/id.
+     *
+     * @param array<string, mixed> $piece
+     * @return array<string, mixed>
+     */
+    public function publishMetaNow(array $piece): array
+    {
+        $config = (array) config('marketing_agents.publisher.meta', []);
+        $token = trim((string) ($config['access_token'] ?? ''));
+        $igUserId = trim((string) ($config['instagram_user_id'] ?? ''));
+        $pageId = trim((string) ($config['facebook_page_id'] ?? ''));
+        $graphVersion = trim((string) ($config['graph_version'] ?? ''));
+        $baseUrl = rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/');
+
+        if ($token === '' || $graphVersion === '') {
+            return [
+                'ok' => false,
+                'status' => 'PUBLISHER_NOT_CONNECTED',
+                'error' => 'meta_publisher_not_configured',
+            ];
+        }
+
+        $assetUrl = trim((string) ($piece['asset_url'] ?? ''));
+        if ($assetUrl === '' || filter_var($assetUrl, FILTER_VALIDATE_URL) === false || ! str_starts_with(strtolower($assetUrl), 'https://')) {
+            return [
+                'ok' => false,
+                'status' => 'MEDIA_NOT_PUBLIC',
+                'error' => 'public_https_asset_required',
+            ];
+        }
+
+        $caption = trim((string) ($piece['caption'] ?? data_get($piece, 'director_job.caption', '')));
+        $type = strtolower(trim((string) ($piece['type'] ?? 'image')));
+        $containerId = trim((string) ($piece['publication_container_id'] ?? ''));
+
+        if ($igUserId !== '') {
+            if ($containerId === '') {
+                $payload = [
+                    'caption' => $caption,
+                    'access_token' => $token,
+                ];
+                if ($type === 'video') {
+                    $payload['media_type'] = 'REELS';
+                    $payload['video_url'] = $assetUrl;
+                } else {
+                    $payload['image_url'] = $assetUrl;
+                }
+
+                $create = Http::asForm()
+                    ->acceptJson()
+                    ->timeout(45)
+                    ->post($baseUrl.'/'.$graphVersion.'/'.$igUserId.'/media', $payload);
+
+                if (! $create->successful() || trim((string) $create->json('id')) === '') {
+                    throw new RuntimeException('Meta Instagram container error HTTP '.$create->status().'.');
+                }
+
+                $containerId = trim((string) $create->json('id'));
+
+                if ($type === 'video') {
+                    return [
+                        'ok' => true,
+                        'status' => 'PUBLISHING',
+                        'channel' => 'instagram',
+                        'container_id' => $containerId,
+                        'external_id' => null,
+                    ];
+                }
+            }
+
+            $publish = Http::asForm()
+                ->acceptJson()
+                ->timeout(45)
+                ->post($baseUrl.'/'.$graphVersion.'/'.$igUserId.'/media_publish', [
+                    'creation_id' => $containerId,
+                    'access_token' => $token,
+                ]);
+
+            if ($publish->successful() && trim((string) $publish->json('id')) !== '') {
+                return [
+                    'ok' => true,
+                    'status' => 'PUBLISHED',
+                    'channel' => 'instagram',
+                    'container_id' => $containerId,
+                    'external_id' => trim((string) $publish->json('id')),
+                ];
+            }
+
+            if ($type === 'video') {
+                return [
+                    'ok' => true,
+                    'status' => 'PUBLISHING',
+                    'channel' => 'instagram',
+                    'container_id' => $containerId,
+                    'external_id' => null,
+                ];
+            }
+
+            throw new RuntimeException('Meta Instagram publish error HTTP '.$publish->status().'.');
+        }
+
+        if ($pageId !== '') {
+            $endpoint = $type === 'video' ? 'videos' : 'photos';
+            $payload = [
+                'access_token' => $token,
+                'published' => 'true',
+            ];
+            if ($type === 'video') {
+                $payload['file_url'] = $assetUrl;
+                $payload['description'] = $caption;
+            } else {
+                $payload['url'] = $assetUrl;
+                $payload['caption'] = $caption;
+            }
+
+            $publish = Http::asForm()
+                ->acceptJson()
+                ->timeout(60)
+                ->post($baseUrl.'/'.$graphVersion.'/'.$pageId.'/'.$endpoint, $payload);
+
+            if ($publish->successful() && trim((string) $publish->json('id')) !== '') {
+                return [
+                    'ok' => true,
+                    'status' => 'PUBLISHED',
+                    'channel' => 'facebook',
+                    'container_id' => null,
+                    'external_id' => trim((string) $publish->json('id')),
+                ];
+            }
+
+            throw new RuntimeException('Meta Facebook publish error HTTP '.$publish->status().'.');
+        }
+
+        return [
+            'ok' => false,
+            'status' => 'PUBLISHER_NOT_CONNECTED',
+            'error' => 'meta_account_id_not_configured',
         ];
     }
 

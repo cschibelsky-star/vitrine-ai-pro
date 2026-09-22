@@ -77,4 +77,52 @@ class SocialDistributionHandoffTest extends TestCase
         $this->assertSame($first['handoff_id'], $second['handoff_id']);
         $this->assertSame($first['idempotency_key'], $second['idempotency_key']);
     }
+
+    #[Test]
+    public function direct_meta_publisher_refuses_to_publish_without_connected_account(): void
+    {
+        config()->set('marketing_agents.publisher.meta', [
+            'base_url' => 'https://graph.facebook.com',
+            'graph_version' => null,
+            'access_token' => null,
+            'instagram_user_id' => null,
+            'facebook_page_id' => null,
+        ]);
+
+        $result = app(SocialDistributionHandoff::class)->publishMetaNow([
+            'type' => 'image',
+            'asset_url' => 'https://cdn.example.test/creative.jpg',
+        ]);
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('PUBLISHER_NOT_CONNECTED', $result['status']);
+    }
+
+    #[Test]
+    public function direct_meta_publisher_marks_image_published_only_after_provider_id(): void
+    {
+        config()->set('marketing_agents.publisher.meta', [
+            'base_url' => 'https://graph.facebook.com',
+            'graph_version' => 'v-test',
+            'access_token' => 'test-token',
+            'instagram_user_id' => 'ig-test',
+            'facebook_page_id' => null,
+        ]);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://graph.facebook.com/v-test/ig-test/media' => \Illuminate\Support\Facades\Http::response(['id' => 'container-1'], 200),
+            'https://graph.facebook.com/v-test/ig-test/media_publish' => \Illuminate\Support\Facades\Http::response(['id' => 'media-1'], 200),
+        ]);
+
+        $result = app(SocialDistributionHandoff::class)->publishMetaNow([
+            'type' => 'image',
+            'asset_url' => 'https://cdn.example.test/creative.jpg',
+            'caption' => 'Legenda de teste',
+        ]);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('PUBLISHED', $result['status']);
+        $this->assertSame('instagram', $result['channel']);
+        $this->assertSame('media-1', $result['external_id']);
+    }
 }

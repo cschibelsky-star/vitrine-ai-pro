@@ -56,6 +56,16 @@ return [
         'model_selection_owner' => 'centro_ia',
         'revision_mode' => 'localized_artifact_version',
     ],
+    'publisher' => [
+        'default' => env('MARKETING_PUBLISHER', 'meta_direct'),
+        'meta' => [
+            'base_url' => env('META_GRAPH_BASE_URL', 'https://graph.facebook.com'),
+            'graph_version' => env('META_GRAPH_VERSION'),
+            'access_token' => env('META_ACCESS_TOKEN'),
+            'instagram_user_id' => env('META_INSTAGRAM_USER_ID'),
+            'facebook_page_id' => env('META_FACEBOOK_PAGE_ID'),
+        ],
+    ],
     'native_studio' => [
         'enabled' => env('MARKETING_NATIVE_STUDIO_ENABLED', true),
         'role' => 'creation_machine',

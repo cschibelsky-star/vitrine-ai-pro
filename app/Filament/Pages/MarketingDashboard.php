@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Marketing\Application\MarketingDashboardStateReader;
+use App\Marketing\Application\SocialDistributionHandoff;
 use App\Marketing\Application\VideoFinalizationService;
 use App\Marketing\Domain\Agents\AgentRegistry;
 use App\Models\AiAgent;
@@ -345,13 +346,54 @@ class MarketingDashboard extends Page
         if ($index === null) {
             return;
         }
+
         $job = $this->flowJobs[$index];
         if (! in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
             || ! hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
             $this->pieceError = 'Aprove a versão atual antes de publicar.';
             return;
         }
-        $this->pieceError = 'Publicação indisponível: a conta publicadora e o envio direto ainda não estão integrados. A peça continua salva; nada foi publicado.';
+
+        try {
+            $result = app(SocialDistributionHandoff::class)->publishMetaNow($job);
+            $publicationStatus = (string) ($result['status'] ?? 'FAILED');
+
+            $job['publication_status'] = $publicationStatus;
+            $job['publication_channel'] = $result['channel'] ?? null;
+            $job['publication_container_id'] = $result['container_id'] ?? ($job['publication_container_id'] ?? null);
+            $job['publication_external_id'] = $result['external_id'] ?? null;
+            $job['publication_error'] = $result['error'] ?? null;
+            $job['publication_requested_at'] = $job['publication_requested_at'] ?? now()->toISOString();
+            $job['updated_at'] = now()->toISOString();
+
+            if ($publicationStatus === 'PUBLISHED') {
+                $job['published_at'] = now()->toISOString();
+                $job['scheduled_at'] = null;
+                $job['status'] = 'APROVADO';
+                $this->pieceFeedback = 'Publicação confirmada pelo provedor. ID externo: '.(string) ($job['publication_external_id'] ?? '');
+                $this->pieceError = null;
+            } elseif ($publicationStatus === 'PUBLISHING') {
+                $this->pieceFeedback = 'A mídia foi enviada ao Meta e está em processamento. Use Publicar agora novamente para concluir quando o provedor liberar o container.';
+                $this->pieceError = null;
+            } elseif ($publicationStatus === 'MEDIA_NOT_PUBLIC') {
+                $this->pieceError = 'A mídia precisa estar disponível por URL HTTPS pública antes do envio ao Meta. A peça foi preservada.';
+            } else {
+                $this->pieceError = 'Conta Meta publicadora ainda não configurada no Marketing IA. A peça foi preservada e nada foi publicado.';
+            }
+
+            $this->saveGalleryPiece($job);
+            $this->flowJobs[$index] = $job;
+            $this->persistFlowWorkstation();
+        } catch (Throwable $exception) {
+            report($exception);
+            $job['publication_status'] = 'FAILED';
+            $job['publication_error'] = $exception->getMessage();
+            $job['updated_at'] = now()->toISOString();
+            $this->saveGalleryPiece($job);
+            $this->flowJobs[$index] = $job;
+            $this->persistFlowWorkstation();
+            $this->pieceError = 'Falha no publicador Meta: '.$exception->getMessage().' A peça foi preservada; não marque como publicada.';
+        }
     }
 
     public function mount(): void
