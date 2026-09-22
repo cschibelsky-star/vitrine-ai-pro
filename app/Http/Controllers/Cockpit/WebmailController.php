@@ -16,7 +16,12 @@ class WebmailController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorizeAdmin();
+        if (! Auth::check()) {
+            return redirect()->route('cockpit.login');
+        }
+
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
         $enabled = (bool) config('cockpit-webmail.enabled', false);
         $accounts = collect(config('cockpit-webmail.accounts', []));
@@ -51,7 +56,12 @@ class WebmailController extends Controller
 
     public function show(Request $request, int $uid)
     {
-        $this->authorizeAdmin();
+        if (! Auth::check()) {
+            return response()->json(['ok' => false, 'error' => 'Sessão expirada. Faça login novamente no Cockpit.'], 401);
+        }
+
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
         $accountKey = (string) $request->query('account', 'vendas');
         $folder = (string) $request->query('folder', 'INBOX');
@@ -74,7 +84,12 @@ class WebmailController extends Controller
 
     public function send(Request $request)
     {
-        $this->authorizeAdmin();
+        if (! Auth::check()) {
+            return redirect()->route('cockpit.login');
+        }
+
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
         $data = $request->validate([
             'account' => ['required', 'string'],
@@ -98,7 +113,12 @@ class WebmailController extends Controller
 
     public function probe(Request $request)
     {
-        $this->authorizeAdmin();
+        if (! Auth::check()) {
+            return redirect()->route('cockpit.login');
+        }
+
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
         $accountKey = (string) $request->query('account', 'vendas');
 
@@ -117,11 +137,4 @@ class WebmailController extends Controller
         }
     }
 
-    private function authorizeAdmin(): void
-    {
-        abort_unless(Auth::check(), 403);
-
-        $user = Auth::user();
-        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
-    }
 }
