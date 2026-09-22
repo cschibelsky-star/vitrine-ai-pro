@@ -1541,14 +1541,14 @@ class MarketingDashboard extends Page
                 }
             }
 
-            logger()->warning('Diretor Marketing IA: planejamento estruturado via Centro IA falhou; usando fallback direto.', [
+            logger()->warning('Diretor Marketing IA: planejamento estruturado via Centro IA falhou.', [
                 'http_status' => $response->status(),
                 'error' => (string) ($response->json('error') ?? 'unknown'),
                 'capability' => $capability,
             ]);
         }
 
-        return $this->generateFlowPackageWithGemini($system, $userPrompt);
+        throw new \RuntimeException('Centro IA indisponível para o planejamento estruturado do Diretor de Marketing.');
     }
 
     private function decodeDirectorPlan(string $raw): array
