@@ -35,6 +35,28 @@ class AiCenterEnterprise extends Page
 
         return [
             'orchestratorProfiles' => $profiles,
+            'orchestratorProviders' => [
+                'Roteia' => [
+                    'configured' => trim((string) env('ROTEIA_API_KEY', '')) !== '' && trim((string) env('ROTEIA_BASE_URL', '')) !== '',
+                    'role' => 'Mídia + texto',
+                ],
+                'OpenRouter' => [
+                    'configured' => trim((string) env('OPENROUTER_API_KEY', '')) !== '',
+                    'role' => 'Texto + raciocínio + multimodal',
+                ],
+                'Gemini direto' => [
+                    'configured' => trim((string) env('GEMINI_API_KEY', '')) !== '',
+                    'role' => 'Fallback direto',
+                ],
+                'OpenAI direto' => [
+                    'configured' => trim((string) env('OPENAI_API_KEY', '')) !== '',
+                    'role' => 'Fallback direto',
+                ],
+                'HeyGen' => [
+                    'configured' => trim((string) env('HEYGEN_API_KEY', '')) !== '',
+                    'role' => 'Avatar / apresentador',
+                ],
+            ],
             'orchestratorModels' => [
                 'image' => $this->rankForPanel($items, 'image', $profiles['balanced'] ?? [], $capabilities['image'] ?? []),
                 'video' => $this->rankForPanel($items, 'video', $profiles['balanced'] ?? [], $capabilities['video'] ?? []),

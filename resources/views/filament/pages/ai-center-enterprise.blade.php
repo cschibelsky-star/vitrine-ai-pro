@@ -23,6 +23,22 @@
                 </div>
             </div>
 
+            <div class="grid gap-4 md:grid-cols-5">
+                @foreach ($orchestratorProviders as $provider => $providerState)
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="font-semibold text-gray-950 dark:text-white">{{ $provider }}</div>
+                            @if (($providerState['configured'] ?? false) === true)
+                                <span class="rounded-full bg-success-50 px-2 py-1 text-[10px] font-semibold text-success-700 dark:bg-success-950/40 dark:text-success-400">configurado</span>
+                            @else
+                                <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">sem runtime</span>
+                            @endif
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ $providerState['role'] ?? '' }}</div>
+                    </div>
+                @endforeach
+            </div>
+
             <div class="grid gap-4 md:grid-cols-4">
                 @foreach ($orchestratorProfiles as $profile => $weights)
                     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">

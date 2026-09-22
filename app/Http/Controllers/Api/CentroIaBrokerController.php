@@ -639,11 +639,41 @@ class CentroIaBrokerController extends Controller
             'reason' => (string) ($candidate['reason'] ?? ''),
         ];
 
+        $routing = app(AiRoutingService::class);
+
         return response()->json([
             'ok' => true,
             'project_id' => (string) $data['project_id'],
             'profile' => $profile,
             'profiles' => (array) config('centro_ia.media_orchestrator.profiles', []),
+            'providers' => [
+                'roteia' => [
+                    'configured' => $apiKey !== '' && $baseUrl !== '',
+                    'role' => 'gateway_media_text',
+                ],
+                'openrouter' => [
+                    'configured' => trim((string) env('OPENROUTER_API_KEY', '')) !== '',
+                    'role' => 'gateway_text_reasoning_multimodal',
+                    'model' => trim((string) env('OPENROUTER_CHAT_MODEL', '')) ?: 'openrouter/free',
+                ],
+                'gemini' => [
+                    'configured' => trim((string) env('GEMINI_API_KEY', '')) !== '',
+                    'role' => 'direct_text_image_video_fallback',
+                ],
+                'openai' => [
+                    'configured' => trim((string) env('OPENAI_API_KEY', '')) !== '',
+                    'role' => 'direct_text_reasoning_fallback',
+                ],
+                'heygen' => [
+                    'configured' => trim((string) env('HEYGEN_API_KEY', '')) !== '',
+                    'role' => 'avatar_presenter',
+                ],
+            ],
+            'text_routes' => [
+                'marketing_strategy' => $routing->resolveRoute('marketing_strategy')['providers'] ?? [],
+                'copy' => $routing->resolveRoute('copy')['providers'] ?? [],
+                'critical_review' => $routing->resolveRoute('critical_review')['providers'] ?? [],
+            ],
             'availability' => $availability,
             'endpoints' => [
                 'images' => filled(data_get($capabilities, 'endpoints.images')),
