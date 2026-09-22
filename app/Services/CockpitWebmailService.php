@@ -228,16 +228,71 @@ class CockpitWebmailService
         }
 
         try {
-            $this->imapCommand(
-                $socket,
-                'LOGIN '.$this->quoteImap((string) $account['username']).' '.$this->quoteImap((string) $account['password'])
-            );
+            $this->imapAuthenticate($socket, (string) $account['username'], (string) $account['password']);
         } catch (\Throwable $e) {
             fclose($socket);
             throw $e;
         }
 
         return $socket;
+    }
+
+    private function imapAuthenticate($socket, string $username, string $password): void
+    {
+        $capabilityLines = $this->imapCommand($socket, 'CAPABILITY');
+        $capabilities = strtoupper(implode(' ', $capabilityLines));
+
+        if (str_contains($capabilities, 'AUTH=PLAIN')) {
+            $this->imapAuthenticatePlain($socket, $username, $password);
+            return;
+        }
+
+        $this->imapCommand(
+            $socket,
+            'LOGIN '.$this->quoteImap($username).' '.$this->quoteImap($password)
+        );
+    }
+
+    private function imapAuthenticatePlain($socket, string $username, string $password): void
+    {
+        static $counter = 9000;
+        $tag = 'A'.str_pad((string) (++$counter), 4, '0', STR_PAD_LEFT);
+
+        if (fwrite($socket, $tag." AUTHENTICATE PLAIN\r\n") === false) {
+            throw new RuntimeException('Falha ao iniciar autenticação IMAP.');
+        }
+
+        $line = fgets($socket, 65536);
+        if ($line === false) {
+            throw new RuntimeException('Servidor IMAP não respondeu ao AUTHENTICATE PLAIN.');
+        }
+
+        $line = rtrim($line, "\r\n");
+        if (! str_starts_with($line, '+')) {
+            throw new RuntimeException('IMAP recusou AUTHENTICATE PLAIN: '.$this->safeImapError($line));
+        }
+
+        $payload = base64_encode("\0".$username."\0".$password);
+        if (fwrite($socket, $payload."\r\n") === false) {
+            throw new RuntimeException('Falha ao enviar credencial IMAP.');
+        }
+
+        while (! feof($socket)) {
+            $response = fgets($socket, 65536);
+            if ($response === false) {
+                break;
+            }
+
+            $response = rtrim($response, "\r\n");
+            if (str_starts_with($response, $tag.' ')) {
+                if (! str_contains($response, ' OK')) {
+                    throw new RuntimeException('IMAP recusou a autenticação: '.$this->safeImapError($response));
+                }
+                return;
+            }
+        }
+
+        throw new RuntimeException('Resposta IMAP incompleta durante autenticação.');
     }
 
     private function imapCommand($socket, string $command): array
