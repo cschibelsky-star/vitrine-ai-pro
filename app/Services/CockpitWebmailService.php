@@ -18,7 +18,23 @@ class CockpitWebmailService
         }
 
         $secretName = (string) ($account['credential_secret'] ?? '');
-        $password = $secretName !== '' ? (string) env($secretName, '') : '';
+        $secretB64Name = (string) ($account['credential_secret_b64'] ?? '');
+        $password = '';
+
+        if ($secretB64Name !== '') {
+            $encoded = (string) env($secretB64Name, '');
+            if ($encoded !== '') {
+                $decoded = base64_decode($encoded, true);
+                if ($decoded === false || $decoded === '') {
+                    throw new RuntimeException('Credencial codificada da conta é inválida.');
+                }
+                $password = $decoded;
+            }
+        }
+
+        if ($password === '' && $secretName !== '') {
+            $password = (string) env($secretName, '');
+        }
 
         if ($password === '') {
             throw new RuntimeException('Credencial da conta não está disponível no runtime.');
