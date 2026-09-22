@@ -164,7 +164,14 @@ class CockpitWebmailService
         $result = [
             'imap' => ['ok' => false],
             'smtp' => ['ok' => false],
+            'imap_capabilities' => [],
         ];
+
+        try {
+            $result['imap_capabilities'] = $this->imapCapabilitiesProbe($account);
+        } catch (\Throwable $e) {
+            $result['imap_capabilities_error'] = $e->getMessage();
+        }
 
         try {
             $client = $this->imapConnect($account);
@@ -198,6 +205,54 @@ class CockpitWebmailService
         }
 
         return $result;
+    }
+
+    private function imapCapabilitiesProbe(array $account): array
+    {
+        $host = (string) $account['imap_host'];
+        $port = (int) ($account['imap_port'] ?? 993);
+        $scheme = strtolower((string) ($account['imap_encryption'] ?? 'ssl')) === 'ssl' ? 'ssl' : 'tcp';
+
+        $socket = @stream_socket_client(
+            $scheme.'://'.$host.':'.$port,
+            $errno,
+            $errstr,
+            12,
+            STREAM_CLIENT_CONNECT
+        );
+
+        if (! is_resource($socket)) {
+            throw new RuntimeException("Falha ao conectar ao IMAP para CAPABILITY: {$errstr} ({$errno}).");
+        }
+
+        stream_set_timeout($socket, 12);
+        $greeting = fgets($socket, 8192);
+
+        if ($greeting === false || ! str_starts_with($greeting, '* OK')) {
+            fclose($socket);
+            throw new RuntimeException('Servidor IMAP não retornou saudação válida no diagnóstico.');
+        }
+
+        try {
+            $lines = $this->imapCommand($socket, 'CAPABILITY');
+            $capabilities = [];
+
+            foreach ($lines as $line) {
+                if (str_starts_with(strtoupper($line), '* CAPABILITY ')) {
+                    $items = preg_split('/\\s+/', trim(substr($line, 13))) ?: [];
+                    foreach ($items as $item) {
+                        $item = trim($item);
+                        if ($item !== '') {
+                            $capabilities[] = $item;
+                        }
+                    }
+                }
+            }
+
+            return array_values(array_unique($capabilities));
+        } finally {
+            fclose($socket);
+        }
     }
 
     private function smtpTransport(array $account): EsmtpTransport
