@@ -1332,17 +1332,23 @@ class MarketingDashboard extends Page
             $brand = trim((string) ($context['brand'] ?? $this->flowProjectName ?? 'Marca do cliente'));
 
             $system = 'Retorne APENAS JSON valido, sem markdown, com esta estrutura: '
-                .'{"campaign":{"name":"","objective":"","audience":"","message":"","cta":"","style":""},'
-                .'"jobs":[{"type":"image|video","format":"ad_1_1|story_9_16|reel_9_16|video_16_9","title":"","idea":"","caption":"","cta":"","duration_seconds":8}]}. '
-                .'Crie de 2 a 5 jobs. Inclua pelo menos uma imagem e um reel quando fizer sentido. '
-                .'Nao invente fatos, metricas, depoimentos ou precos. Video e imagem usam o orquestrador dinamico do Centro IA.';
+                .'{"campaign":{"name":"","objective":"","audience":"","message":"","cta":"","style":"",'
+                .'"creative_concept":{"id":"","central_idea":"","visual_language":"","tone":"","consistency_rules":[""]}},'
+                .'"jobs":[{"type":"image|video","format":"ad_1_1|story_9_16|reel_9_16|video_16_9","channel_role":"feed|story|reel|support",'
+                .'"title":"","idea":"","caption":"","cta":"","duration_seconds":8}]}. '
+                .'Crie um pacote coerente de 3 a 5 pecas derivadas do MESMO creative_concept. '
+                .'Por padrao, inclua Feed 1:1, Story 9:16 e Reel 9:16; adicione outras pecas somente quando ajudarem o objetivo. '
+                .'Cada job deve adaptar o mesmo conceito ao formato/canal, sem reinventar mensagem, identidade ou proposta. '
+                .'Nao invente fatos, metricas, depoimentos ou precos. Nao escolha modelo ou provedor: Video e imagem usam o orquestrador dinamico do Centro IA.';
 
             $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
             $raw = trim($this->generateDirectorCampaignPlan($system, $userPrompt));
             $plan = $this->decodeDirectorPlan($raw);
 
             $campaign = (array) ($plan['campaign'] ?? []);
+            $creativeConcept = (array) ($campaign['creative_concept'] ?? []);
             $jobs = array_values(array_filter((array) ($plan['jobs'] ?? []), 'is_array'));
+            $jobs = $this->normalizeCampaignPieceMix($jobs, $campaign, $brand);
 
             if ($jobs === []) {
                 throw new \RuntimeException('O Diretor nao retornou pecas executaveis.');
@@ -1379,7 +1385,10 @@ class MarketingDashboard extends Page
                     'preview_url' => '',
                     'provider_job_ref' => '',
                     'error' => null,
-                    'director_job' => $job,
+                    'creative_concept' => $creativeConcept,
+                    'concept_id' => trim((string) ($creativeConcept['id'] ?? '')) ?: 'CONCEPT-'.strtoupper(substr(sha1($this->flowCampaign.'|'.$this->flowMessage), 0, 10)),
+                    'channel_role' => trim((string) ($job['channel_role'] ?? 'support')),
+                    'director_job' => array_merge($job, ['creative_concept' => $creativeConcept]),
                 ];
             }
 
@@ -1422,6 +1431,62 @@ class MarketingDashboard extends Page
         }
     }
 
+    private function normalizeCampaignPieceMix(array $jobs, array $campaign, string $brand): array
+    {
+        $concept = (array) ($campaign['creative_concept'] ?? []);
+        $centralIdea = trim((string) ($concept['central_idea'] ?? $campaign['message'] ?? $this->flowMessage));
+        $cta = trim((string) ($campaign['cta'] ?? $this->flowCta));
+
+        $required = [
+            'ad_1_1' => ['type' => 'image', 'channel_role' => 'feed', 'title' => 'Feed principal'],
+            'story_9_16' => ['type' => 'image', 'channel_role' => 'story', 'title' => 'Story de campanha'],
+            'reel_9_16' => ['type' => 'video', 'channel_role' => 'reel', 'title' => 'Reel principal'],
+        ];
+
+        $normalized = [];
+        foreach ($jobs as $job) {
+            if (! is_array($job)) {
+                continue;
+            }
+
+            $format = trim((string) ($job['format'] ?? ''));
+            if (! in_array($format, ['ad_1_1', 'story_9_16', 'reel_9_16', 'video_16_9'], true)) {
+                continue;
+            }
+
+            $job['type'] = strtolower(trim((string) ($job['type'] ?? ($format === 'ad_1_1' || $format === 'story_9_16' ? 'image' : 'video'))));
+            $job['channel_role'] = trim((string) ($job['channel_role'] ?? match ($format) {
+                'ad_1_1' => 'feed',
+                'story_9_16' => 'story',
+                'reel_9_16' => 'reel',
+                default => 'support',
+            }));
+            $job['idea'] = trim((string) ($job['idea'] ?? $centralIdea));
+            $job['cta'] = trim((string) ($job['cta'] ?? $cta));
+            $job['creative_concept'] = $concept;
+            $normalized[] = $job;
+        }
+
+        $formats = array_map(static fn (array $job): string => (string) ($job['format'] ?? ''), $normalized);
+        foreach ($required as $format => $defaults) {
+            if (in_array($format, $formats, true)) {
+                continue;
+            }
+
+            $normalized[] = [
+                ...$defaults,
+                'format' => $format,
+                'idea' => $centralIdea !== '' ? $centralIdea : 'Adaptar o conceito central da campanha para '.$brand,
+                'caption' => '',
+                'cta' => $cta,
+                'duration_seconds' => $format === 'reel_9_16' ? 8 : null,
+                'creative_concept' => $concept,
+            ];
+        }
+
+        return array_slice($normalized, 0, 5);
+    }
+
     private function dispatchDirectorJob(array $job, string $brand, int $sequence, ?string $existingId = null): array
     {
         $type = strtolower(trim((string) ($job['type'] ?? 'image')));
@@ -1435,6 +1500,9 @@ class MarketingDashboard extends Page
         $idea = trim((string) ($job['idea'] ?? $this->flowMessage));
         $caption = trim((string) ($job['caption'] ?? ''));
         $cta = trim((string) ($job['cta'] ?? $this->flowCta));
+        $creativeConcept = (array) ($job['creative_concept'] ?? []);
+        $conceptId = trim((string) ($creativeConcept['id'] ?? '')) ?: 'CONCEPT-'.strtoupper(substr(sha1($this->flowCampaign.'|'.$this->flowMessage), 0, 10));
+        $channelRole = trim((string) ($job['channel_role'] ?? 'support'));
 
         $base = [
             'id' => $id,
@@ -1450,10 +1518,22 @@ class MarketingDashboard extends Page
             'asset_url' => '',
             'preview_url' => '',
             'provider_job_ref' => '',
+            'creative_concept' => $creativeConcept,
+            'concept_id' => $conceptId,
+            'channel_role' => $channelRole,
         ];
 
-        $prompt = 'Marca: '.$brand.'. Ideia: '.$idea.'. Objetivo: '.$this->flowObjective.'. Publico: '.$this->flowAudience.'. '
+        $conceptSummary = trim(implode(' | ', array_filter([
+            (string) ($creativeConcept['central_idea'] ?? ''),
+            (string) ($creativeConcept['visual_language'] ?? ''),
+            (string) ($creativeConcept['tone'] ?? ''),
+            implode('; ', array_map('strval', (array) ($creativeConcept['consistency_rules'] ?? []))),
+        ])));
+
+        $prompt = 'Marca: '.$brand.'. Conceito compartilhado da campanha: '.($conceptSummary !== '' ? $conceptSummary : $this->flowMessage).'. '
+            .'Papel desta peca: '.$channelRole.'. Ideia adaptada ao formato: '.$idea.'. Objetivo: '.$this->flowObjective.'. Publico: '.$this->flowAudience.'. '
             .'Titulo de referencia: '.$title.'. Legenda de referencia: '.$caption.'. CTA: '.$cta.'. Estilo: '.$this->flowStyle.'. '
+            .'Preserve o MESMO conceito, linguagem visual, tom e promessa das demais pecas; adapte apenas composicao, ritmo e enquadramento ao formato '.$format.'. '
             .'Nao invente fatos, nao use marcas de terceiros, nao recrie logotipo e nao renderize texto legivel na midia-base.';
 
         if ($type === 'video') {
@@ -1537,6 +1617,7 @@ class MarketingDashboard extends Page
             'image_generation',
             $prompt,
             (string) config('marketing_agents.native_studio.image_model', 'gemini-3.1-flash-image'),
+            ['aspect_ratio' => $format === 'story_9_16' ? '9:16' : '1:1'],
         );
 
         if ((string) $generation->status !== 'Concluído' || ! $generation->asset_path) {

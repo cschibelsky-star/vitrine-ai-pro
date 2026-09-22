@@ -19,6 +19,7 @@ class AiMediaGenerationService
         string $capability,
         string $prompt,
         ?string $model = null,
+        array $options = [],
     ): AiMediaGeneration {
         $generation = AiMediaGeneration::create([
             'ai_agent_id' => $agent->id,
@@ -37,7 +38,7 @@ class AiMediaGenerationService
         $started = microtime(true);
 
         try {
-            $result = $this->dispatch($provider, $capability, $prompt, $model);
+            $result = $this->dispatch($provider, $capability, $prompt, $model, $options);
             $durationMs = (int) round((microtime(true) - $started) * 1000);
 
             $generation->update([
@@ -63,12 +64,12 @@ class AiMediaGenerationService
         return $generation->refresh();
     }
 
-    protected function dispatch(AiProvider $provider, string $capability, string $prompt, ?string $model): array
+    protected function dispatch(AiProvider $provider, string $capability, string $prompt, ?string $model, array $options = []): array
     {
         $providerSlug = strtolower((string) $provider->slug);
 
         if ($capability === 'image_generation' && in_array($providerSlug, ['gemini', 'google', 'google-gemini'], true)) {
-            return $this->generateGoogleImage($provider, $prompt, $model);
+            return $this->generateGoogleImage($provider, $prompt, $model, $options);
         }
 
         if ($capability === 'video_generation' && in_array($providerSlug, ['gemini', 'google', 'google-gemini'], true)) {
@@ -90,10 +91,14 @@ class AiMediaGenerationService
         ];
     }
 
-    protected function generateGoogleImage(AiProvider $provider, string $prompt, ?string $model): array
+    protected function generateGoogleImage(AiProvider $provider, string $prompt, ?string $model, array $options = []): array
     {
+        $aspectRatio = in_array((string) ($options['aspect_ratio'] ?? '1:1'), ['1:1', '9:16', '16:9'], true)
+            ? (string) ($options['aspect_ratio'] ?? '1:1')
+            : '1:1';
+
         try {
-            return $this->generateImageThroughCentroIa($prompt);
+            return $this->generateImageThroughCentroIa($prompt, $aspectRatio);
         } catch (Throwable $routingException) {
             logger()->warning('Marketing IA: orquestrador dinâmico de imagem indisponível; tentando Google direto.', [
                 'error' => $routingException->getMessage(),
@@ -121,14 +126,14 @@ class AiMediaGenerationService
                 'response_format' => [
                     'type' => 'image',
                     'mime_type' => 'image/jpeg',
-                    'aspect_ratio' => '1:1',
+                    'aspect_ratio' => $aspectRatio,
                     'image_size' => '1K',
                 ],
             ]);
 
         if ($response->failed()) {
             if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
-                return $this->generateImageThroughCentroIa($prompt);
+                return $this->generateImageThroughCentroIa($prompt, $aspectRatio);
             }
 
             throw new RuntimeException('Gemini Image erro HTTP '.$response->status().': '.$response->body());
@@ -190,7 +195,7 @@ class AiMediaGenerationService
         ];
     }
 
-    protected function generateImageThroughCentroIa(string $prompt): array
+    protected function generateImageThroughCentroIa(string $prompt, string $aspectRatio = '1:1'): array
     {
         $hub = (array) config('marketing_agents.hub', []);
         $url = trim((string) ($hub['url'] ?? ''));
@@ -214,6 +219,7 @@ class AiMediaGenerationService
                     'user' => $prompt,
                     'material_type' => 'social_creative',
                     'quality_profile' => 'balanced',
+                    'aspect_ratio' => $aspectRatio,
                 ],
             ]);
 
