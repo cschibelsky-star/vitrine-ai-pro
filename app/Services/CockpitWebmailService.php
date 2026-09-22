@@ -184,7 +184,7 @@ class CockpitWebmailService
             } finally {
                 $this->imapLogout($client);
             }
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $result['imap'] = ['ok' => false, 'error' => $e->getMessage()];
         }
 
@@ -193,7 +193,7 @@ class CockpitWebmailService
             $transport->start();
             $transport->stop();
             $result['smtp'] = ['ok' => true];
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $result['smtp'] = ['ok' => false, 'error' => $e->getMessage()];
         }
 
