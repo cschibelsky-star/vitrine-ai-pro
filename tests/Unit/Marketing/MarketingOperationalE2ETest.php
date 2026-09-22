@@ -279,34 +279,11 @@ class MarketingOperationalE2ETest extends TestCase
         $this->assertCount(2, $newPage->flowJobs);
     }
 
-    public function test_direct_fallback_uses_openrouter_when_gemini_is_exhausted(): void
+    public function test_direct_provider_fallback_is_not_available_outside_centro_ia(): void
     {
-        config()->set('marketing_video.gemini_veo.api_key', 'test-gemini');
-        config()->set('marketing_video.gemini_veo.base_url', 'https://gemini.test/v1beta');
-        config()->set('marketing_agents.native_studio.director_model', 'gemini-test');
-        config()->set('marketing_agents.native_studio.openrouter_model', 'openai/gpt-4o-mini');
-        putenv('OPENROUTER_API_KEY=test-openrouter');
+        $page = app(MarketingDashboard::class);
 
-        Http::fake([
-            'https://gemini.test/*' => Http::response([
-                'error' => ['status' => 'RESOURCE_EXHAUSTED'],
-            ], 402),
-            'https://openrouter.ai/*' => Http::response([
-                'choices' => [['message' => ['content' => 'PACOTE_OPENROUTER_OK']]],
-            ], 200),
-        ]);
-
-        try {
-            $page = app(MarketingDashboard::class);
-            $method = new \ReflectionMethod($page, 'generateFlowPackageWithGemini');
-            $method->setAccessible(true);
-            $result = $method->invoke($page, 'system', 'user');
-
-            $this->assertSame('PACOTE_OPENROUTER_OK', $result);
-            Http::assertSentCount(3);
-        } finally {
-            putenv('OPENROUTER_API_KEY');
-        }
+        $this->assertFalse(method_exists($page, 'generateFlowPackageWithGemini'));
     }
 
     private function pieceFixture(): array

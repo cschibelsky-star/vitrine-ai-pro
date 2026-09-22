@@ -506,7 +506,7 @@ class MarketingDashboard extends Page
                     $model = (string) ($response->json('model') ?: 'hub-routed');
                     $executionId = $response->json('execution_id');
                 } else {
-                    logger()->warning('Diretor Marketing IA: Centro IA indisponível; acionando Gemini direto.', [
+                    logger()->warning('Diretor Marketing IA: Centro IA indisponível.', [
                         'http_status' => $response->status(),
                         'error' => (string) ($response->json('error') ?? 'unknown'),
                         'capability' => $capability,
@@ -515,9 +515,7 @@ class MarketingDashboard extends Page
             }
 
             if ($reply === '') {
-                $reply = $this->generateFlowPackageWithGemini($system, $userPrompt);
-                $model = (string) config('marketing_agents.native_studio.director_model', 'gemini-3.5-flash').' (fallback direto)';
-                $executionId = null;
+                throw new \RuntimeException('Centro IA indisponível para o Diretor de Marketing. O Marketing IA não executa fallback direto de provedor.');
             }
 
             $this->copilotMessages[] = [
@@ -637,7 +635,7 @@ class MarketingDashboard extends Page
                         $this->flowGenerationSource = 'Centro IA';
                     }
                 } else {
-                    logger()->warning('Fluxo Marketing IA: Centro IA indisponível; acionando fallback Gemini local.', [
+                    logger()->warning('Fluxo Marketing IA: Centro IA indisponível.', [
                         'http_status' => $response->status(),
                         'capability' => $capability,
                     ]);
@@ -645,12 +643,7 @@ class MarketingDashboard extends Page
             }
 
             if ($package === '') {
-                $package = $this->generateFlowPackageWithGemini($system, $userPrompt);
-                $this->flowGenerationSource = 'Gemini direto (fallback)';
-            }
-
-            if ($package === '') {
-                throw new \RuntimeException('Não foi possível gerar o Job de Produção do Marketing IA.');
+                throw new \RuntimeException('Centro IA indisponível para gerar o Job de Produção. O Marketing IA não executa fallback direto de provedor.');
             }
 
             $this->flowPackage = $package;
@@ -999,77 +992,6 @@ class MarketingDashboard extends Page
             ."7. Gere a mídia somente depois da conferência. Não publique, não regenere e não altere campanha sem autorização.\n"
             ."8. Ao concluir, registre evidência e retorne o job como GERADO.\n\n"
             ."HANDOFF V1.6:\n{$this->getFlowHandoffPayload()}";
-    }
-
-    private function generateFlowPackageWithGemini(string $system, string $userPrompt): string
-    {
-        $geminiError = null;
-        $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
-        $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
-        $model = trim((string) config('marketing_agents.native_studio.director_model', 'gemini-3.5-flash'));
-
-        if ($apiKey !== '') {
-            $response = Http::acceptJson()
-                ->asJson()
-                ->withHeaders(['X-goog-api-key' => $apiKey])
-                ->timeout(60)
-                ->retry(2, 250, throw: false)
-                ->post("{$baseUrl}/models/{$model}:generateContent", [
-                    'contents' => [[
-                        'parts' => [[
-                            'text' => "INSTRUÇÕES DO SISTEMA:\n{$system}\n\nSOLICITAÇÃO:\n{$userPrompt}",
-                        ]],
-                    ]],
-                ]);
-
-            if ($response->successful()) {
-                $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));
-                if ($text !== '') {
-                    return $text;
-                }
-                $geminiError = 'O fallback Gemini retornou um pacote vazio.';
-            } else {
-                $errorStatus = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($response->json(), 'error.status', '')) ?: 'UNKNOWN';
-                $geminiError = 'O fallback Gemini falhou: HTTP '.$response->status().' '.$errorStatus.'.';
-            }
-        } else {
-            $geminiError = 'Gemini local não está configurado para o Flow Bridge.';
-        }
-
-        $openRouterKey = trim((string) env('OPENROUTER_API_KEY', ''));
-        if ($openRouterKey !== '') {
-            $openRouterModel = trim((string) config('marketing_agents.native_studio.openrouter_model', 'openai/gpt-4o-mini'));
-            $openRouter = Http::acceptJson()
-                ->asJson()
-                ->withToken($openRouterKey)
-                ->withHeaders([
-                    'HTTP-Referer' => config('app.url'),
-                    'X-Title' => 'Vitrine IA Pro Marketing IA',
-                ])
-                ->timeout(60)
-                ->retry(2, 250, throw: false)
-                ->post('https://openrouter.ai/api/v1/chat/completions', [
-                    'model' => $openRouterModel,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $system],
-                        ['role' => 'user', 'content' => $userPrompt],
-                    ],
-                    'temperature' => 0.25,
-                ]);
-
-            if ($openRouter->successful()) {
-                $text = trim((string) data_get($openRouter->json(), 'choices.0.message.content', ''));
-                if ($text !== '') {
-                    return $text;
-                }
-                throw new \RuntimeException(($geminiError ? $geminiError.' ' : '').'O fallback OpenRouter retornou um pacote vazio.');
-            }
-
-            $status = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($openRouter->json(), 'error.code', '')) ?: 'UNKNOWN';
-            throw new \RuntimeException(($geminiError ? $geminiError.' ' : '').'O fallback OpenRouter falhou: HTTP '.$openRouter->status().' '.$status.'.');
-        }
-
-        throw new \RuntimeException($geminiError.' OpenRouter não está configurado no runtime.');
     }
 
     private function createFlowJob(string $status): void
