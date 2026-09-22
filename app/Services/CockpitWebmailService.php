@@ -161,30 +161,43 @@ class CockpitWebmailService
     public function probe(string $key): array
     {
         $account = $this->account($key);
-        $client = $this->imapConnect($account);
+        $result = [
+            'imap' => ['ok' => false],
+            'smtp' => ['ok' => false],
+        ];
 
         try {
-            $lines = $this->imapCommand($client, 'STATUS INBOX (MESSAGES)');
-            $messages = null;
+            $client = $this->imapConnect($account);
 
-            foreach ($lines as $line) {
-                if (preg_match('/MESSAGES\s+(\d+)/i', $line, $match)) {
-                    $messages = (int) $match[1];
-                    break;
+            try {
+                $lines = $this->imapCommand($client, 'STATUS INBOX (MESSAGES)');
+                $messages = null;
+
+                foreach ($lines as $line) {
+                    if (preg_match('/MESSAGES\\s+(\\d+)/i', $line, $match)) {
+                        $messages = (int) $match[1];
+                        break;
+                    }
                 }
+
+                $result['imap'] = ['ok' => true, 'messages' => $messages];
+            } finally {
+                $this->imapLogout($client);
             }
-        } finally {
-            $this->imapLogout($client);
+        } catch (\\Throwable $e) {
+            $result['imap'] = ['ok' => false, 'error' => $e->getMessage()];
         }
 
-        $transport = $this->smtpTransport($account);
-        $transport->start();
-        $transport->stop();
+        try {
+            $transport = $this->smtpTransport($account);
+            $transport->start();
+            $transport->stop();
+            $result['smtp'] = ['ok' => true];
+        } catch (\\Throwable $e) {
+            $result['smtp'] = ['ok' => false, 'error' => $e->getMessage()];
+        }
 
-        return [
-            'imap' => ['ok' => true, 'messages' => $messages],
-            'smtp' => ['ok' => true],
-        ];
+        return $result;
     }
 
     private function smtpTransport(array $account): EsmtpTransport
