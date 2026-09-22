@@ -170,9 +170,25 @@ class MarketingDashboard extends Page
             $job = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
             if (is_array($job) && in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
                 && hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
+                $stableExpiry = now()->startOfHour()->addHours(6);
+
                 if (preg_match('/^IMAGE-(\d+)$/', (string) ($job['provider_job_ref'] ?? ''), $match)) {
-                    $job['preview_url'] = URL::temporarySignedRoute('marketing.native-image-preview',
-                        now()->addHours(2), ['generation' => (int) $match[1]], false);
+                    $job['preview_url'] = URL::temporarySignedRoute(
+                        'marketing.native-image-preview',
+                        $stableExpiry,
+                        ['generation' => (int) $match[1]],
+                        false
+                    );
+                } elseif (($job['type'] ?? '') === 'video') {
+                    $previewPath = (string) parse_url((string) ($job['preview_url'] ?? ''), PHP_URL_PATH);
+                    if (preg_match('#^/marketing/native-preview/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)$#', $previewPath, $match)) {
+                        $job['preview_url'] = URL::temporarySignedRoute(
+                            'marketing.native-video-preview',
+                            $stableExpiry,
+                            ['job' => $match[1], 'version' => $match[2]],
+                            false
+                        );
+                    }
                 }
                 $jobs[] = $job;
             }

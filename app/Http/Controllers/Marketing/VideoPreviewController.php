@@ -121,9 +121,18 @@ final class VideoPreviewController extends Controller
         $absolutePath = Storage::disk($disk)->path($path);
         abort_unless(is_file($absolutePath) && is_readable($absolutePath), 404);
 
+        $mimeType = mime_content_type($absolutePath) ?: 'application/octet-stream';
+        abort_unless(str_starts_with($mimeType, 'image/'), 404);
+        $extension = match ($mimeType) {
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            default => 'png',
+        };
+
         $response = response()->file($absolutePath, [
-            'Content-Type' => 'image/png',
-            'Content-Disposition' => 'inline; filename="marketing-ia-criativo-'.$generation.'.png"',
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="marketing-ia-criativo-'.$generation.'.'.$extension.'"',
             'Pragma' => 'no-cache',
             'X-Content-Type-Options' => 'nosniff',
             'X-Robots-Tag' => 'noindex, nofollow, noarchive',

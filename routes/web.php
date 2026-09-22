@@ -63,13 +63,13 @@ Route::middleware(['auth'])->group(function () {
         ->name('marketing.video-preview.sign');
 
     Route::get('/marketing/native-preview/{job}/{version}', [VideoPreviewController::class, 'nativePreview'])
-        ->middleware(['signed:relative', 'throttle:30,1'])
+        ->middleware(['signed:relative', 'throttle:300,1'])
         ->where('job', '[A-Za-z0-9._-]+')
         ->where('version', '[A-Za-z0-9._-]+')
         ->name('marketing.native-video-preview');
 
     Route::get('/marketing/native-image-preview/{generation}', [VideoPreviewController::class, 'nativeImagePreview'])
-        ->middleware(['signed:relative', 'throttle:30,1'])
+        ->middleware(['signed:relative', 'throttle:300,1'])
         ->whereNumber('generation')
         ->name('marketing.native-image-preview');
 
