@@ -24,14 +24,19 @@ final class GeminiVeoSceneRendererTest extends TestCase
         $this->assertSame('presenter_avatar_voice_only', config('marketing_video.routing.heygen_usage'));
     }
 
-    public function test_dispatches_vertical_veo_generation_without_spending_live_credits(): void
+    public function test_dispatches_video_only_through_centro_ia_without_direct_provider_call(): void
     {
-        config()->set('marketing_video.gemini_veo.api_key', 'test-key');
-        config()->set('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview');
-        config()->set('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta');
+        config()->set('marketing_agents.hub.url', 'https://centro-ia.test/execute');
+        config()->set('marketing_agents.hub.token', 'test-token');
+        config()->set('marketing_agents.hub.project_id', 'marketing-test');
 
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response(['name' => 'operations/test-operation'], 200),
+            'https://centro-ia.test/execute' => Http::response([
+                'ok' => true,
+                'media_status' => 'processing',
+                'job_ref' => 'provider-job-123',
+                'model' => 'hub-routed-video',
+            ], 200),
         ]);
 
         $project = new VideoProject(
@@ -46,38 +51,39 @@ final class GeminiVeoSceneRendererTest extends TestCase
             'duration_seconds' => 8,
         ]);
 
-        $this->assertSame('gemini_veo', $result['provider']);
+        $this->assertSame('centro_ia', $result['provider']);
         $this->assertSame('processing', $result['status']);
-        $this->assertSame('operations/test-operation', $result['job_ref']);
+        $this->assertStringStartsWith('centroia:', $result['job_ref']);
         $this->assertNull($result['render_ref']);
 
         Http::assertSent(function ($request): bool {
-            return str_contains($request->url(), 'veo-3.1-generate-preview:predictLongRunning')
-                && $request['parameters']['aspectRatio'] === '9:16'
-                && $request['parameters']['durationSeconds'] === 8
-                && $request['parameters']['sampleCount'] === 1;
+            return $request->url() === 'https://centro-ia.test/execute'
+                && $request['capability'] === 'video_generation'
+                && $request['input']['aspect_ratio'] === '9:16'
+                && $request['input']['duration_seconds'] === 8;
         });
     }
 
-    public function test_refresh_maps_completed_operation_to_render_reference(): void
+    public function test_refreshes_centro_ia_job_without_direct_provider_call(): void
     {
-        config()->set('marketing_video.gemini_veo.api_key', 'test-key');
-        config()->set('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta');
+        config()->set('marketing_agents.hub.url', 'https://centro-ia.test/execute');
+        config()->set('marketing_agents.hub.token', 'test-token');
+        config()->set('marketing_agents.hub.project_id', 'marketing-test');
+
+        $encoded = base64_encode(json_encode([
+            'job_ref' => 'provider-job-123',
+            'model' => 'hub-routed-video',
+        ], JSON_UNESCAPED_SLASHES));
 
         Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'done' => true,
-                'response' => [
-                    'generateVideoResponse' => [
-                        'generatedSamples' => [[
-                            'video' => ['uri' => 'https://example.test/video.mp4'],
-                        ]],
-                    ],
-                ],
+            'https://centro-ia.test/execute' => Http::response([
+                'ok' => true,
+                'media_status' => 'completed',
+                'asset_url' => 'https://example.test/video.mp4',
             ], 200),
         ]);
 
-        $result = app(GeminiVeoSceneRenderer::class)->refresh('operations/test-operation');
+        $result = app(GeminiVeoSceneRenderer::class)->refresh('centroia:'.$encoded);
 
         $this->assertSame('completed', $result['status']);
         $this->assertSame('https://example.test/video.mp4', $result['render_ref']);

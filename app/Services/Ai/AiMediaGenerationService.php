@@ -100,99 +100,12 @@ class AiMediaGenerationService
         try {
             return $this->generateImageThroughCentroIa($prompt, $aspectRatio);
         } catch (Throwable $routingException) {
-            logger()->warning('Marketing IA: orquestrador dinâmico de imagem indisponível; tentando Google direto.', [
-                'error' => $routingException->getMessage(),
-            ]);
+            throw new RuntimeException(
+                'centro_ia_image_dispatch_failed:'.$routingException->getMessage(),
+                0,
+                $routingException
+            );
         }
-
-        $apiKey = $this->resolveGeminiApiKey($provider);
-        $model = $model
-            ?: data_get($provider->config, 'models.image_generation')
-            ?: 'gemini-3.1-flash-image';
-
-        if (! $apiKey) {
-            throw new RuntimeException('API Key Gemini ausente para geração de imagem.');
-        }
-
-        $response = Http::acceptJson()
-            ->withHeaders(['x-goog-api-key' => $apiKey])
-            ->timeout(120)
-            ->retry(2, 500, throw: false)
-            ->post('https://generativelanguage.googleapis.com/v1beta/interactions', [
-                'model' => $model,
-                'input' => [
-                    ['type' => 'text', 'text' => $prompt],
-                ],
-                'response_format' => [
-                    'type' => 'image',
-                    'mime_type' => 'image/jpeg',
-                    'aspect_ratio' => $aspectRatio,
-                    'image_size' => '1K',
-                ],
-            ]);
-
-        if ($response->failed()) {
-            if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
-                return $this->generateImageThroughCentroIa($prompt, $aspectRatio);
-            }
-
-            throw new RuntimeException('Gemini Image erro HTTP '.$response->status().': '.$response->body());
-        }
-
-        $payload = $response->json();
-        [$base64, $mimeType] = $this->extractImage($payload);
-
-        if (! $base64) {
-            throw new RuntimeException('Gemini Image não retornou dados de imagem utilizáveis.');
-        }
-
-        $binary = base64_decode($base64, true);
-
-        if ($binary === false || $binary === '') {
-            throw new RuntimeException('Gemini Image retornou base64 inválido.');
-        }
-
-        // O Marketing IA gera a base visual neutra. Branding deve ser aplicado pela camada do cliente/Brand Kit.
-
-        $extension = match ($mimeType) {
-            'image/jpeg', 'image/jpg' => 'jpg',
-            'image/webp' => 'webp',
-            default => 'png',
-        };
-
-        $disk = config('filesystems.default', 'local');
-        $path = 'ai-generated/marketing/'.now()->format('Y/m/d').'/'.Str::uuid().'.'.$extension;
-
-        if (! Storage::disk($disk)->put($path, $binary)) {
-            throw new RuntimeException('Falha ao salvar a imagem gerada no filesystem.');
-        }
-
-        $assetUrl = null;
-
-        try {
-            $assetUrl = Storage::disk($disk)->url($path);
-        } catch (Throwable) {
-            // Discos privados/locais podem não expor URL pública.
-        }
-
-        return [
-            'status' => 'Concluído',
-            'output' => 'Imagem gerada com sucesso pelo Google Nano Banana.',
-            'operation_id' => is_string(data_get($payload, 'id')) ? data_get($payload, 'id') : null,
-            'asset_path' => $path,
-            'asset_url' => $assetUrl,
-            'metadata' => [
-                'adapter_ready' => true,
-                'adapter' => 'google_interactions_image',
-                'model' => $model,
-                'mime_type' => $mimeType,
-                'storage_disk' => $disk,
-                'prompt_length' => mb_strlen($prompt),
-                'synthid_expected' => true,
-                'branding' => 'client_branding_pending',
-                'flow_dependency' => false,
-            ],
-        ];
     }
 
     protected function generateImageThroughCentroIa(string $prompt, string $aspectRatio = '1:1'): array

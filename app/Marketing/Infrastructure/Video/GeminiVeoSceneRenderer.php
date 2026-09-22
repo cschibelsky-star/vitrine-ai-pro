@@ -36,47 +36,19 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
 
         try {
             $dynamic = $this->dispatchThroughCentroIa($prompt, $aspectRatio, $duration);
-            if ($dynamic !== null) {
-                return $dynamic;
-            }
         } catch (\Throwable $routingException) {
-            logger()->warning('Marketing IA: orquestrador dinâmico de vídeo indisponível; tentando Veo direto.', [
-                'error' => $routingException->getMessage(),
-            ]);
+            throw new RuntimeException(
+                'centro_ia_video_dispatch_failed:'.$routingException->getMessage(),
+                0,
+                $routingException
+            );
         }
 
-        $payload = [
-            'instances' => [[
-                'prompt' => $prompt,
-            ]],
-            'parameters' => [
-                'aspectRatio' => $aspectRatio,
-                'resolution' => $resolution,
-                'durationSeconds' => $duration,
-                'sampleCount' => 1,
-            ],
-        ];
-
-        $response = $this->client()->post(sprintf('/models/%s:predictLongRunning', $model), $payload);
-        if (! $response->successful()) {
-            if ($response->status() === 402 || str_contains(strtoupper((string) $response->body()), 'RESOURCE_EXHAUSTED')) {
-                return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
-            }
-
-            throw new RuntimeException('gemini_veo_dispatch_failed:'.$response->status());
+        if ($dynamic === null) {
+            throw new RuntimeException('centro_ia_video_dispatch_unavailable');
         }
 
-        $operation = trim((string) $response->json('name', ''));
-        if ($operation === '') {
-            throw new RuntimeException('gemini_veo_operation_missing');
-        }
-
-        return [
-            'provider' => 'gemini_veo',
-            'status' => 'processing',
-            'job_ref' => $operation,
-            'render_ref' => null,
-        ];
+        return $dynamic;
     }
 
     public function refresh(string $jobRef): array
