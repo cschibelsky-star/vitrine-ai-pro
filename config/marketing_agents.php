@@ -33,6 +33,29 @@ return [
         'capability' => env('CENTRO_IA_CAPABILITY', 'marketing_generation'),
         'timeout' => (int) env('CENTRO_IA_TIMEOUT', 60),
     ],
+    'creation_directives' => [
+        'marketing_briefing' => [
+            'applies_to' => ['campaign_planner', 'copy_content', 'creative_director'],
+            'instruction' => 'Antes de criar, normalize o pedido em briefing: produto/marca, objetivo, público, canais, formatos, mensagem principal, CTA, tom, restrições e assets disponíveis. Não invente dados ausentes. Sinalize lacunas críticas antes de assumir informações.',
+        ],
+        'creative_direction' => [
+            'applies_to' => ['creative_director', 'video_producer'],
+            'instruction' => 'Defina conceito central, direção visual, narrativa, composição, ritmo e coerência entre peças. Decida o que criar, nunca qual provedor/modelo executar. Não fixe Veo, Gemini, Grok, Seedream, Seedance ou equivalente; essa decisão pertence ao Centro IA.',
+        ],
+        'brand_asset_guard' => [
+            'applies_to' => ['creative_director', 'video_producer', 'qa_brand_guardian'],
+            'instruction' => 'Use somente identidade, logos, imagens e claims autorizados. Nunca redesenhe ou invente logotipo. Quando o asset oficial não estiver disponível, marque-o como necessário e preserve área segura para aplicação em pós-produção. Não introduza marcas de terceiros sem autorização.',
+        ],
+        'marketing_qa' => [
+            'applies_to' => ['qa_brand_guardian'],
+            'instruction' => 'Valide aderência ao briefing, clareza da mensagem, CTA, formato/canal, consistência de marca, ausência de duplicação, claims suportados e uso correto de assets. Reprovar somente o item com problema e pedir revisão localizada, preservando o restante aprovado.',
+        ],
+    ],
+    'creation_pipeline' => [
+        'stages' => ['briefing', 'creative_direction', 'brand_guard', 'generation', 'qa', 'approval', 'distribution'],
+        'model_selection_owner' => 'centro_ia',
+        'revision_mode' => 'localized_artifact_version',
+    ],
     'native_studio' => [
         'enabled' => env('MARKETING_NATIVE_STUDIO_ENABLED', true),
         'role' => 'creation_machine',

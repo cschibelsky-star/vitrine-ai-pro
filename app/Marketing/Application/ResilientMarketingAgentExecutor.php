@@ -96,6 +96,8 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
             'upstream_outputs' => $inputs,
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+        $directives = $this->creationDirectivesFor($agentId);
+
         $response = Http::acceptJson()
             ->asJson()
             ->withToken($token)
@@ -106,7 +108,7 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
                 'project_id' => $projectId,
                 'capability' => $capability,
                 'input' => [
-                    'system' => "Você é o agente {$agentId} do Marketing IA da Vitrine IA Pro. Use somente os fatos e saídas anteriores fornecidos. Não invente preços, clientes, depoimentos, métricas ou funcionalidades. Retorne somente JSON válido e exatamente compatível com este JSON Schema: {$schemaJson}",
+                    'system' => "Você é o agente {$agentId} do Marketing IA da Vitrine IA Pro. Use somente os fatos e saídas anteriores fornecidos. Não invente preços, clientes, depoimentos, métricas ou funcionalidades. Siga obrigatoriamente estas diretrizes normativas do processo criativo: {$directives} Retorne somente JSON válido e exatamente compatível com este JSON Schema: {$schemaJson}",
                     'user' => $context,
                     'response_format' => 'json',
                     'temperature' => 0.2,
@@ -146,6 +148,28 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
         ];
 
         return $output;
+    }
+
+    private function creationDirectivesFor(string $agentId): string
+    {
+        $directives = (array) config('marketing_agents.creation_directives', []);
+        $selected = [];
+
+        foreach ($directives as $name => $directive) {
+            $appliesTo = (array) ($directive['applies_to'] ?? []);
+            if (! in_array($agentId, $appliesTo, true)) {
+                continue;
+            }
+
+            $instruction = trim((string) ($directive['instruction'] ?? ''));
+            if ($instruction !== '') {
+                $selected[] = strtoupper(str_replace('_', ' ', (string) $name)).': '.$instruction;
+            }
+        }
+
+        return $selected === []
+            ? 'Nenhuma diretriz adicional aplicável.'
+            : implode(' ', $selected);
     }
 
     private function schemaFor(string $agentId): string

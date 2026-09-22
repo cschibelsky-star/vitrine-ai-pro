@@ -304,9 +304,12 @@ class MarketingDashboard extends Page
                 ? 'CONTEXTO OPERACIONAL: MOTOR TV DIGITAL. Produza ativos como capacidade interna da TV Digital Enterprise, preservando a identidade do veículo atendido e sem tratar a TV Sumaré como cliente de marketing neste contexto. '
                 : 'CONTEXTO OPERACIONAL: CLIENTE TV SUMARÉ. Produza conteúdo para as redes sociais e presença digital da marca TV Sumaré como cliente independente do Marketing IA. O conteúdo pode ser próprio de marca, comunidade, agenda, curiosidades, engajamento, bastidores ou derivado de notícias, sem depender exclusivamente do portal. ';
 
+            $creationDirectives = $this->creationDirectiveText(['marketing_briefing', 'creative_direction', 'brand_asset_guard', 'marketing_qa']);
+
             $system = $contextInstruction.'Você é o Creative Director do Fluxo de Produção nativo do Marketing IA da Vitrine IA Pro. '
-                .'Sua função é preparar um Job de Produção executável pelos motores nativos do Marketing IA, incluindo Gemini, Veo e finalização técnica. '
-                .'POLÍTICA DE VÍDEO: use Veo como motor padrão para vídeos de campanha, demonstração, conceito e narrativa visual. HeyGen não faz parte da produção padrão: reserve HeyGen exclusivamente para jobs de apresentação em que o briefing peça explicitamente o avatar de Cristian Schibelsky junto com sua voz clonada. Nunca selecione HeyGen automaticamente para um vídeo comum. '
+                .'Sua função é preparar um Job de Produção executável pelos motores nativos do Marketing IA e pela finalização técnica. '
+                .'DIRETRIZES NORMATIVAS: '.$creationDirectives.' '
+                .'POLÍTICA DE ROTEAMENTO: não escolha nem fixe Gemini, Veo, Grok, Seedream, Seedance ou qualquer outro modelo/provedor. Descreva a necessidade criativa e deixe a escolha tecnológica exclusivamente para o Centro IA. HeyGen só pode ser usado para jobs de apresentação quando o briefing pedir explicitamente avatar e voz autorizados. '
                 .'Não afirme que gerou mídia, publicou ou consumiu créditos sem execução operacional confirmada. '
                 .'Entregue um briefing implementável e objetivo, em português do Brasil, preservando fatos fornecidos e sem inventar logos, preços, depoimentos ou funcionalidades. '
                 .'Quando a campanha ou produto for Vitrine Social Mídia, a comunicação deve deixar explícito que o assunto é redes sociais, produção de conteúdo, calendário editorial, Instagram/Facebook ou presença digital. Não use metáforas ambíguas como "vitrine parada", "vitrine estagnada" ou equivalentes sem explicar imediatamente que se trata das redes sociais. '
@@ -404,7 +407,13 @@ class MarketingDashboard extends Page
 
         $aspectRatio = $this->flowFormat === 'video_16_9' ? '16:9' : '9:16';
         $duration = $this->nativeDurationSeconds();
-        $prompt = 'Crie um vídeo publicitário profissional para o produto Vitrine Social Mídia. '
+        $activeContext = $this->getMarketingContext();
+        $activeBrand = trim((string) ($activeContext['brand'] ?? ''));
+        $campaignName = trim($this->flowCampaign);
+        $subject = $campaignName !== '' ? $campaignName : ($activeBrand !== '' ? $activeBrand : 'a campanha ativa');
+
+        $prompt = 'Crie um vídeo publicitário profissional para '.$subject.'. '
+            .'Marca/contexto: '.($activeBrand !== '' ? $activeBrand : 'marca ativa do briefing').'. '
             .'Público: '.trim($this->flowAudience).'. '
             .'Objetivo: '.trim($this->flowObjective).'. '
             .'Mensagem que a narrativa visual deve comunicar: '.trim($this->flowMessage).'. '
@@ -445,12 +454,12 @@ class MarketingDashboard extends Page
         try {
             $agent = AiAgent::query()->where('slug', 'marketing-ia')->first();
             $provider = AiProvider::query()
-                ->whereIn('slug', ['google', 'gemini', 'google-gemini'])
                 ->where('status', 'ativo')
+                ->whereIn('slug', ['google', 'gemini', 'google-gemini'])
                 ->first();
 
             if (! $agent || ! $provider) {
-                throw new \RuntimeException('Marketing IA ou provider Google/Gemini não está disponível para geração de imagem.');
+                throw new \RuntimeException('Marketing IA não está preparado para iniciar a geração de imagem via Centro IA.');
             }
 
             $prompt = 'Crie um criativo publicitário quadrado 1:1 profissional para a campanha '.trim($this->flowCampaign).'. '
@@ -1657,6 +1666,21 @@ class MarketingDashboard extends Page
     public function getAgents(): array
     {
         return app(AgentRegistry::class)->all();
+    }
+
+    private function creationDirectiveText(array $keys): string
+    {
+        $directives = (array) config('marketing_agents.creation_directives', []);
+        $selected = [];
+
+        foreach ($keys as $key) {
+            $instruction = trim((string) data_get($directives, $key.'.instruction', ''));
+            if ($instruction !== '') {
+                $selected[] = strtoupper(str_replace('_', ' ', (string) $key)).': '.$instruction;
+            }
+        }
+
+        return implode(' ', $selected);
     }
 
     public function getRuntime(): array
