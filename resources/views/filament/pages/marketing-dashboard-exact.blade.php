@@ -17,7 +17,7 @@
         $videoJobs = $clientJobs->filter(fn (array $job) => (($job['type'] ?? (($job['format'] ?? '') === 'ad_1_1' ? 'image' : 'video')) === 'video'))->values();
         $workingJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['PRONTO_PARA_PRODUCAO','CORRECAO_SOLICITADA','EM_GERACAO','GERADO','FINALIZANDO'], true))->count();
         $reviewJobs = $clientJobs->filter(fn (array $job) => (string) ($job['status'] ?? '') === 'EM_QA')->count();
-        $readyJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true))->count();
+        $readyJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','PLANEJADO_EDITORIAL','AGENDADO','PUBLICADO'], true))->count();
     @endphp
 
     <style>
@@ -404,13 +404,15 @@
                         </div>
                     </section>
 
-                    <section id="resultados" class="vm-results" wire:init="recoverPendingRevision" wire:poll.5s="refreshProductionBoard">
+                    <section id="resultados" class="vm-results" wire:poll.5s="refreshProductionBoard">
+                        @if($pieceError)<div class="vm-error" role="alert">{{ $pieceError }}</div>@endif
+                        @if($pieceFeedback)<div class="vm-panel" role="status">{{ $pieceFeedback }}</div>@endif
                         <div class="vm-panel">
                             <div class="vm-results-head">
                                 <div>
                                     <div class="vm-eyebrow">Resultado primeiro</div>
                                     <h2>O que o Marketing IA entregou</h2>
-                                    <p>Veja conteúdos, aprove peças e peça correções pelo chat. A operação técnica permanece em segundo plano.</p>
+                                    <p>Revise cada peça, aprove a versão final e escolha o que fazer na galeria.</p>
                                 </div>
                                 <a href="#copilot" class="vm-cta" style="margin-top:0">Pedir criação ou ajuste <span>→</span></a>
                             </div>
@@ -440,7 +442,7 @@
                                 </div>
                                 <div class="vm-note" style="margin-top:12px">
                                     <span>{{ $workingJobs > 0 ? $workingJobs.' conteúdo(s) em produção.' : 'Nenhuma produção ativa neste momento.' }}</span>
-                                    <span>Para corrigir qualquer peça, descreva o ajuste no chat.</span>
+                                    <span>Use o campo de ajuste da peça que deseja corrigir.</span>
                                 </div>
                             </div>
                             <div class="vm-machine-orb" aria-hidden="true"></div>
@@ -457,7 +459,9 @@
                                             $statusView = match ($rawStatus) {
                                                 'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
                                                 'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
-                                                'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'GERADO' => ['label' => 'Aguardando aprovação', 'class' => 'review'],
+                                                'APROVADO', 'PLANEJADO_EDITORIAL' => ['label' => 'Aprovado', 'class' => 'ready'],
+                                                'AGENDADO', 'PUBLICADO' => ['label' => 'Distribuído', 'class' => 'ready'],
                                                 'BLOQUEADO_CREDITO' => ['label' => 'Crédito indisponível', 'class' => 'error'],
                                                 'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
                                                 default => ['label' => 'Aguardando', 'class' => 'processing'],
@@ -487,7 +491,18 @@
                                                 @if(in_array((string) ($job['status'] ?? ''), ['ERRO','BLOQUEADO_CREDITO'], true))
                                                     <button type="button" class="vm-action-link" wire:click="retryProductionJob('{{ $job['id'] ?? '' }}')">Tentar novamente</button>
                                                 @endif
-                                                <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
+                                                
+                                                <div style="margin-top:12px">
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true))
+                                                        <button type="button" class="vm-action-link" wire:click="approveProductionJob('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Aprovar esta versão</button>
+                                                    @endif
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true))
+                                                        <label style="display:block;margin-top:10px;font-size:12px">Ajuste nesta peça
+                                                            <textarea wire:model="pieceRevisionInputs.{{ $job['id'] }}" maxlength="2000" rows="2" style="width:100%;margin-top:6px;border-radius:8px;background:#17142e;color:#f7f5ff;border:1px solid #706a82" placeholder="Descreva somente o que deseja corrigir"></textarea>
+                                                        </label>
+                                                        <button type="button" class="vm-action-link" wire:click="requestPieceRevision('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Enviar correção desta peça</button>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </article>
                                     @endforeach
@@ -508,7 +523,9 @@
                                             $statusView = match ($rawStatus) {
                                                 'PRONTO_PARA_PRODUCAO', 'EM_GERACAO', 'FINALIZANDO' => ['label' => 'Produzindo', 'class' => 'processing'],
                                                 'EM_QA' => ['label' => 'Em revisão', 'class' => 'review'],
-                                                'GERADO', 'APROVADO', 'AGENDADO', 'PUBLICADO' => ['label' => 'Pronto', 'class' => 'ready'],
+                                                'GERADO' => ['label' => 'Aguardando aprovação', 'class' => 'review'],
+                                                'APROVADO', 'PLANEJADO_EDITORIAL' => ['label' => 'Aprovado', 'class' => 'ready'],
+                                                'AGENDADO', 'PUBLICADO' => ['label' => 'Distribuído', 'class' => 'ready'],
                                                 'BLOQUEADO_CREDITO' => ['label' => 'Crédito indisponível', 'class' => 'error'],
                                                 'ERRO' => ['label' => 'Atenção', 'class' => 'error'],
                                                 default => ['label' => 'Aguardando', 'class' => 'processing'],
@@ -538,7 +555,18 @@
                                                 @if(in_array((string) ($job['status'] ?? ''), ['ERRO','BLOQUEADO_CREDITO'], true))
                                                     <button type="button" class="vm-action-link" wire:click="retryProductionJob('{{ $job['id'] ?? '' }}')">Tentar novamente</button>
                                                 @endif
-                                                <a href="#copilot" class="vm-action-link">Pedir ajuste pelo chat</a>
+                                                
+                                                <div style="margin-top:12px">
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true))
+                                                        <button type="button" class="vm-action-link" wire:click="approveProductionJob('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Aprovar esta versão</button>
+                                                    @endif
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true))
+                                                        <label style="display:block;margin-top:10px;font-size:12px">Ajuste nesta peça
+                                                            <textarea wire:model="pieceRevisionInputs.{{ $job['id'] }}" maxlength="2000" rows="2" style="width:100%;margin-top:6px;border-radius:8px;background:#17142e;color:#f7f5ff;border:1px solid #706a82" placeholder="Descreva somente o que deseja corrigir"></textarea>
+                                                        </label>
+                                                        <button type="button" class="vm-action-link" wire:click="requestPieceRevision('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Enviar correção desta peça</button>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </article>
                                     @endforeach
@@ -550,15 +578,15 @@
 
                         <div id="calendario" class="vm-panel">
                             <div class="vm-panel-title"><h2>Calendário</h2><span class="vm-secondary">Conteúdo aprovado e programação</span></div>
-                            @php $calendarJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true)); @endphp
+                            @php $calendarJobs = collect($this->getGalleryJobs())->filter(fn (array $job) => !empty($job['scheduled_at'])); @endphp
                             @if($calendarJobs->count())
                                 <div class="vm-campaigns">
                                     @foreach($calendarJobs as $job)
-                                        <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">{{ $job['status'] ?? '' }}</span><span class="vm-time">atual</span></div>
+                                        <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">Planejamento editorial</span><span class="vm-time">{{ \Carbon\CarbonImmutable::parse($job['scheduled_at'])->setTimezone('America/Sao_Paulo')->format('d/m/Y H:i') }} BRT</span></div>
                                     @endforeach
                                 </div>
                             @else
-                                <div class="vm-section-empty">Nenhum conteúdo aprovado para o calendário ainda.</div>
+                                <div class="vm-section-empty">Nenhuma data editorial definida. Escolha uma peça na galeria para planejar a publicação.</div>
                             @endif
                         </div>
 
@@ -591,7 +619,18 @@
                                             <div class="vm-result-body">
                                                 <div class="vm-result-title">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div>
                                                 <div class="vm-result-meta">Aguardando sua revisão</div>
-                                                <a href="#copilot" class="vm-action-link">Pedir alteração pelo chat</a>
+                                                
+                                                <div style="margin-top:12px">
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true))
+                                                        <button type="button" class="vm-action-link" wire:click="approveProductionJob('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Aprovar esta versão</button>
+                                                    @endif
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true))
+                                                        <label style="display:block;margin-top:10px;font-size:12px">Ajuste nesta peça
+                                                            <textarea wire:model="pieceRevisionInputs.{{ $job['id'] }}" maxlength="2000" rows="2" style="width:100%;margin-top:6px;border-radius:8px;background:#17142e;color:#f7f5ff;border:1px solid #706a82" placeholder="Descreva somente o que deseja corrigir"></textarea>
+                                                        </label>
+                                                        <button type="button" class="vm-action-link" wire:click="requestPieceRevision('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Enviar correção desta peça</button>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </article>
                                     @endforeach
@@ -601,17 +640,55 @@
                             @endif
                         </div>
 
+
                         <div id="distribuicao" class="vm-panel">
-                            <div class="vm-panel-title"><h2>Distribuição</h2><span class="vm-secondary">Somente conteúdo aprovado</span></div>
-                            @php $distributionJobs = $clientJobs->filter(fn (array $job) => in_array((string) ($job['status'] ?? ''), ['APROVADO','AGENDADO','PUBLICADO'], true)); @endphp
-                            @if($distributionJobs->count())
-                                <div class="vm-campaigns">
-                                    @foreach($distributionJobs as $job)
-                                        <div class="vm-campaign-row"><div class="vm-thumb">↗</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">{{ $job['status'] ?? '' }}</span><span class="vm-time">fila</span></div>
+                            <div class="vm-panel-title"><h2>Galeria de aprovados</h2><span class="vm-secondary">Escolha quando distribuir</span></div>
+                            <p class="vm-result-meta">As peças aprovadas ficam guardadas aqui. Publicação automática ainda não conectada.</p>
+                            @php $galleryJobs = $this->getGalleryJobs(); @endphp
+                            @if(count($galleryJobs))
+                                <div class="vm-result-grid">
+                                    @foreach($galleryJobs as $job)
+                                        @php $media = ($job['preview_url'] ?? '') ?: ($job['asset_url'] ?? ''); @endphp
+                                        <article class="vm-result-card" wire:key="gallery-{{ $job['id'] }}">
+                                            <div class="vm-result-media {{ ($job['type'] ?? '') === 'video' ? 'video' : '' }}">
+                                                @if(($job['type'] ?? '') === 'video')
+                                                    <video controls playsinline preload="metadata" src="{{ $media }}"></video>
+                                                @else
+                                                    <img loading="lazy" src="{{ $media }}" alt="{{ $job['title'] ?? 'Peça aprovada' }}">
+                                                @endif
+                                            </div>
+                                            <div class="vm-result-body">
+                                                <h3 class="vm-result-title">{{ $job['title'] ?? 'Peça aprovada' }}</h3>
+                                                <p class="vm-result-meta">{{ $job['campaign'] ?? '' }} · Versão {{ 1 + (int) ($job['revision_count'] ?? 0) }}</p>
+                                                <p class="vm-result-meta">{{ $job['director_job']['caption'] ?? '' }}</p>
+                                                <span class="vm-status-badge ready">{{ ($job['status'] ?? '') === 'PLANEJADO_EDITORIAL' ? 'Data editorial definida' : 'Aprovada' }}</span>
+                                                <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px">
+                                                    <button type="button" class="vm-action-link" wire:click="publishPieceNow('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Publicar agora</button>
+                                                    <button type="button" class="vm-action-link" wire:click="keepPieceInGallery('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Guardar sem data</button>
+                                                </div>
+                                                <label style="display:block;margin-top:12px;font-size:12px">Data editorial — horário de Brasília
+                                                    <input type="datetime-local" wire:model="pieceScheduleInputs.{{ $job['id'] }}" style="width:100%;margin-top:6px;background:#17142e;color:#f7f5ff;border:1px solid #706a82;border-radius:8px">
+                                                </label>
+                                                <button type="button" class="vm-action-link" wire:click="planPiecePublication('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Salvar data editorial</button>
+                                                <p class="vm-result-meta">Esta data não ativa publicação automática.</p>
+                                                
+                                                <div style="margin-top:12px">
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true))
+                                                        <button type="button" class="vm-action-link" wire:click="approveProductionJob('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Aprovar esta versão</button>
+                                                    @endif
+                                                    @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true))
+                                                        <label style="display:block;margin-top:10px;font-size:12px">Ajuste nesta peça
+                                                            <textarea wire:model="pieceRevisionInputs.{{ $job['id'] }}" maxlength="2000" rows="2" style="width:100%;margin-top:6px;border-radius:8px;background:#17142e;color:#f7f5ff;border:1px solid #706a82" placeholder="Descreva somente o que deseja corrigir"></textarea>
+                                                        </label>
+                                                        <button type="button" class="vm-action-link" wire:click="requestPieceRevision('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Enviar correção desta peça</button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </article>
                                     @endforeach
                                 </div>
                             @else
-                                <div class="vm-section-empty">Nada para distribuir ainda. Os conteúdos aprovados aparecerão aqui.</div>
+                                <div class="vm-section-empty">Aprove uma versão para guardá-la na galeria.</div>
                             @endif
                         </div>
 
@@ -778,7 +855,7 @@
                                                 <button type="button" wire:click="finalizeNativeProduction" wire:loading.attr="disabled" wire:target="finalizeNativeProduction"><span wire:loading.remove wire:target="finalizeNativeProduction">Finalizar e enviar para QA</span><span wire:loading wire:target="finalizeNativeProduction">Finalizando vídeo...</span></button>
                                             @endif
                                             @if($nativeProductionStatus === 'EM_QA')
-                                                <button type="button" wire:click="setFlowJobStatus('REPROVADO_QA')">Reprovar QA</button>
+                                                <a href="#qa" class="vm-action-link">Solicitar correção na peça</a>
                                                 <button type="button" wire:click="setFlowJobStatus('APROVADO')">Aprovar peça</button>
                                             @endif
                                         </div>

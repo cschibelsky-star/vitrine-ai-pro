@@ -32,6 +32,7 @@ class MarketingDashboard extends Page
     public ?string $copilotActiveArchiveId = null;
     public ?string $copilotError = null;
 
+    #[\Livewire\Attributes\Locked]
     public string $marketingContextKey = 'tv_sumare_client';
 
     public string $flowCampaign = 'TV Sumaré';
@@ -51,6 +52,7 @@ class MarketingDashboard extends Page
     public string $flowJobId = '';
     public string $flowJobStatus = 'RASCUNHO';
     public string $flowGenerationSource = '';
+    #[\Livewire\Attributes\Locked]
     public array $flowJobs = [];
 
     public string $nativeProductionStatus = 'RASCUNHO';
@@ -59,6 +61,282 @@ class MarketingDashboard extends Page
     public string $nativeProductionFinalPath = '';
     public string $nativeProductionPreviewUrl = '';
     public ?string $nativeProductionError = null;
+
+
+    public array $pieceRevisionInputs = [];
+    public array $pieceScheduleInputs = [];
+    public ?string $pieceFeedback = null;
+    public ?string $pieceError = null;
+
+    private function pieceVersion(array $job): string
+    {
+        return hash('sha256', json_encode([
+            $job['id'] ?? '', $job['revision_count'] ?? 0,
+            $job['asset_url'] ?? '', $job['provider_job_ref'] ?? '',
+            $job['final_path'] ?? '', $job['director_job'] ?? [],
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    private function galleryDirectory(): string
+    {
+        abort_unless(auth()->check(), 403);
+        $scope = auth()->id().'|'.(string) auth()->user()?->company_id.'|'.$this->marketingContextKey;
+        return 'marketing/gallery/'.hash('sha256', $scope);
+    }
+
+    private function saveGalleryPiece(array &$job): void
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $directory = $this->galleryDirectory();
+        $path = $directory.'/'.hash('sha256', (string) $job['id']).'.json';
+        Cache::lock('marketing-gallery:'.hash('sha256', $path), 10)->block(5, function () use ($disk, $directory, $path, &$job): void {
+            if ($disk->exists($path)) {
+                $stored = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
+                if ($stored === $job) {
+                    return;
+                }
+                if (($stored['_gallery_etag'] ?? null) !== ($job['_gallery_etag'] ?? null)) {
+                    throw new \RuntimeException('A peça foi atualizada em outra janela. Atualize antes de continuar.');
+                }
+            }
+            $disk->makeDirectory($directory);
+            $job['_gallery_etag'] = bin2hex(random_bytes(16));
+            $target = $disk->path($path);
+            $temporary = tempnam(dirname($target), '.piece-');
+            if ($temporary === false) {
+                throw new \RuntimeException('Não foi possível salvar a peça.');
+            }
+            try {
+                $encoded = json_encode($job, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                if (file_put_contents($temporary, $encoded) === false || ! rename($temporary, $target)) {
+                    throw new \RuntimeException('Não foi possível salvar a peça.');
+                }
+            } finally {
+                if (is_file($temporary)) {
+                    unlink($temporary);
+                }
+            }
+        });
+    }
+
+    private function storedProductionPieces(): array
+    {
+        if (! auth()->check()) {
+            return [];
+        }
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $jobs = [];
+        foreach ($disk->files($this->galleryDirectory()) as $path) {
+            if (str_ends_with($path, '.json')) {
+                $job = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
+                if (is_array($job) && ! empty($job['id'])) {
+                    $jobs[] = $job;
+                }
+            }
+        }
+        usort($jobs, static fn (array $a, array $b): int => strcmp($b['updated_at'] ?? '', $a['updated_at'] ?? ''));
+        return $jobs;
+    }
+
+    private function mergeStoredProductionPieces(array $sessionJobs): array
+    {
+        $jobs = [];
+        foreach ($sessionJobs as $job) {
+            $jobs[(string) ($job['id'] ?? '')] = $job;
+        }
+        foreach ($this->storedProductionPieces() as $job) {
+            $jobs[(string) $job['id']] = $job;
+        }
+        return array_values($jobs);
+    }
+
+    public function hydrate(): void
+    {
+        $state = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
+        $this->flowJobs = $this->mergeStoredProductionPieces((array) ($state['jobs'] ?? []));
+    }
+
+    public function getGalleryJobs(): array
+    {
+        if (! auth()->check()) {
+            return [];
+        }
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $jobs = [];
+        foreach ($disk->files($this->galleryDirectory()) as $path) {
+            if (! str_ends_with($path, '.json')) {
+                continue;
+            }
+            $job = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
+            if (is_array($job) && in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+                && hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
+                if (preg_match('/^IMAGE-(\d+)$/', (string) ($job['provider_job_ref'] ?? ''), $match)) {
+                    $job['preview_url'] = URL::temporarySignedRoute('marketing.native-image-preview',
+                        now()->addHours(2), ['generation' => (int) $match[1]], false);
+                }
+                $jobs[] = $job;
+            }
+        }
+        usort($jobs, static fn (array $a, array $b): int => strcmp($b['updated_at'] ?? '', $a['updated_at'] ?? ''));
+        return $jobs;
+    }
+
+    private function locatePiece(string $jobId, string $version): ?int
+    {
+        $this->pieceError = null;
+        $this->pieceFeedback = null;
+        $state = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
+        $this->flowJobs = $this->normalizeProductionJobs($this->mergeStoredProductionPieces((array) ($state['jobs'] ?? [])));
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $path = $this->galleryDirectory().'/'.hash('sha256', $jobId).'.json';
+        $stored = $disk->exists($path) ? json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR) : null;
+        foreach ($this->flowJobs as $index => $job) {
+            if (($job['id'] ?? '') === $jobId) {
+                if (is_array($stored)) {
+                    $job = $stored;
+                    $this->flowJobs[$index] = $job;
+                }
+                if (! hash_equals($this->pieceVersion($job), $version)) {
+                    $this->pieceError = 'A peça mudou. Atualize e revise a versão atual.';
+                    return null;
+                }
+                return $index;
+            }
+        }
+        foreach ($this->getGalleryJobs() as $job) {
+            if (($job['id'] ?? '') === $jobId && hash_equals($this->pieceVersion($job), $version)) {
+                $this->flowJobs[] = $job;
+                return array_key_last($this->flowJobs);
+            }
+        }
+        $this->pieceError = 'Peça não encontrada neste contexto. Atualize a página.';
+        return null;
+    }
+
+    public function getPieceVersion(array $job): string
+    {
+        return $this->pieceVersion($job);
+    }
+
+    public function approveProductionJob(string $jobId, string $version): void
+    {
+        $index = $this->locatePiece($jobId, $version);
+        if ($index === null) {
+            return;
+        }
+        $job = $this->flowJobs[$index];
+        if (! in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true)
+            || (empty($job['asset_url']) && empty($job['preview_url']))) {
+            $this->pieceError = 'A peça precisa estar concluída e disponível para revisão antes da aprovação.';
+            return;
+        }
+        $job['status'] = 'APROVADO';
+        $job['approved_version'] = $this->pieceVersion($job);
+        $job['approved_at'] = now()->toISOString();
+        $job['approved_by'] = auth()->id();
+        $job['updated_at'] = now()->toISOString();
+        $job['scheduled_at'] = null;
+        $job['publication_status'] = 'NOT_REQUESTED';
+        $this->saveGalleryPiece($job);
+        $this->flowJobs[$index] = $job;
+        $this->persistFlowWorkstation();
+        $this->pieceFeedback = 'Versão aprovada e salva na galeria. Escolha quando distribuir.';
+    }
+
+    public function requestPieceRevision(string $jobId, string $version): void
+    {
+        $index = $this->locatePiece($jobId, $version);
+        if ($index === null) {
+            return;
+        }
+        $instruction = trim((string) ($this->pieceRevisionInputs[$jobId] ?? ''));
+        if (mb_strlen($instruction) < 3 || mb_strlen($instruction) > 2000) {
+            $this->pieceError = 'Descreva o ajuste em 3 a 2.000 caracteres.';
+            return;
+        }
+        if (! in_array($this->flowJobs[$index]['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true)) {
+            $this->pieceError = 'Aguarde a produção desta peça antes de solicitar outra revisão.';
+            return;
+        }
+        $this->reviseProductionJobFromDirector($instruction, '', $jobId);
+        $this->persistCopilot();
+        $this->pieceRevisionInputs[$jobId] = '';
+        if (($this->flowJobs[$index]['status'] ?? '') === 'ERRO') {
+            $this->pieceError = 'A correção foi registrada, mas a geração falhou. A versão anterior foi preservada e a aprovação foi retirada.';
+        } else {
+            $this->pieceFeedback = 'A revisão foi vinculada somente à peça selecionada. A nova versão exigirá aprovação.';
+        }
+    }
+
+    public function planPiecePublication(string $jobId, string $version): void
+    {
+        $index = $this->locatePiece($jobId, $version);
+        if ($index === null) {
+            return;
+        }
+        $job = $this->flowJobs[$index];
+        if (! in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+            || ! hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
+            $this->pieceError = 'Aprove a versão atual antes de planejar sua publicação.';
+            return;
+        }
+        $raw = trim((string) ($this->pieceScheduleInputs[$jobId] ?? ''));
+        try {
+            $date = \Carbon\CarbonImmutable::createFromFormat('!Y-m-d\\TH:i', $raw, 'America/Sao_Paulo');
+            if (! $date || $date->format('Y-m-d\\TH:i') !== $raw || ! $date->isFuture()) {
+                throw new \InvalidArgumentException();
+            }
+        } catch (Throwable) {
+            $this->pieceError = 'Informe uma data futura válida no horário de Brasília.';
+            return;
+        }
+        $job['status'] = 'PLANEJADO_EDITORIAL';
+        $job['scheduled_at'] = $date->utc()->toISOString();
+        $job['schedule_timezone'] = 'America/Sao_Paulo';
+        $job['publication_status'] = 'PUBLISHER_NOT_CONNECTED';
+        $job['updated_at'] = now()->toISOString();
+        $this->saveGalleryPiece($job);
+        $this->flowJobs[$index] = $job;
+        $this->persistFlowWorkstation();
+        $this->pieceFeedback = 'Data salva no calendário editorial. A publicação automática ainda depende da conta publicadora.';
+    }
+
+    public function keepPieceInGallery(string $jobId, string $version): void
+    {
+        $index = $this->locatePiece($jobId, $version);
+        if ($index === null) {
+            return;
+        }
+        $job = $this->flowJobs[$index];
+        if (! in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+            || ! hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
+            $this->pieceError = 'Aprove a versão atual para mantê-la na galeria.';
+            return;
+        }
+        $job['status'] = 'APROVADO';
+        $job['scheduled_at'] = null;
+        $job['publication_status'] = 'NOT_REQUESTED';
+        $job['updated_at'] = now()->toISOString();
+        $this->saveGalleryPiece($job);
+        $this->flowJobs[$index] = $job;
+        $this->persistFlowWorkstation();
+        $this->pieceFeedback = 'Peça mantida na galeria, sem data de publicação.';
+    }
+
+    public function publishPieceNow(string $jobId, string $version): void
+    {
+        $index = $this->locatePiece($jobId, $version);
+        if ($index === null) {
+            return;
+        }
+        $job = $this->flowJobs[$index];
+        if (! in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+            || ! hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
+            $this->pieceError = 'Aprove a versão atual antes de publicar.';
+            return;
+        }
+        $this->pieceError = 'Publicação indisponível: a conta publicadora e o envio direto ainda não estão integrados. A peça continua salva; nada foi publicado.';
+    }
 
     public function mount(): void
     {
@@ -117,7 +395,7 @@ class MarketingDashboard extends Page
         $this->flowJobId = (string) ($workstation['job_id'] ?? '');
         $this->flowJobStatus = (string) ($workstation['job_status'] ?? 'RASCUNHO');
         $this->flowGenerationSource = (string) ($workstation['generation_source'] ?? '');
-        $this->flowJobs = $this->normalizeProductionJobs(array_values((array) ($workstation['jobs'] ?? [])));
+        $this->flowJobs = $this->normalizeProductionJobs($this->mergeStoredProductionPieces(array_values((array) ($workstation['jobs'] ?? []))));
         $this->nativeProductionStatus = (string) ($workstation['native_status'] ?? 'RASCUNHO');
         $this->nativeProductionJobRef = (string) ($workstation['native_job_ref'] ?? '');
         $this->nativeProductionAssetUrl = (string) ($workstation['native_asset_url'] ?? '');
@@ -195,7 +473,7 @@ class MarketingDashboard extends Page
                 .'Atue como copiloto operacional, em português do Brasil. Organize estratégia, campanha, copy, criativos, vídeo, distribuição e QA. '
                 .'Para mídia, use o Centro IA e seu roteamento dinâmico; não fixe Veo, Grok, Seedream, Seedance ou outro modelo. HeyGen só deve ser proposto quando o pedido exigir explicitamente o avatar de Cristian Schibelsky e sua voz clonada como apresentador do Vitrine Social Mídia. '
                 .'Nunca afirme que publicou, agendou, ativou campanha ou gastou verba sem uma ação operacional confirmada. '
-                .'Publicação orgânica deve ir ao Metricool somente após aprovação humana. '
+                .'Após aprovação, o cliente escolhe guardar na galeria, publicar ou agendar nas contas cadastradas. Metricool é uma evolução futura; nunca prometa publicação sem confirmação do publicador. '
                 .'Mídia paga deve ir ao Windsor.ai FB Ads/Meta Ads somente após aprovação humana e autorização explícita de orçamento/ativação. '
                 .'Não invente preços, clientes, depoimentos, métricas ou funcionalidades.';
 
@@ -633,40 +911,14 @@ class MarketingDashboard extends Page
 
     public function setFlowJobStatus(string $status): void
     {
-        $this->flowError = null;
-        $allowed = [
-            'RASCUNHO',
-            'PREPARADO',
-            'PRONTO_PARA_FLOW',
-            'PRONTO_PARA_PRODUCAO',
-            'EM_GERACAO',
-            'GERADO',
-            'EM_QA',
-            'REPROVADO_QA',
-            'APROVADO',
-            'ENVIADO_DRIVE',
-            'AGENDADO',
-            'PUBLICADO',
-        ];
-
-        if (! in_array($status, $allowed, true)) {
-            $this->flowError = 'Status de FLOW JOB inválido.';
+        if ($status === 'APROVADO') {
+            $job = collect($this->flowJobs)->first(fn (array $job): bool => ($job['id'] ?? '') === $this->flowJobId);
+            if (is_array($job)) {
+                $this->approveProductionJob($this->flowJobId, $this->pieceVersion($job));
+            }
             return;
         }
-
-        if ($this->flowJobId === '') {
-            $this->flowError = 'Gere um pacote para criar o FLOW JOB antes de alterar o status.';
-            return;
-        }
-
-        if (in_array($status, ['PRONTO_PARA_FLOW', 'EM_GERACAO'], true) && ! $this->hasValidFlowToolUrl()) {
-            $this->flowError = 'Cadastre uma URL oficial do Google Flow antes de enviar o job para geração.';
-            return;
-        }
-
-        $this->flowJobStatus = $status;
-        $this->upsertCurrentFlowJob();
-        $this->persistFlowWorkstation();
+        $this->flowError = 'Use as ações da peça. Geração, agendamento e publicação exigem confirmação da operação correspondente.';
     }
 
     public function hasValidFlowToolUrl(): bool
@@ -875,7 +1127,11 @@ class MarketingDashboard extends Page
                         $index + 1,
                         (string) ($job['id'] ?? '')
                     );
+                    $produced = array_replace($job, $produced);
                     $produced['director_job'] = $directorJob;
+                    if (isset($produced['_gallery_etag'])) {
+                        $this->saveGalleryPiece($produced);
+                    }
                     $this->flowJobs[$index] = $produced;
                     $changed = true;
 
@@ -997,6 +1253,14 @@ class MarketingDashboard extends Page
 
     private function persistFlowWorkstation(): void
     {
+        if (auth()->check()) {
+            foreach ($this->flowJobs as &$job) {
+                if (! empty($job['id']) && empty($job['legacy'])) {
+                    $this->saveGalleryPiece($job);
+                }
+            }
+            unset($job);
+        }
         session([
             'marketing_workstation.production.'.$this->marketingContextKey => [
                 'campaign' => $this->flowCampaign,
@@ -1136,7 +1400,7 @@ class MarketingDashboard extends Page
         return false;
     }
 
-    private function reviseProductionJobFromDirector(string $message, string $directorReply): void
+    private function reviseProductionJobFromDirector(string $message, string $directorReply, ?string $selectedJobId = null): void
     {
         if ($this->flowJobs === []) {
             $this->copilotMessages[] = [
@@ -1149,7 +1413,12 @@ class MarketingDashboard extends Page
             return;
         }
 
-        $targetIndex = $this->resolveRevisionTargetIndex($message);
+        $targetIndex = $selectedJobId === null
+            ? $this->resolveRevisionTargetIndex($message)
+            : collect($this->flowJobs)->search(fn (array $job): bool => ($job['id'] ?? '') === $selectedJobId);
+        if ($targetIndex === false) {
+            $targetIndex = null;
+        }
         if ($targetIndex === null || ! isset($this->flowJobs[$targetIndex])) {
             $this->copilotMessages[] = [
                 'role' => 'assistant',
@@ -1171,6 +1440,20 @@ class MarketingDashboard extends Page
         $directorJob['type'] = (string) ($directorJob['type'] ?? $current['type'] ?? 'image');
         $directorJob['format'] = (string) ($directorJob['format'] ?? $current['format'] ?? 'ad_1_1');
 
+        if (! in_array($current['status'] ?? '', ['EM_QA', 'GERADO', 'APROVADO', 'PLANEJADO_EDITORIAL', 'REPROVADO_QA', 'ERRO'], true)) {
+            $this->pieceError = 'Aguarde a produção da peça antes de revisar.';
+            return;
+        }
+        $history = (array) ($current['revision_history'] ?? []);
+        $snapshot = $current;
+        unset($snapshot['revision_history']);
+        $history[] = $snapshot;
+        $current['revision_history'] = $history;
+        $current['approved_version'] = null;
+        $current['approved_at'] = null;
+        $current['approved_by'] = null;
+        $current['scheduled_at'] = null;
+        $current['publication_status'] = 'REAPPROVAL_REQUIRED';
         $current['status'] = 'CORRECAO_SOLICITADA';
         $current['revision_reason'] = $message;
         $current['revision_count'] = ((int) ($current['revision_count'] ?? 0)) + 1;
@@ -1178,11 +1461,17 @@ class MarketingDashboard extends Page
         $current['previous_preview_url'] = (string) ($current['preview_url'] ?? '');
         $current['supersedes_provider_job_ref'] = (string) ($current['provider_job_ref'] ?? '');
         $current['updated_at'] = now()->toISOString();
+        $this->saveGalleryPiece($current);
         $this->flowJobs[$targetIndex] = $current;
         $this->persistFlowWorkstation();
 
         try {
             $revised = $this->dispatchDirectorJob($directorJob, $brand, $targetIndex + 1, $jobId);
+            $revised['_gallery_etag'] = $current['_gallery_etag'];
+            $revised['revision_history'] = $history;
+            $revised['approved_version'] = null;
+            $revised['scheduled_at'] = null;
+            $revised['publication_status'] = 'REAPPROVAL_REQUIRED';
             $revised['revision_reason'] = $message;
             $revised['revision_count'] = (int) $current['revision_count'];
             $revised['previous_asset_url'] = (string) $current['previous_asset_url'];
@@ -1190,6 +1479,7 @@ class MarketingDashboard extends Page
             $revised['supersedes_provider_job_ref'] = (string) $current['supersedes_provider_job_ref'];
             $revised['director_job'] = $directorJob;
             $revised['updated_at'] = now()->toISOString();
+            $this->saveGalleryPiece($revised);
             $this->flowJobs[$targetIndex] = $revised;
 
             $this->flowJobId = (string) ($revised['id'] ?? $jobId);
@@ -1213,6 +1503,7 @@ class MarketingDashboard extends Page
             $current['status'] = 'ERRO';
             $current['error'] = 'Falha ao gerar a correção: '.$exception->getMessage();
             $current['updated_at'] = now()->toISOString();
+            $this->saveGalleryPiece($current);
             $this->flowJobs[$targetIndex] = $current;
             $this->persistFlowWorkstation();
             $this->copilotMessages[] = [
@@ -1228,23 +1519,25 @@ class MarketingDashboard extends Page
     private function resolveRevisionTargetIndex(string $message): ?int
     {
         $normalized = mb_strtolower($message);
-        $fallback = null;
-
+        $ids = [];
+        $titles = [];
         foreach ($this->flowJobs as $index => $job) {
             $id = mb_strtolower((string) ($job['id'] ?? ''));
             $title = mb_strtolower((string) ($job['title'] ?? ''));
-            $status = (string) ($job['status'] ?? '');
-
-            if (($id !== '' && str_contains($normalized, $id)) || ($title !== '' && mb_strlen($title) >= 4 && str_contains($normalized, $title))) {
-                return $index;
+            if ($id !== '' && str_contains($normalized, $id)) {
+                $ids[] = $index;
             }
-
-            if ($fallback === null && in_array($status, ['EM_QA', 'GERADO', 'APROVADO', 'REPROVADO_QA', 'ERRO'], true)) {
-                $fallback = $index;
+            if ($title !== '' && mb_strlen($title) >= 4 && str_contains($normalized, $title)) {
+                $titles[] = $index;
             }
         }
-
-        return $fallback ?? (array_key_exists(0, $this->flowJobs) ? 0 : null);
+        if (count($ids) === 1) {
+            return $ids[0];
+        }
+        if (count($ids) > 1) {
+            return null;
+        }
+        return count($titles) === 1 ? $titles[0] : null;
     }
 
     private function shouldAutoProduceFromDirector(string $message): bool
