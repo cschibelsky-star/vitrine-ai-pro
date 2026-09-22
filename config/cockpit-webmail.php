@@ -16,6 +16,7 @@ return [
             'smtp_encryption' => env('COCKPIT_WEBMAIL_SALES_SMTP_ENCRYPTION', 'ssl'),
             'username' => env('COCKPIT_WEBMAIL_SALES_USERNAME'),
             'credential_secret' => 'COCKPIT_WEBMAIL_SALES_PASSWORD',
+            'credential_secret_b64' => 'COCKPIT_WEBMAIL_SALES_PASSWORD_B64',
         ],
     ],
 ];
