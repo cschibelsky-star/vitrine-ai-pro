@@ -1003,40 +1003,73 @@ class MarketingDashboard extends Page
 
     private function generateFlowPackageWithGemini(string $system, string $userPrompt): string
     {
+        $geminiError = null;
         $apiKey = trim((string) config('marketing_video.gemini_veo.api_key'));
         $baseUrl = rtrim((string) config('marketing_video.gemini_veo.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
         $model = trim((string) config('marketing_agents.native_studio.director_model', 'gemini-3.5-flash'));
 
-        if ($apiKey === '') {
-            throw new \RuntimeException('Gemini local não está configurado para o Flow Bridge.');
+        if ($apiKey !== '') {
+            $response = Http::acceptJson()
+                ->asJson()
+                ->withHeaders(['X-goog-api-key' => $apiKey])
+                ->timeout(60)
+                ->retry(2, 250, throw: false)
+                ->post("{$baseUrl}/models/{$model}:generateContent", [
+                    'contents' => [[
+                        'parts' => [[
+                            'text' => "INSTRUÇÕES DO SISTEMA:\n{$system}\n\nSOLICITAÇÃO:\n{$userPrompt}",
+                        ]],
+                    ]],
+                ]);
+
+            if ($response->successful()) {
+                $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));
+                if ($text !== '') {
+                    return $text;
+                }
+                $geminiError = 'O fallback Gemini retornou um pacote vazio.';
+            } else {
+                $errorStatus = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($response->json(), 'error.status', '')) ?: 'UNKNOWN';
+                $geminiError = 'O fallback Gemini falhou: HTTP '.$response->status().' '.$errorStatus.'.';
+            }
+        } else {
+            $geminiError = 'Gemini local não está configurado para o Flow Bridge.';
         }
 
-        $response = Http::acceptJson()
-            ->asJson()
-            ->withHeaders(['X-goog-api-key' => $apiKey])
-            ->timeout(60)
-            ->retry(2, 250, throw: false)
-            ->post("{$baseUrl}/models/{$model}:generateContent", [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => "INSTRUÇÕES DO SISTEMA:\n{$system}\n\nSOLICITAÇÃO:\n{$userPrompt}"],
-                        ],
+        $openRouterKey = trim((string) env('OPENROUTER_API_KEY', ''));
+        if ($openRouterKey !== '') {
+            $openRouterModel = trim((string) config('marketing_agents.native_studio.openrouter_model', 'openai/gpt-4o-mini'));
+            $openRouter = Http::acceptJson()
+                ->asJson()
+                ->withToken($openRouterKey)
+                ->withHeaders([
+                    'HTTP-Referer' => config('app.url'),
+                    'X-Title' => 'Vitrine IA Pro Marketing IA',
+                ])
+                ->timeout(60)
+                ->retry(2, 250, throw: false)
+                ->post('https://openrouter.ai/api/v1/chat/completions', [
+                    'model' => $openRouterModel,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user', 'content' => $userPrompt],
                     ],
-                ],
-            ]);
+                    'temperature' => 0.25,
+                ]);
 
-        if (! $response->successful()) {
-            $errorStatus = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($response->json(), 'error.status', '')) ?: 'UNKNOWN';
-            throw new \RuntimeException('O fallback Gemini falhou: HTTP '.$response->status().' '.$errorStatus.'.');
+            if ($openRouter->successful()) {
+                $text = trim((string) data_get($openRouter->json(), 'choices.0.message.content', ''));
+                if ($text !== '') {
+                    return $text;
+                }
+                throw new \RuntimeException(($geminiError ? $geminiError.' ' : '').'O fallback OpenRouter retornou um pacote vazio.');
+            }
+
+            $status = preg_replace('/[^A-Z0-9_\-]/i', '', (string) data_get($openRouter->json(), 'error.code', '')) ?: 'UNKNOWN';
+            throw new \RuntimeException(($geminiError ? $geminiError.' ' : '').'O fallback OpenRouter falhou: HTTP '.$openRouter->status().' '.$status.'.');
         }
 
-        $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text', ''));
-        if ($text === '') {
-            throw new \RuntimeException('O fallback Gemini retornou um pacote vazio.');
-        }
-
-        return $text;
+        throw new \RuntimeException($geminiError.' OpenRouter não está configurado no runtime.');
     }
 
     private function createFlowJob(string $status): void
