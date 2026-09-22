@@ -88,12 +88,12 @@ final class SocialDistributionHandoff
      * @param array<string, mixed> $piece
      * @return array<string, mixed>
      */
-    public function publishMetaNow(array $piece): array
+    public function publishMetaNow(array $piece, array $account = []): array
     {
-        $config = (array) config('marketing_agents.publisher.meta', []);
+        $config = array_replace((array) config('marketing_agents.publisher.meta', []), $account);
         $token = trim((string) ($config['access_token'] ?? ''));
         $igUserId = trim((string) ($config['instagram_user_id'] ?? ''));
-        $pageId = trim((string) ($config['facebook_page_id'] ?? ''));
+        $pageId = trim((string) ($config['facebook_page_id'] ?? $config['page_id'] ?? ''));
         $graphVersion = trim((string) ($config['graph_version'] ?? ''));
         $baseUrl = rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/');
 

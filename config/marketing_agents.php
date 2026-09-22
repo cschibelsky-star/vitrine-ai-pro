@@ -61,9 +61,19 @@ return [
         'meta' => [
             'base_url' => env('META_GRAPH_BASE_URL', 'https://graph.facebook.com'),
             'graph_version' => env('META_GRAPH_VERSION'),
+            'app_id' => env('META_APP_ID'),
+            'app_secret' => env('META_APP_SECRET'),
+            'redirect_uri' => env('META_OAUTH_REDIRECT_URI'),
             'access_token' => env('META_ACCESS_TOKEN'),
             'instagram_user_id' => env('META_INSTAGRAM_USER_ID'),
             'facebook_page_id' => env('META_FACEBOOK_PAGE_ID'),
+            'scopes' => [
+                'pages_show_list',
+                'pages_read_engagement',
+                'pages_manage_posts',
+                'instagram_basic',
+                'instagram_content_publish',
+            ],
         ],
     ],
     'native_studio' => [

@@ -69,6 +69,153 @@ class MarketingDashboard extends Page
     public ?string $pieceFeedback = null;
     public ?string $pieceError = null;
 
+    private function metaPublisherStoragePath(): string
+    {
+        abort_unless(auth()->check(), 403);
+        $scope = auth()->id().'|'.(string) auth()->user()?->company_id;
+        return 'marketing/publisher/meta/'.hash('sha256', $scope).'.enc';
+    }
+
+    private function readMetaPublisherConnection(): array
+    {
+        if (! auth()->check()) {
+            return [];
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $path = $this->metaPublisherStoragePath();
+        if (! $disk->exists($path)) {
+            return [];
+        }
+
+        try {
+            $payload = \Illuminate\Support\Facades\Crypt::decryptString($disk->get($path));
+            $decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+            return is_array($decoded) ? $decoded : [];
+        } catch (Throwable $exception) {
+            report($exception);
+            return [];
+        }
+    }
+
+    private function writeMetaPublisherConnection(array $connection): void
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $path = $this->metaPublisherStoragePath();
+        $disk->makeDirectory(dirname($path));
+        $disk->put($path, \Illuminate\Support\Facades\Crypt::encryptString(
+            json_encode($connection, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+        ));
+    }
+
+    public function getMetaPublisherStatus(): array
+    {
+        $meta = (array) config('marketing_agents.publisher.meta', []);
+        $connection = $this->readMetaPublisherConnection();
+        $accounts = array_values((array) ($connection['accounts'] ?? []));
+        $selectedPageId = (string) ($connection['selected_page_id'] ?? '');
+
+        $selected = collect($accounts)->first(
+            fn (array $account): bool => (string) ($account['page_id'] ?? '') === $selectedPageId
+        );
+
+        return [
+            'app_configured' => filled($meta['app_id'] ?? null)
+                && filled($meta['app_secret'] ?? null)
+                && filled($meta['graph_version'] ?? null),
+            'connected' => $accounts !== [],
+            'accounts' => array_map(static fn (array $account): array => [
+                'page_id' => (string) ($account['page_id'] ?? ''),
+                'page_name' => (string) ($account['page_name'] ?? 'Página Meta'),
+                'instagram_user_id' => (string) ($account['instagram_user_id'] ?? ''),
+                'instagram_username' => (string) ($account['instagram_username'] ?? ''),
+                'instagram_name' => (string) ($account['instagram_name'] ?? ''),
+            ], $accounts),
+            'selected_page_id' => $selectedPageId,
+            'selected' => is_array($selected) ? [
+                'page_id' => (string) ($selected['page_id'] ?? ''),
+                'page_name' => (string) ($selected['page_name'] ?? 'Página Meta'),
+                'instagram_user_id' => (string) ($selected['instagram_user_id'] ?? ''),
+                'instagram_username' => (string) ($selected['instagram_username'] ?? ''),
+            ] : null,
+            'connected_at' => $connection['connected_at'] ?? null,
+        ];
+    }
+
+    public function selectMetaPublisherAccount(string $pageId): void
+    {
+        $connection = $this->readMetaPublisherConnection();
+        $accounts = array_values((array) ($connection['accounts'] ?? []));
+        $exists = collect($accounts)->contains(
+            fn (array $account): bool => hash_equals((string) ($account['page_id'] ?? ''), $pageId)
+        );
+
+        if (! $exists) {
+            $this->pieceError = 'A conta Meta selecionada não está disponível.';
+            return;
+        }
+
+        $connection['selected_page_id'] = $pageId;
+        $connection['updated_at'] = now()->toISOString();
+        $this->writeMetaPublisherConnection($connection);
+        $this->pieceFeedback = 'Conta publicadora padrão atualizada.';
+        $this->pieceError = null;
+    }
+
+    public function testMetaPublisherConnection(): void
+    {
+        $account = $this->selectedMetaPublisherAccount();
+        if ($account === []) {
+            $this->pieceError = 'Conecte e selecione uma conta Meta antes de testar.';
+            return;
+        }
+
+        try {
+            $response = Http::acceptJson()->timeout(20)->get(
+                rtrim((string) ($account['base_url'] ?? 'https://graph.facebook.com'), '/')
+                    .'/'.(string) $account['graph_version'].'/'.(string) $account['page_id'],
+                [
+                    'fields' => 'id,name',
+                    'access_token' => (string) $account['access_token'],
+                ]
+            );
+
+            if (! $response->successful() || trim((string) $response->json('id')) === '') {
+                throw new \RuntimeException('Meta respondeu HTTP '.$response->status().'.');
+            }
+
+            $this->pieceFeedback = 'Conexão Meta validada com sucesso para '.(string) ($account['page_name'] ?? 'a Página selecionada').'.';
+            $this->pieceError = null;
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->pieceError = 'Falha ao validar a conexão Meta: '.$exception->getMessage();
+        }
+    }
+
+    private function selectedMetaPublisherAccount(): array
+    {
+        $connection = $this->readMetaPublisherConnection();
+        $selectedPageId = (string) ($connection['selected_page_id'] ?? '');
+        if ($selectedPageId === '') {
+            return [];
+        }
+
+        $account = collect((array) ($connection['accounts'] ?? []))->first(
+            fn (array $item): bool => (string) ($item['page_id'] ?? '') === $selectedPageId
+        );
+
+        if (! is_array($account)) {
+            return [];
+        }
+
+        return [
+            ...$account,
+            'facebook_page_id' => (string) ($account['page_id'] ?? ''),
+            'graph_version' => (string) ($connection['graph_version'] ?? ''),
+            'base_url' => (string) ($connection['base_url'] ?? 'https://graph.facebook.com'),
+        ];
+    }
+
     private function pieceVersion(array $job): string
     {
         return hash('sha256', json_encode([
@@ -355,7 +502,7 @@ class MarketingDashboard extends Page
         }
 
         try {
-            $result = app(SocialDistributionHandoff::class)->publishMetaNow($job);
+            $result = app(SocialDistributionHandoff::class)->publishMetaNow($job, $this->selectedMetaPublisherAccount());
             $publicationStatus = (string) ($result['status'] ?? 'FAILED');
 
             $job['publication_status'] = $publicationStatus;

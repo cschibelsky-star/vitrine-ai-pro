@@ -5,7 +5,11 @@ use App\Http\Controllers\Marketing\VideoPreviewController;
 use App\Marketing\Application\VideoFinalizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 Route::get('/robots.txt', function () {
     return response("User-agent: *\nAllow: /marketing/media/image/\n", 200, [
@@ -58,6 +62,129 @@ Route::post('/marketing/internal/finalize-reel-03', function (Request $request, 
 })->middleware(['throttle:2,1'])->name('marketing.internal.finalize-reel-03');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/marketing/publisher/meta/connect', function (Request $request) {
+        $meta = (array) config('marketing_agents.publisher.meta', []);
+        $appId = trim((string) ($meta['app_id'] ?? ''));
+        $version = trim((string) ($meta['graph_version'] ?? ''));
+        $baseUrl = rtrim((string) ($meta['base_url'] ?? 'https://graph.facebook.com'), '/');
+        $redirectUri = trim((string) ($meta['redirect_uri'] ?? '')) ?: route('marketing.publisher.meta.callback');
+
+        if ($appId === '' || trim((string) ($meta['app_secret'] ?? '')) === '' || $version === '') {
+            return redirect('/admin/marketing-dashboard#configuracoes')
+                ->with('publisher_error', 'Configure o aplicativo Meta antes de conectar uma conta.');
+        }
+
+        $state = Str::random(64);
+        $request->session()->put('marketing.meta.oauth_state', $state);
+
+        $dialog = $baseUrl.'/'.$version.'/dialog/oauth?'.http_build_query([
+            'client_id' => $appId,
+            'redirect_uri' => $redirectUri,
+            'state' => $state,
+            'response_type' => 'code',
+            'scope' => implode(',', (array) ($meta['scopes'] ?? [])),
+        ]);
+
+        return redirect()->away($dialog);
+    })->name('marketing.publisher.meta.connect');
+
+    Route::get('/marketing/publisher/meta/callback', function (Request $request) {
+        $expectedState = (string) $request->session()->pull('marketing.meta.oauth_state', '');
+        $receivedState = (string) $request->query('state', '');
+        abort_unless($expectedState !== '' && hash_equals($expectedState, $receivedState), 419);
+
+        $meta = (array) config('marketing_agents.publisher.meta', []);
+        $appId = trim((string) ($meta['app_id'] ?? ''));
+        $appSecret = trim((string) ($meta['app_secret'] ?? ''));
+        $version = trim((string) ($meta['graph_version'] ?? ''));
+        $baseUrl = rtrim((string) ($meta['base_url'] ?? 'https://graph.facebook.com'), '/');
+        $redirectUri = trim((string) ($meta['redirect_uri'] ?? '')) ?: route('marketing.publisher.meta.callback');
+        $code = trim((string) $request->query('code', ''));
+
+        if ($code === '' || $appId === '' || $appSecret === '' || $version === '') {
+            return redirect('/admin/marketing-dashboard#configuracoes')
+                ->with('publisher_error', 'A autorização Meta não foi concluída.');
+        }
+
+        try {
+            $tokenResponse = Http::acceptJson()->timeout(30)->get(
+                $baseUrl.'/'.$version.'/oauth/access_token',
+                [
+                    'client_id' => $appId,
+                    'client_secret' => $appSecret,
+                    'redirect_uri' => $redirectUri,
+                    'code' => $code,
+                ]
+            );
+
+            if (! $tokenResponse->successful() || trim((string) $tokenResponse->json('access_token')) === '') {
+                throw new RuntimeException('Falha ao obter token de autorização Meta.');
+            }
+
+            $userToken = trim((string) $tokenResponse->json('access_token'));
+
+            $accountsResponse = Http::acceptJson()->timeout(30)->get(
+                $baseUrl.'/'.$version.'/me/accounts',
+                [
+                    'fields' => 'id,name,access_token,instagram_business_account{id,username,name}',
+                    'access_token' => $userToken,
+                    'limit' => 100,
+                ]
+            );
+
+            if (! $accountsResponse->successful()) {
+                throw new RuntimeException('Falha ao consultar Páginas autorizadas no Meta.');
+            }
+
+            $accounts = [];
+            foreach ((array) $accountsResponse->json('data', []) as $account) {
+                if (! is_array($account) || empty($account['id']) || empty($account['access_token'])) {
+                    continue;
+                }
+                $ig = (array) ($account['instagram_business_account'] ?? []);
+                $accounts[] = [
+                    'page_id' => (string) $account['id'],
+                    'page_name' => (string) ($account['name'] ?? 'Página Meta'),
+                    'instagram_user_id' => (string) ($ig['id'] ?? ''),
+                    'instagram_username' => (string) ($ig['username'] ?? ''),
+                    'instagram_name' => (string) ($ig['name'] ?? ''),
+                    'access_token' => (string) $account['access_token'],
+                ];
+            }
+
+            if ($accounts === []) {
+                throw new RuntimeException('Nenhuma Página Meta elegível foi encontrada para esta conta.');
+            }
+
+            $scope = auth()->id().'|'.(string) auth()->user()?->company_id;
+            $path = 'marketing/publisher/meta/'.hash('sha256', $scope).'.enc';
+            Storage::disk('local')->makeDirectory('marketing/publisher/meta');
+            Storage::disk('local')->put($path, Crypt::encryptString(json_encode([
+                'provider' => 'meta',
+                'graph_version' => $version,
+                'base_url' => $baseUrl,
+                'accounts' => $accounts,
+                'selected_page_id' => (string) $accounts[0]['page_id'],
+                'connected_at' => now()->toISOString(),
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)));
+
+            return redirect('/admin/marketing-dashboard#configuracoes')
+                ->with('publisher_success', 'Conta Meta conectada. Escolha a Página/Instagram padrão para publicar.');
+        } catch (Throwable $exception) {
+            report($exception);
+            return redirect('/admin/marketing-dashboard#configuracoes')
+                ->with('publisher_error', 'Não foi possível concluir a conexão Meta: '.$exception->getMessage());
+        }
+    })->name('marketing.publisher.meta.callback');
+
+    Route::post('/marketing/publisher/meta/disconnect', function () {
+        $scope = auth()->id().'|'.(string) auth()->user()?->company_id;
+        Storage::disk('local')->delete('marketing/publisher/meta/'.hash('sha256', $scope).'.enc');
+
+        return redirect('/admin/marketing-dashboard#configuracoes')
+            ->with('publisher_success', 'Conta Meta desconectada.');
+    })->name('marketing.publisher.meta.disconnect');
+
     Route::get('/marketing/video-preview/reel-01/signed', [VideoPreviewController::class, 'signedUrl'])
         ->middleware(['throttle:10,1'])
         ->name('marketing.video-preview.sign');

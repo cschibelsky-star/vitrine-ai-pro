@@ -704,7 +704,83 @@
                         </div>
 
                         <div id="configuracoes" class="vm-panel">
-                            <div class="vm-panel-title"><h2>Preferências</h2><a href="#copilot" class="vm-link">Solicitar alteração →</a></div>
+                            @php $publisher = $this->getMetaPublisherStatus(); @endphp
+                            <div class="vm-panel-title"><h2>Configurações</h2><span class="vm-secondary">Contas e preferências</span></div>
+
+                            @if(session('publisher_success'))
+                                <div class="vm-note" style="margin-bottom:12px"><span>{{ session('publisher_success') }}</span></div>
+                            @endif
+                            @if(session('publisher_error'))
+                                <div class="vm-error" style="margin-bottom:12px">{{ session('publisher_error') }}</div>
+                            @endif
+                            @if($pieceFeedback)
+                                <div class="vm-note" style="margin-bottom:12px"><span>{{ $pieceFeedback }}</span></div>
+                            @endif
+                            @if($pieceError)
+                                <div class="vm-error" style="margin-bottom:12px">{{ $pieceError }}</div>
+                            @endif
+
+                            <div style="border:1px solid rgba(139,92,246,.18);border-radius:14px;padding:16px;background:#100d24;margin-bottom:14px">
+                                <div class="vm-panel-title" style="margin-bottom:10px">
+                                    <div>
+                                        <h2 style="font-size:15px">Contas Publicadoras</h2>
+                                        <div class="vm-result-meta" style="margin-top:4px">Conecte Instagram/Facebook por autorização Meta. Tokens nunca aparecem na tela.</div>
+                                    </div>
+                                    <span class="vm-status {{ ($publisher['connected'] ?? false) ? 'green' : 'yellow' }}">
+                                        {{ ($publisher['connected'] ?? false) ? 'CONECTADA' : 'NÃO CONECTADA' }}
+                                    </span>
+                                </div>
+
+                                @if(!($publisher['app_configured'] ?? false))
+                                    <div class="vm-error" style="margin:8px 0 12px">
+                                        O aplicativo Meta ainda não está configurado no servidor. A tela de conexão está pronta, mas o botão será habilitado após cadastrar App ID, App Secret e versão da Graph API.
+                                    </div>
+                                @endif
+
+                                @if($publisher['connected'] ?? false)
+                                    <div class="vm-campaigns">
+                                        @foreach(($publisher['accounts'] ?? []) as $account)
+                                            @php $selected = ($publisher['selected_page_id'] ?? '') === ($account['page_id'] ?? ''); @endphp
+                                            <div class="vm-campaign-row">
+                                                <div class="vm-thumb">{{ $selected ? '✓' : 'M' }}</div>
+                                                <div>
+                                                    <div class="vm-campaign-name">{{ $account['page_name'] ?? 'Página Meta' }}</div>
+                                                    <div class="vm-campaign-type">
+                                                        Facebook: {{ $account['page_id'] ?? '—' }}
+                                                        @if(!empty($account['instagram_user_id']))
+                                                            · Instagram: {{ !empty($account['instagram_username']) ? '@'.$account['instagram_username'] : $account['instagram_user_id'] }}
+                                                        @else
+                                                            · Instagram não vinculado
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @if($selected)
+                                                    <span class="vm-status green">Padrão</span>
+                                                @else
+                                                    <button type="button" class="vm-action-link" wire:click="selectMetaPublisherAccount('{{ $account['page_id'] }}')" wire:loading.attr="disabled">Usar esta conta</button>
+                                                @endif
+                                                <span class="vm-time">Meta</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+                                        <button type="button" class="vm-action-link" wire:click="testMetaPublisherConnection" wire:loading.attr="disabled">Testar conexão</button>
+                                        <a class="vm-action-link" href="{{ route('marketing.publisher.meta.connect') }}">Reconectar Meta</a>
+                                        <form method="POST" action="{{ route('marketing.publisher.meta.disconnect') }}" onsubmit="return confirm('Desconectar a conta Meta deste Marketing IA?')">
+                                            @csrf
+                                            <button type="submit" class="vm-action-link">Desconectar</button>
+                                        </form>
+                                    </div>
+                                @else
+                                    @if($publisher['app_configured'] ?? false)
+                                        <a class="vm-flow-primary" style="display:inline-flex;text-decoration:none;margin-top:8px" href="{{ route('marketing.publisher.meta.connect') }}">Conectar conta Meta</a>
+                                    @else
+                                        <button type="button" class="vm-flow-secondary" style="margin-top:8px" disabled>Conectar conta Meta</button>
+                                    @endif
+                                @endif
+                            </div>
+
                             <div class="vm-campaigns">
                                 <div class="vm-campaign-row"><div class="vm-thumb">◎</div><div><div class="vm-campaign-name">Marca ativa</div><div class="vm-campaign-type">{{ $marketingContext['brand'] ?? 'Marketing IA' }}</div></div><span class="vm-status purple">Ativa</span><span class="vm-time">contexto</span></div>
                                 <div class="vm-campaign-row"><div class="vm-thumb">✦</div><div><div class="vm-campaign-name">Correções e preferências</div><div class="vm-campaign-type">Faça pedidos e ajustes pelo Diretor de Marketing IA</div></div><span class="vm-status blue">Via chat</span><span class="vm-time">sempre</span></div>
