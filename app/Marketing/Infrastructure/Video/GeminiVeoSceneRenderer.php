@@ -36,19 +36,31 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
 
         try {
             $dynamic = $this->dispatchThroughCentroIa($prompt, $aspectRatio, $duration);
+
+            if ($dynamic !== null) {
+                return $dynamic;
+            }
         } catch (\Throwable $routingException) {
+            try {
+                return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
+            } catch (\Throwable $fallbackException) {
+                throw new RuntimeException(
+                    'centro_ia_video_dispatch_failed:'.$routingException->getMessage().';local_motion_fallback_failed:'.$fallbackException->getMessage(),
+                    0,
+                    $fallbackException
+                );
+            }
+        }
+
+        try {
+            return $this->renderLocalMotionFallback($project, $prompt, $aspectRatio, $duration);
+        } catch (\Throwable $fallbackException) {
             throw new RuntimeException(
-                'centro_ia_video_dispatch_failed:'.$routingException->getMessage(),
+                'centro_ia_video_dispatch_unavailable;local_motion_fallback_failed:'.$fallbackException->getMessage(),
                 0,
-                $routingException
+                $fallbackException
             );
         }
-
-        if ($dynamic === null) {
-            throw new RuntimeException('centro_ia_video_dispatch_unavailable');
-        }
-
-        return $dynamic;
     }
 
     public function refresh(string $jobRef): array

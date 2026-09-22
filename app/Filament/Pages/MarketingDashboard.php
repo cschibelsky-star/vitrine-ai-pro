@@ -1058,7 +1058,10 @@ class MarketingDashboard extends Page
 
             if (
                 in_array($jobStatus, ['ERRO', 'BLOQUEADO_CREDITO'], true)
-                && $this->isMediaQuotaBlocked((string) ($job['error'] ?? ''))
+                && (
+                    $this->isMediaQuotaBlocked((string) ($job['error'] ?? ''))
+                    || str_contains(strtoupper((string) ($job['error'] ?? '')), 'CENTRO_IA_VIDEO_DISPATCH_FAILED')
+                )
                 && empty($job['fallback_retry_attempted'])
             ) {
                 $this->flowJobs[$index]['status'] = 'PRONTO_PARA_PRODUCAO';
