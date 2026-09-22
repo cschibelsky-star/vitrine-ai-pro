@@ -55,8 +55,9 @@ class CockpitWebmailService
             $folders = ['INBOX'];
 
             foreach ($lines as $line) {
-                if (preg_match('/\* LIST .*? "(.*?)"$/', $line, $match)) {
-                    $name = trim($match[1], '"');
+                if (preg_match('/^\\* LIST \\([^)]*\\)\\s+(?:NIL|"(?:[^"\\\\]|\\\\.)*")\\s+"((?:[^"\\\\]|\\\\.)*)"$/i', $line, $match)) {
+                    $name = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]) ?? $match[1];
+
                     if ($name !== '') {
                         $folders[] = $name;
                     }
