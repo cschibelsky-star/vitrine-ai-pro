@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiAgent;
 use App\Models\Subscription;
 use App\Services\Ai\AiRoutingService;
+use App\Shared\AI\Services\AiUsageTelemetry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -84,7 +85,8 @@ class CentroIaBrokerController extends Controller
                 $capability,
                 $routingCapability,
                 $prompt,
-                (array) ($data['input'] ?? [])
+                (array) ($data['input'] ?? []),
+                $usageTelemetry
             );
         }
 
@@ -118,7 +120,8 @@ class CentroIaBrokerController extends Controller
         string $capability,
         string $routingCapability,
         string $prompt,
-        array $input
+        array $input,
+        AiUsageTelemetry $usageTelemetry
     ): JsonResponse {
         $apiKey = trim((string) env('ROTEIA_API_KEY', ''));
         $baseUrl = rtrim(trim((string) env('ROTEIA_BASE_URL', '')), '/');
