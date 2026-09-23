@@ -59,7 +59,7 @@ return [
     'publisher' => [
         'default' => env('MARKETING_PUBLISHER', 'meta_direct'),
         'meta' => [
-            'base_url' => env('META_GRAPH_BASE_URL', 'https://graph.facebook.com'),
+            'base_url' => env('META_GRAPH_BASE_URL', 'https://graph.instagram.com'),
             'graph_version' => env('META_GRAPH_VERSION'),
             'app_id' => env('META_APP_ID'),
             'app_secret' => env('META_APP_SECRET'),
@@ -68,11 +68,8 @@ return [
             'instagram_user_id' => env('META_INSTAGRAM_USER_ID'),
             'facebook_page_id' => env('META_FACEBOOK_PAGE_ID'),
             'scopes' => [
-                'pages_show_list',
-                'pages_read_engagement',
-                'pages_manage_posts',
-                'instagram_basic',
-                'instagram_content_publish',
+                'instagram_business_basic',
+                'instagram_business_content_publish',
             ],
         ],
     ],

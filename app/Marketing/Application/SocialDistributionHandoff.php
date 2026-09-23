@@ -223,6 +223,105 @@ final class SocialDistributionHandoff
         ];
     }
 
+    /**
+     * Publish a TV Sumare article to Instagram using the article metadata.
+     * The article page remains the source of truth; only title, summary and
+     * a public HTTPS image are sent to Instagram.
+     *
+     * @return array<string, mixed>
+     */
+    public function publishTvSumareArticleNow(string $articleUrl): array
+    {
+        $articleUrl = trim($articleUrl);
+        if ($articleUrl === '' || filter_var($articleUrl, FILTER_VALIDATE_URL) === false) {
+            throw new DomainException('A valid article URL is required.');
+        }
+
+        $parts = parse_url($articleUrl);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if (! in_array($host, ['tvsumare.com.br', 'www.tvsumare.com.br'], true)) {
+            throw new DomainException('Only TV Sumare article URLs are allowed.');
+        }
+        if (strtolower((string) ($parts['scheme'] ?? '')) !== 'https') {
+            throw new DomainException('TV Sumare article URL must use HTTPS.');
+        }
+
+        $response = Http::accept('text/html')->timeout(30)->get($articleUrl);
+        if (! $response->successful()) {
+            throw new RuntimeException('TV Sumare article fetch error HTTP '.$response->status().'.');
+        }
+
+        $html = (string) $response->body();
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $loaded = $dom->loadHTML($html, LIBXML_NOWARNING | LIBXML_NOERROR);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+        if (! $loaded) {
+            throw new RuntimeException('Unable to parse TV Sumare article HTML.');
+        }
+
+        $xpath = new \DOMXPath($dom);
+        $meta = static function (\DOMXPath $xpath, string $property): string {
+            $queries = [
+                "//meta[@property='{$property}']/@content",
+                "//meta[@name='{$property}']/@content",
+            ];
+            foreach ($queries as $query) {
+                $nodes = $xpath->query($query);
+                if ($nodes !== false && $nodes->length > 0) {
+                    $value = trim((string) $nodes->item(0)?->nodeValue);
+                    if ($value !== '') {
+                        return $value;
+                    }
+                }
+            }
+            return '';
+        };
+
+        $title = $meta($xpath, 'og:title');
+        if ($title === '') {
+            $nodes = $xpath->query('//title');
+            $title = $nodes !== false && $nodes->length > 0
+                ? trim((string) $nodes->item(0)?->textContent)
+                : '';
+        }
+
+        $summary = $meta($xpath, 'og:description');
+        if ($summary === '') {
+            $summary = $meta($xpath, 'description');
+        }
+
+        $imageUrl = $meta($xpath, 'og:image');
+        if ($imageUrl === '' || filter_var($imageUrl, FILTER_VALIDATE_URL) === false || ! str_starts_with(strtolower($imageUrl), 'https://')) {
+            throw new RuntimeException('TV Sumare article has no public HTTPS og:image.');
+        }
+
+        if ($title === '') {
+            throw new RuntimeException('TV Sumare article title was not found.');
+        }
+
+        $captionParts = [$title];
+        if ($summary !== '') {
+            $captionParts[] = $summary;
+        }
+        $captionParts[] = 'Leia a materia completa: '.$articleUrl;
+        $captionParts[] = '#TVSumare #Sumare';
+
+        $publication = $this->publishMetaNow([
+            'type' => 'image',
+            'asset_url' => $imageUrl,
+            'caption' => implode("\n\n", $captionParts),
+        ]);
+
+        return array_merge($publication, [
+            'article_url' => $articleUrl,
+            'article_title' => $title,
+            'article_summary' => $summary,
+            'article_image_url' => $imageUrl,
+        ]);
+    }
+
     /** @param array<string, mixed> $distribution */
     private function approvedChannels(array $distribution): array
     {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\Marketing\VideoPreviewController;
+use App\Marketing\Application\SocialDistributionHandoff;
 use App\Marketing\Application\VideoFinalizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,17 @@ Route::get('/marketing/video-preview/{version}', VideoPreviewController::class)
     ->middleware(['signed', 'throttle:30,1'])
     ->where('version', '[A-Za-z0-9._-]+')
     ->name('marketing.video-preview');
+
+Route::post('/marketing/internal/publish-tv-sumare-article', function (Request $request, SocialDistributionHandoff $publisher) {
+    $expected = (string) env('MARKETING_ENGINE_TOKEN', '');
+    abort_unless($expected !== '' && hash_equals($expected, (string) $request->header('X-Marketing-Engine-Token', '')), 403);
+
+    $validated = $request->validate([
+        'url' => ['required', 'url', 'max:2048'],
+    ]);
+
+    return response()->json($publisher->publishTvSumareArticleNow((string) $validated['url']));
+})->middleware(['throttle:10,1'])->name('marketing.internal.publish-tv-sumare-article');
 
 Route::post('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {
     $expected = (string) env('VIDEO_FINALIZE_TOKEN', '');
