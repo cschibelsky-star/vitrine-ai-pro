@@ -37,6 +37,11 @@ Route::get('/marketing/media/reel-03/{version}', [VideoPreviewController::class,
     ->where('version', '[A-Za-z0-9._-]+\\.mp4')
     ->name('marketing.media.reel-03');
 
+Route::get('/marketing/media/tv-sumare-reel/{slug}.mp4', [VideoPreviewController::class, 'publicTvSumareReel'])
+    ->middleware(['throttle:60,1'])
+    ->where('slug', '[A-Za-z0-9._-]+')
+    ->name('marketing.media.tv-sumare-reel');
+
 Route::get('/marketing/media/image/{filename}', [VideoPreviewController::class, 'publicImage'])
     ->middleware(['throttle:60,1'])
     ->where('filename', '[A-Za-z0-9._-]+\\.png')
@@ -53,9 +58,13 @@ Route::post('/marketing/internal/publish-tv-sumare-article', function (Request $
 
     $validated = $request->validate([
         'url' => ['required', 'url', 'max:2048'],
+        'format' => ['nullable', 'in:image,reel'],
     ]);
 
-    return response()->json($publisher->publishTvSumareArticleNow((string) $validated['url']));
+    return response()->json($publisher->publishTvSumareArticleNow(
+        (string) $validated['url'],
+        (string) ($validated['format'] ?? 'image'),
+    ));
 })->middleware(['throttle:10,1'])->name('marketing.internal.publish-tv-sumare-article');
 
 Route::post('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {

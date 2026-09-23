@@ -75,6 +75,103 @@ final class VideoFinalizationService
         ];
     }
 
+    /**
+     * Build a lightweight 9:16 news Reel from a TV Sumare article image.
+     *
+     * @return array{slug:string,path:string,duration_seconds:float}
+     */
+    public function createTvSumareArticleReel(string $slug, string $imageUrl, string $title, string $summary = ''): array
+    {
+        $this->assertBinariesAvailable();
+
+        $slug = $this->safe($slug);
+        if ($slug === '') {
+            throw new RuntimeException('tv_sumare_reel_slug_invalid');
+        }
+
+        $parts = parse_url($imageUrl);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if (($parts['scheme'] ?? '') !== 'https' || ! in_array($host, ['tvsumare.com.br', 'www.tvsumare.com.br'], true)) {
+            throw new RuntimeException('tv_sumare_reel_image_host_not_allowed');
+        }
+
+        $dir = storage_path('app/marketing/tv-sumare-reels');
+        if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            throw new RuntimeException('tv_sumare_reel_workdir_unavailable');
+        }
+
+        $imagePath = $dir.'/'.$slug.'.jpg';
+        $videoPath = $dir.'/'.$slug.'.mp4';
+
+        $response = Http::timeout(90)->retry(2, 500)->get($imageUrl);
+        if ($response->failed()) {
+            throw new RuntimeException('tv_sumare_reel_image_download_failed:'.$response->status());
+        }
+        if (file_put_contents($imagePath, $response->body()) === false || ! is_file($imagePath) || filesize($imagePath) === 0) {
+            throw new RuntimeException('tv_sumare_reel_image_write_failed');
+        }
+
+        $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+        if (! is_file($font)) {
+            $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+        }
+        if (! is_file($font)) {
+            throw new RuntimeException('tv_sumare_reel_font_missing');
+        }
+
+        $titleText = $this->ffmpegText(wordwrap(trim($title), 28, "\n", true));
+        $summaryText = $this->ffmpegText(wordwrap(trim($summary), 40, "\n", true));
+        $brandText = $this->ffmpegText('TV SUMARE');
+        $ctaText = $this->ffmpegText('Leia a materia completa em tvsumare.com.br');
+
+        $filters = [
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=18:8[bg]",
+            "[0:v]scale=980:980:force_original_aspect_ratio=decrease[photo]",
+            "[bg]drawbox=x=0:y=0:w=1080:h=1920:color=black@0.48:t=fill[dark]",
+            "[dark][photo]overlay=(W-w)/2:245[base]",
+            "[base]drawtext=fontfile='".$font."':text='".$brandText."':fontcolor=white:fontsize=54:x=70:y=90[v1]",
+            "[v1]drawbox=x=60:y=1280:w=960:h=470:color=black@0.62:t=fill[v2]",
+            "[v2]drawtext=fontfile='".$font."':text='".$titleText."':fontcolor=white:fontsize=54:line_spacing=10:x=90:y=1320[v3]",
+        ];
+        if ($summaryText !== '') {
+            $filters[] = "[v3]drawtext=fontfile='".$font."':text='".$summaryText."':fontcolor=white@0.92:fontsize=32:line_spacing=8:x=90:y=1545[v4]";
+            $last = 'v4';
+        } else {
+            $last = 'v3';
+        }
+        $filters[] = "[{$last}]drawtext=fontfile='".$font."':text='".$ctaText."':fontcolor=white:fontsize=30:x=(w-text_w)/2:y=1810[outv]";
+
+        $command = sprintf(
+            '%s -hide_banner -loglevel error -y -loop 1 -framerate 30 -i %s -filter_complex %s -map "[outv]" -t 15 -r 30 -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -movflags +faststart %s 2>&1',
+            escapeshellarg($this->ffmpegBinary),
+            escapeshellarg($imagePath),
+            escapeshellarg(implode(';', $filters)),
+            escapeshellarg($videoPath),
+        );
+
+        exec($command, $stdout, $exitCode);
+        @unlink($imagePath);
+
+        if ($exitCode !== 0 || ! is_file($videoPath) || filesize($videoPath) === 0) {
+            throw new RuntimeException('tv_sumare_reel_ffmpeg_failed:'.implode(' ', array_slice($stdout, -6)));
+        }
+
+        return [
+            'slug' => $slug,
+            'path' => $videoPath,
+            'duration_seconds' => 15.0,
+        ];
+    }
+
+    private function ffmpegText(string $value): string
+    {
+        return str_replace(
+            ['\\', ':', "'", '%', "\r"],
+            ['\\\\', '\\:', "\\'", '\\%', ''],
+            $value,
+        );
+    }
+
     private function download(string $url, string $target): void
     {
         $request = Http::timeout(180)->retry(2, 750);

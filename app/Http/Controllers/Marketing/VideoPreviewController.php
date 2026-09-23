@@ -81,6 +81,26 @@ final class VideoPreviewController extends Controller
         return $response;
     }
 
+    public function publicTvSumareReel(string $slug): BinaryFileResponse
+    {
+        abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/', $slug), 404);
+
+        $path = storage_path('app/marketing/tv-sumare-reels/'.$slug.'.mp4');
+        abort_unless(is_file($path) && is_readable($path), 404);
+
+        $response = response()->file($path, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="'.$slug.'.mp4"',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
+        ]);
+        $response->setPublic();
+        $response->setMaxAge(86400);
+        $response->setSharedMaxAge(86400);
+
+        return $response;
+    }
+
     public function publicImage(string $filename): BinaryFileResponse
     {
         $allowed = [

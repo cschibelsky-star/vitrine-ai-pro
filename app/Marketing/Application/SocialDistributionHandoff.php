@@ -143,13 +143,35 @@ final class SocialDistributionHandoff
                 $containerId = trim((string) $create->json('id'));
 
                 if ($type === 'video') {
-                    return [
-                        'ok' => true,
-                        'status' => 'PUBLISHING',
-                        'channel' => 'instagram',
-                        'container_id' => $containerId,
-                        'external_id' => null,
-                    ];
+                    $ready = false;
+                    for ($attempt = 0; $attempt < 10; $attempt++) {
+                        $status = Http::acceptJson()
+                            ->timeout(20)
+                            ->get($baseUrl.'/'.$graphVersion.'/'.$containerId, [
+                                'fields' => 'status_code',
+                                'access_token' => $token,
+                            ]);
+
+                        $statusCode = strtoupper(trim((string) $status->json('status_code')));
+                        if ($status->successful() && $statusCode === 'FINISHED') {
+                            $ready = true;
+                            break;
+                        }
+                        if (in_array($statusCode, ['ERROR', 'EXPIRED'], true)) {
+                            throw new RuntimeException('Meta Instagram video container failed with status '.$statusCode.'.');
+                        }
+                        usleep(1500000);
+                    }
+
+                    if (! $ready) {
+                        return [
+                            'ok' => true,
+                            'status' => 'PUBLISHING',
+                            'channel' => 'instagram',
+                            'container_id' => $containerId,
+                            'external_id' => null,
+                        ];
+                    }
                 }
             }
 
@@ -230,7 +252,7 @@ final class SocialDistributionHandoff
      *
      * @return array<string, mixed>
      */
-    public function publishTvSumareArticleNow(string $articleUrl): array
+    public function publishTvSumareArticleNow(string $articleUrl, string $format = 'image'): array
     {
         $articleUrl = trim($articleUrl);
         if ($articleUrl === '' || filter_var($articleUrl, FILTER_VALIDATE_URL) === false) {
@@ -308,17 +330,40 @@ final class SocialDistributionHandoff
         $captionParts[] = 'Leia a materia completa: '.$articleUrl;
         $captionParts[] = '#TVSumare #Sumare';
 
-        $publication = $this->publishMetaNow([
-            'type' => 'image',
-            'asset_url' => $imageUrl,
-            'caption' => implode("\n\n", $captionParts),
-        ]);
+        $format = strtolower(trim($format));
+        if (! in_array($format, ['image', 'reel'], true)) {
+            throw new DomainException('Unsupported TV Sumare publication format.');
+        }
+
+        if ($format === 'reel') {
+            $slug = 'tv-sumare-'.substr(hash('sha256', $articleUrl), 0, 20);
+            $reel = app(VideoFinalizationService::class)->createTvSumareArticleReel(
+                $slug,
+                $imageUrl,
+                $title,
+                $summary,
+            );
+            $assetUrl = route('marketing.media.tv-sumare-reel', ['slug' => $reel['slug']]);
+            $publication = $this->publishMetaNow([
+                'type' => 'video',
+                'asset_url' => $assetUrl,
+                'caption' => implode("\n\n", $captionParts),
+            ]);
+        } else {
+            $publication = $this->publishMetaNow([
+                'type' => 'image',
+                'asset_url' => $imageUrl,
+                'caption' => implode("\n\n", $captionParts),
+            ]);
+        }
 
         return array_merge($publication, [
             'article_url' => $articleUrl,
             'article_title' => $title,
             'article_summary' => $summary,
             'article_image_url' => $imageUrl,
+            'publication_format' => $format,
+            'publication_asset_url' => $assetUrl ?? $imageUrl,
         ]);
     }
 
