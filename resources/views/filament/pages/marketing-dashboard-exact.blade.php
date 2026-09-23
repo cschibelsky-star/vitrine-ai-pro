@@ -601,6 +601,32 @@
 
                         <div id="qa" class="vm-panel">
                             <div class="vm-panel-title"><h2>QA e Aprovação</h2><a href="#copilot" class="vm-link">Pedir correção →</a></div>
+                            @php $campaignGroups = $this->getProductionCampaignGroups(); @endphp
+                            @if(count($campaignGroups))
+                                <div class="vm-campaigns" style="margin-bottom:16px">
+                                    @foreach($campaignGroups as $group)
+                                        <div class="vm-campaign-row">
+                                            <div class="vm-thumb">✦</div>
+                                            <div>
+                                                <div class="vm-campaign-name">{{ $group['campaign'] }}</div>
+                                                <div class="vm-campaign-type">
+                                                    {{ $group['concept_id'] }} · {{ $group['approved_count'] }}/{{ $group['pieces_count'] }} aprovadas
+                                                    @if(!empty($group['creative_concept']['central_idea']))
+                                                        · {{ $group['creative_concept']['central_idea'] }}
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if(($group['reviewable_count'] ?? 0) > 0)
+                                                <button type="button" class="vm-action-link" wire:click="approveCampaignConcept('{{ $group['concept_id'] }}')" wire:loading.attr="disabled">
+                                                    Aprovar peças prontas deste conceito
+                                                </button>
+                                            @else
+                                                <span class="vm-status green">Coerência preservada</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                             @php $qaJobs = $clientJobs->filter(fn (array $job) => (string) ($job['status'] ?? '') === 'EM_QA'); @endphp
                             @if($qaJobs->count())
                                 <div class="vm-result-grid">
@@ -642,8 +668,23 @@
 
 
                         <div id="distribuicao" class="vm-panel">
-                            <div class="vm-panel-title"><h2>Galeria de aprovados</h2><span class="vm-secondary">Escolha quando distribuir</span></div>
-                            <p class="vm-result-meta">As peças aprovadas ficam guardadas aqui. Publicação automática ainda não conectada.</p>
+                            <div class="vm-panel-title"><h2>Galeria de aprovados</h2><span class="vm-secondary">Campanha → conceito → peças → distribuição</span></div>
+                            <p class="vm-result-meta">As versões aprovadas preservam conceito e briefing. Você pode publicar agora ou registrar data e conta para o executor de agendamento.</p>
+                            @php $galleryGroups = $this->getGalleryCampaignGroups(); @endphp
+                            @if(count($galleryGroups))
+                                <div class="vm-campaigns" style="margin:12px 0 16px">
+                                    @foreach($galleryGroups as $group)
+                                        <div class="vm-campaign-row">
+                                            <div class="vm-thumb">✓</div>
+                                            <div>
+                                                <div class="vm-campaign-name">{{ $group['campaign'] }}</div>
+                                                <div class="vm-campaign-type">{{ $group['concept_id'] ?: $group['concept_key'] }} · {{ count($group['pieces']) }} peça(s) · {{ $group['published_count'] }} publicada(s)</div>
+                                            </div>
+                                            <span class="vm-status green">Conceito preservado</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                             @php $galleryJobs = $this->getGalleryJobs(); @endphp
                             @if(count($galleryJobs))
                                 <div class="vm-result-grid">

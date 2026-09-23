@@ -345,6 +345,112 @@ class MarketingDashboard extends Page
         return $jobs;
     }
 
+    public function getProductionCampaignGroups(): array
+    {
+        return collect($this->flowJobs)
+            ->filter(fn (array $job): bool => trim((string) ($job['concept_id'] ?? '')) !== '')
+            ->groupBy(fn (array $job): string => (string) $job['concept_id'])
+            ->map(function ($pieces, string $conceptId): array {
+                $items = array_values($pieces->all());
+                $first = $items[0] ?? [];
+                $reviewable = array_values(array_filter($items, fn (array $job): bool =>
+                    in_array((string) ($job['status'] ?? ''), ['EM_QA', 'GERADO'], true)
+                    && (! empty($job['asset_url']) || ! empty($job['preview_url']))
+                ));
+
+                return [
+                    'concept_id' => $conceptId,
+                    'campaign' => (string) ($first['campaign'] ?? 'Campanha'),
+                    'creative_concept' => (array) ($first['creative_concept'] ?? []),
+                    'pieces_count' => count($items),
+                    'reviewable_count' => count($reviewable),
+                    'approved_count' => count(array_filter($items, fn (array $job): bool =>
+                        in_array((string) ($job['status'] ?? ''), ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+                    )),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function getGalleryCampaignGroups(): array
+    {
+        return collect($this->getGalleryJobs())
+            ->groupBy(fn (array $job): string => trim((string) ($job['concept_id'] ?? '')) ?: 'campaign:'.trim((string) ($job['campaign'] ?? 'sem-campanha')))
+            ->map(function ($pieces, string $conceptKey): array {
+                $items = array_values($pieces->all());
+                $first = $items[0] ?? [];
+
+                return [
+                    'concept_key' => $conceptKey,
+                    'concept_id' => (string) ($first['concept_id'] ?? ''),
+                    'campaign' => (string) ($first['campaign'] ?? 'Campanha'),
+                    'creative_concept' => (array) ($first['creative_concept'] ?? []),
+                    'pieces' => $items,
+                    'approved_count' => count(array_filter($items, fn (array $job): bool => in_array((string) ($job['status'] ?? ''), ['APROVADO', 'PLANEJADO_EDITORIAL'], true))),
+                    'published_count' => count(array_filter($items, fn (array $job): bool => (string) ($job['publication_status'] ?? '') === 'PUBLISHED')),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function approveCampaignConcept(string $conceptId): void
+    {
+        $this->pieceError = null;
+        $this->pieceFeedback = null;
+        $conceptId = trim($conceptId);
+
+        if ($conceptId === '') {
+            $this->pieceError = 'Campanha sem concept_id não pode ser aprovada em lote.';
+            return;
+        }
+
+        $state = (array) session('marketing_workstation.production.'.$this->marketingContextKey, []);
+        $this->flowJobs = $this->normalizeProductionJobs($this->mergeStoredProductionPieces((array) ($state['jobs'] ?? [])));
+
+        $approved = 0;
+        $blocked = 0;
+        foreach ($this->flowJobs as $index => $job) {
+            if (! hash_equals((string) ($job['concept_id'] ?? ''), $conceptId)) {
+                continue;
+            }
+
+            if (! in_array((string) ($job['status'] ?? ''), ['EM_QA', 'GERADO'], true)
+                || (empty($job['asset_url']) && empty($job['preview_url']))) {
+                if (! in_array((string) ($job['status'] ?? ''), ['APROVADO', 'PLANEJADO_EDITORIAL'], true)) {
+                    $blocked++;
+                }
+                continue;
+            }
+
+            $job['status'] = 'APROVADO';
+            $job['approved_version'] = $this->pieceVersion($job);
+            $job['approved_at'] = now()->toISOString();
+            $job['approved_by'] = auth()->id();
+            $job['approved_concept_fingerprint'] = hash('sha256', json_encode([
+                $job['concept_id'] ?? '',
+                $job['creative_concept'] ?? [],
+                $job['production_brief'] ?? [],
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            $job['updated_at'] = now()->toISOString();
+            $job['scheduled_at'] = null;
+            $job['publication_status'] = 'NOT_REQUESTED';
+            $this->saveGalleryPiece($job);
+            $this->flowJobs[$index] = $job;
+            $approved++;
+        }
+
+        $this->persistFlowWorkstation();
+
+        if ($approved === 0 && $blocked > 0) {
+            $this->pieceError = 'Nenhuma peça foi aprovada: ainda há itens não concluídos ou indisponíveis para revisão.';
+            return;
+        }
+
+        $this->pieceFeedback = 'Campanha atualizada: '.$approved.' peça(s) aprovada(s) no mesmo conceito'.($blocked > 0 ? ' e '.$blocked.' aguardando conclusão.' : '.');
+    }
+
     private function locatePiece(string $jobId, string $version): ?int
     {
         $this->pieceError = null;
@@ -398,6 +504,11 @@ class MarketingDashboard extends Page
         $job['approved_version'] = $this->pieceVersion($job);
         $job['approved_at'] = now()->toISOString();
         $job['approved_by'] = auth()->id();
+        $job['approved_concept_fingerprint'] = hash('sha256', json_encode([
+            $job['concept_id'] ?? '',
+            $job['creative_concept'] ?? [],
+            $job['production_brief'] ?? [],
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $job['updated_at'] = now()->toISOString();
         $job['scheduled_at'] = null;
         $job['publication_status'] = 'NOT_REQUESTED';
@@ -454,15 +565,20 @@ class MarketingDashboard extends Page
             $this->pieceError = 'Informe uma data futura válida no horário de Brasília.';
             return;
         }
+        $publisher = $this->selectedMetaPublisherAccount();
         $job['status'] = 'PLANEJADO_EDITORIAL';
         $job['scheduled_at'] = $date->utc()->toISOString();
         $job['schedule_timezone'] = 'America/Sao_Paulo';
-        $job['publication_status'] = 'PUBLISHER_NOT_CONNECTED';
+        $job['publication_status'] = $publisher === [] ? 'PUBLISHER_NOT_CONNECTED' : 'SCHEDULED_PENDING_EXECUTOR';
+        $job['publication_channel'] = $publisher === [] ? null : 'meta';
+        $job['publication_requested_at'] = null;
         $job['updated_at'] = now()->toISOString();
         $this->saveGalleryPiece($job);
         $this->flowJobs[$index] = $job;
         $this->persistFlowWorkstation();
-        $this->pieceFeedback = 'Data salva no calendário editorial. A publicação automática ainda depende da conta publicadora.';
+        $this->pieceFeedback = $publisher === []
+            ? 'Data salva no calendário editorial. Conecte uma conta publicadora para habilitar o envio.'
+            : 'Data e conta publicadora registradas. A peça está pronta para o executor de agendamento.';
     }
 
     public function keepPieceInGallery(string $jobId, string $version): void
