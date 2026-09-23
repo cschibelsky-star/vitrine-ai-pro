@@ -2,14 +2,14 @@ x-factory-app-env: &factory-app-env
   APP_NAME: "Vitrine IA Pro Factory HML"
   APP_ENV: homologation
   APP_DEBUG: "false"
-  APP_KEY: "base64:L9gVu/ZJgsRCXfHyJAmuVMer3Bh5e3zky91CaCrneBQ="
+  APP_KEY: "${FACTORY_APP_KEY}"
   APP_URL: "https://factory.hml.vitrineiapro.com.br"
   DB_CONNECTION: mysql
   DB_HOST: vitrine_factory_hml_db
   DB_PORT: 3306
   DB_DATABASE: vitrine_factory_hml
   DB_USERNAME: vitrine_factory
-  DB_PASSWORD: "Vxg3Kky7NBAxOsEcsQSplMhq0E1v01cj"
+  DB_PASSWORD: "${FACTORY_DB_PASSWORD}"
   SESSION_DRIVER: file
   CACHE_STORE: file
   QUEUE_CONNECTION: sync
@@ -22,8 +22,8 @@ services:
     environment:
       MARIADB_DATABASE: vitrine_factory_hml
       MARIADB_USER: vitrine_factory
-      MARIADB_PASSWORD: "Vxg3Kky7NBAxOsEcsQSplMhq0E1v01cj"
-      MARIADB_ROOT_PASSWORD: "R0-2Y_zNl7UuXqQxAhxnMYzaUq2FcJO6"
+      MARIADB_PASSWORD: "${FACTORY_DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${FACTORY_DB_ROOT_PASSWORD}"
     volumes:
       - factory_db_hml:/var/lib/mysql
     healthcheck:
@@ -91,7 +91,7 @@ services:
     environment:
       <<: *factory-app-env
       CORE_AI_HUB_URL: "http://vitrine_core_web_hml/api/internal/ai-dev/chat"
-      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN:-HML-CURSOS-IA}"
+      CENTRO_IA_INTERNAL_TOKEN: "${CENTRO_IA_INTERNAL_TOKEN}"
       VIA_AI_PROJECT_ID: "via-agent-hub"
     volumes:
       - ./:/var/www/html
