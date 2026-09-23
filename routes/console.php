@@ -283,10 +283,134 @@ Artisan::command('marketing:sync-metrics', function (SocialDistributionHandoff $
     return $summary['failed'] > 0 ? 1 : 0;
 })->purpose('Sincroniza metadados e engajamento basico das publicacoes Meta confirmadas.');
 
+Artisan::command('marketing:reconcile-legacy-schedules', function () use ($writePiece) {
+    $disk = Storage::disk('local');
+    $now = CarbonImmutable::now('UTC');
+    $publisherFiles = array_values(array_filter(
+        $disk->allFiles('marketing/publisher/meta'),
+        static fn (string $path): bool => str_ends_with($path, '.enc')
+    ));
+    $summary = ['legacy' => 0, 'bound' => 0, 'review_required' => 0, 'ambiguous' => 0, 'failed' => 0];
+
+    foreach ($disk->allFiles('marketing/gallery') as $path) {
+        if (! str_ends_with($path, '.json')) {
+            continue;
+        }
+
+        Cache::lock('marketing-legacy-reconcile:'.hash('sha256', $path), 55)->get(function () use (
+            $disk,
+            $path,
+            $now,
+            $publisherFiles,
+            $writePiece,
+            &$summary
+        ): void {
+            try {
+                $job = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
+                if (! is_array($job)) {
+                    return;
+                }
+
+                if ((string) ($job['status'] ?? '') !== 'PLANEJADO_EDITORIAL') {
+                    return;
+                }
+
+                if (trim((string) ($job['publisher_connection_path'] ?? '')) !== '') {
+                    return;
+                }
+
+                $scheduledAt = trim((string) ($job['scheduled_at'] ?? ''));
+                if ($scheduledAt === '') {
+                    return;
+                }
+
+                $summary['legacy']++;
+                $dueAt = CarbonImmutable::parse($scheduledAt, 'UTC');
+
+                if (! $dueAt->isAfter($now)) {
+                    $job['publication_status'] = 'LEGACY_SCHEDULE_REVIEW_REQUIRED';
+                    $job['publication_error'] = 'legacy_schedule_is_past_due';
+                    $job['updated_at'] = now()->toISOString();
+                    $writePiece($disk, $path, $job);
+                    $summary['review_required']++;
+                    return;
+                }
+
+                if (count($publisherFiles) !== 1) {
+                    $job['publication_status'] = 'LEGACY_SCHEDULE_ACCOUNT_AMBIGUOUS';
+                    $job['publication_error'] = 'legacy_schedule_requires_account_selection';
+                    $job['updated_at'] = now()->toISOString();
+                    $writePiece($disk, $path, $job);
+                    $summary['ambiguous']++;
+                    return;
+                }
+
+                $publisherPath = $publisherFiles[0];
+
+                try {
+                    $decoded = json_decode(
+                        Crypt::decryptString($disk->get($publisherPath)),
+                        true,
+                        512,
+                        JSON_THROW_ON_ERROR,
+                    );
+                } catch (Throwable) {
+                    $summary['failed']++;
+                    return;
+                }
+
+                if (! is_array($decoded)) {
+                    $summary['failed']++;
+                    return;
+                }
+
+                $selectedPageId = trim((string) ($decoded['selected_page_id'] ?? ''));
+                $accounts = array_values((array) ($decoded['accounts'] ?? []));
+                $selected = collect($accounts)->first(
+                    static fn (array $item): bool => (string) ($item['page_id'] ?? '') === $selectedPageId
+                );
+
+                if ($selectedPageId === '' || ! is_array($selected)) {
+                    $job['publication_status'] = 'LEGACY_SCHEDULE_ACCOUNT_AMBIGUOUS';
+                    $job['publication_error'] = 'legacy_schedule_requires_valid_selected_account';
+                    $job['updated_at'] = now()->toISOString();
+                    $writePiece($disk, $path, $job);
+                    $summary['ambiguous']++;
+                    return;
+                }
+
+                $job['publisher_connection_path'] = $publisherPath;
+                $job['publisher_page_id'] = $selectedPageId;
+                $job['publication_channel'] = 'meta';
+                $job['publication_status'] = 'SCHEDULED_PENDING_EXECUTOR';
+                $job['publication_error'] = null;
+                $job['legacy_schedule_reconciled_at'] = now()->toISOString();
+                $job['updated_at'] = now()->toISOString();
+                $writePiece($disk, $path, $job);
+                $summary['bound']++;
+            } catch (Throwable $exception) {
+                report($exception);
+                $summary['failed']++;
+            }
+        });
+    }
+
+    $this->line(json_encode($summary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+    return $summary['failed'] > 0 ? 1 : 0;
+})->purpose('Reconcilia agendamentos antigos sem publicar itens vencidos automaticamente.');
+
+Schedule::command('marketing:reconcile-legacy-schedules')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->sendOutputTo('/proc/1/fd/1');
+
 Schedule::command('marketing:publish-due')
     ->everyMinute()
-    ->withoutOverlapping();
+    ->withoutOverlapping()
+    ->sendOutputTo('/proc/1/fd/1');
 
 Schedule::command('marketing:sync-metrics')
     ->everyTenMinutes()
-    ->withoutOverlapping();
+    ->withoutOverlapping()
+    ->sendOutputTo('/proc/1/fd/1');
