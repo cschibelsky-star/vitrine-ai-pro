@@ -123,6 +123,20 @@ Route::middleware(['auth'])->group(function () {
 
             $userToken = trim((string) $tokenResponse->json('access_token'));
 
+            $profileResponse = Http::acceptJson()->timeout(30)->get(
+                $baseUrl.'/'.$version.'/me',
+                [
+                    'fields' => 'id,name',
+                    'access_token' => $userToken,
+                ]
+            );
+
+            if (! $profileResponse->successful() || trim((string) $profileResponse->json('id')) === '') {
+                throw new RuntimeException('Falha ao identificar o usuário Meta autorizado.');
+            }
+
+            $metaUserId = trim((string) $profileResponse->json('id'));
+
             $accountsResponse = Http::acceptJson()->timeout(30)->get(
                 $baseUrl.'/'.$version.'/me/accounts',
                 [
@@ -163,6 +177,7 @@ Route::middleware(['auth'])->group(function () {
                 'provider' => 'meta',
                 'graph_version' => $version,
                 'base_url' => $baseUrl,
+                'meta_user_id' => $metaUserId,
                 'accounts' => $accounts,
                 'selected_page_id' => (string) $accounts[0]['page_id'],
                 'connected_at' => now()->toISOString(),

@@ -9,6 +9,7 @@ use App\Models\AiAgent;
 use App\Models\AiProvider;
 use App\Services\Ai\AiMediaGenerationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -203,5 +204,142 @@ Route::middleware('throttle:30,1')->group(function () {
         ]);
     })->name('api.internal.marketing.media.video.refresh');
 });
+
+
+$decodeMetaSignedRequest = static function (Request $request): array {
+    $signedRequest = trim((string) $request->input('signed_request', ''));
+
+    if ($signedRequest === '' || ! str_contains($signedRequest, '.')) {
+        abort(400, 'signed_request ausente ou inválido.');
+    }
+
+    [$encodedSignature, $encodedPayload] = explode('.', $signedRequest, 2);
+    $decode = static function (string $value): string|false {
+        $padding = strlen($value) % 4;
+        if ($padding > 0) {
+            $value .= str_repeat('=', 4 - $padding);
+        }
+
+        return base64_decode(strtr($value, '-_', '+/'), true);
+    };
+
+    $signature = $decode($encodedSignature);
+    $payloadJson = $decode($encodedPayload);
+
+    if ($signature === false || $payloadJson === false) {
+        abort(400, 'signed_request malformado.');
+    }
+
+    $payload = json_decode($payloadJson, true);
+    if (! is_array($payload)) {
+        abort(400, 'Payload Meta inválido.');
+    }
+
+    $algorithm = strtoupper((string) ($payload['algorithm'] ?? ''));
+    if ($algorithm !== 'HMAC-SHA256') {
+        abort(400, 'Algoritmo Meta não suportado.');
+    }
+
+    $appSecret = trim((string) env('META_APP_SECRET', ''));
+    if ($appSecret === '') {
+        abort(503, 'META_APP_SECRET não configurado.');
+    }
+
+    $expected = hash_hmac('sha256', $encodedPayload, $appSecret, true);
+    if (! hash_equals($expected, $signature)) {
+        abort(403, 'Assinatura Meta inválida.');
+    }
+
+    return $payload;
+};
+
+$removeMetaPublisherConnections = static function (string $metaUserId): int {
+    $removed = 0;
+
+    foreach (Storage::disk('local')->files('marketing/publisher/meta') as $path) {
+        if (! str_ends_with($path, '.enc')) {
+            continue;
+        }
+
+        try {
+            $payload = json_decode(Crypt::decryptString(Storage::disk('local')->get($path)), true, 512, JSON_THROW_ON_ERROR);
+
+            if ((string) ($payload['meta_user_id'] ?? '') === $metaUserId) {
+                Storage::disk('local')->delete($path);
+                $removed++;
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    return $removed;
+};
+
+Route::post('/marketing/publisher/meta/deauthorize', function (Request $request) use ($decodeMetaSignedRequest, $removeMetaPublisherConnections) {
+    $payload = $decodeMetaSignedRequest($request);
+    $metaUserId = trim((string) ($payload['user_id'] ?? ''));
+
+    if ($metaUserId === '') {
+        abort(400, 'user_id ausente no callback de desautorização.');
+    }
+
+    $removed = $removeMetaPublisherConnections($metaUserId);
+
+    Storage::disk('local')->put(
+        'marketing/publisher/meta/deauthorization-'.hash('sha256', $metaUserId.'|'.now()->toIso8601String()).'.json',
+        json_encode([
+            'meta_user_id' => $metaUserId,
+            'removed_connections' => $removed,
+            'processed_at' => now()->toIso8601String(),
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+    );
+
+    return response()->json(['ok' => true]);
+})->middleware('throttle:20,1')->name('api.marketing.publisher.meta.deauthorize');
+
+Route::post('/marketing/publisher/meta/data-deletion', function (Request $request) use ($decodeMetaSignedRequest, $removeMetaPublisherConnections) {
+    $payload = $decodeMetaSignedRequest($request);
+    $metaUserId = trim((string) ($payload['user_id'] ?? ''));
+
+    if ($metaUserId === '') {
+        abort(400, 'user_id ausente na solicitação de exclusão.');
+    }
+
+    $confirmationCode = bin2hex(random_bytes(16));
+    $removed = $removeMetaPublisherConnections($metaUserId);
+    $recordPath = 'marketing/publisher/meta/deletion-requests/'.$confirmationCode.'.json';
+
+    Storage::disk('local')->put(
+        $recordPath,
+        json_encode([
+            'confirmation_code' => $confirmationCode,
+            'meta_user_id_hash' => hash('sha256', $metaUserId),
+            'status' => 'completed',
+            'removed_connections' => $removed,
+            'processed_at' => now()->toIso8601String(),
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+    );
+
+    return response()->json([
+        'url' => url('/api/marketing/publisher/meta/data-deletion/'.$confirmationCode),
+        'confirmation_code' => $confirmationCode,
+    ]);
+})->middleware('throttle:20,1')->name('api.marketing.publisher.meta.data-deletion');
+
+Route::get('/marketing/publisher/meta/data-deletion/{confirmationCode}', function (string $confirmationCode) {
+    abort_unless((bool) preg_match('/^[a-f0-9]{32}$/', $confirmationCode), 404);
+
+    $path = 'marketing/publisher/meta/deletion-requests/'.$confirmationCode.'.json';
+    abort_unless(Storage::disk('local')->exists($path), 404);
+
+    $record = json_decode(Storage::disk('local')->get($path), true);
+
+    return response()->json([
+        'confirmation_code' => $confirmationCode,
+        'status' => (string) ($record['status'] ?? 'unknown'),
+        'processed_at' => $record['processed_at'] ?? null,
+    ]);
+})->middleware('throttle:60,1')->name('api.marketing.publisher.meta.data-deletion-status');
 
 require __DIR__.'/site_factory_api.php';
