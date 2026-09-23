@@ -367,6 +367,73 @@ final class SocialDistributionHandoff
         ]);
     }
 
+    /**
+     * Fetch provider-confirmed publication metadata and basic engagement.
+     * This is intentionally limited to fields that can be queried directly
+     * from the published object without inferring reach or paid-media results.
+     *
+     * @param array<string, mixed> $piece
+     * @param array<string, mixed> $account
+     * @return array<string, mixed>
+     */
+    public function fetchMetaPublicationMetrics(array $piece, array $account = []): array
+    {
+        $config = array_replace((array) config('marketing_agents.publisher.meta', []), $account);
+        $token = trim((string) ($config['access_token'] ?? ''));
+        $graphVersion = trim((string) ($config['graph_version'] ?? ''));
+        $baseUrl = rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/');
+        $externalId = trim((string) ($piece['publication_external_id'] ?? ''));
+        $channel = strtolower(trim((string) ($piece['publication_channel'] ?? '')));
+
+        if ($token === '' || $graphVersion === '' || $externalId === '') {
+            return [
+                'ok' => false,
+                'status' => 'METRICS_UNAVAILABLE',
+                'error' => 'publisher_or_external_id_missing',
+            ];
+        }
+
+        $fields = $channel === 'instagram'
+            ? 'id,timestamp,permalink,media_type,media_product_type,like_count,comments_count'
+            : 'id,created_time,permalink_url';
+
+        $response = Http::acceptJson()
+            ->timeout(30)
+            ->get($baseUrl.'/'.$graphVersion.'/'.$externalId, [
+                'fields' => $fields,
+                'access_token' => $token,
+            ]);
+
+        if (! $response->successful()) {
+            return [
+                'ok' => false,
+                'status' => 'METRICS_RETRY',
+                'http_status' => $response->status(),
+                'error' => 'meta_metrics_http_error',
+            ];
+        }
+
+        $payload = (array) $response->json();
+
+        return [
+            'ok' => true,
+            'status' => 'METRICS_SYNCED',
+            'channel' => $channel,
+            'external_id' => $externalId,
+            'provider_data' => [
+                'timestamp' => $payload['timestamp'] ?? $payload['created_time'] ?? null,
+                'permalink' => $payload['permalink'] ?? $payload['permalink_url'] ?? null,
+                'media_type' => $payload['media_type'] ?? null,
+                'media_product_type' => $payload['media_product_type'] ?? null,
+            ],
+            'engagement' => [
+                'likes' => isset($payload['like_count']) ? (int) $payload['like_count'] : null,
+                'comments' => isset($payload['comments_count']) ? (int) $payload['comments_count'] : null,
+            ],
+            'synced_at' => now()->toISOString(),
+        ];
+    }
+
     /** @param array<string, mixed> $distribution */
     private function approvedChannels(array $distribution): array
     {

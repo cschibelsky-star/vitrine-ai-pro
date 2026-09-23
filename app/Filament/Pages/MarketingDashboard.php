@@ -316,7 +316,7 @@ class MarketingDashboard extends Page
                 continue;
             }
             $job = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
-            if (is_array($job) && in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL'], true)
+            if (is_array($job) && in_array($job['status'] ?? '', ['APROVADO', 'PLANEJADO_EDITORIAL', 'PUBLICADO'], true)
                 && hash_equals((string) ($job['approved_version'] ?? ''), $this->pieceVersion($job))) {
                 $stableExpiry = now()->startOfHour()->addHours(6);
 
@@ -571,6 +571,8 @@ class MarketingDashboard extends Page
         $job['schedule_timezone'] = 'America/Sao_Paulo';
         $job['publication_status'] = $publisher === [] ? 'PUBLISHER_NOT_CONNECTED' : 'SCHEDULED_PENDING_EXECUTOR';
         $job['publication_channel'] = $publisher === [] ? null : 'meta';
+        $job['publisher_connection_path'] = $publisher === [] ? null : $this->metaPublisherStoragePath();
+        $job['publisher_page_id'] = $publisher === [] ? null : (string) ($publisher['page_id'] ?? '');
         $job['publication_requested_at'] = null;
         $job['updated_at'] = now()->toISOString();
         $this->saveGalleryPiece($job);
@@ -632,7 +634,9 @@ class MarketingDashboard extends Page
             if ($publicationStatus === 'PUBLISHED') {
                 $job['published_at'] = now()->toISOString();
                 $job['scheduled_at'] = null;
-                $job['status'] = 'APROVADO';
+                $job['status'] = 'PUBLICADO';
+                $job['metrics_status'] = 'PENDING';
+                $job['metrics_next_sync_at'] = now()->addMinutes(10)->toISOString();
                 $this->pieceFeedback = 'Publicação confirmada pelo provedor. ID externo: '.(string) ($job['publication_external_id'] ?? '');
                 $this->pieceError = null;
             } elseif ($publicationStatus === 'PUBLISHING') {
