@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CentroIaBrokerController;
 use App\Http\Controllers\Api\LeadCaptureController;
 use App\Http\Controllers\Api\MarketingDashboardStateController;
+use App\Marketing\Application\SocialDistributionHandoff;
 use App\Marketing\Domain\Video\VideoProject;
 use App\Marketing\Infrastructure\Video\GeminiVeoSceneRenderer;
 use App\Models\AiAgent;
@@ -10,6 +11,7 @@ use App\Models\AiProvider;
 use App\Services\Ai\AiMediaGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -205,6 +207,133 @@ Route::middleware('throttle:30,1')->group(function () {
     })->name('api.internal.marketing.media.video.refresh');
 });
 
+
+$assertMarketingEngine = static function (Request $request): void {
+    $expectedToken = trim((string) env('MARKETING_ENGINE_TOKEN', ''));
+    $receivedToken = trim((string) $request->bearerToken());
+
+    abort_unless(
+        $expectedToken !== '' && $receivedToken !== '' && hash_equals($expectedToken, $receivedToken),
+        401
+    );
+};
+
+$metaBridgeConnectionPath = static function (string $projectId, int $clientId): string {
+    return 'marketing/publisher/meta/bridge/connections/'.hash('sha256', $projectId.'|'.$clientId).'.enc';
+};
+
+Route::post('/internal/marketing/publisher/meta/connect-url', function (Request $request) use ($assertMarketingEngine) {
+    $assertMarketingEngine($request);
+
+    $data = $request->validate([
+        'project_id' => ['required', 'string', 'max:120'],
+        'client_id' => ['required', 'integer', 'min:1'],
+        'return_url' => ['required', 'url', 'max:2048'],
+    ]);
+
+    $returnHost = strtolower((string) parse_url((string) $data['return_url'], PHP_URL_HOST));
+    abort_unless(in_array($returnHost, ['social.hml.vitrineiapro.com.br'], true), 422);
+
+    $meta = (array) config('marketing_agents.publisher.meta', []);
+    $appId = trim((string) ($meta['app_id'] ?? ''));
+    $appSecret = trim((string) ($meta['app_secret'] ?? ''));
+    $version = trim((string) ($meta['graph_version'] ?? ''));
+    abort_if($appId === '' || $appSecret === '' || $version === '', 503, 'meta_app_not_configured');
+
+    $state = bin2hex(random_bytes(32));
+    $statePath = 'marketing/publisher/meta/bridge/states/'.hash('sha256', $state).'.enc';
+    Storage::disk('local')->makeDirectory('marketing/publisher/meta/bridge/states');
+    Storage::disk('local')->put($statePath, Crypt::encryptString(json_encode([
+        'project_id' => (string) $data['project_id'],
+        'client_id' => (int) $data['client_id'],
+        'return_url' => (string) $data['return_url'],
+        'created_at' => now()->toIso8601String(),
+    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
+
+    $callback = url('/marketing/publisher/meta/bridge/callback');
+    $authorizationUrl = 'https://www.facebook.com/'.$version.'/dialog/oauth?'.http_build_query([
+        'client_id' => $appId,
+        'redirect_uri' => $callback,
+        'state' => $state,
+        'response_type' => 'code',
+        'scope' => implode(',', [
+            'pages_show_list',
+            'pages_read_engagement',
+            'pages_manage_posts',
+            'instagram_basic',
+            'instagram_content_publish',
+            'business_management',
+        ]),
+    ]);
+
+    return response()->json(['ok' => true, 'authorization_url' => $authorizationUrl]);
+})->middleware('throttle:20,1')->name('api.internal.marketing.publisher.meta.connect-url');
+
+Route::post('/internal/marketing/publisher/meta/status', function (Request $request) use ($assertMarketingEngine, $metaBridgeConnectionPath) {
+    $assertMarketingEngine($request);
+    $data = $request->validate([
+        'project_id' => ['required', 'string', 'max:120'],
+        'client_id' => ['required', 'integer', 'min:1'],
+    ]);
+
+    $path = $metaBridgeConnectionPath((string) $data['project_id'], (int) $data['client_id']);
+    if (! Storage::disk('local')->exists($path)) {
+        return response()->json(['ok' => true, 'connected' => false]);
+    }
+
+    $payload = json_decode(Crypt::decryptString(Storage::disk('local')->get($path)), true, 512, JSON_THROW_ON_ERROR);
+
+    return response()->json([
+        'ok' => true,
+        'connected' => true,
+        'page_name' => $payload['page_name'] ?? null,
+        'instagram_username' => $payload['instagram_username'] ?? null,
+        'connected_at' => $payload['connected_at'] ?? null,
+    ]);
+})->middleware('throttle:60,1')->name('api.internal.marketing.publisher.meta.status');
+
+Route::post('/internal/marketing/publisher/meta/disconnect', function (Request $request) use ($assertMarketingEngine, $metaBridgeConnectionPath) {
+    $assertMarketingEngine($request);
+    $data = $request->validate([
+        'project_id' => ['required', 'string', 'max:120'],
+        'client_id' => ['required', 'integer', 'min:1'],
+    ]);
+
+    Storage::disk('local')->delete($metaBridgeConnectionPath((string) $data['project_id'], (int) $data['client_id']));
+
+    return response()->json(['ok' => true]);
+})->middleware('throttle:20,1')->name('api.internal.marketing.publisher.meta.disconnect');
+
+Route::post('/internal/marketing/publisher/meta/publish', function (Request $request, SocialDistributionHandoff $publisher) use ($assertMarketingEngine, $metaBridgeConnectionPath) {
+    $assertMarketingEngine($request);
+    $data = $request->validate([
+        'project_id' => ['required', 'string', 'max:120'],
+        'client_id' => ['required', 'integer', 'min:1'],
+        'channel' => ['required', 'in:instagram,facebook'],
+        'asset_url' => ['required', 'url', 'max:2048'],
+        'caption' => ['nullable', 'string', 'max:10000'],
+        'type' => ['nullable', 'in:image,video'],
+    ]);
+
+    $path = $metaBridgeConnectionPath((string) $data['project_id'], (int) $data['client_id']);
+    abort_unless(Storage::disk('local')->exists($path), 409, 'publisher_not_connected');
+
+    $connection = json_decode(Crypt::decryptString(Storage::disk('local')->get($path)), true, 512, JSON_THROW_ON_ERROR);
+
+    $account = [
+        'access_token' => (string) ($connection['access_token'] ?? ''),
+        'instagram_user_id' => $data['channel'] === 'instagram' ? (string) ($connection['instagram_user_id'] ?? '') : '',
+        'facebook_page_id' => $data['channel'] === 'facebook' ? (string) ($connection['page_id'] ?? '') : '',
+        'graph_version' => (string) ($connection['graph_version'] ?? config('marketing_agents.publisher.meta.graph_version')),
+        'base_url' => (string) config('marketing_agents.publisher.meta.base_url', 'https://graph.facebook.com'),
+    ];
+
+    return response()->json($publisher->publishMetaNow([
+        'type' => (string) ($data['type'] ?? 'image'),
+        'asset_url' => (string) $data['asset_url'],
+        'caption' => (string) ($data['caption'] ?? ''),
+    ], $account));
+})->middleware('throttle:20,1')->name('api.internal.marketing.publisher.meta.publish');
 
 $decodeMetaSignedRequest = static function (Request $request): array {
     $signedRequest = trim((string) $request->input('signed_request', ''));

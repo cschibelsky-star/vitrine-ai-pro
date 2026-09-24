@@ -82,6 +82,100 @@ Route::post('/marketing/internal/finalize-reel-03', function (Request $request, 
     ));
 })->middleware(['throttle:2,1'])->name('marketing.internal.finalize-reel-03');
 
+
+Route::get('/marketing/publisher/meta/bridge/callback', function (Request $request) {
+    $state = trim((string) $request->query('state', ''));
+    $code = trim((string) $request->query('code', ''));
+    abort_if($state === '' || $code === '', 400, 'meta_oauth_callback_invalid');
+
+    $statePath = 'marketing/publisher/meta/bridge/states/'.hash('sha256', $state).'.enc';
+    abort_unless(Storage::disk('local')->exists($statePath), 419, 'meta_oauth_state_expired');
+
+    $context = json_decode(
+        Crypt::decryptString(Storage::disk('local')->get($statePath)),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+    Storage::disk('local')->delete($statePath);
+
+    $createdAt = isset($context['created_at']) ? \Illuminate\Support\Carbon::parse($context['created_at']) : null;
+    abort_if(! $createdAt || $createdAt->lt(now()->subMinutes(15)), 419, 'meta_oauth_state_expired');
+
+    $returnUrl = (string) ($context['return_url'] ?? '');
+    $returnHost = strtolower((string) parse_url($returnUrl, PHP_URL_HOST));
+    abort_unless(in_array($returnHost, ['social.hml.vitrineiapro.com.br'], true), 422);
+
+    $meta = (array) config('marketing_agents.publisher.meta', []);
+    $appId = trim((string) ($meta['app_id'] ?? ''));
+    $appSecret = trim((string) ($meta['app_secret'] ?? ''));
+    $version = trim((string) ($meta['graph_version'] ?? ''));
+    abort_if($appId === '' || $appSecret === '' || $version === '', 503, 'meta_app_not_configured');
+
+    try {
+        $callback = url('/marketing/publisher/meta/bridge/callback');
+        $tokenResponse = Http::acceptJson()->timeout(30)->get(
+            'https://graph.facebook.com/'.$version.'/oauth/access_token',
+            [
+                'client_id' => $appId,
+                'client_secret' => $appSecret,
+                'redirect_uri' => $callback,
+                'code' => $code,
+            ]
+        );
+
+        if (! $tokenResponse->successful() || trim((string) $tokenResponse->json('access_token')) === '') {
+            throw new RuntimeException('Falha ao obter autorização Meta.');
+        }
+
+        $userToken = trim((string) $tokenResponse->json('access_token'));
+
+        $accountsResponse = Http::acceptJson()->timeout(30)->get(
+            'https://graph.facebook.com/'.$version.'/me/accounts',
+            [
+                'fields' => 'id,name,access_token,instagram_business_account{id,username,name}',
+                'access_token' => $userToken,
+                'limit' => 100,
+            ]
+        );
+
+        if (! $accountsResponse->successful()) {
+            throw new RuntimeException('Falha ao consultar Páginas Meta autorizadas.');
+        }
+
+        $accounts = (array) $accountsResponse->json('data', []);
+        $account = collect($accounts)->first(fn ($item) => is_array($item) && ! empty($item['id']) && ! empty($item['access_token']));
+
+        if (! is_array($account)) {
+            throw new RuntimeException('Nenhuma Página Meta elegível foi encontrada.');
+        }
+
+        $instagram = (array) ($account['instagram_business_account'] ?? []);
+        $connectionPath = 'marketing/publisher/meta/bridge/connections/'.hash(
+            'sha256',
+            (string) ($context['project_id'] ?? '').'|'.(int) ($context['client_id'] ?? 0)
+        ).'.enc';
+
+        Storage::disk('local')->makeDirectory('marketing/publisher/meta/bridge/connections');
+        Storage::disk('local')->put($connectionPath, Crypt::encryptString(json_encode([
+            'provider' => 'meta',
+            'page_id' => (string) $account['id'],
+            'page_name' => (string) ($account['name'] ?? 'Página Meta'),
+            'instagram_user_id' => (string) ($instagram['id'] ?? ''),
+            'instagram_username' => (string) ($instagram['username'] ?? ''),
+            'access_token' => (string) $account['access_token'],
+            'graph_version' => $version,
+            'connected_at' => now()->toIso8601String(),
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)));
+
+        return redirect()->away($returnUrl.(str_contains($returnUrl, '?') ? '&' : '?').'publisher=connected');
+    } catch (Throwable $exception) {
+        report($exception);
+
+        return redirect()->away($returnUrl.(str_contains($returnUrl, '?') ? '&' : '?').'publisher=error');
+    }
+})->middleware('throttle:20,1')->name('marketing.publisher.meta.bridge.callback');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/marketing/publisher/meta/connect', function (Request $request) {
         $meta = (array) config('marketing_agents.publisher.meta', []);
