@@ -321,11 +321,28 @@
             .vm-grid{grid-template-columns:1fr}.vm-hero{grid-template-columns:1fr}.vm-hero-brand{display:none}.vm-modules{grid-template-columns:repeat(2,1fr)}.vm-flow-layout{grid-template-columns:1fr}
         }
         @media (max-width:760px){
-            .vm-layout{display:block}.vm-sidebar{position:relative;height:auto;padding:14px}.vm-nav{grid-template-columns:repeat(2,1fr)}.vm-side-card{display:none}
-            .vm-logo{padding-bottom:10px}.vm-main{width:100%}.vm-topbar{padding:10px 14px;height:64px}.vm-search{display:none}.vm-user-name,.vm-user-role{display:none}
-            .vm-content{padding:14px}.vm-hero{min-height:auto;padding:25px 20px}.vm-hero h1{font-size:42px}.vm-hero-lead{font-size:20px}.vm-stats{grid-template-columns:1fr 1fr;gap:10px}.vm-stat{padding:15px}.vm-grid{gap:10px}.vm-campaign-row{grid-template-columns:48px 1fr auto}.vm-time{display:none}.vm-quote{align-items:flex-start;flex-direction:column}.vm-form{grid-template-columns:1fr}.vm-modules{grid-template-columns:1fr}.vm-flow-form{grid-template-columns:1fr}.vm-field.full{grid-column:auto}.vm-workstation-head{flex-direction:column}
+            .vm-layout{display:block;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+            .vm-sidebar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));top:auto;height:auto;padding:7px;z-index:60;border:1px solid rgba(139,92,246,.26);border-radius:18px;background:rgba(16,11,34,.96);backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,.46)}
+            .vm-logo,.vm-side-card{display:none}
+            .vm-nav{display:flex;gap:6px;margin:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x proximity}
+            .vm-nav::-webkit-scrollbar{display:none}
+            .vm-nav a{flex:0 0 68px;min-height:54px;padding:6px 4px;gap:4px;flex-direction:column;justify-content:center;text-align:center;border-radius:12px;font-size:9px;scroll-snap-align:start}
+            .vm-nav svg{width:19px;height:19px}
+            .vm-main{width:100%}
+            .vm-topbar{padding:8px 12px;height:60px;position:sticky;top:0}
+            .vm-search{display:none}.vm-user-name,.vm-user-role{display:none}.vm-top-actions{margin-left:auto}.vm-avatar{width:38px;height:38px}
+            .vm-content{padding:12px}
+            .vm-context-bar{align-items:flex-start;flex-direction:column;padding:12px}.vm-context-actions{width:100%;overflow-x:auto;flex-wrap:nowrap}
+            .vm-hero{min-height:auto;padding:22px 18px;border-radius:18px}.vm-hero h1{font-size:38px}.vm-hero-lead{font-size:19px}.vm-hero-sub{font-size:13px}.vm-cta{min-height:44px}
+            .vm-stats{grid-template-columns:1fr 1fr;gap:10px}.vm-stat{padding:14px}.vm-stat-value{font-size:27px}
+            .vm-grid{grid-template-columns:1fr;gap:10px}.vm-panel{padding:15px}
+            .vm-results-head{align-items:flex-start;flex-direction:column}.vm-result-grid{grid-auto-columns:min(78vw,230px)}
+            .vm-campaign-row{grid-template-columns:48px 1fr auto}.vm-time{display:none}
+            .vm-quote{align-items:flex-start;flex-direction:column}.vm-form{grid-template-columns:1fr}.vm-send{min-height:44px;width:100%}
+            .vm-modules{grid-template-columns:1fr}.vm-flow-form{grid-template-columns:1fr}.vm-field.full{grid-column:auto}.vm-workstation-head{flex-direction:column}
+            .vm-machine{grid-template-columns:1fr}.vm-machine-orb{display:none}.vm-machine-track{grid-template-columns:1fr 1fr;gap:6px}
         }
-        @media (max-width:470px){ .vm-nav{grid-template-columns:1fr 1fr}.vm-stats{grid-template-columns:1fr}.vm-logo-title{font-size:16px}.vm-hero h1{font-size:36px}.vm-content{padding:10px}.vm-campaign-row{grid-template-columns:46px 1fr}.vm-status{display:none} }
+        @media (max-width:470px){ .vm-stats{grid-template-columns:1fr}.vm-hero h1{font-size:34px}.vm-content{padding:10px}.vm-campaign-row{grid-template-columns:46px 1fr}.vm-status{display:none}.vm-context-btn{white-space:nowrap}.vm-panel-title{align-items:flex-start;flex-direction:column}.vm-machine-track{grid-template-columns:1fr}.vm-chat{max-height:300px}.vm-msg{max-width:94%} }
     </style>
 
     <div class="vm-shell">
