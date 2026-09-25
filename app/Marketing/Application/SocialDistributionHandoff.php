@@ -252,7 +252,7 @@ final class SocialDistributionHandoff
      *
      * @return array<string, mixed>
      */
-    public function publishTvSumareArticleNow(string $articleUrl, string $format = 'image'): array
+    public function publishTvSumareArticleNow(string $articleUrl, string $format = 'image', array $account = []): array
     {
         $articleUrl = trim($articleUrl);
         if ($articleUrl === '' || filter_var($articleUrl, FILTER_VALIDATE_URL) === false) {
@@ -348,13 +348,13 @@ final class SocialDistributionHandoff
                 'type' => 'video',
                 'asset_url' => $assetUrl,
                 'caption' => implode("\n\n", $captionParts),
-            ]);
+            ], $account);
         } else {
             $publication = $this->publishMetaNow([
                 'type' => 'image',
                 'asset_url' => $imageUrl,
                 'caption' => implode("\n\n", $captionParts),
-            ]);
+            ], $account);
         }
 
         return array_merge($publication, [

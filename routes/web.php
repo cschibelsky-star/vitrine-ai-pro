@@ -92,6 +92,55 @@ Route::post('/marketing/internal/publish-tv-sumare-article', function (Request $
     ));
 })->middleware(['throttle:10,1'])->name('marketing.internal.publish-tv-sumare-article');
 
+Route::post('/marketing/internal/publish-tv-sumare-facebook', function (Request $request, SocialDistributionHandoff $publisher) {
+    $expected = (string) env('MARKETING_ENGINE_TOKEN', '');
+    abort_unless($expected !== '' && hash_equals($expected, (string) $request->header('X-Marketing-Engine-Token', '')), 403);
+
+    $validated = $request->validate([
+        'url' => ['required', 'url', 'max:2048'],
+        'page_id' => ['required', 'string', 'max:80'],
+        'format' => ['nullable', 'in:image,reel'],
+    ]);
+
+    $meta = (array) config('marketing_agents.publisher.meta', []);
+    $token = trim((string) ($meta['access_token'] ?? ''));
+    $version = trim((string) ($meta['graph_version'] ?? ''));
+    $baseUrl = rtrim((string) ($meta['base_url'] ?? 'https://graph.facebook.com'), '/');
+    abort_if($token === '' || $version === '', 503, 'meta_publisher_not_configured');
+
+    $accounts = Http::acceptJson()->timeout(30)->get(
+        $baseUrl.'/'.$version.'/me/accounts',
+        [
+            'fields' => 'id,name,access_token',
+            'access_token' => $token,
+            'limit' => 100,
+        ]
+    );
+
+    abort_unless($accounts->successful(), 502, 'meta_accounts_lookup_failed');
+
+    $requestedPageId = (string) $validated['page_id'];
+    $page = collect((array) $accounts->json('data', []))->first(
+        fn ($item) => is_array($item)
+            && (string) ($item['id'] ?? '') === $requestedPageId
+            && trim((string) ($item['access_token'] ?? '')) !== ''
+    );
+
+    abort_unless(is_array($page), 409, 'facebook_page_not_authorized');
+
+    return response()->json($publisher->publishTvSumareArticleNow(
+        (string) $validated['url'],
+        (string) ($validated['format'] ?? 'image'),
+        [
+            'access_token' => (string) $page['access_token'],
+            'instagram_user_id' => '',
+            'facebook_page_id' => $requestedPageId,
+            'graph_version' => $version,
+            'base_url' => $baseUrl,
+        ],
+    ));
+})->middleware(['throttle:10,1'])->name('marketing.internal.publish-tv-sumare-facebook');
+
 Route::post('/marketing/internal/finalize-reel-03', function (Request $request, VideoFinalizationService $service) {
     $expected = (string) env('VIDEO_FINALIZE_TOKEN', '');
     abort_unless($expected !== '' && hash_equals($expected, (string) $request->header('X-Vitrine-Finalize-Token', '')), 403);
