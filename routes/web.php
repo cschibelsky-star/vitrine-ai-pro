@@ -9,6 +9,32 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+Route::get('/manifest.webmanifest', function () {
+    return response()->json([
+        'name' => 'Vitrine IA Pro',
+        'short_name' => 'Vitrine IA Pro',
+        'description' => 'Cockpit operacional do ecossistema Vitrine IA Pro',
+        'start_url' => '/cockpit',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#0B1020',
+        'theme_color' => '#0B1020',
+        'lang' => 'pt-BR',
+    ])->header('Content-Type', 'application/manifest+json');
+});
+
+Route::get('/sw.js', function () {
+    return response(<<<'JS'
+const CACHE = "vitrine-ia-pro-shell-v1";
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", event => event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", event => {
+    if (event.request.method !== "GET" || event.request.mode === "navigate") return;
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+});
+JS, 200, ['Content-Type' => 'application/javascript', 'Service-Worker-Allowed' => '/']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Compatibilidade de autenticação
