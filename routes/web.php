@@ -27,6 +27,31 @@ Route::get('/login', function () {
     return redirect('/admin/login');
 })->name('login');
 
+Route::get('/sso/cockpit', function (Request $request) {
+    $token = trim((string) $request->query('token', ''));
+    abort_unless(strlen($token) === 64, 404);
+
+    $response = Http::acceptJson()->timeout(5)->get('https://hml.vitrineiapro.com.br/cockpit/sso/consume', [
+        'token' => $token,
+    ]);
+    abort_unless($response->successful(), 403, 'cockpit_sso_invalid');
+
+    $payload = (array) $response->json();
+    abort_unless(($payload['target'] ?? null) === 'marketing-ia', 403, 'cockpit_sso_target_invalid');
+    abort_unless(in_array(($payload['role'] ?? null), ['admin'], true), 403, 'cockpit_sso_role_invalid');
+
+    $email = trim((string) ($payload['email'] ?? ''));
+    abort_unless(filter_var($email, FILTER_VALIDATE_EMAIL), 403, 'cockpit_sso_identity_invalid');
+
+    $user = \App\Models\User::query()->where('email', $email)->first();
+    abort_unless($user && ($user->is_active ?? true), 403, 'cockpit_sso_user_not_provisioned');
+
+    Auth::login($user, false);
+    $request->session()->regenerate();
+
+    return redirect('/admin/marketing-dashboard');
+})->middleware('throttle:20,1')->name('marketing.sso.cockpit');
+
 Route::get('/marketing/media/reel-01/{version}', [VideoPreviewController::class, 'publicMedia'])
     ->middleware(['throttle:60,1'])
     ->where('version', '[A-Za-z0-9._-]+\\.mp4')
