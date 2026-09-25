@@ -20,8 +20,22 @@ Route::get('/manifest.webmanifest', function () {
         'background_color' => '#0B1020',
         'theme_color' => '#0B1020',
         'lang' => 'pt-BR',
+        'icons' => [
+            ['src' => '/pwa/icon.svg', 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'any maskable'],
+        ],
     ])->header('Content-Type', 'application/manifest+json');
 });
+
+Route::get('/pwa/icon.svg', function () {
+    return response(<<<'SVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0B1020"/>
+  <circle cx="256" cy="256" r="164" fill="none" stroke="#2563EB" stroke-width="30"/>
+  <path d="M162 180h188l-94 190z" fill="#F8FAFC"/>
+  <circle cx="256" cy="232" r="42" fill="#2563EB"/>
+</svg>
+SVG, 200, ['Content-Type' => 'image/svg+xml', 'Cache-Control' => 'public, max-age=86400']);
+})->name('pwa.icon');
 
 Route::get('/sw.js', function () {
     return response(<<<'JS'
