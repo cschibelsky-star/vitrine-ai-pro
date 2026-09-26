@@ -174,12 +174,23 @@ Route::middleware('throttle:30,1')->group(function () {
             'resolution' => '720p',
         ]);
 
+        $status = (string) ($job['status'] ?? 'processing');
+        $jobRef = trim((string) ($job['job_ref'] ?? ''));
+        $renderRef = trim((string) ($job['render_ref'] ?? ''));
+
+        if ($jobRef === '' && $status === 'completed' && $renderRef !== '') {
+            $jobRef = 'completed:'.base64_encode(json_encode([
+                'asset_url' => $renderRef,
+            ], JSON_UNESCAPED_SLASHES) ?: '{}');
+        }
+
         return response()->json([
             'ok' => true,
-            'provider' => 'gemini_veo',
-            'status' => (string) ($job['status'] ?? 'processing'),
-            'job_ref' => (string) ($job['job_ref'] ?? ''),
-            'model' => (string) config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview'),
+            'provider' => (string) ($job['provider'] ?? 'gemini_veo'),
+            'status' => $status,
+            'job_ref' => $jobRef,
+            'asset_url' => $renderRef !== '' ? $renderRef : null,
+            'model' => (string) ($job['model'] ?? config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview')),
         ]);
     })->name('api.internal.marketing.media.video');
 
@@ -195,13 +206,30 @@ Route::middleware('throttle:30,1')->group(function () {
             'job_ref' => ['required', 'string', 'max:500'],
         ]);
 
-        $job = $renderer->refresh((string) $data['job_ref']);
+        $jobRef = (string) $data['job_ref'];
+
+        if (str_starts_with($jobRef, 'completed:')) {
+            $payload = json_decode((string) base64_decode(substr($jobRef, strlen('completed:')), true), true);
+            $assetUrl = trim((string) ($payload['asset_url'] ?? ''));
+
+            abort_if($assetUrl === '', 422, 'completed_video_job_ref_invalid');
+
+            return response()->json([
+                'ok' => true,
+                'provider' => 'completed_asset',
+                'status' => 'completed',
+                'job_ref' => $jobRef,
+                'asset_url' => $assetUrl,
+            ]);
+        }
+
+        $job = $renderer->refresh($jobRef);
 
         return response()->json([
             'ok' => true,
-            'provider' => 'gemini_veo',
+            'provider' => (string) ($job['provider'] ?? 'gemini_veo'),
             'status' => (string) ($job['status'] ?? 'processing'),
-            'job_ref' => (string) ($job['job_ref'] ?? ''),
+            'job_ref' => (string) ($job['job_ref'] ?? $jobRef),
             'asset_url' => $job['render_ref'] ?? null,
         ]);
     })->name('api.internal.marketing.media.video.refresh');
