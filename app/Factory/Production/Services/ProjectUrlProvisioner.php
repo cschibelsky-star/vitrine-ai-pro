@@ -48,6 +48,16 @@ final class ProjectUrlProvisioner
             'identity_policy' => $kind === 'project'
                 ? 'p######.hml.vitrineiapro.com.br'
                 : 'c######.vitrineiapro.com.br',
+            'alias_policy' => $kind === 'project'
+                ? '<project-slug>.hml.vitrineiapro.com.br'
+                : '<customer-slug>.vitrineiapro.com.br',
+            'identity_rules' => [
+                'canonical' => 'O código p######/c###### é a identidade técnica imutável da implantação.',
+                'friendly_alias' => $kind === 'project'
+                    ? 'O alias amigável usa o slug do projeto e pode ser alterado sem mudar a identidade técnica.'
+                    : 'O alias amigável usa o slug do cliente e pode ser alterado sem mudar a identidade técnica.',
+                'activation_scope' => 'O provider deve provisionar o hostname canônico e todos os aliases declarados no registry antes de marcar READY.',
+            ],
             'activation' => [
                 'command' => ['python3', 'routing/activate_route.py', '--route-id', '<route-id>'],
                 'pipeline' => ['RESERVED', 'DNS_PENDING', 'ROUTE_PENDING', 'TLS_PENDING', 'HEALTH_PENDING', 'READY'],
