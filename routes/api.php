@@ -177,6 +177,9 @@ Route::middleware('throttle:30,1')->group(function () {
         $status = (string) ($job['status'] ?? 'processing');
         $jobRef = trim((string) ($job['job_ref'] ?? ''));
         $renderRef = trim((string) ($job['render_ref'] ?? ''));
+        if ($renderRef !== '' && str_starts_with($renderRef, '/')) {
+            $renderRef = $request->getSchemeAndHttpHost().$renderRef;
+        }
 
         if ($jobRef === '' && $status === 'completed' && $renderRef !== '') {
             $jobRef = 'completed:'.base64_encode(json_encode([
@@ -211,6 +214,9 @@ Route::middleware('throttle:30,1')->group(function () {
         if (str_starts_with($jobRef, 'completed:')) {
             $payload = json_decode((string) base64_decode(substr($jobRef, strlen('completed:')), true), true);
             $assetUrl = trim((string) ($payload['asset_url'] ?? ''));
+            if ($assetUrl !== '' && str_starts_with($assetUrl, '/')) {
+                $assetUrl = $request->getSchemeAndHttpHost().$assetUrl;
+            }
 
             abort_if($assetUrl === '', 422, 'completed_video_job_ref_invalid');
 
@@ -224,13 +230,17 @@ Route::middleware('throttle:30,1')->group(function () {
         }
 
         $job = $renderer->refresh($jobRef);
+        $assetUrl = trim((string) ($job['render_ref'] ?? ''));
+        if ($assetUrl !== '' && str_starts_with($assetUrl, '/')) {
+            $assetUrl = $request->getSchemeAndHttpHost().$assetUrl;
+        }
 
         return response()->json([
             'ok' => true,
             'provider' => (string) ($job['provider'] ?? 'gemini_veo'),
             'status' => (string) ($job['status'] ?? 'processing'),
             'job_ref' => (string) ($job['job_ref'] ?? $jobRef),
-            'asset_url' => $job['render_ref'] ?? null,
+            'asset_url' => $assetUrl !== '' ? $assetUrl : null,
         ]);
     })->name('api.internal.marketing.media.video.refresh');
 });
