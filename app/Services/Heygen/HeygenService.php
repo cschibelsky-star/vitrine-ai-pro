@@ -58,24 +58,55 @@ class HeygenService
         $config = $this->provider()?->config ?? [];
         if (is_string($config)) $config = json_decode($config, true) ?: [];
 
-        $avatarId = $job->avatar?->avatar_id ?: ($config['avatar_id'] ?? null);
-        $voiceId = $job->avatar?->voice_id ?: ($config['voice_id'] ?? null);
+        $marketingConfig = (array) config('marketing_video.heygen', []);
+        $requireExplicitAvatar = (bool) ($marketingConfig['require_explicit_avatar'] ?? true);
+        $requireExplicitVoice = (bool) ($marketingConfig['require_explicit_voice'] ?? true);
+        $allowAutomaticAvatar = (bool) ($marketingConfig['allow_automatic_avatar_selection'] ?? false);
 
-        if (!$avatarId) return $this->fail($job, 'Avatar ID ausente. Cadastre um avatar ou configure avatar_id no provedor HeyGen.');
+        $avatarId = $job->avatar?->avatar_id;
+        $voiceId = $job->avatar?->voice_id;
+
+        if (! $avatarId && $allowAutomaticAvatar && ! $requireExplicitAvatar) {
+            $avatarId = $config['avatar_id'] ?? null;
+        }
+
+        if (! $voiceId && ! $requireExplicitVoice) {
+            $voiceId = $config['voice_id'] ?? null;
+        }
+
+        if (! $avatarId) {
+            return $this->fail($job, 'Avatar não aprovado. O Marketing IA exige seleção explícita do avatar antes de consumir créditos HeyGen.');
+        }
+
+        if (! $voiceId) {
+            return $this->fail($job, 'Voz não aprovada. O Marketing IA exige uma voice_id explícita antes de consumir créditos HeyGen.');
+        }
+
         if (!$job->script) return $this->fail($job, 'Roteiro ausente.');
+
+        $voiceSpeed = (float) ($marketingConfig['voice_speed'] ?? 1.0);
+        $voiceSpeed = max(0.5, min(1.5, $voiceSpeed));
+        $engine = trim((string) ($marketingConfig['engine'] ?? 'avatar_v'));
 
         $payload = [
             'type' => 'avatar',
             'avatar_id' => $avatarId,
-            'title' => $job->title ?: 'Vídeo Vitrine AI Pro',
+            'title' => $job->title ?: 'Vídeo Vitrine IA Pro',
             'aspect_ratio' => '16:9',
             'output_format' => 'mp4',
             'script' => $job->script,
+            'voice_id' => $voiceId,
+            'voice_settings' => [
+                'speed' => $voiceSpeed,
+                'volume' => 1.0,
+            ],
             'callback_url' => URL::to('/api/heygen/callback'),
             'callback_id' => (string) $job->id,
         ];
 
-        if ($voiceId) $payload['voice_id'] = $voiceId;
+        if ($engine !== '') {
+            $payload['engine'] = ['type' => $engine];
+        }
 
         $job->update([
             'status' => 'Gerando',

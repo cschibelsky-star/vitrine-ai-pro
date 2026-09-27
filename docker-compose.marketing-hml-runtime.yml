@@ -1,7 +1,91 @@
-include:
-  - .docker-compose.core-hml.yml.bak-20260902-025745-693426
-
 services:
+  marketing_db:
+    image: mariadb:11.4
+    container_name: vitrine_marketing_db_hml
+    restart: unless-stopped
+    env_file:
+      - ../.env.runtime
+    environment:
+      MARIADB_DATABASE: vitrine_marketing_hml
+      MARIADB_USER: vitrine_marketing
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - marketing_db_hml:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - vitrine_net
+
+  marketing_app:
+    image: vitrine-marketing-agents-core-hml-app:latest
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    container_name: vitrine_marketing_app_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php-fpm
+    env_file:
+      - ../.env.runtime
+    environment:
+      APP_NAME: "Vitrine Marketing IA HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_URL: "https://marketing.hml.vitrineiapro.com.br"
+      DB_CONNECTION: mysql
+      DB_HOST: marketing_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_marketing_hml
+      DB_USERNAME: vitrine_marketing
+      SESSION_DRIVER: file
+      SESSION_DOMAIN: marketing.hml.vitrineiapro.com.br
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+      SESSION_COOKIE: vitrine_marketing_hml_session
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - marketing_storage_hml:/var/www/html/storage
+      - ../storage/app/marketing/video-producer:/var/www/video-previews:ro
+    depends_on:
+      marketing_db:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
+  marketing_scheduler:
+    image: vitrine-marketing-agents-core-hml-app:latest
+    container_name: vitrine_marketing_scheduler_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    env_file:
+      - ../.env.runtime
+    environment:
+      APP_NAME: "Vitrine Marketing IA HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_URL: "https://marketing.hml.vitrineiapro.com.br"
+      DB_CONNECTION: mysql
+      DB_HOST: marketing_db
+      DB_PORT: 3306
+      DB_DATABASE: vitrine_marketing_hml
+      DB_USERNAME: vitrine_marketing
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - marketing_storage_hml:/var/www/html/storage
+      - ../storage/app/marketing/video-producer:/var/www/video-previews:ro
+    depends_on:
+      marketing_app:
+        condition: service_healthy
+    networks:
+      - vitrine_net
+
   marketing_web_internal:
     image: nginx:stable
     container_name: vitrine_marketing_web_internal_hml
@@ -14,3 +98,23 @@ services:
         condition: service_healthy
     networks:
       - vitrine_net
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.marketing-hml.rule=Host(`marketing.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.marketing-hml.entrypoints=websecure"
+      - "traefik.http.routers.marketing-hml.tls=true"
+      - "traefik.http.routers.marketing-hml.tls.certresolver=le"
+      - "traefik.http.services.marketing-hml.loadbalancer.server.port=80"
+
+volumes:
+  marketing_db_hml:
+  marketing_storage_hml:
+
+networks:
+  vitrine_net:
+    external: true
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network

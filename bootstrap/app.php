@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Middleware padrão do Laravel 12.
+        $middleware->trustProxies(at: ['172.18.0.0/16']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Tratamento padrão de exceções.
