@@ -1,0 +1,112 @@
+name: Cutover Marketing HML
+
+on:
+  push:
+    branches:
+      - feature/marketing-agents-core-v1
+    paths:
+      - .github/workflows/cutover-marketing-hml.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cutover-marketing-hml
+  cancel-in-progress: false
+
+jobs:
+  cutover:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    env:
+      OPS_REPO_DIR: /srv/projects/vitrine-marketing-agents-core-hml/repository
+      TARGET_BRANCH: feature/marketing-agents-core-v1
+      COMPOSE_FILE: docker-compose.marketing-hml-runtime.yml
+      DOCKER_PROJECT: vitrine-marketing-agents-core-hml
+
+    steps:
+      - name: Checkout workflow source
+        uses: actions/checkout@v4
+        with:
+          ref: feature/marketing-agents-core-v1
+          fetch-depth: 1
+          clean: true
+
+      - name: Preflight and preserve runtime branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$OPS_REPO_DIR"
+          test -z "$(git status --porcelain)"
+          PREV_BRANCH="$(git branch --show-current)"
+          PREV_HEAD="$(git rev-parse HEAD)"
+          test -n "$PREV_BRANCH"
+          git fetch --prune origin
+          git merge-base --is-ancestor "$PREV_HEAD" "origin/$TARGET_BRANCH"
+          git push origin "$PREV_HEAD:refs/heads/$PREV_BRANCH"
+          echo "PREV_BRANCH=$PREV_BRANCH" >> "$GITHUB_ENV"
+          echo "PREV_HEAD=$PREV_HEAD" >> "$GITHUB_ENV"
+
+      - name: Switch runtime worktree to official branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$OPS_REPO_DIR"
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          test -z "$(git status --porcelain)"
+          echo "TARGET_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Build Marketing application
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$OPS_REPO_DIR"
+          docker compose -p "$DOCKER_PROJECT" -f "$COMPOSE_FILE" build marketing_app
+
+      - name: Recreate Marketing services
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$OPS_REPO_DIR"
+          docker compose -p "$DOCKER_PROJECT" -f "$COMPOSE_FILE" up -d --no-build --force-recreate marketing_app marketing_scheduler marketing_web_internal
+
+      - name: Validate Marketing health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 36); do
+            APP_STATE="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' vitrine_marketing_app_hml 2>/dev/null || true)"
+            WEB_STATE="$(docker inspect -f '{{.State.Status}}' vitrine_marketing_web_internal_hml 2>/dev/null || true)"
+            if [ "$APP_STATE" = "healthy" ] && [ "$WEB_STATE" = "running" ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' vitrine_marketing_app_hml)" = "healthy"
+          test "$(docker inspect -f '{{.State.Status}}' vitrine_marketing_scheduler_hml)" = "running"
+          test "$(docker inspect -f '{{.State.Status}}' vitrine_marketing_web_internal_hml)" = "running"
+          HTTP_CODE="$(curl -ksS -o /tmp/marketing-cutover.out -w '%{http_code}' https://marketing.hml.vitrineiapro.com.br/)"
+          case "$HTTP_CODE" in
+            200|301|302|401|403) ;;
+            *) cat /tmp/marketing-cutover.out || true; exit 21 ;;
+          esac
+
+      - name: Roll back on failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$OPS_REPO_DIR"
+          git checkout -B "$PREV_BRANCH" "$PREV_HEAD"
+          docker compose -p "$DOCKER_PROJECT" -f "$COMPOSE_FILE" build marketing_app
+          docker compose -p "$DOCKER_PROJECT" -f "$COMPOSE_FILE" up -d --no-build --force-recreate marketing_app marketing_scheduler marketing_web_internal
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          cd "$OPS_REPO_DIR"
+          echo "branch=$(git branch --show-current)"
+          echo "head=$(git rev-parse HEAD)"
+          echo "target=${TARGET_HEAD:-unknown}"
