@@ -11,6 +11,7 @@ use App\Models\AiProvider;
 use App\Services\Ai\AiMediaGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,92 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::post('/leads', [LeadCaptureController::class, 'store'])
         ->name('api.leads.store');
 });
+
+Route::post('/internal/marketing/publisher/tv-sumare/facebook', function (Request $request, SocialDistributionHandoff $publisher) {
+    $expectedToken = trim((string) env('MARKETING_ENGINE_TOKEN', ''));
+    $receivedToken = trim((string) $request->bearerToken());
+
+    if ($expectedToken === '' || $receivedToken === '' || ! hash_equals($expectedToken, $receivedToken)) {
+        return response()->json(['ok' => false, 'error' => 'unauthorized'], 401);
+    }
+
+    $data = $request->validate([
+        'url' => ['required', 'url', 'max:2048'],
+        'page_id' => ['required', 'string', 'max:80'],
+        'format' => ['nullable', 'in:image,reel'],
+        'idempotency_key' => ['required', 'string', 'max:128'],
+        'dry_run' => ['nullable', 'boolean'],
+    ]);
+
+    $meta = (array) config('marketing_agents.publisher.meta', []);
+    $token = trim((string) ($meta['access_token'] ?? ''));
+    $version = trim((string) ($meta['graph_version'] ?? ''));
+    $baseUrl = rtrim((string) ($meta['base_url'] ?? 'https://graph.facebook.com'), '/');
+
+    if ($token === '' || $version === '') {
+        return response()->json(['ok' => false, 'error' => 'meta_publisher_not_configured'], 503);
+    }
+
+    $accounts = Http::acceptJson()->timeout(30)->get(
+        $baseUrl.'/'.$version.'/me/accounts',
+        [
+            'fields' => 'id,name,access_token',
+            'access_token' => $token,
+            'limit' => 100,
+        ]
+    );
+
+    if (! $accounts->successful()) {
+        return response()->json(['ok' => false, 'error' => 'meta_accounts_lookup_failed'], 502);
+    }
+
+    $requestedPageId = (string) $data['page_id'];
+    $page = collect((array) $accounts->json('data', []))->first(
+        fn ($item) => is_array($item)
+            && (string) ($item['id'] ?? '') === $requestedPageId
+            && trim((string) ($item['access_token'] ?? '')) !== ''
+    );
+
+    if (! is_array($page)) {
+        return response()->json(['ok' => false, 'error' => 'facebook_page_not_authorized'], 409);
+    }
+
+    if ((bool) ($data['dry_run'] ?? false)) {
+        return response()->json([
+            'ok' => true,
+            'validated' => true,
+            'dry_run' => true,
+            'page_id' => $requestedPageId,
+        ]);
+    }
+
+    $cacheKey = 'marketing:tv-sumare:facebook:'.hash('sha256', (string) $data['idempotency_key']);
+    if ($cached = Cache::get($cacheKey)) {
+        return response()->json($cached);
+    }
+
+    return Cache::lock($cacheKey.':lock', 90)->block(5, function () use ($cacheKey, $publisher, $data, $page, $requestedPageId, $version, $baseUrl) {
+        if ($cached = Cache::get($cacheKey)) {
+            return response()->json($cached);
+        }
+
+        $result = $publisher->publishTvSumareArticleNow(
+            (string) $data['url'],
+            (string) ($data['format'] ?? 'image'),
+            [
+                'access_token' => (string) $page['access_token'],
+                'instagram_user_id' => '',
+                'facebook_page_id' => $requestedPageId,
+                'graph_version' => $version,
+                'base_url' => $baseUrl,
+            ],
+        );
+
+        Cache::put($cacheKey, $result, now()->addDay());
+
+        return response()->json($result);
+    });
+})->middleware('throttle:10,1')->name('api.internal.marketing.publisher.tv-sumare.facebook');
 
 Route::middleware('throttle:30,1')->group(function () {
     Route::post('/internal/centro-ia/execute', [CentroIaBrokerController::class, 'execute'])
