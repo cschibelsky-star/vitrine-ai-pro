@@ -18,7 +18,7 @@ class AgendamentoResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Módulos Gerados';
+    protected static string|\UnitEnum|null $navigationGroup = 'Módulos Gerados';
 
     protected static ?string $navigationLabel = 'Agendamentos';
 
