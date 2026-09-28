@@ -1,0 +1,60 @@
+name: Core Feature Tests
+
+on:
+  push:
+    branches:
+      - feature/ai-cost-center-v1
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'routes/**'
+      - 'tests/Feature/**'
+      - 'tests/TestCase.php'
+      - 'phpunit.xml'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/core-feature-tests.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'routes/**'
+      - 'tests/Feature/**'
+      - 'tests/TestCase.php'
+      - 'phpunit.xml'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/core-feature-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  core-feature-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Prepare Laravel cache paths
+        run: |
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run Core feature tests
+        run: vendor/bin/phpunit tests/Feature --colors=never
