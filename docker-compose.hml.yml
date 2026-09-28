@@ -44,7 +44,7 @@ services:
     environment:
       <<: *factory-app-env
     command: >-
-      sh -lc 'php artisan config:clear > FACTORY_MIGRATE.txt 2>&1 &&
+      sh -lc 'mkdir -p storage/logs && php artisan config:clear > storage/logs/factory-hml-migrate.log 2>&1 &&
       rm -rf /tmp/factory-migrations && mkdir -p /tmp/factory-migrations &&
       cp database/migrations/*.php /tmp/factory-migrations/ &&
       rm -f
@@ -72,7 +72,7 @@ services:
       /tmp/factory-migrations/2026_06_28_223145_create_financeiro_table.php
       /tmp/factory-migrations/2026_06_28_223203_create_financeiro_table.php
       /tmp/factory-migrations/2026_06_28_224806_create_financeiro_table.php &&
-      php artisan migrate --force --path=/tmp/factory-migrations --realpath >> FACTORY_MIGRATE.txt 2>&1'
+      php artisan migrate --force --path=/tmp/factory-migrations --realpath >> storage/logs/factory-hml-migrate.log 2>&1'
     volumes:
       - ./:/var/www/html
     depends_on:
@@ -166,7 +166,7 @@ services:
       - sh
       - -lc
       - >-
-        log=app/Factory/FinalMaster/FACTORY_HML_DRYRUN.txt;
+        mkdir -p storage/logs; log=storage/logs/factory-hml-dryrun.log;
         rm -f "$$log";
         mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache;
         if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --prefer-dist --no-progress >> "$$log" 2>&1; fi;
