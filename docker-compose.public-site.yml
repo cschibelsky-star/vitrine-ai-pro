@@ -1,0 +1,52 @@
+services:
+  web:
+    image: php:8.3-apache
+    container_name: vitrine_site_web_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+        a2enmod rewrite headers >/dev/null
+        sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+        rm -rf /var/www/html/*
+        cp -a /var/www/source/assets /var/www/html/
+        cp -a /var/www/source/includes /var/www/html/
+        cp -a /var/www/source/demos /var/www/html/
+        cp -a /var/www/source/documentos /var/www/html/
+        cp /var/www/source/.htaccess /var/www/html/.htaccess
+        cp /var/www/source/config.php /var/www/html/config.php
+        for f in           index.php           casos-reais.php           contato.php           contratacao-publica.php           demonstracoes.php           desenvolvimento.php           diagnostico.php           diagnostico-resultado.php           documentos-publicos.php           governo.php           guia-digital.php           lgpd.php           news.php           produtos.php           salvar-lead.php           salvar-solicitacao.php           seguranca.php           sla.php           social-media.php           solicitacao-institucional.php           solicitacao-recebida.php           solucoes.php           termos.php           tv-digital.php
+        do
+          if [ -f "/var/www/source/$f" ]; then cp "/var/www/source/$f" "/var/www/html/$f"; fi
+        done
+        if [ ! -f /var/www/html/data/.seeded ]; then
+          cp -a /var/www/source/data/. /var/www/html/data/
+          touch /var/www/html/data/.seeded
+        fi
+        chown -R www-data:www-data /var/www/html/data
+        apache2-foreground
+    volumes:
+      - .:/var/www/source:ro
+      - vitrine_site_data:/var/www/html/data
+    ports:
+      - "127.0.0.1:19080:80"
+    networks:
+      - vitrine_net
+    healthcheck:
+      test: ["CMD", "php", "-r", "$c=@file_get_contents('http://127.0.0.1/index.php'); exit($c===false?1:0);"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  vitrine_site_data:
+    name: vitrine_site_data
+
+networks:
+  vitrine_net:
+    external: true
+    name: vitrine_net
