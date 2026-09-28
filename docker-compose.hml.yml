@@ -143,6 +143,8 @@ services:
         php -l routes/site_factory_api.php &&
         php -l routes/factory_generated.php &&
         echo LINT_OK &&
+        php artisan factory:smart-qa2 &&
+        echo SMART_QA2_OK &&
         tail -f /dev/null
     volumes:
       - ./:/var/www/html:ro
