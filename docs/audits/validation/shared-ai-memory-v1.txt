@@ -1,1 +1,0 @@
-Trigger de validação do lote Shared AI Memory.
