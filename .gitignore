@@ -25,3 +25,6 @@ error_log
 *.log
 __pycache__/
 *.py[cod]
+
+# Factory runtime execution artifacts
+app/Factory/FinalMaster/FACTORY_HML_*.txt
