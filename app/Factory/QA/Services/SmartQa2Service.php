@@ -92,7 +92,7 @@ class SmartQa2Service
     protected function criticalComponents(): array
     {
         return [
-            'url_provisioner' => app_path('Factory/Production/ProjectUrlProvisioner.php'),
+            'url_provisioner' => app_path('Factory/Production/Services/ProjectUrlProvisioner.php'),
             'final_master' => app_path('Factory/FinalMaster/Services/FactoryFinalMasterService.php'),
             'real_installer' => app_path('Factory/RealBuilder/Services/RealBuildInstaller.php'),
             'enterprise_installer' => app_path('Factory/EnterpriseMaturity/Services/EnterpriseBuildInstaller.php'),

@@ -148,6 +148,7 @@ services:
         tail -f /dev/null
     volumes:
       - ./:/var/www/html:ro
+      - ./storage:/var/www/html/storage
     depends_on:
       vitrine_factory_hml_db:
         condition: service_healthy
