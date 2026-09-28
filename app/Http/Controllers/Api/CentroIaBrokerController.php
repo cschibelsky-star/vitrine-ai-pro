@@ -266,6 +266,10 @@ class CentroIaBrokerController extends Controller
             $assetUrl = data_get($providerPayload, 'data.0.url')
                 ?? data_get($providerPayload, 'asset_url')
                 ?? data_get($providerPayload, 'url');
+            if (is_string($assetUrl) && str_starts_with(trim($assetUrl), '/')) {
+                $gatewayRoot = rtrim((string) preg_replace('#/v1$#', '', $apiBaseUrl), '/');
+                $assetUrl = $gatewayRoot.'/'.ltrim(trim($assetUrl), '/');
+            }
 
             if ($jobRef === '' && (! is_string($assetUrl) || trim($assetUrl) === '')) {
                 continue;
@@ -351,6 +355,10 @@ class CentroIaBrokerController extends Controller
             ?? data_get($payload, 'data.url')
             ?? data_get($payload, 'asset_url')
             ?? data_get($payload, 'url');
+        if (is_string($assetUrl) && str_starts_with(trim($assetUrl), '/')) {
+            $gatewayRoot = rtrim((string) preg_replace('#/v1$#', '', $apiBaseUrl), '/');
+            $assetUrl = $gatewayRoot.'/'.ltrim(trim($assetUrl), '/');
+        }
 
         $failed = in_array($status, ['failed', 'error', 'erro', 'cancelled', 'canceled'], true);
         $completed = in_array($status, ['completed', 'complete', 'done', 'success', 'succeeded', 'concluido', 'concluído'], true)
