@@ -31,7 +31,7 @@ return [
         'token' => env('CENTRO_IA_INTERNAL_TOKEN'),
         'project_id' => env('CENTRO_IA_PROJECT_ID', 'vitrine-marketing-agents-core'),
         'capability' => env('CENTRO_IA_CAPABILITY', 'marketing_generation'),
-        'timeout' => (int) env('CENTRO_IA_TIMEOUT', 60),
+        'timeout' => (int) env('CENTRO_IA_TIMEOUT', 120),
     ],
     'creation_directives' => [
         'marketing_briefing' => [
