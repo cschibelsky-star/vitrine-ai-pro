@@ -1,16 +1,29 @@
 services:
   web:
-    image: php:8.3-apache
+    image: vitrine-ai-pro-factory-hml2-vitrine_factory_hml_app
     container_name: vitrine_commercial_sales_web
     restart: unless-stopped
     working_dir: /var/www/html
+    command: ["php", "-S", "0.0.0.0:8080", "-t", "/var/www/html"]
     volumes:
       - ./:/var/www/html:ro
-    ports:
-      - "127.0.0.1:18081:80"
+    networks:
+      - n8n-traefik_app_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.vitrine-commercial-hml.rule=Host(`comercial.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.vitrine-commercial-hml.entrypoints=websecure"
+      - "traefik.http.routers.vitrine-commercial-hml.tls=true"
+      - "traefik.http.routers.vitrine-commercial-hml.tls.certresolver=le"
+      - "traefik.http.services.vitrine-commercial-hml.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD-SHELL", "php -r '$$r=@file_get_contents(\"http://127.0.0.1/health.php\"); exit($$r && strpos($$r,\"\\\"ok\\\":true\")!==false ? 0 : 1);'"]
+      test: ["CMD-SHELL", "php -r '$$r=@file_get_contents(\"http://127.0.0.1:8080/health.php\"); exit($$r && strpos($$r,\"\\\"ok\\\":true\")!==false ? 0 : 1);'"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
+
+networks:
+  n8n-traefik_app_network:
+    external: true
