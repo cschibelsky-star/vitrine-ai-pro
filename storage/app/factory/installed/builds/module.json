@@ -1,8 +1,0 @@
-{
-    "name": "Fornecedores",
-    "slug": "fornecedores",
-    "model": "Fornecedor",
-    "table": "fornecedores",
-    "list_page": "ListFornecedores",
-    "generated_by": "Factory BUILD 004.1"
-}

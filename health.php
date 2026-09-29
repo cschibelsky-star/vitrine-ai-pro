@@ -1,0 +1,1 @@
+<?php header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok'=>true,'app'=>'Conheça Sumaré Premium HML','version'=>'4.1.0-PREMIUM-HML','time'=>date('c')],JSON_UNESCAPED_UNICODE);
