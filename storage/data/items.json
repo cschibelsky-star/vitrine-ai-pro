@@ -1,0 +1,5 @@
+[
+  {"id":1,"type":"atrativo","title":"Bosque dos Lagos","category":"Natureza","region":"Sumaré/SP","image":"assets/img/bosque.svg","summary":"Espaço de lazer, caminhada e contato com áreas verdes.","source":"Referência pública: Turismo/Cultura de Sumaré","featured":true},
+  {"id":2,"type":"atrativo","title":"Pró-Memória","category":"Cultura e História","region":"Centro","image":"assets/img/memoria.svg","summary":"Memória, patrimônio, história e identidade local.","source":"Referência pública: Cultura de Sumaré","featured":true},
+  {"id":3,"type":"evento","title":"Feira de Artesanato","category":"Eventos","region":"Área central","image":"assets/img/feira.svg","summary":"Economia criativa, programação local e valorização de produtores.","source":"Referência pública: Agenda cultural","featured":true}
+]
