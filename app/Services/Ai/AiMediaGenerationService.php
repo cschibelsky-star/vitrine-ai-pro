@@ -75,6 +75,10 @@ class AiMediaGenerationService
             return $this->generateGoogleImage($provider, $prompt, $model);
         }
 
+        if ($capability === 'avatar_video' && $providerSlug === 'heygen') {
+            return $this->generateHeygenAvatarVideo($provider, $prompt);
+        }
+
         return [
             'status' => 'Pendente',
             'output' => sprintf(
@@ -134,6 +138,134 @@ class AiMediaGenerationService
                 'provider_status' => $statusRaw,
                 'model' => $model,
             ],
+        ];
+    }
+
+    protected function generateHeygenAvatarVideo(AiProvider $provider, string $prompt): array
+    {
+        $apiKey = trim((string) ($provider->api_key ?? '')) ?: trim((string) env('HEYGEN_API_KEY', ''));
+
+        if ($apiKey === '') {
+            throw new RuntimeException('API Key HeyGen ausente para avatar_video.');
+        }
+
+        $config = is_array($provider->config) ? $provider->config : [];
+        $payload = [
+            'prompt' => $prompt,
+            'mode' => 'generate',
+            'incognito_mode' => true,
+        ];
+
+        foreach ([
+            'avatar_id' => 'avatar_id',
+            'voice_id' => 'voice_id',
+            'style_id' => 'style_id',
+            'brand_kit_id' => 'brand_kit_id',
+        ] as $apiField => $configField) {
+            $value = trim((string) data_get($config, $configField, ''));
+            if ($value !== '') {
+                $payload[$apiField] = $value;
+            }
+        }
+
+        $response = Http::withHeaders([
+                'X-Api-Key' => $apiKey,
+                'Accept' => 'application/json',
+            ])
+            ->timeout(60)
+            ->post('https://api.heygen.com/v3/video-agents', $payload);
+
+        if ($response->failed()) {
+            throw new RuntimeException('HeyGen Video Agent erro HTTP '.$response->status().': '.$response->body());
+        }
+
+        $body = (array) $response->json();
+        $data = (array) data_get($body, 'data', $body);
+        $sessionId = trim((string) ($data['session_id'] ?? ''));
+        $videoId = trim((string) ($data['video_id'] ?? ''));
+
+        if ($sessionId === '' && $videoId === '') {
+            throw new RuntimeException('HeyGen Video Agent não retornou session_id nem video_id.');
+        }
+
+        return [
+            'status' => 'Pendente',
+            'output' => 'HeyGen Video Agent iniciado.',
+            'operation_id' => $sessionId !== '' ? $sessionId : $videoId,
+            'metadata' => [
+                'adapter_ready' => true,
+                'adapter' => 'heygen_video_agent_v3',
+                'provider_status' => strtolower((string) ($data['status'] ?? 'generating')),
+                'session_id' => $sessionId,
+                'video_id' => $videoId,
+            ],
+        ];
+    }
+
+    public function refreshHeygenAvatarVideo(string $sessionId): array
+    {
+        $provider = AiProvider::query()->where('slug', 'heygen')->where('status', 'ativo')->first();
+        $apiKey = trim((string) ($provider?->api_key ?? '')) ?: trim((string) env('HEYGEN_API_KEY', ''));
+
+        if ($apiKey === '') {
+            throw new RuntimeException('API Key HeyGen ausente para atualização de avatar_video.');
+        }
+
+        $sessionId = trim($sessionId);
+        if ($sessionId === '') {
+            throw new RuntimeException('session_id HeyGen ausente.');
+        }
+
+        $headers = [
+            'X-Api-Key' => $apiKey,
+            'Accept' => 'application/json',
+        ];
+
+        $sessionResponse = Http::withHeaders($headers)
+            ->timeout(30)
+            ->get('https://api.heygen.com/v3/video-agents/'.rawurlencode($sessionId));
+
+        if ($sessionResponse->failed()) {
+            throw new RuntimeException('HeyGen sessão erro HTTP '.$sessionResponse->status().': '.$sessionResponse->body());
+        }
+
+        $sessionBody = (array) $sessionResponse->json();
+        $session = (array) data_get($sessionBody, 'data', $sessionBody);
+        $videoId = trim((string) ($session['video_id'] ?? ''));
+        $sessionStatus = strtolower(trim((string) ($session['status'] ?? 'generating')));
+
+        if ($videoId === '') {
+            return [
+                'status' => in_array($sessionStatus, ['failed', 'error'], true) ? 'failed' : 'processing',
+                'job_ref' => $sessionId,
+                'video_id' => null,
+                'asset_url' => null,
+                'provider_status' => $sessionStatus,
+            ];
+        }
+
+        $videoResponse = Http::withHeaders($headers)
+            ->timeout(30)
+            ->get('https://api.heygen.com/v3/videos/'.rawurlencode($videoId));
+
+        if ($videoResponse->failed()) {
+            throw new RuntimeException('HeyGen vídeo erro HTTP '.$videoResponse->status().': '.$videoResponse->body());
+        }
+
+        $videoBody = (array) $videoResponse->json();
+        $video = (array) data_get($videoBody, 'data', $videoBody);
+        $videoStatus = strtolower(trim((string) ($video['status'] ?? 'processing')));
+        $assetUrl = trim((string) ($video['video_url'] ?? ''));
+
+        return [
+            'status' => in_array($videoStatus, ['failed', 'error'], true)
+                ? 'failed'
+                : ($assetUrl !== '' || in_array($videoStatus, ['completed', 'complete', 'done', 'success'], true) ? 'completed' : 'processing'),
+            'job_ref' => $sessionId,
+            'video_id' => $videoId,
+            'asset_url' => $assetUrl !== '' ? $assetUrl : null,
+            'provider_status' => $videoStatus,
+            'failure_message' => (string) ($video['failure_message'] ?? $video['failure_code'] ?? ''),
         ];
     }
 
