@@ -1,0 +1,6 @@
+<?php
+require_once __DIR__ . '/../app/bootstrap.php';
+require_admin();
+$items=data_read('items.json',[]);
+$events=data_read('events.json',[]);
+?><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Painel — Conheça Sumaré</title><link rel="stylesheet" href="/admin/admin.css"></head><body><main class="wrap"><section class="card"><h1>Painel Conheça Sumaré</h1><p class="muted">Admin preservado e migrado para a VPS.</p><nav class="nav"><a href="/admin/index.php">Dashboard</a><a href="/admin/items.php">Conteúdos</a><a href="/admin/settings.php">Configurações</a><a href="/admin/logout.php">Sair</a></nav><div class="grid"><div class="stat"><strong><?=count($items)?></strong><p>conteúdos</p></div><div class="stat"><strong><?=count($events)?></strong><p>eventos</p></div><div class="stat"><strong>PWA</strong><p>versão 4.1</p></div><div class="stat"><strong>VPS</strong><p>ambiente HML</p></div></div></section></main></body></html>
