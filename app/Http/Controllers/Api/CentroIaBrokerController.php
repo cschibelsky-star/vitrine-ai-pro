@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiAgent;
+use App\Models\AiMediaGeneration;
 use App\Models\Subscription;
+use App\Services\Ai\AiMediaGenerationService;
 use App\Services\Ai\AiRoutingService;
 use App\Shared\AI\Services\AiUsageTelemetry;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +19,7 @@ use Throwable;
 
 class CentroIaBrokerController extends Controller
 {
-    public function execute(Request $request, AiRoutingService $service, AiUsageTelemetry $usageTelemetry): JsonResponse
+    public function execute(Request $request, AiRoutingService $service, AiMediaGenerationService $mediaGenerator, AiUsageTelemetry $usageTelemetry): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
             return response()->json([
@@ -79,6 +81,34 @@ class CentroIaBrokerController extends Controller
 
         $routingCapability = trim((string) ($capabilityConfig['routing_capability'] ?? ''));
 
+        if (
+            $routingCapability === 'avatar_video'
+            && strtolower(trim((string) ($data['input']['operation'] ?? ''))) === 'refresh'
+        ) {
+            try {
+                $result = $mediaGenerator->refreshAvatarVideo((string) ($data['input']['job_ref'] ?? ''));
+
+                return response()->json([
+                    'ok' => $result['status'] !== 'failed',
+                    'project_id' => $data['project_id'],
+                    'capability' => $capability,
+                    'provider' => $result['provider'] ?? 'heygen',
+                    'media_status' => $result['status'],
+                    'job_ref' => $result['job_ref'] ?? null,
+                    'video_id' => $result['video_id'] ?? null,
+                    'asset_url' => $result['asset_url'] ?? null,
+                    'provider_status' => $result['provider_status'] ?? null,
+                    'failure_message' => $result['failure_message'] ?? null,
+                ], $result['status'] === 'failed' ? 502 : 200);
+            } catch (Throwable $e) {
+                return response()->json([
+                    'ok' => false,
+                    'error' => 'heygen_refresh_failed',
+                    'message' => $e->getMessage(),
+                ], 502);
+            }
+        }
+
         if (in_array($routingCapability, ['image_generation', 'video_generation'], true)) {
             return $this->executeDynamicMedia(
                 (string) $data['project_id'],
@@ -93,6 +123,37 @@ class CentroIaBrokerController extends Controller
         $execution = $service->execute($agent, $prompt, $routingCapability !== '' ? $routingCapability : null);
         $status = (string) ($execution->status ?? '');
         $output = (string) ($execution->output ?? '');
+
+        if ($execution instanceof AiMediaGeneration) {
+            if ($status === 'Erro') {
+                return response()->json([
+                    'ok' => false,
+                    'error' => 'media_generation_failed',
+                    'execution_id' => $execution->id,
+                    'status' => $status,
+                    'message' => $execution->error_message ?: $output,
+                    'provider' => data_get($execution->metadata, 'provider_slug'),
+                ], 502);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'project_id' => $data['project_id'],
+                'capability' => $capability,
+                'execution_id' => $execution->id,
+                'agent_id' => $agent->id,
+                'model' => $execution->model_name ?? null,
+                'provider' => data_get($execution->metadata, 'provider_slug'),
+                'media_status' => $status === 'Concluído' ? 'completed' : 'processing',
+                'job_ref' => $execution->operation_id,
+                'job_ref_type' => trim((string) data_get($execution->metadata, 'session_id', '')) !== ''
+                    ? 'session_id'
+                    : (trim((string) data_get($execution->metadata, 'video_id', '')) !== '' ? 'video_id' : null),
+                'video_id' => data_get($execution->metadata, 'video_id'),
+                'asset_url' => $execution->asset_url,
+                'output_text' => $output,
+            ]);
+        }
 
         if ($status !== 'Concluído') {
             return response()->json([

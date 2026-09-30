@@ -42,8 +42,6 @@ services:
     depends_on:
       core_db:
         condition: service_healthy
-      core_seed_agents:
-        condition: service_completed_successfully
     networks:
       - core_hml_internal
       - vitrine_net
