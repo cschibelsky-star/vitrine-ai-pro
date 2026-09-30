@@ -283,9 +283,9 @@ class AiMediaGenerationService
             throw new RuntimeException('API Key HeyGen ausente para atualização de avatar_video.');
         }
 
-        $sessionId = trim($sessionId);
-        if ($sessionId === '') {
-            throw new RuntimeException('session_id HeyGen ausente.');
+        $jobRef = trim($jobRef);
+        if ($jobRef === '') {
+            throw new RuntimeException('Referência de geração HeyGen ausente.');
         }
 
         $headers = [
@@ -349,7 +349,7 @@ class AiMediaGenerationService
             'status' => in_array($videoStatus, ['failed', 'error'], true)
                 ? 'failed'
                 : ($assetUrl !== '' || in_array($videoStatus, ['completed', 'complete', 'done', 'success'], true) ? 'completed' : 'processing'),
-            'job_ref' => $sessionId,
+            'job_ref' => $jobRef,
             'video_id' => $videoId,
             'asset_url' => $assetUrl !== '' ? $assetUrl : null,
             'provider_status' => $videoStatus,
