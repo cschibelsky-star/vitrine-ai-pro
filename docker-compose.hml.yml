@@ -7,7 +7,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-traefik_app_network"
-      - "traefik.http.routers.conheca-sumare-hml.rule=Host(\`conheca-sumare-hml.vitrineaipro.com.br\`)"
+      - 'traefik.http.routers.conheca-sumare-hml.rule=Host(`conheca-sumare-hml.vitrineaipro.com.br`)'
       - "traefik.http.routers.conheca-sumare-hml.entrypoints=websecure"
       - "traefik.http.routers.conheca-sumare-hml.tls=true"
       - "traefik.http.routers.conheca-sumare-hml.tls.certresolver=le"
