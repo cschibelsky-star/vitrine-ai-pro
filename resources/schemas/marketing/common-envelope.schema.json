@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://vitrineaipro.com.br/schemas/marketing/common-envelope-v1.json",
+  "$id": "https://vitrineiapro.com.br/schemas/marketing/common-envelope-v1.json",
   "title": "Marketing Agent Common Envelope",
   "type": "object",
   "additionalProperties": false,
