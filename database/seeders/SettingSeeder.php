@@ -11,7 +11,7 @@ class SettingSeeder extends Seeder
     {
         Setting::updateOrCreate(
             ['id' => 1],
-            ['empresa' => 'Vitrine AI Pro', 'logo' => null, 'telefone' => '(19) 99999-0000', 'email' => 'contato@vitrineaipro.com.br', 'endereco' => 'Sumaré - SP']
+            ['empresa' => 'Vitrine AI Pro', 'logo' => null, 'telefone' => '(19) 99999-0000', 'email' => 'contato@vitrineiapro.com.br', 'endereco' => 'Sumaré - SP']
         );
     }
 }
