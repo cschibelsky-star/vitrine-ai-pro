@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://vitrineaipro.com.br/schemas/marketing/creative-package-v1.json",
+  "$id": "https://vitrineiapro.com.br/schemas/marketing/creative-package-v1.json",
   "title": "Creative Package",
   "type": "object",
   "additionalProperties": false,
