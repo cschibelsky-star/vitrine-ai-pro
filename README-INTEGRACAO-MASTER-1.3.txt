@@ -22,6 +22,6 @@ A integração é server-to-server via PHP, portanto evita bloqueio de CORS no n
 Se o Master estiver fora do ar, o site continua salvando o lead localmente e redirecionando para obrigado.php.
 
 Teste:
-1. Subir o site no domínio vitrineaipro.com.br.
+1. Subir o site no domínio vitrineiapro.com.br.
 2. Preencher formulário de contato/consultor.
 3. Conferir o lead em app.vitrineiapro.com.br/admin > Comercial.
