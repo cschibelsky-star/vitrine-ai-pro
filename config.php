@@ -3,7 +3,7 @@ return [
   'site_name' => 'VITRINE IA PRO',
   'tagline' => 'Soluções digitais escaláveis em modelo SaaS, personalizado e White Label.',
   'base_url' => '',
-  'contact_email' => 'vendas@vitrineaipro.com.br',
+  'contact_email' => 'vendas@vitrineiapro.com.br',
   'whatsapp' => '5519999999999',
   'admin_user' => '__disabled__',
   'admin_pass_hash' => '',
