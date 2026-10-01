@@ -38,7 +38,7 @@ curl -X POST https://app.vitrineiapro.com.br/api/leads \
     "empresa": "Cliente Teste API",
     "contato": "Cristian Teste",
     "telefone": "19999999999",
-    "email": "teste@vitrineaipro.com.br",
+    "email": "teste@vitrineiapro.com.br",
     "produto_interesse": "TV Digital Enterprise",
     "plano_sugerido": "Enterprise",
     "origem_lead": "Site",
