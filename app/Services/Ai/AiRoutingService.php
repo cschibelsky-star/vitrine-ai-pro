@@ -20,6 +20,43 @@ class AiRoutingService
     {
         $capability = $capability ?: $this->classifyCapability($prompt);
         $route = $this->resolveRoute($capability);
+
+        if ($this->isMediaCapability($capability)) {
+            $lastGeneration = null;
+
+            foreach ($route['providers'] as $providerSlug) {
+                $provider = $this->resolveProvider([$providerSlug], $capability);
+
+                if (! $provider) {
+                    continue;
+                }
+
+                $model = data_get($provider->config, 'models.'.$capability)
+                    ?: data_get($provider->config, 'model_default');
+
+                if (
+                    in_array(strtolower((string) ($provider->slug ?? '')), ['gemini', 'google', 'google-gemini'], true)
+                    && $model === 'gemini-2.5-flash'
+                ) {
+                    $model = 'gemini-3.6-flash';
+                }
+
+                $generation = $this->mediaGenerator->generate($agent, $provider, $capability, $prompt, $model);
+                $lastGeneration = $generation;
+                $adapterReady = data_get($generation->metadata, 'adapter_ready');
+
+                if ((string) $generation->status !== 'Erro' && $adapterReady !== false) {
+                    return $generation;
+                }
+            }
+
+            if ($lastGeneration) {
+                return $lastGeneration;
+            }
+
+            return $this->executor->execute($agent, $prompt);
+        }
+
         $provider = $this->resolveProvider($route['providers'], $capability);
 
         if (! $provider) {
@@ -28,17 +65,6 @@ class AiRoutingService
 
         $model = data_get($provider->config, 'models.'.$capability)
             ?: data_get($provider->config, 'model_default');
-
-        if (
-            in_array(strtolower((string) ($provider->slug ?? '')), ['gemini', 'google', 'google-gemini'], true)
-            && $model === 'gemini-2.5-flash'
-        ) {
-            $model = 'gemini-3.6-flash';
-        }
-
-        if ($this->isMediaCapability($capability)) {
-            return $this->mediaGenerator->generate($agent, $provider, $capability, $prompt, $model);
-        }
 
         return $this->executor->execute($agent, $prompt, $provider, $model);
     }

@@ -25,6 +25,7 @@ class AiAgentSeeder extends Seeder
             ['name' => 'Município IA', 'type' => 'especialista', 'product_scope' => 'Município Digital IA', 'provider' => $openai, 'description' => 'Atendimento cidadão, FAQ, serviços públicos e comunicação institucional.'],
             ['name' => 'Cursos IA', 'type' => 'especialista', 'product_scope' => 'Cursos IA', 'provider' => $openai, 'description' => 'Geração estruturada de cursos, módulos, aulas, objetivos pedagógicos e roteiros didáticos a partir de fontes homologadas.'],
             ['name' => 'SISMED IA', 'type' => 'especialista futuro', 'product_scope' => 'SISMED', 'provider' => $openai, 'description' => 'Apoio administrativo, fluxos internos, relatórios e protocolos.'],
+            ['name' => 'Agente Operacional Master', 'type' => 'operacional master', 'product_scope' => 'Vitrine IA Pro / VIA / JARVIS', 'provider' => $openai, 'description' => 'Assistente operacional conversacional central para VIA e JARVIS, com roteamento pelo Centro IA.'],
         ];
 
         foreach ($agents as $agent) {

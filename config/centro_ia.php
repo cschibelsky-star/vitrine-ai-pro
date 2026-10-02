@@ -29,6 +29,10 @@ return [
             'agent_slug' => env('CENTRO_IA_SOCIAL_CONTENT_AGENT_SLUG', 'marketing-ia'),
             'routing_capability' => 'copy',
         ],
+        'assistant_conversation' => [
+            'agent_slug' => env('CENTRO_IA_ASSISTANT_AGENT_SLUG', 'agente-operacional-master'),
+            'routing_capability' => 'copy',
+        ],
         'marketing_generation' => [
             'agent_slug' => env('CENTRO_IA_MARKETING_AGENT_SLUG', 'marketing-ia'),
             'routing_capability' => 'marketing_strategy',

@@ -69,9 +69,17 @@ class AiProviderSeeder extends Seeder
             $config = $provider['config'];
             unset($provider['config']);
 
+            $slug = Str::slug($provider['name']);
+            $existing = AiProvider::query()->where('slug', $slug)->first();
+            $existingConfig = is_array($existing?->config) ? $existing->config : [];
+
+            // Defaults de bootstrap nunca apagam configuração operacional já
+            // cadastrada (endpoints, avatar/voice IDs, modelos ou outros campos).
+            $mergedConfig = array_replace_recursive($config, $existingConfig);
+
             AiProvider::updateOrCreate(
-                ['slug' => Str::slug($provider['name'])],
-                $provider + ['config' => $config]
+                ['slug' => $slug],
+                $provider + ['config' => $mergedConfig]
             );
         }
     }
