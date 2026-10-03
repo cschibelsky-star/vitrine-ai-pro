@@ -108,6 +108,7 @@ class AiMediaGenerationService
             throw new RuntimeException('Endpoint Roteia para '.$capability.' ainda não configurado.');
         }
 
+        $started = microtime(true);
         $response = Http::withToken($apiKey)
             ->acceptJson()
             ->timeout(120)
@@ -157,8 +158,12 @@ class AiMediaGenerationService
                     && empty($result['asset_url'])) {
                     throw new RuntimeException('Roteia informou conclusão, mas não retornou uma imagem utilizável. Nenhuma nova geração foi iniciada.');
                 } elseif (! empty($result['asset_url'])) {
-                    $result['output'] = 'Imagem disponível no provedor; download e armazenamento ainda precisam ser confirmados. Não gere novamente.';
                     $result['metadata']['phase'] = 'download_pending';
+                    $hosts = (array) data_get($provider->config, 'asset_hosts', []);
+                    $result = array_merge($result, $this->downloadImage((string) $result['asset_url'], $hosts));
+                    $result['status'] = 'Concluído';
+                    $result['output'] = 'Imagem baixada, validada e salva.';
+                    $result['metadata']['phase'] = 'asset_saved';
                 }
             } elseif (in_array($statusRaw, ['completed', 'concluido', 'concluído', 'done', 'success'], true)) {
                 // Outros tipos de mídia mantêm o contrato existente.
@@ -176,7 +181,7 @@ class AiMediaGenerationService
         $payload['id'] = $requestId;
         app(AiUsageTelemetry::class)->recordMedia(
             'roteia', $provider->id, null, 'core', (string) $model, $capability,
-            $payload, 0,
+            $payload, (int) round((microtime(true) - $started) * 1000),
             match ($result['status']) {
                 'Concluído' => 'completed',
                 'Erro' => 'failed',
@@ -185,6 +190,72 @@ class AiMediaGenerationService
         );
 
         return $result;
+    }
+
+
+    protected function downloadImage(string $url, array $allowedHosts): array
+    {
+        $parts = parse_url($url);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $allowedHosts = array_map('strtolower', array_filter($allowedHosts, 'is_string'));
+        if (($parts['scheme'] ?? '') !== 'https' || $host === ''
+            || isset($parts['user']) || isset($parts['pass'])
+            || (isset($parts['port']) && $parts['port'] !== 443)
+            || ! in_array($host, $allowedHosts, true)) {
+            throw new RuntimeException('Download pendente: host HTTPS da imagem precisa estar autorizado em asset_hosts. Não gere novamente.');
+        }
+
+        $addresses = gethostbynamel($host);
+        if (! $addresses || filter_var($host, FILTER_VALIDATE_IP)) {
+            throw new RuntimeException('Host de imagem inválido para download seguro.');
+        }
+        foreach ($addresses as $address) {
+            if (! filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                throw new RuntimeException('Download de imagem bloqueado: endereço não público.');
+            }
+        }
+        if (! defined('CURLOPT_RESOLVE')) {
+            throw new RuntimeException('Download seguro exige a extensão cURL.');
+        }
+
+        $temp = tmpfile();
+        if ($temp === false) {
+            throw new RuntimeException('Não foi possível preparar armazenamento temporário.');
+        }
+        $limit = 20 * 1024 * 1024;
+        try {
+            $response = Http::timeout(60)->connectTimeout(10)->withOptions([
+                'allow_redirects' => false,
+                'proxy' => '',
+                'sink' => $temp,
+                // Fixar o IP já validado impede troca de DNS entre checagem e conexão.
+                'curl' => [CURLOPT_RESOLVE => [$host.':443:'.$addresses[0]]],
+                'on_headers' => static function ($response) use ($limit): void {
+                    if ((int) $response->getHeaderLine('Content-Length') > $limit) {
+                        throw new RuntimeException('Imagem excede o limite de 20 MB.');
+                    }
+                },
+                'progress' => static function ($total, $downloaded) use ($limit): void {
+                    if ($downloaded > $limit) {
+                        throw new RuntimeException('Imagem excede o limite de 20 MB.');
+                    }
+                },
+            ])->get($url);
+            if ($response->status() !== 200) {
+                throw new RuntimeException('Falha no download da imagem HTTP '.$response->status().'. Não gere novamente.');
+            }
+            rewind($temp);
+            $binary = stream_get_contents($temp, $limit + 1);
+            if ($binary === false || strlen($binary) > $limit) {
+                throw new RuntimeException('Imagem inválida ou maior que 20 MB.');
+            }
+
+            return $this->persistImage(base64_encode($binary));
+        } finally {
+            if (is_resource($temp)) {
+                fclose($temp);
+            }
+        }
     }
 
     protected function persistImage(string $base64): array
