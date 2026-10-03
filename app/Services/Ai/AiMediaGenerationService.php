@@ -179,7 +179,11 @@ class AiMediaGenerationService
         // O ID financeiro é distinto do ID de operação e deve sobreviver à falha de entrega.
         $payload['request_id'] = $requestId;
         $payload['id'] = $requestId;
-        app(AiUsageTelemetry::class)->recordMedia(
+        $result['metadata']['provider_cost_brl'] = data_get($payload, 'billing.cost_brl') ?? $payload['cost_brl'] ?? data_get($payload, 'usage.cost') ?? null;
+        $result['metadata']['provider_usage'] = $payload['usage'] ?? null;
+        $result['metadata']['telemetry_available'] = class_exists(AiUsageTelemetry::class);
+        if ($result['metadata']['telemetry_available']) {
+            app(AiUsageTelemetry::class)->recordMedia(
             'roteia', $provider->id, null, 'core', (string) $model, $capability,
             $payload, (int) round((microtime(true) - $started) * 1000),
             match ($result['status']) {
@@ -187,7 +191,8 @@ class AiMediaGenerationService
                 'Erro' => 'failed',
                 default => 'pending',
             },
-        );
+            );
+        }
 
         return $result;
     }
