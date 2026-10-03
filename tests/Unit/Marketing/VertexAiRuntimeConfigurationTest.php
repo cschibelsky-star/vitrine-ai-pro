@@ -70,7 +70,7 @@ class VertexAiRuntimeConfigurationTest extends TestCase
         $this->assertFalse($this->vertexConfigured('image_generation'));
     }
 
-    public function test_vertex_is_not_configured_when_daily_limit_is_missing_or_zero(): void
+    public function test_vertex_is_incomplete_when_daily_limit_is_zero(): void
     {
         $this->setVertexEnvironment(['VERTEX_AI_DAILY_REQUEST_LIMIT' => '0']);
 
@@ -93,6 +93,15 @@ class VertexAiRuntimeConfigurationTest extends TestCase
         ]);
 
         $this->assertTrue($this->vertexConfigured('video_generation'));
+    }
+
+    public function test_daily_limit_is_declared_in_the_env_template_and_passed_to_hml(): void
+    {
+        $envExample = file_get_contents(base_path('.env.example'));
+        $compose = file_get_contents(base_path('docker-compose.core-hml.yml'));
+
+        $this->assertStringContainsString('VERTEX_AI_DAILY_REQUEST_LIMIT=0', $envExample);
+        $this->assertStringContainsString('VERTEX_AI_DAILY_REQUEST_LIMIT: "${VERTEX_AI_DAILY_REQUEST_LIMIT:-0}"', $compose);
     }
 
     private function vertexConfigured(string $capability): bool
