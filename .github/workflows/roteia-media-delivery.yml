@@ -1,0 +1,34 @@
+name: Roteia media delivery
+on:
+  pull_request:
+    paths:
+      - 'app/Services/Ai/AiMediaGenerationService.php'
+      - 'app/Console/Commands/RoteiaUsageAuditCommand.php'
+      - 'tests/Feature/RoteiaMediaDeliveryTest.php'
+      - '.github/workflows/roteia-media-delivery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_KEY: 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+      - run: mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: php -l app/Services/Ai/AiMediaGenerationService.php
+      - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php
