@@ -8,6 +8,7 @@ use App\Models\AiProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Shared\AI\Services\AiUsageTelemetry;
 use RuntimeException;
 use Throwable;
 
@@ -46,9 +47,10 @@ class AiMediaGenerationService
                 'operation_id' => $result['operation_id'] ?? null,
                 'asset_url' => $result['asset_url'] ?? null,
                 'asset_path' => $result['asset_path'] ?? null,
+                'error_message' => $result['error_message'] ?? null,
                 'metadata' => array_merge((array) $generation->metadata, $result['metadata'] ?? []),
                 'duration_ms' => $durationMs,
-                'finished_at' => ($result['status'] ?? null) === 'Concluído' ? now() : null,
+                'finished_at' => in_array($result['status'] ?? null, ['Concluído', 'Erro'], true) ? now() : null,
             ]);
         } catch (Throwable $e) {
             $generation->update([
@@ -115,26 +117,103 @@ class AiMediaGenerationService
                 'capability' => $capability,
             ]);
 
-        if ($response->failed()) {
-            throw new RuntimeException('Roteia mídia erro HTTP '.$response->status().': '.$response->body());
-        }
-
         $payload = (array) $response->json();
+        $requestId = trim((string) ($payload['request_id'] ?? $response->header('x-request-id') ?? $payload['id'] ?? ''));
         $statusRaw = strtolower((string) ($payload['status'] ?? 'pending'));
-        $done = in_array($statusRaw, ['completed', 'concluido', 'concluído', 'done', 'success'], true);
-
-        return [
-            'status' => $done ? 'Concluído' : 'Pendente',
-            'output' => (string) ($payload['message'] ?? 'Geração encaminhada ao Roteia.'),
-            'operation_id' => (string) ($payload['operation_id'] ?? $payload['job_id'] ?? $payload['id'] ?? ''),
-            'asset_url' => $payload['asset_url'] ?? $payload['url'] ?? null,
+        $operationId = (string) ($payload['operation_id'] ?? $payload['job_id'] ?? $payload['id'] ?? '');
+        $result = [
+            'status' => 'Pendente',
+            'output' => 'Geração encaminhada à Roteia; entrega ainda não confirmada.',
+            'operation_id' => $operationId,
+            'asset_url' => $payload['asset_url'] ?? $payload['url'] ?? data_get($payload, 'data.0.url'),
             'metadata' => [
                 'adapter_ready' => true,
                 'adapter' => 'roteia_media',
                 'provider_status' => $statusRaw,
+                'provider_request_id' => $requestId !== '' ? $requestId : null,
+                'http_status' => $response->status(),
                 'model' => $model,
+                'phase' => 'awaiting_asset',
+                'generation_retry_allowed' => false,
             ],
         ];
+
+        try {
+            if (! $response->successful()) {
+                throw new RuntimeException('Roteia mídia erro HTTP '.$response->status().'. Consulte o identificador da requisição.');
+            }
+            if (in_array($statusRaw, ['failed', 'error', 'cancelled', 'canceled'], true)) {
+                throw new RuntimeException('A Roteia informou falha na geração de mídia.');
+            }
+
+            if ($capability === 'image_generation') {
+                $base64 = data_get($payload, 'data.0.b64_json') ?? data_get($payload, 'output_image.data');
+                if (is_string($base64) && $base64 !== '') {
+                    $result = array_merge($result, $this->persistImage($base64));
+                    $result['status'] = 'Concluído';
+                    $result['output'] = 'Imagem recebida, validada e salva.';
+                    $result['metadata']['phase'] = 'asset_saved';
+                } elseif (in_array($statusRaw, ['completed', 'concluido', 'concluído', 'done', 'success'], true)
+                    && empty($result['asset_url'])) {
+                    throw new RuntimeException('Roteia informou conclusão, mas não retornou uma imagem utilizável. Nenhuma nova geração foi iniciada.');
+                } elseif (! empty($result['asset_url'])) {
+                    $result['output'] = 'Imagem disponível no provedor; download e armazenamento ainda precisam ser confirmados. Não gere novamente.';
+                    $result['metadata']['phase'] = 'download_pending';
+                }
+            } elseif (in_array($statusRaw, ['completed', 'concluido', 'concluído', 'done', 'success'], true)) {
+                // Outros tipos de mídia mantêm o contrato existente.
+                $result['status'] = 'Concluído';
+            }
+        } catch (Throwable $e) {
+            $result['status'] = 'Erro';
+            $result['error_message'] = $e->getMessage();
+            $result['output'] = $e->getMessage();
+            $result['metadata']['phase'] = 'delivery_failed';
+        }
+
+        // O ID financeiro é distinto do ID de operação e deve sobreviver à falha de entrega.
+        $payload['request_id'] = $requestId;
+        $payload['id'] = $requestId;
+        app(AiUsageTelemetry::class)->recordMedia(
+            'roteia', $provider->id, null, 'core', (string) $model, $capability,
+            $payload, 0,
+            match ($result['status']) {
+                'Concluído' => 'completed',
+                'Erro' => 'failed',
+                default => 'pending',
+            },
+        );
+
+        return $result;
+    }
+
+    protected function persistImage(string $base64): array
+    {
+        // Limite aplicado antes da decodificação para evitar alocação sem limite.
+        if (strlen($base64) > 28 * 1024 * 1024) {
+            throw new RuntimeException('Imagem excede o limite de armazenamento de 20 MB.');
+        }
+
+        $binary = base64_decode($base64, true);
+        $info = $binary !== false && $binary !== '' ? @getimagesizefromstring($binary) : false;
+        $mime = is_array($info) ? ($info['mime'] ?? '') : '';
+        $extension = match ($mime) {
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            default => null,
+        };
+        if ($extension === null || strlen($binary) > 20 * 1024 * 1024) {
+            throw new RuntimeException('O provedor retornou dados de imagem inválidos ou não suportados.');
+        }
+
+        $disk = config('filesystems.default', 'local');
+        $path = 'ai-generated/marketing/'.now()->format('Y/m/d').'/'.Str::uuid().'.'.$extension;
+        if (! Storage::disk($disk)->put($path, $binary) || ! Storage::disk($disk)->exists($path)) {
+            throw new RuntimeException('Falha ao salvar a imagem recebida. Não gere novamente.');
+        }
+
+        return ['asset_path' => $path, 'asset_url' => null];
     }
 
     protected function generateGoogleImage(AiProvider $provider, string $prompt, ?string $model): array
@@ -151,7 +230,6 @@ class AiMediaGenerationService
         $response = Http::acceptJson()
             ->withHeaders(['x-goog-api-key' => $apiKey])
             ->timeout(120)
-            ->retry(2, 500, throw: false)
             ->post('https://generativelanguage.googleapis.com/v1beta/interactions', [
                 'model' => $model,
                 'input' => [
