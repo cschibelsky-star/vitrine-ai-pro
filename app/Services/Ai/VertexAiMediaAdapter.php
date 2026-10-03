@@ -42,7 +42,11 @@ class VertexAiMediaAdapter
             if (! preg_match('~^gs://[a-z0-9][a-z0-9._-]{1,220}[a-z0-9](?:/.*)?$~D', $gcs)) {
                 throw new RuntimeException('Destino GCS Vertex inválido ou ausente.');
             }
-            $parameters += ['storageUri' => $gcs, 'durationSeconds' => 4, 'aspectRatio' => '16:9'];
+            $parameters += ['storageUri' => $gcs, 'durationSeconds' => 8, 'aspectRatio' => '16:9'];
+        }
+
+        if ($video && str_starts_with($model, 'veo-3')) {
+            $parameters['generateAudio'] = false;
         }
 
         $token = $this->credentials->accessToken();
@@ -133,10 +137,14 @@ class VertexAiMediaAdapter
     private function endpoint(string $project, string $model): string
     {
         $location = trim((string) env('GOOGLE_CLOUD_LOCATION', 'us-central1'));
-        foreach ([$project, $location, $model] as $segment) {
+        foreach ([$project, $location] as $segment) {
             if (! preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/D', $segment)) {
                 throw new RuntimeException('Projeto, região ou modelo Vertex inválido.');
             }
+        }
+
+        if (! preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/D', $model)) {
+            throw new RuntimeException('Modelo Vertex inválido.');
         }
 
         return 'https://'.$location.'-aiplatform.googleapis.com/v1/projects/'.$project

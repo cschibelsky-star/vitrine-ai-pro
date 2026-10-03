@@ -73,7 +73,7 @@ class AiMediaGenerationService
 
         $result = app(VertexAiMediaAdapter::class)->poll(
             (string) $generation->operation_id,
-            (string) $generation->model_name,
+            (string) ($generation->model_name ?: data_get($generation->metadata, 'model', '')),
         );
         $generation->update([
             'status' => $result['status'],

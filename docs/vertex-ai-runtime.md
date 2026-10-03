@@ -29,3 +29,5 @@ Referências:
 - https://developers.google.com/identity/protocols/oauth2/service-account
 - https://cloud.google.com/vertex-ai/generative-ai/docs/image/generate-images
 - https://cloud.google.com/vertex-ai/generative-ai/docs/video/generate-videos-from-text
+
+Veo envia uma amostra de 8 segundos em 16:9; para Veo 3 o áudio é explicitamente desabilitado. Ajustes de duração, formato e áudio exigem revisão do contrato e dos custos antes da ativação.

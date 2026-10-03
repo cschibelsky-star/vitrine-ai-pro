@@ -118,6 +118,8 @@ class VertexAiMediaAdapterTest extends TestCase
         Http::assertSentCount(2);
         Http::assertSent(fn ($request) => str_ends_with($request->url(), ':predictLongRunning')
             && $request['parameters']['sampleCount'] === 1
+            && $request['parameters']['durationSeconds'] === 8
+            && $request['parameters']['generateAudio'] === false
             && $request['parameters']['storageUri'] === 'gs://test-video-output');
         $this->assertSame(1, (int) DB::table('vertex_ai_daily_usage')->value('requests'));
     }
