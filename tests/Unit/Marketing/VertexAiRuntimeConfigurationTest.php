@@ -111,7 +111,7 @@ class VertexAiRuntimeConfigurationTest extends TestCase
 
     public function test_unavailable_vertex_falls_back_to_configured_provider(): void
     {
-        Schema::create('ai_providers', function (\\Illuminate\\Database\\Schema\\Blueprint $table) {
+        Schema::create('ai_providers', function (\Illuminate\Database\Schema\Blueprint $table) {
             $table->id();
             $table->string('name', 120);
             $table->string('slug', 120)->unique();
@@ -136,8 +136,8 @@ class VertexAiRuntimeConfigurationTest extends TestCase
             $this->setVertexEnvironment(['VERTEX_AI_ENABLED' => 'false']);
 
             $service = new AiRoutingService(
-                \\Mockery::mock(AiExecutionService::class),
-                \\Mockery::mock(AiMediaGenerationService::class),
+                \Mockery::mock(AiExecutionService::class),
+                \Mockery::mock(AiMediaGenerationService::class),
             );
             $method = new ReflectionMethod(AiRoutingService::class, 'resolveProvider');
             $provider = $method->invoke($service, ['vertex-ai', 'gemini'], 'image_generation');
