@@ -84,7 +84,8 @@ services:
       && php artisan migrate --path=database/migrations/2026_06_21_130005_create_ai_consumptions_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130006_create_ai_alerts_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_200000_master_2_0_operacional_tables.php --force"
+      && php artisan migrate --path=database/migrations/2026_06_21_200000_master_2_0_operacional_tables.php --force
+      && php artisan migrate --path=database/migrations/2026_10_03_160000_create_vertex_ai_daily_usage_table.php --force"
     environment:
       <<: *core-db-env
     depends_on:

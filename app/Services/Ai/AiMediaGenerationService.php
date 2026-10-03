@@ -63,9 +63,35 @@ class AiMediaGenerationService
         return $generation->refresh();
     }
 
+    public function refreshVertexVideo(AiMediaGeneration $generation): AiMediaGeneration
+    {
+        if ($generation->status !== 'Processando'
+            || $generation->capability !== 'video_generation'
+            || data_get($generation->metadata, 'provider_slug') !== 'vertex-ai') {
+            return $generation;
+        }
+
+        $result = app(VertexAiMediaAdapter::class)->poll(
+            (string) $generation->operation_id,
+            (string) $generation->model_name,
+        );
+        $generation->update([
+            'status' => $result['status'],
+            'output' => $result['output'],
+            'metadata' => array_merge((array) $generation->metadata, $result['metadata'] ?? []),
+            'finished_at' => in_array($result['status'], ['Concluído', 'Erro'], true) ? now() : null,
+        ]);
+
+        return $generation->refresh();
+    }
+
     protected function dispatch(AiProvider $provider, string $capability, string $prompt, ?string $model): array
     {
         $providerSlug = strtolower((string) $provider->slug);
+
+        if ($providerSlug === 'vertex-ai') {
+            return app(VertexAiMediaAdapter::class)->generate($capability, $prompt, $model);
+        }
 
         if ($providerSlug === 'roteia') {
             return $this->generateRoteiaMedia($provider, $capability, $prompt, $model);
