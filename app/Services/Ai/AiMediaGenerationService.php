@@ -119,7 +119,9 @@ class AiMediaGenerationService
             ]);
 
         $payload = (array) $response->json();
-        $requestId = trim((string) ($payload['request_id'] ?? $response->header('x-request-id') ?? $payload['id'] ?? ''));
+        $requestId = trim((string) ($payload['request_id'] ?? ''))
+            ?: trim((string) $response->header('x-request-id'))
+            ?: trim((string) ($payload['id'] ?? ''));
         $statusRaw = strtolower((string) ($payload['status'] ?? 'pending'));
         $operationId = (string) ($payload['operation_id'] ?? $payload['job_id'] ?? $payload['id'] ?? '');
         $result = [
@@ -134,6 +136,7 @@ class AiMediaGenerationService
                 'provider_request_id' => $requestId !== '' ? $requestId : null,
                 'http_status' => $response->status(),
                 'model' => $model,
+                'storage_disk' => config('filesystems.default', 'local'),
                 'phase' => 'awaiting_asset',
                 'generation_retry_allowed' => false,
             ],
@@ -183,7 +186,8 @@ class AiMediaGenerationService
         $result['metadata']['provider_usage'] = $payload['usage'] ?? null;
         $result['metadata']['telemetry_available'] = class_exists(AiUsageTelemetry::class);
         if ($result['metadata']['telemetry_available']) {
-            app(AiUsageTelemetry::class)->recordMedia(
+            try {
+                app(AiUsageTelemetry::class)->recordMedia(
             'roteia', $provider->id, null, 'core', (string) $model, $capability,
             $payload, (int) round((microtime(true) - $started) * 1000),
             match ($result['status']) {
@@ -191,7 +195,10 @@ class AiMediaGenerationService
                 'Erro' => 'failed',
                 default => 'pending',
             },
-            );
+                );
+            } catch (Throwable) {
+                $result['metadata']['telemetry_failed'] = true;
+            }
         }
 
         return $result;
