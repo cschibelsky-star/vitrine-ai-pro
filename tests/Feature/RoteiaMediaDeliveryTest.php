@@ -47,8 +47,8 @@ class RoteiaMediaDeliveryTest extends TestCase
     public function test_remote_url_does_not_prove_local_delivery(): void
     {
         $result = $this->dispatchPayload(['status' => 'completed', 'url' => 'https://images.example/image.png']);
-        $this->assertSame('Pendente', $result['status']);
-        $this->assertSame('download_pending', $result['metadata']['phase']);
+        $this->assertSame('Erro', $result['status']);
+        $this->assertStringContainsString('asset_hosts', $result['error_message']);
         Http::assertSentCount(1);
     }
 
