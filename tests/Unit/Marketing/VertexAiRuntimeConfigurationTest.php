@@ -135,10 +135,9 @@ class VertexAiRuntimeConfigurationTest extends TestCase
             ]);
             $this->setVertexEnvironment(['VERTEX_AI_ENABLED' => 'false']);
 
-            $service = new AiRoutingService(
-                \Mockery::mock(AiExecutionService::class),
-                \Mockery::mock(AiMediaGenerationService::class),
-            );
+            $executor = (new \ReflectionClass(AiExecutionService::class))->newInstanceWithoutConstructor();
+            $mediaGenerator = (new \ReflectionClass(AiMediaGenerationService::class))->newInstanceWithoutConstructor();
+            $service = new AiRoutingService($executor, $mediaGenerator);
             $method = new ReflectionMethod(AiRoutingService::class, 'resolveProvider');
             $provider = $method->invoke($service, ['vertex-ai', 'gemini'], 'image_generation');
 
