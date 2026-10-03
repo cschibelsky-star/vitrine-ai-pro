@@ -73,8 +73,8 @@ class AiRoutingService
     public function resolveRoute(string $capability): array
     {
         return match ($capability) {
-            'image_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
-            'video_generation' => ['providers' => ['roteia', 'google', 'gemini'], 'capability' => $capability],
+            'image_generation' => ['providers' => ['vertex-ai', 'roteia', 'google', 'gemini'], 'capability' => $capability],
+            'video_generation' => ['providers' => ['vertex-ai', 'roteia', 'google', 'gemini'], 'capability' => $capability],
             'avatar_video' => ['providers' => ['roteia', 'heygen'], 'capability' => $capability],
             'critical_review' => ['providers' => ['roteia', 'openai', 'gemini'], 'capability' => $capability],
             'marketing_strategy', 'copy' => ['providers' => ['roteia', 'gemini', 'openai'], 'capability' => $capability],
@@ -91,6 +91,10 @@ class AiRoutingService
                 ->first();
 
             if (! $provider) {
+                continue;
+            }
+
+            if ($slug === 'vertex-ai' && ! $this->vertexAiRuntimeConfigured($capability)) {
                 continue;
             }
 
@@ -115,6 +119,29 @@ class AiRoutingService
         }
 
         return null;
+    }
+
+    protected function vertexAiRuntimeConfigured(string $capability): bool
+    {
+        $enabled = filter_var((string) env('VERTEX_AI_ENABLED', 'false'), FILTER_VALIDATE_BOOL);
+        $project = trim((string) env('GOOGLE_CLOUD_PROJECT', ''));
+        $accessToken = trim((string) env('GOOGLE_VERTEX_ACCESS_TOKEN', ''));
+        $credentialsFile = trim((string) env('GOOGLE_APPLICATION_CREDENTIALS', ''));
+        $hasApplicationCredentials = $credentialsFile !== ''
+            && is_file($credentialsFile)
+            && is_readable($credentialsFile);
+        $hasAuthentication = $accessToken !== '' || $hasApplicationCredentials;
+        $dailyLimit = (int) env('VERTEX_AI_DAILY_REQUEST_LIMIT', 0);
+
+        if (! $enabled || $project === '' || ! $hasAuthentication || $dailyLimit < 1) {
+            return false;
+        }
+
+        if ($capability === 'video_generation') {
+            return trim((string) env('GOOGLE_VERTEX_VIDEO_GCS_URI', '')) !== '';
+        }
+
+        return true;
     }
 
     protected function isMediaCapability(string $capability): bool
