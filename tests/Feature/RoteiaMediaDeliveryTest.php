@@ -10,14 +10,14 @@ use Tests\TestCase;
 
 class RoteiaMediaDeliveryTest extends TestCase
 {
-    private function dispatchPayload(array $payload, int $status = 200): array
+    private function dispatchPayload(array $payload, int $status = 200, array $headers = ['x-request-id' => 'billing-id']): array
     {
         config(['filesystems.default' => 'local']);
         Storage::fake('local');
         putenv('ROTEIA_API_KEY=test-only-key');
         putenv('ROTEIA_BASE_URL=https://roteia.example');
         Http::preventStrayRequests();
-        Http::fake(['roteia.example/*' => Http::response($payload, $status, ['x-request-id' => 'billing-id'])]);
+        Http::fake(['roteia.example/*' => Http::response($payload, $status, $headers)]);
         $provider = new AiProvider(['slug' => 'roteia', 'config' => ['endpoints' => ['image_generation' => 'images']]]);
         $service = new class extends AiMediaGenerationService {
             public function run(AiProvider $provider): array
@@ -67,6 +67,14 @@ class RoteiaMediaDeliveryTest extends TestCase
         $this->assertSame('Concluído', $result['status']);
         Storage::disk('local')->assertExists($result['asset_path']);
         $this->assertSame('asset_saved', $result['metadata']['phase']);
+        Http::assertSentCount(1);
+    }
+
+    public function test_payload_id_is_used_when_request_header_is_absent(): void
+    {
+        $result = $this->dispatchPayload(['status' => 'completed', 'id' => 'payload-only-id'], 200, []);
+        $this->assertSame('payload-only-id', $result['metadata']['provider_request_id']);
+        $this->assertSame('Erro', $result['status']);
         Http::assertSentCount(1);
     }
 
