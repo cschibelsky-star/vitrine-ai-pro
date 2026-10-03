@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\\Unit\\Marketing;
+namespace Tests\Unit\Marketing;
 
-use App\\Services\\Ai\\AiRoutingService;
+use App\Services\Ai\AiRoutingService;
 use ReflectionMethod;
-use Tests\\TestCase;
+use Tests\TestCase;
 
 class VertexAiRuntimeConfigurationTest extends TestCase
 {
@@ -106,7 +106,7 @@ class VertexAiRuntimeConfigurationTest extends TestCase
 
     private function vertexConfigured(string $capability): bool
     {
-        $service = (new \\ReflectionClass(AiRoutingService::class))->newInstanceWithoutConstructor();
+        $service = (new \ReflectionClass(AiRoutingService::class))->newInstanceWithoutConstructor();
         $method = new ReflectionMethod(AiRoutingService::class, 'vertexAiRuntimeConfigured');
         $method->setAccessible(true);
 
