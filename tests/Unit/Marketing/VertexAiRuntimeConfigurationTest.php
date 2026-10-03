@@ -2,7 +2,12 @@
 
 namespace Tests\Unit\Marketing;
 
+use App\Models\AiProvider;
+use App\Services\Ai\AiExecutionService;
+use App\Services\Ai\AiMediaGenerationService;
 use App\Services\Ai\AiRoutingService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -102,6 +107,46 @@ class VertexAiRuntimeConfigurationTest extends TestCase
 
         $this->assertStringContainsString('VERTEX_AI_DAILY_REQUEST_LIMIT=0', $envExample);
         $this->assertStringContainsString('VERTEX_AI_DAILY_REQUEST_LIMIT: "${VERTEX_AI_DAILY_REQUEST_LIMIT:-0}"', $compose);
+    }
+
+    public function test_unavailable_vertex_falls_back_to_configured_provider(): void
+    {
+        Schema::create('ai_providers', function (\\Illuminate\\Database\\Schema\\Blueprint $table) {
+            $table->id();
+            $table->string('name', 120);
+            $table->string('slug', 120)->unique();
+            $table->string('status', 30)->default('ativo');
+            $table->json('config')->nullable();
+            $table->timestamps();
+        });
+
+        try {
+            AiProvider::query()->create([
+                'name' => 'Vertex AI',
+                'slug' => 'vertex-ai',
+                'status' => 'ativo',
+                'config' => ['capabilities' => ['image_generation']],
+            ]);
+            AiProvider::query()->create([
+                'name' => 'Gemini',
+                'slug' => 'gemini',
+                'status' => 'ativo',
+                'config' => ['capabilities' => ['image_generation']],
+            ]);
+            $this->setVertexEnvironment(['VERTEX_AI_ENABLED' => 'false']);
+
+            $service = new AiRoutingService(
+                \\Mockery::mock(AiExecutionService::class),
+                \\Mockery::mock(AiMediaGenerationService::class),
+            );
+            $method = new ReflectionMethod(AiRoutingService::class, 'resolveProvider');
+            $provider = $method->invoke($service, ['vertex-ai', 'gemini'], 'image_generation');
+
+            $this->assertSame('gemini', $provider?->slug);
+            Http::assertNothingSent();
+        } finally {
+            Schema::dropIfExists('ai_providers');
+        }
     }
 
     private function vertexConfigured(string $capability): bool
