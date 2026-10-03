@@ -126,9 +126,14 @@ class AiRoutingService
         $enabled = filter_var((string) env('VERTEX_AI_ENABLED', 'false'), FILTER_VALIDATE_BOOL);
         $project = trim((string) env('GOOGLE_CLOUD_PROJECT', ''));
         $accessToken = trim((string) env('GOOGLE_VERTEX_ACCESS_TOKEN', ''));
+        $credentialsFile = trim((string) env('GOOGLE_APPLICATION_CREDENTIALS', ''));
+        $hasApplicationCredentials = $credentialsFile !== ''
+            && is_file($credentialsFile)
+            && is_readable($credentialsFile);
+        $hasAuthentication = $accessToken !== '' || $hasApplicationCredentials;
         $dailyLimit = (int) env('VERTEX_AI_DAILY_REQUEST_LIMIT', 0);
 
-        if (! $enabled || $project === '' || $accessToken === '' || $dailyLimit < 1) {
+        if (! $enabled || $project === '' || ! $hasAuthentication || $dailyLimit < 1) {
             return false;
         }
 
