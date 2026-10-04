@@ -14,6 +14,14 @@ final class ProjectUrlProvisionerTest extends TestCase
         $result = (new ProjectUrlProvisioner())->provisionCommand('jarvis', 'jarvis_hml_agent:8000', '/health', 'jarvis');
         $this->assertSame('p######.hml.vitrineiapro.com.br', $result['identity_policy']);
         $this->assertContains('--friendly', $result['arguments']);
+        $this->assertSame('provider-managed', $result['activation']['dns_provider']);
+        $this->assertSame('factory-provider-required', $result['activation']['hml_policy']);
+        $this->assertFalse($result['activation']['manual_dns_allowed']);
+        $this->assertFalse($result['activation']['manual_proxy_route_allowed']);
+        $this->assertSame(
+            'Todo novo ambiente HML deve ser provisionado pela Factory por meio do Provider.',
+            $result['governance']['hml_creation']
+        );
     }
 
     public function test_customer_policy_uses_short_root_code(): void

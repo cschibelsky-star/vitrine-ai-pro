@@ -63,6 +63,14 @@ final class ProjectUrlProvisioner
                 'pipeline' => ['RESERVED', 'DNS_PENDING', 'ROUTE_PENDING', 'TLS_PENDING', 'HEALTH_PENDING', 'READY'],
                 'ready_gate' => 'A URL só pode ser entregue quando DNS, proxy, TLS e healthcheck estiverem válidos.',
                 'dns_provider' => 'provider-managed',
+                'hml_policy' => 'factory-provider-required',
+                'manual_dns_allowed' => false,
+                'manual_proxy_route_allowed' => false,
+            ],
+            'governance' => [
+                'hml_creation' => 'Todo novo ambiente HML deve ser provisionado pela Factory por meio do Provider.',
+                'source_of_truth' => 'O registry operacional canônico é a única fonte autorizada para reservar a identidade p###### e seus aliases.',
+                'forbidden_shortcuts' => ['manual_dns', 'manual_proxy_route', 'unregistered_hml_hostname'],
             ],
             'note' => 'A execução deve ocorrer no workspace do registry operacional, que é a única fonte autorizada a reservar códigos e ativar a URL ponta a ponta.',
         ];
