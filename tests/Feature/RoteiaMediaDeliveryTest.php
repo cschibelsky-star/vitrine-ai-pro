@@ -85,21 +85,29 @@ class RoteiaMediaDeliveryTest extends TestCase
         $this->assertSame('billing-id', $result['metadata']['provider_request_id']);
         Http::assertSentCount(1);
     }
-    public function test_top_level_base64_fields_are_validated_and_persisted(): void
+    public static function topLevelPayloads(): array
+    {
+        return [
+            'image_base64 valid' => ['image_base64', true],
+            'asset_base64 valid' => ['asset_base64', true],
+            'image_base64 invalid' => ['image_base64', false],
+            'asset_base64 invalid' => ['asset_base64', false],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('topLevelPayloads')]
+    public function test_top_level_base64_fields_are_validated_and_persisted(string $field, bool $valid): void
     {
         $png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=';
-        foreach (['image_base64', 'asset_base64'] as $field) {
-            $result = $this->dispatchPayload(['status' => 'completed', $field => $png]);
-            $this->assertSame('Concluído', $result['status'], $field);
+        $result = $this->dispatchPayload(['status' => 'completed', $field => $valid ? $png : base64_encode('not an image')]);
+        $this->assertSame($valid ? 'Concluído' : 'Erro', $result['status']);
+        $this->assertSame('billing-id', $result['metadata']['provider_request_id']);
+        if ($valid) {
             $this->assertSame(base64_decode($png), Storage::disk('local')->get($result['asset_path']));
-            $this->assertSame('billing-id', $result['metadata']['provider_request_id']);
             $this->assertSame('asset_saved', $result['metadata']['phase']);
-            Http::assertSentCount(1);
-
-            $result = $this->dispatchPayload(['status' => 'completed', $field => base64_encode('not an image')]);
-            $this->assertSame('Erro', $result['status'], $field);
+        } else {
             $this->assertSame([], Storage::disk('local')->allFiles());
-            Http::assertSentCount(1);
         }
+        Http::assertSentCount(1);
     }
 }
