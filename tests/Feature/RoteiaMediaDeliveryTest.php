@@ -85,4 +85,21 @@ class RoteiaMediaDeliveryTest extends TestCase
         $this->assertSame('billing-id', $result['metadata']['provider_request_id']);
         Http::assertSentCount(1);
     }
+    public function test_top_level_base64_fields_are_validated_and_persisted(): void
+    {
+        $png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=';
+        foreach (['image_base64', 'asset_base64'] as $field) {
+            $result = $this->dispatchPayload(['status' => 'completed', $field => $png]);
+            $this->assertSame('Concluído', $result['status'], $field);
+            $this->assertSame(base64_decode($png), Storage::disk('local')->get($result['asset_path']));
+            $this->assertSame('billing-id', $result['metadata']['provider_request_id']);
+            $this->assertSame('asset_saved', $result['metadata']['phase']);
+            Http::assertSentCount(1);
+
+            $result = $this->dispatchPayload(['status' => 'completed', $field => base64_encode('not an image')]);
+            $this->assertSame('Erro', $result['status'], $field);
+            $this->assertSame([], Storage::disk('local')->allFiles());
+            Http::assertSentCount(1);
+        }
+    }
 }

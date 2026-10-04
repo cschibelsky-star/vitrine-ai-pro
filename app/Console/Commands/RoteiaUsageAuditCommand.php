@@ -39,11 +39,9 @@ class RoteiaUsageAuditCommand extends Command
                     throw new \RuntimeException('Linha CSV inválida.');
                 }
                 $row = array_combine($header, $values);
-                if (! preg_match('/image|seedream/i', $row['model'])) {
-                    continue;
-                }
+                // Audit every exported row: model names do not reliably identify media types.
                 $id = $row['request_id'];
-                if (! preg_match('/^[a-f0-9-]{36}$/i', $id)) {
+                if (trim($id) === '' || strlen($id) > 255 || preg_match('/[\x00-\x1F\x7F]/', $id)) {
                     throw new \RuntimeException('ID de requisição inválido.');
                 }
                 $ledgerCount = $ledgerAvailable
@@ -75,7 +73,11 @@ class RoteiaUsageAuditCommand extends Command
                         }
                     }
                 }
-                $this->line(implode(',', [$id, $row['cost_brl'], $ledgerCount ?? 'unavailable', $media->count(), $delivery]));
+                $csvLine = fopen('php://temp', 'r+');
+                fputcsv($csvLine, [$id, $row['cost_brl'], $ledgerCount ?? 'unavailable', $media->count(), $delivery], ',', '"', '');
+                rewind($csvLine);
+                $this->line(rtrim(stream_get_contents($csvLine), "\r\n"));
+                fclose($csvLine);
             }
             $this->info('Auditoria somente leitura. Ausência de vínculo não comprova perda ou ausência de cobrança.');
             return self::SUCCESS;

@@ -5,6 +5,7 @@ on:
       - 'app/Services/Ai/AiMediaGenerationService.php'
       - 'app/Console/Commands/RoteiaUsageAuditCommand.php'
       - 'tests/Feature/RoteiaMediaDeliveryTest.php'
+      - 'tests/Feature/RoteiaUsageAuditTest.php'
       - '.github/workflows/roteia-media-delivery.yml'
   workflow_dispatch:
 permissions:
@@ -31,4 +32,5 @@ jobs:
       - run: mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: php -l app/Services/Ai/AiMediaGenerationService.php
-      - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php
+      - run: php -l app/Console/Commands/RoteiaUsageAuditCommand.php
+      - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php tests/Feature/RoteiaUsageAuditTest.php
