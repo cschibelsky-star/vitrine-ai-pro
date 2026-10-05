@@ -88,32 +88,54 @@
 
 
 @push('scripts')
-<script src="https://via.vitrineiapro.com.br/via-widget-loader.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const bootVia = () => {
-        if (!window.VIAWidget) {
-            window.setTimeout(bootVia, 150);
-            return;
-        }
+    if (document.getElementById('via-widget-frame')) return;
 
-        window.VIAWidget.init({
-            projectId: 'cockpit',
-            userId: @json((string) auth()->id()),
-            hostOrigin: window.location.origin,
-            bridge: false,
+    const frame = document.createElement('iframe');
+    frame.id = 'via-widget-frame';
+    frame.title = 'VIA - Assistente Virtual';
+    frame.allow = 'microphone; autoplay';
+    frame.src = 'https://via.vitrineiapro.com.br/?embed=1'
+        + '&hostOrigin=' + encodeURIComponent(window.location.origin)
+        + '&viaProject=cockpit'
+        + '&viaModule=' + encodeURIComponent('dashboard');
+    frame.setAttribute('aria-label', 'VIA - Assistente Virtual da Vitrine IA Pro');
+
+    Object.assign(frame.style, {
+        position: 'fixed',
+        right: '0',
+        bottom: '0',
+        width: 'min(460px, 100vw)',
+        height: 'min(760px, 100dvh)',
+        maxWidth: '100vw',
+        maxHeight: '100dvh',
+        border: '0',
+        background: 'transparent',
+        zIndex: '2147483000',
+        pointerEvents: 'auto'
+    });
+
+    document.body.appendChild(frame);
+
+    window.VIAWidget = {
+        open: () => frame.contentWindow?.postMessage({ type: 'via:widget:command', command: 'open' }, 'https://via.vitrineiapro.com.br'),
+        close: () => frame.contentWindow?.postMessage({ type: 'via:widget:command', command: 'close' }, 'https://via.vitrineiapro.com.br'),
+        toggle: () => frame.contentWindow?.postMessage({ type: 'via:widget:command', command: 'toggle' }, 'https://via.vitrineiapro.com.br'),
+        setContext: (context = {}) => frame.contentWindow?.postMessage({
+            type: 'via:widget:command',
+            command: 'set-context',
             context: {
-                product: 'cockpit',
-                surface: 'centro-operacional',
-                screen: 'dashboard',
-                route: window.location.pathname
-            },
-            capabilities: ['chat', 'voice', 'read_context'],
-            handsFree: false
-        });
+                module: context.module || context.screen || 'dashboard',
+                project: context.project || 'cockpit'
+            }
+        }, 'https://via.vitrineiapro.com.br'),
+        setState: (state) => frame.contentWindow?.postMessage({
+            type: 'via:widget:command',
+            command: 'set-state',
+            detail: { state }
+        }, 'https://via.vitrineiapro.com.br')
     };
-
-    bootVia();
 });
 </script>
 @endpush
