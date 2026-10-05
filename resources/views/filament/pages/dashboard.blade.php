@@ -88,7 +88,7 @@
 
 
 @push('scripts')
-<script src="https://via.vitrineiapro.com.br/via-widget.js" defer></script>
+<script src="https://via.vitrineiapro.com.br/via-widget-loader.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const bootVia = () => {
@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.VIAWidget.init({
             projectId: 'cockpit',
             userId: @json((string) auth()->id()),
+            hostOrigin: window.location.origin,
+            bridge: false,
             context: {
                 product: 'cockpit',
                 surface: 'centro-operacional',
