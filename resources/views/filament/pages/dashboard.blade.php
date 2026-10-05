@@ -85,3 +85,33 @@
         </section>
     </div>
 </x-filament-panels::page>
+
+
+@push('scripts')
+<script src="https://via.vitrineiapro.com.br/via-widget.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const bootVia = () => {
+        if (!window.VIAWidget) {
+            window.setTimeout(bootVia, 150);
+            return;
+        }
+
+        window.VIAWidget.init({
+            projectId: 'cockpit',
+            userId: @json((string) auth()->id()),
+            context: {
+                product: 'cockpit',
+                surface: 'centro-operacional',
+                screen: 'dashboard',
+                route: window.location.pathname
+            },
+            capabilities: ['chat', 'voice', 'read_context'],
+            handsFree: false
+        });
+    };
+
+    bootVia();
+});
+</script>
+@endpush
