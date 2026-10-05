@@ -1,0 +1,103 @@
+services:
+  smoke_db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: factory_smoke
+      MARIADB_USER: factory_smoke
+      MARIADB_PASSWORD: "${FACTORY_DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${FACTORY_DB_ROOT_PASSWORD}"
+    volumes:
+      - factory_smoke_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smoke_internal
+
+  smoke_app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_NAME: "Factory Generated Smoke"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "${FACTORY_APP_KEY}"
+      APP_URL: "https://factory-smoke-0927.hml.vitrineiapro.com.br"
+      DB_CONNECTION: mysql
+      DB_HOST: smoke_db
+      DB_PORT: 3306
+      DB_DATABASE: factory_smoke
+      DB_USERNAME: factory_smoke
+      DB_PASSWORD: "${FACTORY_DB_PASSWORD}"
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      smoke_db:
+        condition: service_healthy
+    networks:
+      - smoke_internal
+
+  smoke_migrate:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    restart: "no"
+    working_dir: /var/www/html
+    environment:
+      APP_NAME: "Factory Generated Smoke"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "${FACTORY_APP_KEY}"
+      DB_CONNECTION: mysql
+      DB_HOST: smoke_db
+      DB_PORT: 3306
+      DB_DATABASE: factory_smoke
+      DB_USERNAME: factory_smoke
+      DB_PASSWORD: "${FACTORY_DB_PASSWORD}"
+    command: ["sh","-lc","php artisan migrate --force"]
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      smoke_db:
+        condition: service_healthy
+    networks:
+      - smoke_internal
+
+  smoke_web:
+    image: nginx:stable
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      smoke_app:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.factory-smoke-0927.rule=Host(`factory-smoke-0927.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.factory-smoke-0927.entrypoints=websecure"
+      - "traefik.http.routers.factory-smoke-0927.tls=true"
+      - "traefik.http.routers.factory-smoke-0927.tls.certresolver=le"
+      - "traefik.http.services.factory-smoke-0927.loadbalancer.server.port=80"
+    networks:
+      - smoke_internal
+      - traefik_net
+
+volumes:
+  factory_smoke_db:
+
+networks:
+  smoke_internal:
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network

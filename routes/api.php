@@ -160,3 +160,8 @@ require __DIR__.'/site_factory_api.php';
 
 \Illuminate\Support\Facades\Route::post('/vendedoria-pro-news/leads', [\App\Http\Controllers\Api\VendedoriaProNewsLeadController::class, 'store'])
     ->middleware('throttle:30,1');
+
+
+if (file_exists(__DIR__.'/api_factory_sistema_gerado_factory.php')) {
+    require __DIR__.'/api_factory_sistema_gerado_factory.php';
+}
