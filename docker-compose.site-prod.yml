@@ -1,0 +1,49 @@
+services:
+  site_php:
+    image: php:8.3-fpm-alpine
+    container_name: vitrine_site_php_prod
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:ro
+      - site_leads:/var/www/html/data/leads
+    networks:
+      - site_internal
+
+  site_web:
+    image: nginx:stable-alpine
+    container_name: vitrine_site_web_prod
+    restart: unless-stopped
+    depends_on:
+      - site_php
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/site-prod/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - site_leads:/var/www/html/data/leads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.vitrine-site-prod.rule=Host(`vitrineaipro.com.br`) || Host(`www.vitrineaipro.com.br`)"
+      - "traefik.http.routers.vitrine-site-prod.entrypoints=websecure"
+      - "traefik.http.routers.vitrine-site-prod.tls=true"
+      - "traefik.http.routers.vitrine-site-prod.tls.certresolver=le"
+      - "traefik.http.services.vitrine-site-prod.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - site_internal
+      - traefik_net
+
+volumes:
+  site_leads:
+
+networks:
+  site_internal:
+    driver: bridge
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network
