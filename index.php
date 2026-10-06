@@ -3,8 +3,8 @@
 <section class="salesHero">
   <div class="salesHeroInner">
     <div class="salesHeroCopy">
-      <h1>Transformamos necessidades em <em>soluções digitais com IA.</em></h1>
-      <p>Sistemas, plataformas, aplicativos, portais, agentes de IA e automações inteligentes para empresas, organizações e governos.</p>
+      <h1>Colocamos a IA no centro <em>da sua operação.</em></h1>
+      <p>A Vitrine IA Pro transforma processos, atendimento, gestão, conteúdo e automações em uma operação mais inteligente, integrada e eficiente.</p>
       <div class="salesTags"><span>✦ IA</span><span>◉ Web</span><span>⚙ Automação</span><span>▤ Dados</span><span>☁ SaaS</span><span>◇ White Label</span></div>
       <div class="salesActions"><a class="btn salesPrimary" href="/diagnostico.php">Solicitar diagnóstico →</a><a class="btn salesGhost" href="#segmentos">Conhecer soluções</a></div>
     </div>
