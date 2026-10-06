@@ -18,10 +18,30 @@ services:
         cp -a /var/www/source/documentos /var/www/html/
         cp /var/www/source/.htaccess /var/www/html/.htaccess
         cp /var/www/source/config.php /var/www/html/config.php
-        for f in index.php casos-reais.php contato.php contratacao-publica.php demonstracoes.php desenvolvimento.php diagnostico.php diagnostico-resultado.php documentos-publicos.php governo.php guia-digital.php lgpd.php news.php produtos.php salvar-lead.php salvar-solicitacao.php seguranca.php sla.php social-media.php solicitacao-institucional.php solicitacao-recebida.php solucoes.php termos.php tv-digital.php
-        do
-          if [ -f "/var/www/source/$f" ]; then cp "/var/www/source/$f" "/var/www/html/$f"; fi
-        done
+        cp /var/www/source/index.php /var/www/html/index.php
+        cp /var/www/source/casos-reais.php /var/www/html/casos-reais.php
+        cp /var/www/source/contato.php /var/www/html/contato.php
+        cp /var/www/source/contratacao-publica.php /var/www/html/contratacao-publica.php
+        cp /var/www/source/demonstracoes.php /var/www/html/demonstracoes.php
+        cp /var/www/source/desenvolvimento.php /var/www/html/desenvolvimento.php
+        cp /var/www/source/diagnostico.php /var/www/html/diagnostico.php
+        cp /var/www/source/diagnostico-resultado.php /var/www/html/diagnostico-resultado.php
+        cp /var/www/source/documentos-publicos.php /var/www/html/documentos-publicos.php
+        cp /var/www/source/governo.php /var/www/html/governo.php
+        cp /var/www/source/guia-digital.php /var/www/html/guia-digital.php
+        cp /var/www/source/lgpd.php /var/www/html/lgpd.php
+        cp /var/www/source/news.php /var/www/html/news.php
+        cp /var/www/source/produtos.php /var/www/html/produtos.php
+        cp /var/www/source/salvar-lead.php /var/www/html/salvar-lead.php
+        cp /var/www/source/salvar-solicitacao.php /var/www/html/salvar-solicitacao.php
+        cp /var/www/source/seguranca.php /var/www/html/seguranca.php
+        cp /var/www/source/sla.php /var/www/html/sla.php
+        cp /var/www/source/social-media.php /var/www/html/social-media.php
+        cp /var/www/source/solicitacao-institucional.php /var/www/html/solicitacao-institucional.php
+        cp /var/www/source/solicitacao-recebida.php /var/www/html/solicitacao-recebida.php
+        cp /var/www/source/solucoes.php /var/www/html/solucoes.php
+        cp /var/www/source/termos.php /var/www/html/termos.php
+        cp /var/www/source/tv-digital.php /var/www/html/tv-digital.php
         if [ ! -f /var/www/html/data/.seeded ]; then
           cp -a /var/www/source/data/. /var/www/html/data/
           touch /var/www/html/data/.seeded
@@ -43,7 +63,7 @@ services:
       - "traefik.http.routers.vitrine-site-prod.tls.certresolver=le"
       - "traefik.http.services.vitrine-site-prod.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "php", "-r", "$c=@file_get_contents('http://127.0.0.1/index.php'); exit($c===false?1:0);"]
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/index.php')===false?1:0);"]
       interval: 15s
       timeout: 5s
       retries: 5
