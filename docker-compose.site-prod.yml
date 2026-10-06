@@ -11,7 +11,7 @@ services:
         set -e
         a2enmod rewrite headers >/dev/null
         sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
-        rm -rf /var/www/html/*
+        find /var/www/html -mindepth 1 -maxdepth 1 ! -name data -exec rm -rf {} +
         cp -a /var/www/source/assets /var/www/html/
         cp -a /var/www/source/includes /var/www/html/
         cp -a /var/www/source/demos /var/www/html/
