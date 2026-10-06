@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Vitrine: instalar dependencias PHP",
+      "type": "shell",
+      "command": "composer install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitrine: preparar .env local",
+      "type": "shell",
+      "windows": {
+        "command": "if (!(Test-Path .env)) { Copy-Item .env.example .env; php artisan key:generate } else { Write-Host '.env ja existe; nenhuma chave foi sobrescrita.' }"
+      },
+      "linux": {
+        "command": "test -f .env || (cp .env.example .env && php artisan key:generate)"
+      },
+      "osx": {
+        "command": "test -f .env || (cp .env.example .env && php artisan key:generate)"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitrine: testes",
+      "type": "shell",
+      "command": "php artisan test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitrine: Pint (verificar)",
+      "type": "shell",
+      "command": "vendor/bin/pint --test",
+      "windows": {
+        "command": "vendor\\bin\\pint.bat --test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitrine: servidor local",
+      "type": "shell",
+      "command": "php artisan serve --host=127.0.0.1 --port=8000",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitrine: rotas",
+      "type": "shell",
+      "command": "php artisan route:list",
+      "problemMatcher": []
+    }
+  ]
+}
