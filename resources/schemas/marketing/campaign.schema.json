@@ -12,6 +12,8 @@
     "product_id": {"type": "integer", "minimum": 1},
     "name": {"type": "string", "minLength": 1, "maxLength": 180},
     "objective": {"type": "string", "minLength": 1},
+    "audience": {"type": "string"},
+    "channels": {"type": "array", "items": {"type": "string"}},
     "automation_mode": {"enum": ["manual", "assisted", "autonomous"]},
     "status": {"enum": ["draft", "ready", "running", "paused", "blocked", "completed", "cancelled"]},
     "known_facts": {"type": "array"},

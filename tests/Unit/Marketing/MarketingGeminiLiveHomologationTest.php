@@ -38,15 +38,11 @@ final class MarketingGeminiLiveHomologationTest extends TestCase
             ));
         }
 
-        foreach (['product_market_strategist', 'campaign_planner', 'copy_content', 'creative_director', 'social_distribution', 'qa_brand_guardian'] as $agentId) {
+        foreach (['product_market_strategist', 'campaign_planner', 'copy_content', 'creative_director', 'video_producer', 'social_distribution', 'qa_brand_guardian'] as $agentId) {
             $metadata = $result['execution_metadata'][$agentId] ?? [];
             $this->assertSame('centro-ia', $metadata['provider'] ?? null, "{$agentId} must execute via Centro IA. Metadata: ".json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             $this->assertFalse($metadata['fallback'] ?? true, "{$agentId} must not use fallback.");
         }
-
-        $videoMetadata = $result['execution_metadata']['video_producer'] ?? [];
-        $this->assertSame('video-engine-plan', $videoMetadata['provider'] ?? null);
-        $this->assertSame('explicit', $videoMetadata['generation_mode'] ?? null);
 
         $this->assertSame('completed', $result['status']);
         $this->assertSame('approved', $result['qa_result']);

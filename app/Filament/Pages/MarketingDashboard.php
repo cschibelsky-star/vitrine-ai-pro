@@ -3,6 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Marketing\Application\MarketingDashboardStateReader;
+use App\Marketing\Application\MarketingOrchestrator;
+use App\Marketing\Application\ResilientMarketingAgentExecutor;
+use App\Marketing\Application\SchemaContractValidator;
 use App\Marketing\Application\SocialDistributionHandoff;
 use App\Marketing\Application\VideoFinalizationService;
 use App\Marketing\Domain\Agents\AgentRegistry;
@@ -1902,25 +1905,175 @@ class MarketingDashboard extends Page
         throw new \RuntimeException('O Diretor retornou um plano de campanha inválido. Tente novamente; o pedido foi preservado no chat.');
     }
 
+    private function runCanonicalAgentPipeline(string $message, string $directorReply, string $brand): array
+    {
+        $companyId = max(1, (int) (auth()->user()?->company_id ?? 1));
+        $campaignId = 'MKT-CAM-'.now()->format('Ymd-His').'-'.strtoupper(bin2hex(random_bytes(2)));
+        $objective = trim($this->flowObjective) !== '' ? trim($this->flowObjective) : trim($message);
+
+        $campaignContract = [
+            'campaign_id' => $campaignId,
+            'tenant_id' => $companyId,
+            'company_id' => $companyId,
+            'product_id' => 1,
+            'name' => mb_substr($brand.' - '.$objective, 0, 180),
+            'objective' => $objective,
+            'automation_mode' => 'assisted',
+            'status' => 'ready',
+            'known_facts' => [
+                'brand: '.$brand,
+                'marketing_context: '.$this->marketingContextKey,
+                'user_request: '.$message,
+                'director_interpretation: '.$directorReply,
+                'requested_cta: '.(trim($this->flowCta) !== '' ? trim($this->flowCta) : '[not informed]'),
+            ],
+            'missing_information' => [],
+            'restrictions' => [
+                'Do not invent prices, metrics, testimonials, customers or product capabilities.',
+                'Preserve the active brand and the user request across every downstream agent.',
+                'Do not publish or spend automatically.',
+            ],
+            'audience' => trim($this->flowAudience),
+            'channels' => ['instagram', 'facebook'],
+        ];
+
+        $result = app(MarketingOrchestrator::class)->runOperationalCampaign(
+            $campaignContract,
+            app(ResilientMarketingAgentExecutor::class),
+            app(SchemaContractValidator::class),
+        );
+
+        if (($result['status'] ?? '') !== 'completed' || ! in_array((string) ($result['qa_result'] ?? ''), ['approved', 'approved_with_warnings'], true)) {
+            throw new \RuntimeException('O pipeline de agentes não aprovou a campanha para produção. QA: '.(string) ($result['qa_result'] ?? 'sem resultado').'.');
+        }
+
+        foreach (['product_market_strategist', 'campaign_planner', 'copy_content', 'creative_director', 'video_producer', 'social_distribution', 'qa_brand_guardian'] as $agentId) {
+            $metadata = (array) data_get($result, 'execution_metadata.'.$agentId, []);
+            if (($metadata['provider'] ?? '') !== 'centro-ia' || ($metadata['fallback'] ?? true) === true) {
+                throw new \RuntimeException('O agente '.$agentId.' não executou de forma real pelo Centro IA.');
+            }
+        }
+
+        $result['campaign_contract'] = $campaignContract;
+
+        return $result;
+    }
+
+    private function buildDirectorPlanFromAgentArtifacts(array $pipeline, string $brand, string $message): array
+    {
+        $artifacts = (array) ($pipeline['artifacts'] ?? []);
+        $strategy = (array) ($artifacts['product_market_strategist'] ?? []);
+        $campaignPlan = (array) ($artifacts['campaign_planner'] ?? []);
+        $content = (array) ($artifacts['copy_content'] ?? []);
+        $creative = (array) ($artifacts['creative_director'] ?? []);
+        $video = (array) ($artifacts['video_producer'] ?? []);
+
+        $campaignName = trim((string) ($strategy['campaign_concept'] ?? '')) ?: $brand;
+        $objective = trim((string) ($campaignPlan['objective'] ?? '')) ?: (trim($this->flowObjective) ?: $message);
+        $audience = trim((string) data_get($strategy, 'icp.0.segment', '')) ?: trim($this->flowAudience);
+        $coreMessage = trim((string) ($strategy['core_message'] ?? '')) ?: $message;
+        $cta = trim((string) data_get($content, 'message_hierarchy.cta', ''));
+        if ($cta === '') {
+            $cta = trim((string) data_get($campaignPlan, 'cta_strategy.0', '')) ?: trim($this->flowCta);
+        }
+
+        $visualDirection = (array) ($creative['visual_direction'] ?? []);
+        $style = trim(implode(' | ', array_filter(array_map(
+            static fn (mixed $value): string => is_scalar($value) ? trim((string) $value) : '',
+            $visualDirection,
+        ))));
+        if ($style === '') {
+            $style = trim($this->flowStyle);
+        }
+
+        $conceptId = trim((string) ($creative['creative_package_id'] ?? ''))
+            ?: 'CONCEPT-'.strtoupper(substr(sha1($pipeline['campaign_id'].'|'.$coreMessage), 0, 10));
+        $creativeConcept = [
+            'id' => $conceptId,
+            'central_idea' => $campaignName,
+            'visual_language' => $style,
+            'tone' => trim((string) ($strategy['positioning'] ?? '')),
+            'consistency_rules' => [
+                'Preserve the campaign contract and core message in every format.',
+                'Use only authorized brand assets.',
+                'Keep CTA consistent with the approved copy package.',
+            ],
+        ];
+
+        $feedCopy = trim((string) data_get($content, 'content_items.0.copy', '')) ?: $coreMessage;
+        $storyIdea = data_get($content, 'story_sequences.0');
+        $storyCopy = is_array($storyIdea)
+            ? trim((string) json_encode($storyIdea, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+            : trim((string) $storyIdea);
+        $storyCopy = $storyCopy !== '' ? $storyCopy : $coreMessage;
+        $videoScript = data_get($content, 'video_scripts.0');
+        $videoIdea = is_array($videoScript)
+            ? trim((string) json_encode($videoScript, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+            : trim((string) $videoScript);
+        $videoIdea = $videoIdea !== '' ? $videoIdea : $coreMessage;
+        $duration = (int) data_get($video, 'videos.0.duration_seconds', data_get($content, 'video_scripts.0.duration_seconds', 8));
+        $duration = in_array($duration, [4, 6, 8], true) ? $duration : 8;
+
+        $jobs = [
+            [
+                'type' => 'image',
+                'format' => 'ad_1_1',
+                'channel_role' => 'feed',
+                'title' => 'Feed principal',
+                'idea' => $feedCopy,
+                'caption' => $feedCopy,
+                'cta' => $cta,
+                'creative_concept' => $creativeConcept,
+            ],
+            [
+                'type' => 'image',
+                'format' => 'story_9_16',
+                'channel_role' => 'story',
+                'title' => 'Story de campanha',
+                'idea' => $storyCopy,
+                'caption' => $feedCopy,
+                'cta' => $cta,
+                'creative_concept' => $creativeConcept,
+            ],
+            [
+                'type' => 'video',
+                'format' => 'reel_9_16',
+                'channel_role' => 'reel',
+                'title' => 'Reel principal',
+                'idea' => $videoIdea,
+                'caption' => $feedCopy,
+                'cta' => $cta,
+                'duration_seconds' => $duration,
+                'creative_concept' => $creativeConcept,
+            ],
+        ];
+
+        return [
+            'campaign' => [
+                'name' => $campaignName,
+                'objective' => $objective,
+                'audience' => $audience,
+                'message' => $coreMessage,
+                'cta' => $cta,
+                'style' => $style,
+                'creative_concept' => $creativeConcept,
+            ],
+            'jobs' => $jobs,
+            'campaign_contract' => $pipeline['campaign_contract'] ?? [],
+            'agent_artifacts' => $artifacts,
+            'execution_metadata' => $pipeline['execution_metadata'] ?? [],
+            'qa_result' => $pipeline['qa_result'] ?? null,
+        ];
+    }
+
     private function autoProduceDirectorCampaign(string $message, string $directorReply): void
     {
         try {
             $context = $this->getMarketingContext();
             $brand = trim((string) ($context['brand'] ?? $this->flowProjectName ?? 'Marca do cliente'));
 
-            $system = 'Retorne APENAS JSON valido, sem markdown, com esta estrutura: '
-                .'{"campaign":{"name":"","objective":"","audience":"","message":"","cta":"","style":"",'
-                .'"creative_concept":{"id":"","central_idea":"","visual_language":"","tone":"","consistency_rules":[""]}},'
-                .'"jobs":[{"type":"image|video","format":"ad_1_1|story_9_16|reel_9_16|video_16_9","channel_role":"feed|story|reel|support",'
-                .'"title":"","idea":"","caption":"","cta":"","duration_seconds":8}]}. '
-                .'Crie um pacote coerente de 3 a 5 pecas derivadas do MESMO creative_concept. '
-                .'Por padrao, inclua Feed 1:1, Story 9:16 e Reel 9:16; adicione outras pecas somente quando ajudarem o objetivo. '
-                .'Cada job deve adaptar o mesmo conceito ao formato/canal, sem reinventar mensagem, identidade ou proposta. '
-                .'Nao invente fatos, metricas, depoimentos ou precos. Nao escolha modelo ou provedor: Video e imagem usam o orquestrador dinamico do Centro IA.';
-
-            $userPrompt = "MARCA: ".$brand."\nCONTEXTO: ".$this->marketingContextKey."\nPEDIDO: ".$message."\nPLANO DO DIRETOR: ".$directorReply;
-            $raw = trim($this->generateDirectorCampaignPlan($system, $userPrompt));
-            $plan = $this->decodeDirectorPlan($raw);
+            $pipeline = $this->runCanonicalAgentPipeline($message, $directorReply, $brand);
+            $plan = $this->buildDirectorPlanFromAgentArtifacts($pipeline, $brand, $message);
 
             $campaign = (array) ($plan['campaign'] ?? []);
             $creativeConcept = (array) ($campaign['creative_concept'] ?? []);

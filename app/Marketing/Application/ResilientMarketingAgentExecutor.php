@@ -23,16 +23,6 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
 
     public function execute(string $agentId, array $campaign, array $inputs): array
     {
-        if ($agentId === 'video_producer') {
-            $this->metadata[$agentId] = [
-                'provider' => 'video-engine-plan',
-                'fallback' => false,
-                'generation_mode' => 'explicit',
-            ];
-
-            return $this->simulated->execute($agentId, $campaign, $inputs);
-        }
-
         if (! $this->liveHubEnabled()) {
             $this->metadata[$agentId] = [
                 'provider' => 'simulated',
@@ -178,6 +168,7 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
             'campaign_planner' => 'campaign-plan',
             'copy_content' => 'content-package',
             'creative_director' => 'creative-package',
+            'video_producer' => 'video-package',
             'social_distribution' => 'distribution-plan',
             'qa_brand_guardian' => 'qa-report',
             'performance_analyst' => 'performance-report',

@@ -181,7 +181,7 @@ final readonly class MarketingOrchestrator
 
                 if (
                     $agentId === 'qa_brand_guardian'
-                    && (string) ($output['result'] ?? '') !== 'approved'
+                    && in_array((string) ($output['result'] ?? ''), ['needs_revision', 'blocked'], true)
                 ) {
                     $state->blockTask($agentId, 'QA did not approve the campaign.');
                     break 2;
