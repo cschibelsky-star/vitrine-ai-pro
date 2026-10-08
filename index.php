@@ -1,113 +1,440 @@
 <?php
-$version='4.1.0-PREMIUM-HML';
+$version='4.2.0-REFERENCE-HML';
+
+$imageSources = [
+  'bosque-jardim-dallorto' => 'https://turismo.sumare.sp.gov.br/public/img/natural_atractives/bosque-dos-lagos-sumare.jpeg',
+  'pro-memoria' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg',
+  'orquidario-municipal' => 'https://turismo.sumare.sp.gov.br/public/img/natural_atractives/Orquidario-municipal.jpg',
+  'represa-marcelo-pedroni' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/represa-marcelo-pedroni/capa-real.jpg',
+  'praca-das-bandeiras' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/praca-das-bandeiras/capa-real.jpg',
+  'horto-florestal-de-sumare' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/horto-florestal/capa.jpg',
+  'ceav-centro-de-educacao-ambiental-vivenciada' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/ceav/capa.jpg',
+  'igreja-matriz-de-santana' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/igreja-matriz-santana.jpg',
+  'centro-historico-de-nova-veneza' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/centro-administrativo.jpeg',
+  'shopping-parkcity-sumare' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/shopping-parkcity/capa.jpg',
+  'recanto-dos-animais-henrique-pedroni' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/recanto-dos-animais/capa.jpg',
+  'estancia-arvore-da-vida' => 'https://turismo.sumare.sp.gov.br/public/img/cultural_atractives/estancia.jpg',
+  'capela-bom-jesus' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/igreja-bom-jesus.jpg',
+  'casarao-sertaozinho' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/casarao-sertaozinho.jpeg',
+  'categoria-natureza' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/natureza.jpg',
+  'categoria-evento' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/evento.jpg',
+  'categoria-gastronomia' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/gastronomia.jpg',
+  'categoria-hospedagem' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/hospedagem.jpg',
+  'categoria-comercio' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/comercio.jpg',
+  'evento-feira-artesanato' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg',
+];
+
+function conheca_image_url(string $key): string {
+  return '/?img=' . rawurlencode($key);
+}
+
+if (isset($_GET['img'])) {
+  $key = preg_replace('/[^a-z0-9-]/', '', strtolower((string)$_GET['img']));
+  if (!$key || !isset($imageSources[$key])) {
+    http_response_code(404);
+    exit;
+  }
+
+  $cacheDir = __DIR__ . '/storage/image-cache';
+  if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0775, true);
+  }
+
+  $cacheFile = $cacheDir . '/' . $key . '.bin';
+  if (!is_file($cacheFile) || filesize($cacheFile) < 512) {
+    $context = stream_context_create([
+      'http' => [
+        'timeout' => 8,
+        'follow_location' => 1,
+        'header' => "User-Agent: ConhecaSumare/4.1\r\nAccept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8\r\n",
+      ],
+      'ssl' => [
+        'verify_peer' => true,
+        'verify_peer_name' => true,
+      ],
+    ]);
+    $data = @file_get_contents($imageSources[$key], false, $context);
+    if ($data !== false && strlen($data) >= 512) {
+      $tmp = $cacheFile . '.tmp';
+      if (@file_put_contents($tmp, $data, LOCK_EX) !== false) {
+        @rename($tmp, $cacheFile);
+      }
+    }
+  }
+
+  if (is_file($cacheFile) && filesize($cacheFile) >= 512) {
+    $mime = 'image/jpeg';
+    if (class_exists('finfo')) {
+      $finfo = new finfo(FILEINFO_MIME_TYPE);
+      $detected = $finfo->file($cacheFile);
+      if (is_string($detected) && str_starts_with($detected, 'image/')) {
+        $mime = $detected;
+      }
+    }
+    header('Content-Type: ' . $mime);
+    header('Cache-Control: public, max-age=604800, stale-while-revalidate=86400');
+    header('X-Content-Type-Options: nosniff');
+    readfile($cacheFile);
+    exit;
+  }
+
+  header('Content-Type: image/svg+xml; charset=UTF-8');
+  header('Cache-Control: no-store');
+  echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#dfe9e3"/><stop offset="1" stop-color="#f5f7f4"/></linearGradient></defs><rect width="1200" height="750" fill="url(#g)"/><circle cx="600" cy="315" r="72" fill="#0b6b46" opacity=".13"/><path d="M560 335l42-55 46 70 30-38 72 94H450z" fill="#0b6b46" opacity=".35"/><text x="600" y="470" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#365b4c">Foto em atualização</text></svg>';
+  exit;
+}
+
+$atrativos = [
+  'bosque-jardim-dallorto' => [
+    'nome' => "Bosque dos Lagos Cidade Orquídea",
+    'bairro' => "Jardim Dall'Orto",
+    'categoria' => 'Natureza & lazer',
+    'imagem' => conheca_image_url('bosque-jardim-dallorto'),
+    'descricao' => 'Área verde com lagos e espaços para caminhar, contemplar e aproveitar momentos ao ar livre em Sumaré.',
+    'historia' => 'Inaugurado em 2018, o Bosque dos Lagos ocupa uma área verde de aproximadamente 32 mil metros quadrados e reúne duas lagoas naturais e vegetação nativa. O espaço passou a integrar a oferta de lazer e convivência da cidade, recebendo moradores e visitantes em busca de tranquilidade e atividades ao ar livre.',
+    'porque' => 'O projeto de estruturação prevê pista de caminhada, área para eventos, trilhas ecológicas, playground, quadras de vôlei e futebol de areia e pista para mountain bike, ampliando seu papel como ponto de lazer e contato com a natureza.',
+    'endereco' => "Rua Piracanjuba, esquina com Rua Goiatuba - Jardim Dall'Orto"
+  ],
+  'pro-memoria' => [
+    'nome' => 'Associação Pró-Memória de Sumaré',
+    'bairro' => 'Centro',
+    'categoria' => 'Cultura & história',
+    'imagem' => conheca_image_url('pro-memoria'),
+    'descricao' => 'Espaço dedicado à preservação da memória, da história e da identidade de Sumaré.',
+    'historia' => 'A Associação Pró-Memória funciona no Centro de Memória Thomaz Didona, em um prédio construído em 1913, um dos mais antigos de Sumaré. A entidade atua na recuperação, preservação e divulgação da história local, organizando e conservando documentos, fotografias, jornais, livros e outros registros históricos.',
+    'porque' => 'O acervo reúne cerca de 250 mil papéis, uma ampla coleção de jornais e mais de 117 mil fotografias digitalizadas, além de livros impressos e manuscritos. É uma das principais referências para quem quer conhecer a formação e a memória da cidade.',
+    'endereco' => 'Praça da República, 102 - Centro'
+  ],
+  'orquidario-municipal' => [
+    'nome' => 'Orquidário Municipal de Sumaré',
+    'bairro' => 'Jardim Primavera',
+    'categoria' => 'Cidade Orquídea',
+    'imagem' => conheca_image_url('orquidario-municipal'),
+    'descricao' => 'Atrativo relacionado à identidade de Sumaré como Cidade Orquídea, com foco em natureza e valorização da flora.',
+    'historia' => 'O Orquidário Municipal ocupa uma área construída de aproximadamente 890 metros quadrados e foi implantado em parceria com empresas instaladas na região. O espaço foi concebido para reforçar a vocação de Sumaré ligada às orquídeas e valorizar esse elemento da identidade local.',
+    'porque' => 'Logo na entrada, o visitante encontra espécies associadas à chamada orquídea de Sumaré, entre elas Cyrtopodium punctatum, nativa da região, e Cyrtopodium hatschbachi. A presença dessas espécies reforça a ligação simbólica entre a cidade e sua flora.',
+    'endereco' => 'Av. Eugênia Biancalana Duarte, 200 - Jardim Primavera'
+  ],
+  'represa-marcelo-pedroni' => [
+    'nome' => 'Represa Marcelo Pedroni',
+    'bairro' => 'Sumaré',
+    'categoria' => 'Natureza & lazer',
+    'imagem' => conheca_image_url('represa-marcelo-pedroni'),
+    'descricao' => 'Espaço associado à contemplação, caminhada e contato com a paisagem natural da cidade.',
+    'historia' => 'A Represa Marcelo Pedroni faz parte da memória urbana de Sumaré desde a primeira metade do século XX. O Plano Diretor registra que, em 1934, foi construída no Sítio Sertãozinho uma estação de captação ligada ao primeiro serviço de abastecimento de água do município, utilizando a nascente que também abastecia a represa.',
+    'porque' => 'Marcelo Pedroni, imigrante italiano ligado à implantação desse sistema de abastecimento, ficou conhecido como o “Pai da Água” de Sumaré. Hoje a represa continua sendo uma importante área de lazer e passa por revitalização com ciclovia, pista de caminhada, playground, deck panorâmico e outras melhorias previstas.',
+    'endereco' => 'Rua da Represa Marcelo Pedroni'
+  ],
+];
+$explorarItems = [
+  ['slug'=>'bosque-jardim-dallorto','nome'=>'Bosque dos Lagos Cidade Orquídea','categoria'=>'Natureza','bairro'=>"Jardim Dall'Orto",'imagem'=>conheca_image_url('bosque-jardim-dallorto')],
+  ['slug'=>'represa-marcelo-pedroni','nome'=>'Represa Marcelo Pedroni','categoria'=>'Natureza','bairro'=>'Sumaré','imagem'=>conheca_image_url('represa-marcelo-pedroni')],
+  ['slug'=>'praca-das-bandeiras','nome'=>'Praça das Bandeiras','categoria'=>'Cultura e História','bairro'=>'Centro','imagem'=>conheca_image_url('praca-das-bandeiras')],
+  ['slug'=>'pro-memoria','nome'=>'Associação Pró-Memória de Sumaré','categoria'=>'Cultura e História','bairro'=>'Centro','imagem'=>conheca_image_url('pro-memoria')],
+  ['slug'=>'horto-florestal-de-sumare','nome'=>'Horto Florestal de Sumaré','categoria'=>'Natureza','bairro'=>'Sumaré','imagem'=>conheca_image_url('horto-florestal-de-sumare')],
+  ['slug'=>'ceav-centro-de-educacao-ambiental-vivenciada','nome'=>'CEAV - Centro de Educação Ambiental Vivenciada','categoria'=>'Natureza','bairro'=>'Sumaré','imagem'=>conheca_image_url('ceav-centro-de-educacao-ambiental-vivenciada')],
+  ['slug'=>'igreja-matriz-de-santana','nome'=>'Igreja Matriz de Sant’Ana','categoria'=>'Cultura e História','bairro'=>'Centro','imagem'=>conheca_image_url('igreja-matriz-de-santana')],
+  ['slug'=>'orquidario-municipal','nome'=>'Orquidário Municipal de Sumaré','categoria'=>'Natureza','bairro'=>'Jardim Primavera','imagem'=>conheca_image_url('orquidario-municipal')],
+  ['slug'=>'centro-historico-de-nova-veneza','nome'=>'Centro Histórico de Nova Veneza','categoria'=>'Cultura e História','bairro'=>'Nova Veneza','imagem'=>conheca_image_url('centro-historico-de-nova-veneza')],
+  ['slug'=>'shopping-parkcity-sumare','nome'=>'Shopping ParkCity Sumaré','categoria'=>'Lazer e Família','bairro'=>'Sumaré','imagem'=>conheca_image_url('shopping-parkcity-sumare')],
+  ['slug'=>'recanto-dos-animais-henrique-pedroni','nome'=>'Recanto dos Animais Henrique Pedroni','categoria'=>'Lazer e Família','bairro'=>'Sumaré','imagem'=>conheca_image_url('recanto-dos-animais-henrique-pedroni')],
+  ['slug'=>'estancia-arvore-da-vida','nome'=>'Estância Árvore da Vida','categoria'=>'Lazer e Família','bairro'=>'Sumaré','imagem'=>conheca_image_url('estancia-arvore-da-vida')],
+  ['slug'=>'capela-bom-jesus','nome'=>'Capela Bom Jesus','categoria'=>'Cultura e História','bairro'=>'Matão','imagem'=>conheca_image_url('capela-bom-jesus')],
+  ['slug'=>'casarao-sertaozinho','nome'=>'Casarão Sertãozinho','categoria'=>'Cultura e História','bairro'=>'Sumaré','imagem'=>conheca_image_url('casarao-sertaozinho')]
+];
+$eventsFile = __DIR__ . '/storage/data/events.json';
+$eventsData = [];
+if (is_file($eventsFile)) {
+  $decodedEvents = json_decode((string)file_get_contents($eventsFile), true);
+  if (is_array($decodedEvents)) {
+    $eventsData = $decodedEvents;
+  }
+}
+$today = date('Y-m-d');
+$publishedEvents = array_values(array_filter($eventsData, static function(array $event) use ($today): bool {
+  if (($event['status'] ?? 'candidate') !== 'published') return false;
+  $end = trim((string)($event['end_date'] ?? ''));
+  $start = trim((string)($event['start_date'] ?? ''));
+  $lastDay = $end !== '' ? $end : $start;
+  return $start !== '' && ($lastDay === '' || $lastDay >= $today);
+}));
+usort($publishedEvents, static function(array $a, array $b): int {
+  return strcmp((string)($a['start_date'] ?? '9999-12-31'), (string)($b['start_date'] ?? '9999-12-31'));
+});
+
+function conheca_event_date_label(array $event): string {
+  $date = trim((string)($event['start_date'] ?? ''));
+  if ($date === '') return 'DATA A CONFIRMAR';
+  $ts = strtotime($date);
+  if (!$ts) return strtoupper($date);
+  $months = [1=>'JAN',2=>'FEV',3=>'MAR',4=>'ABR',5=>'MAI',6=>'JUN',7=>'JUL',8=>'AGO',9=>'SET',10=>'OUT',11=>'NOV',12=>'DEZ'];
+  return date('d', $ts) . ' ' . ($months[(int)date('n', $ts)] ?? '');
+}
+
+$pathOnly = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+
+if ($pathOnly === 'eventos') {
+  ?><!doctype html>
+  <html lang="pt-BR"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Agenda Cultural — Conheça Sumaré</title>
+  <meta name="description" content="Agenda de eventos culturais, turísticos e gastronômicos confirmados em Sumaré.">
+  <meta name="theme-color" content="#0b3d2d">
+  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
+  </head><body class="explore-page">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
+    <nav><a href="/explorar">Explorar</a><a href="/eventos">Eventos</a><a href="/#roteiros">Roteiros</a><a href="/#parceiros">Participar</a></nav>
+    <a class="header-install detail-back" href="/">← Início</a>
+  </header>
+  <main class="explore-main">
+    <section class="explore-hero">
+      <div class="container">
+        <span class="detail-kicker">AGENDA CULTURAL</span>
+        <h1>O que está acontecendo em Sumaré.</h1>
+        <p>Eventos confirmados em fontes públicas, organizados por data para moradores e visitantes.</p>
+      </div>
+    </section>
+    <section class="container explore-grid">
+      <?php if(!$publishedEvents): ?>
+        <article class="explore-card" style="padding:24px">
+          <div class="explore-card-body">
+            <small>AGENDA</small>
+            <h2>Novos eventos em monitoramento</h2>
+            <p>A agenda é atualizada a partir de anúncios públicos confirmados.</p>
+          </div>
+        </article>
+      <?php endif; ?>
+      <?php foreach($publishedEvents as $event): ?>
+        <article class="explore-card">
+          <?php if(!empty($event['image'])): ?><img src="<?=htmlspecialchars((string)$event['image'])?>" alt="<?=htmlspecialchars((string)($event['title']??''))?>" loading="lazy"><?php endif; ?>
+          <div class="explore-card-body">
+            <small><?=htmlspecialchars((string)($event['category']??'Evento'))?> · <?=htmlspecialchars(conheca_event_date_label($event))?></small>
+            <h2><?=htmlspecialchars((string)($event['title']??''))?></h2>
+            <p><?=htmlspecialchars((string)($event['place']??''))?><?php if(!empty($event['start_time'])): ?> · <?=htmlspecialchars((string)$event['start_time'])?><?php endif; ?></p>
+            <?php if(!empty($event['summary'])): ?><p><?=htmlspecialchars((string)$event['summary'])?></p><?php endif; ?>
+            <?php if(!empty($event['source_url'])): ?><a class="explore-action" href="<?=htmlspecialchars((string)$event['source_url'])?>" target="_blank" rel="noopener">Ver fonte oficial ↗</a><?php endif; ?>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </section>
+  </main>
+  </body></html><?php
+  exit;
+}
+
+if ($pathOnly === 'explorar') {
+  ?><!doctype html>
+  <html lang="pt-BR"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Explorar Sumaré — Conheça Sumaré</title>
+  <meta name="theme-color" content="#0b3d2d">
+  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
+  </head><body class="explore-page">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
+    <nav><a href="/explorar">Explorar</a><a href="/#agenda">Eventos</a><a href="/#roteiros">Roteiros</a><a href="/#parceiros">Participar</a></nav>
+    <a class="header-install detail-back" href="/">← Início</a>
+  </header>
+  <main class="explore-main">
+    <section class="explore-hero">
+      <div class="container">
+        <span class="detail-kicker">DESCUBRA SUMARÉ</span>
+        <h1>Explore os atrativos da cidade.</h1>
+        <p>Natureza, cultura, história, lazer e experiências para montar seu próprio roteiro.</p>
+        <input id="exploreSearch" class="explore-search" type="search" placeholder="Buscar atrativo...">
+      </div>
+    </section>
+    <section class="container explore-grid" id="exploreGrid">
+      <?php foreach($explorarItems as $item): ?>
+      <?php
+        $exploreName = htmlspecialchars(strtolower($item['nome'].' '.$item['categoria'].' '.$item['bairro']), ENT_QUOTES, 'UTF-8');
+        $exploreHref = isset($atrativos[$item['slug']]) ? '/atrativo/'.rawurlencode($item['slug']) : '#';
+      ?>
+      <a class="explore-card" data-name="<?=$exploreName?>" href="<?=$exploreHref?>">
+        <?php if(!empty($item['imagem'])): ?>
+          <img src="<?=htmlspecialchars($item['imagem'])?>" alt="<?=htmlspecialchars($item['nome'])?>" loading="lazy">
+        <?php else: ?>
+          <div class="explore-photo-placeholder"><span>Foto em atualização</span></div>
+        <?php endif; ?>
+        <div class="explore-card-body">
+          <small><?=htmlspecialchars($item['categoria'])?></small>
+          <h2><?=htmlspecialchars($item['nome'])?></h2>
+          <p><?=htmlspecialchars($item['bairro'])?></p>
+          <span class="explore-action"><?=isset($atrativos[$item['slug']]) ? 'Ver detalhes →' : 'Conteúdo em atualização'?></span>
+        </div>
+      </a>
+      <?php endforeach; ?>
+    </section>
+  </main>
+  <script>
+  const q=document.getElementById('exploreSearch');
+  q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.explore-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});
+  </script>
+  </body></html><?php
+  exit;
+}
+$slug = isset($_GET['atrativo']) ? preg_replace('/[^a-z0-9-]/', '', strtolower($_GET['atrativo'])) : '';
+if ($slug && isset($atrativos[$slug])) {
+  $a = $atrativos[$slug];
+  ?><!doctype html>
+  <html lang="pt-BR"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title><?=htmlspecialchars($a['nome'])?> — Conheça Sumaré</title>
+  <meta name="theme-color" content="#0b3d2d">
+  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
+  </head><body class="detail-page">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
+    <a class="header-install detail-back" href="/#cultura">← Voltar</a>
+  </header>
+  <main class="attraction-detail">
+    <section class="detail-hero">
+      <img src="<?=htmlspecialchars($a['imagem'])?>" alt="<?=htmlspecialchars($a['nome'])?>">
+      <div class="detail-overlay"></div>
+      <div class="detail-copy">
+        <span><?=htmlspecialchars(strtoupper($a['categoria']))?></span>
+        <h1><?=htmlspecialchars($a['nome'])?></h1>
+        <p><?=htmlspecialchars($a['bairro'])?> · Sumaré</p>
+      </div>
+    </section>
+    <section class="detail-content">
+      <div>
+        <span class="detail-kicker">CONHEÇA O LOCAL</span>
+        <h2>Sobre este atrativo</h2>
+        <p><?=htmlspecialchars($a['descricao'])?></p>
+        <div class="story-block">
+          <span class="detail-kicker">HISTÓRIA</span>
+          <h3>A história deste lugar</h3>
+          <p><?=htmlspecialchars($a['historia'])?></p>
+        </div>
+        <div class="story-block">
+          <span class="detail-kicker">POR QUE CONHECER</span>
+          <h3>O que torna este lugar especial</h3>
+          <p><?=htmlspecialchars($a['porque'])?></p>
+        </div>
+      </div>
+      <aside>
+        <strong>Planeje sua visita</strong>
+        <p><?=htmlspecialchars($a['endereco'])?></p>
+        <p class="visit-note">Confirme horários e condições de visitação antes de sair.</p>
+        <a class="btn yellow" href="https://www.google.com/maps/search/?api=1&query=<?=urlencode($a['nome'].' Sumaré SP')?>" target="_blank" rel="noopener">Abrir no mapa →</a>
+      </aside>
+    </section>
+  </main>
+  </body></html><?php
+  exit;
+}
 ?><!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Conheça Sumaré — Descubra e viva mais a sua cidade</title>
-<meta name="description" content="Descubra lugares, eventos, cultura, gastronomia, hospedagem e experiências em Sumaré.">
-<meta name="theme-color" content="#0b3d2d">
-<link rel="manifest" href="/manifest.json?v=4.1">
-<link rel="stylesheet" href="/assets/style.css?v=4.1">
+<title>Conheça Sumaré — Turismo, cultura, eventos e negócios</title>
+<meta name="description" content="Conheça Sumaré: turismo, cultura, eventos, gastronomia, negócios, mapa e experiências da cidade.">
+<meta name="theme-color" content="#0b7167">
+<link rel="manifest" href="/manifest.json?v=4.2.0">
+<link rel="stylesheet" href="/assets/style.css?v=4.2.0">
 </head>
-<body>
-<header class="site-header">
-  <a class="brand" href="#inicio"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
-  <nav><a href="#descubra">Explorar</a><a href="#agenda">Eventos</a><a href="#roteiros">Roteiros</a><a href="#parceiros">Participar</a></nav>
-  <button class="header-install" data-install>Instalar no celular</button>
+<body class="reference-home">
+<header class="ref-header">
+  <a class="ref-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
+  <nav><a href="#inicio">Início</a><a href="#turismo">Turismo</a><a href="/eventos">Eventos</a><a href="#gastronomia">Gastronomia</a><a href="#negocios">Negócios</a><a href="#mapa">Mapa</a></nav>
+  <div class="ref-header-actions"><a class="ref-search" href="/explorar" aria-label="Buscar">⌕</a><button data-install>Baixar App</button></div>
 </header>
 
 <main>
-<section class="hero" id="inicio">
-  <div class="hero-image"></div><div class="hero-overlay"></div>
-  <div class="hero-inner">
-    <div class="hero-copy">
-      <span class="eyebrow"><i></i> Sumaré, São Paulo</span>
-      <h1>Descubra Sumaré.<br><em>Viva mais a sua cidade.</em></h1>
-      <p>Encontre lugares, experiências, cultura, eventos, sabores e histórias para aproveitar Sumaré de um jeito novo.</p>
-      <div class="actions"><a class="btn light" href="#descubra">Explorar Sumaré <b>→</b></a><a class="btn ghost" href="#agenda">O que fazer hoje</a></div>
-      <form class="search" onsubmit="event.preventDefault();document.querySelector('#descubra').scrollIntoView({behavior:'smooth'})"><span>⌕</span><input placeholder="Busque lugares, experiências e eventos"><button>Buscar</button></form>
-    </div>
-    <aside class="hero-card">
-      <small>SEU PRÓXIMO PASSEIO</small><strong>Comece pelo que combina com você.</strong>
-      <a href="#natureza">🌿 Natureza</a><a href="#cultura">🏛 Cultura</a><a href="#sabores">🍽 Gastronomia</a><a href="#agenda">✦ Eventos</a>
-    </aside>
-  </div>
-</section>
-
-<section class="section" id="descubra">
-  <div class="container">
-    <div class="heading split"><div><span>DO SEU JEITO</span><h2>O que você quer fazer em Sumaré?</h2></div><p>Escolha uma experiência e encontre opções para hoje, para o fim de semana ou para montar seu próprio roteiro.</p></div>
-    <div class="experience-grid">
-      <a class="experience large" id="natureza" style="--img:url('https://conhecasumare.com.br/assets/img/real/natureza.jpg')"><small>NATUREZA & LAZER</small><strong>Respire, caminhe, desacelere.</strong><b>Explorar →</b></a>
-      <a class="experience" style="--img:url('https://conhecasumare.com.br/assets/img/real/evento.jpg')"><small>AGENDA</small><strong>Acontecendo em Sumaré</strong><b>Ver eventos →</b></a>
-      <a class="experience" id="sabores" style="--img:url('https://conhecasumare.com.br/assets/img/real/gastronomia.jpg')"><small>SABORES</small><strong>Onde comer</strong><b>Descobrir →</b></a>
-      <a class="experience" style="--img:url('https://conhecasumare.com.br/assets/img/real/hospedagem.jpg')"><small>HOSPEDAGEM</small><strong>Onde ficar</strong><b>Encontrar →</b></a>
-      <a class="experience" style="--img:url('https://conhecasumare.com.br/assets/img/real/comercio.jpg')"><small>COMÉRCIO LOCAL</small><strong>Compre de quem faz a cidade</strong><b>Conhecer →</b></a>
+<section class="ref-hero" id="inicio">
+  <div class="ref-hero-bg"></div>
+  <div class="ref-hero-shade"></div>
+  <div class="ref-hero-copy">
+    <h1>Descubra<br><em>Sumaré</em> no<br>seu celular.</h1>
+    <p>Turismo, cultura, eventos, gastronomia<br>hospedagem, atrativos e experiências<br>locais em um guia digital moderno.</p>
+    <div class="ref-hero-buttons"><a href="/explorar">➜ <span>Explorar Sumaré</span> →</a><button data-install>▯ <span>Instalar App</span></button></div>
+    <div class="ref-benefits">
+      <div><b>♧</b><span>Conheça<br>nossa região</span></div>
+      <div><b>♚</b><span>Viva a<br>cultura local</span></div>
+      <div><b>▣</b><span>Acompanhe<br>eventos</span></div>
+      <div><b>♡</b><span>Apoie o<br>comércio da cidade</span></div>
     </div>
   </div>
-</section>
-
-<section class="section soft" id="cultura">
-  <div class="container">
-    <div class="heading"><span>VALE CONHECER</span><h2>Lugares que contam Sumaré.</h2><p>Natureza, memória, cultura e pontos de encontro para redescobrir a cidade.</p></div>
-    <div class="places">
-      <article class="place featured"><img src="https://conhecasumare.com.br/images/atrativos/bosque-dallorto/capa-real.jpg" alt="Bosque do Jardim Dall'Orto"><div><small>NATUREZA</small><h3>Bosque do Jardim Dall'Orto</h3><p>Ver detalhes →</p></div></article>
-      <article class="place"><img src="https://conhecasumare.com.br/images/atrativos/pro-memoria/capa-real.jpg" alt="Pró-Memória"><div><small>CULTURA & HISTÓRIA</small><h3>Pró-Memória</h3><p>Ver detalhes →</p></div></article>
-      <article class="place"><img src="https://conhecasumare.com.br/images/atrativos/praca-das-bandeiras/capa-real.jpg" alt="Praça das Bandeiras"><div><small>CIDADE</small><h3>Praça das Bandeiras</h3><p>Ver detalhes →</p></div></article>
-      <article class="place"><img src="https://conhecasumare.com.br/images/atrativos/represa-marcelo-pedroni/capa-real.jpg" alt="Represa Marcelo Pedroni"><div><small>NATUREZA</small><h3>Represa Marcelo Pedroni</h3><p>Ver detalhes →</p></div></article>
+  <div class="ref-phone">
+    <div class="ref-phone-notch"></div>
+    <div class="ref-phone-screen">
+      <small>CONHEÇA</small><strong>SUMARÉ</strong>
+      <h3>Explore<br>Sumaré</h3>
+      <p>Turismo, cultura,<br>eventos e experiências</p>
+      <div class="ref-phone-search">⌕ O que você procura?</div>
+      <div class="ref-phone-icons"><span>♧<small>Atrações</small></span><span>▣<small>Eventos</small></span><span>♨<small>Gastronomia</small></span><span>⚑<small>Hospedagem</small></span><span>⌖<small>Mapas</small></span><span>▣<small>Negócios</small></span></div>
+      <b>Destaques</b>
+      <div class="ref-phone-card" style="background-image:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><span>Pró-Memória<br>de Sumaré</span></div>
     </div>
   </div>
+  <div class="ref-script">História<br>Cultura<br>Pessoas<br>Oportunidades</div>
+  <div class="ref-slogan">Sumaré<br>é para viver.</div>
 </section>
 
-<section class="section agenda" id="agenda">
-  <div class="container">
-    <div class="heading split"><div><span>AGENDA DA CIDADE</span><h2>Sempre tem algo acontecendo.</h2></div><a href="https://cultura.sumare.sp.gov.br/" target="_blank" rel="noopener">Fonte oficial Cultura ↗</a></div>
-    <div class="agenda-grid">
-      <article class="event-card main"><img src="https://conhecasumare.com.br/images/eventos/feira-artesanato/capa-real.jpg" alt="Feira de Artesanato"><div class="date"><b>•</b><span>AGENDA</span></div><div><small>FEIRAS & ECONOMIA CRIATIVA</small><h3>Feira de Artesanato</h3><p>Programação local e experiências da cidade.</p></div></article>
-      <article class="event-card"><div class="date"><b>•</b><span>CULTURA</span></div><div><small>PROGRAMAÇÃO</small><h3>Agenda Cultural</h3><p>Eventos e atividades com referência nas fontes oficiais.</p></div></article>
-      <article class="event-card"><div class="date"><b>•</b><span>SUMARÉ</span></div><div><small>EXPERIÊNCIAS</small><h3>Fim de semana na cidade</h3><p>Descubra novas opções para aproveitar Sumaré.</p></div></article>
+<section class="ref-categories" id="turismo">
+  <a href="/explorar" style="--bg:url('<?=htmlspecialchars(conheca_image_url('categoria-natureza'))?>')"><span>♧</span><strong>Natureza</strong></a>
+  <a href="#historia" style="--bg:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><span>⌂</span><strong>Cultura</strong></a>
+  <a href="/eventos" style="--bg:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')"><span>☕</span><strong>Eventos</strong></a>
+  <a href="#mapa" style="--bg:url('<?=htmlspecialchars(conheca_image_url('categoria-comercio'))?>')"><span>●</span><strong>Mapa</strong></a>
+  <a id="gastronomia" href="/explorar" style="--bg:url('<?=htmlspecialchars(conheca_image_url('categoria-gastronomia'))?>')"><span>♨</span><strong>Gastronomia</strong></a>
+  <a href="/explorar" style="--bg:url('<?=htmlspecialchars(conheca_image_url('categoria-hospedagem'))?>')"><span>▰</span><strong>Hospedagem</strong></a>
+</section>
+
+<section class="ref-official">
+  <div class="ref-section-title"><div><small>✦ Conteúdo oficial</small><h2>Atrativos e eventos com referência nas fontes oficiais da cidade.</h2></div><a href="/explorar">Ver todos os atrativos →</a></div>
+  <div class="ref-feature-grid">
+    <a href="/atrativo/bosque-jardim-dallorto" class="ref-feature" style="--img:url('<?=htmlspecialchars(conheca_image_url('bosque-jardim-dallorto'))?>')"><div><small>NATUREZA</small><h3>Bosque dos Lagos</h3><p>Lazer, contato com a natureza<br>e um dos principais cartões-postais<br>de Sumaré.</p><b>›</b></div></a>
+    <a href="/atrativo/pro-memoria" class="ref-feature" style="--img:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
+    <a href="/eventos" class="ref-feature" style="--img:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
+  </div>
+</section>
+
+<section class="ref-history" id="historia">
+  <div class="ref-history-copy"><h2>Cultura e História de Sumaré</h2><p>Uma cidade com raízes fortes, patrimônio histórico<br>e uma identidade construída por sua gente.</p><a href="/atrativo/pro-memoria">Conheça nossa história →</a>
+    <div class="ref-mini-cards">
+      <span style="--img:url('<?=htmlspecialchars(conheca_image_url('igreja-matriz-de-santana'))?>')">♟ <b>Área Urbana e Rural</b></span>
+      <span style="--img:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')">♚ <b>Cultura popular</b></span>
+      <span style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-natureza'))?>')">♧ <b>Natureza e Lazer</b></span>
     </div>
-    <div class="source-note"><span>✓</span><p><strong>Referências oficiais.</strong> A curadoria editorial considera informações públicas da Secretaria Municipal de Turismo e da Secretaria Municipal de Cultura.</p><div><a href="https://turismo.sumare.sp.gov.br/" target="_blank">Turismo ↗</a><a href="https://cultura.sumare.sp.gov.br/" target="_blank">Cultura ↗</a></div></div>
+  </div>
+  <div class="ref-history-photo" style="background-image:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><span>▣ <b>Patrimônio<br>que inspira<br>gerações</b></span></div>
+</section>
+
+<section class="ref-business" id="negocios">
+  <div class="ref-business-copy"><small>↗</small><h2>Sumaré também é<br><em>destino de negócios.</em></h2><p>Localização estratégica, infraestrutura completa,<br>conexão com os maiores centros do país e um ambiente<br>convidativo e seguro, atraindo grandes empresas e novos<br>investimentos.</p></div>
+  <div class="ref-business-grid">
+    <article><b>▥</b><div><strong>Polo CKy Sumaré</strong><p>Um dos maiores polos<br>industriais da região.</p></div></article>
+    <article><b>↗</b><div><strong>Mercado Livre</strong><p>Centro de distribuição<br>e geração de oportunidades.</p></div></article>
+    <article><b>▰</b><div><strong>3M</strong><p>Inovação e tecnologia<br>na sua área.</p></div></article>
+    <article><b>♚</b><div><strong>Logística</strong><p>Malha viária e localização<br>privilegiada no estado de SP.</p></div></article>
   </div>
 </section>
 
-<section class="section" id="roteiros">
-  <div class="container">
-    <div class="heading"><span>EXPERIÊNCIAS PRONTAS</span><h2>Escolha um roteiro e vá.</h2><p>Ideias para aproveitar Sumaré sozinho, em família ou com amigos.</p></div>
-    <div class="route-grid">
-      <article><i>☀</i><small>ROTEIRO SUGERIDO</small><h3>Um dia em Sumaré</h3><p>Natureza, cultura, sabores e pontos marcantes em uma experiência leve.</p><a href="#descubra">Explorar →</a></article>
-      <article><i>👨‍👩‍👧</i><small>ROTEIRO SUGERIDO</small><h3>Sumaré em família</h3><p>Opções para passear, brincar, comer e aproveitar junto.</p><a href="#descubra">Explorar →</a></article>
-      <article><i>🏛</i><small>ROTEIRO SUGERIDO</small><h3>Cultura & memória</h3><p>Um caminho para conhecer histórias, patrimônio e identidade local.</p><a href="#cultura">Explorar →</a></article>
-    </div>
+<section class="ref-opportunities" id="mapa">
+  <h2>Negócios e Oportunidades em Sumaré</h2>
+  <div>
+    <article><b>↗</b><strong>Potencial econômico</strong><p>Cidade em crescimento<br>consistente, com ambientes<br>favoráveis a novos negócios.</p></article>
+    <article><b>●</b><strong>Localização estratégica</strong><p>Acesso fácil e rápido pelas<br>principais rodovias da região.</p></article>
+    <article><b>♚</b><strong>Apoio ao empreendedor</strong><p>Uma cidade que valoriza<br>o incentivo local e<br>desenvolvimento regional.</p></article>
+    <article><b>▣</b><strong>Turismo de negócios</strong><p>Eventos, serviços<br>e infraestrutura para o setor<br>corporativo.</p></article>
   </div>
 </section>
 
-<section class="section app" id="app">
-  <div class="container app-inner">
-    <div><span>CONHEÇA SUMARÉ NO CELULAR</span><h2>A cidade com você,<br>onde você estiver.</h2><p>Instale o Conheça Sumaré e tenha acesso rápido a lugares, agenda, mapa, favoritos e, em breve, benefícios exclusivos do Passaporte.</p><ul><li>✓ Instalação rápida</li><li>✓ Favoritos e rotas</li><li>✓ Experiência otimizada para celular</li></ul><button class="btn yellow" data-install>Instalar agora</button></div>
-    <div class="phone"><div class="phone-screen"><img src="https://conhecasumare.com.br/assets/img/hero-real.jpg" alt=""><div><small>CONHEÇA SUMARÉ</small><strong>O que vamos descobrir hoje?</strong><span>🌿 Natureza</span><span>✦ Eventos</span><span>🍽 Sabores</span></div></div></div>
-  </div>
-</section>
-
-<section class="section passport">
-  <div class="container passport-inner">
-    <div><span>PRÓXIMA EXPERIÊNCIA</span><h2>Passaporte<br>Conheça Sumaré</h2><p>Uma nova forma de descobrir negócios locais, viver experiências e acessar benefícios em parceiros da cidade.</p><b class="pill">Em desenvolvimento</b></div>
-    <div class="passport-card"><small>CONHEÇA SUMARÉ</small><b>PASSAPORTE</b><strong>Descubra. Visite.<br>Viva Sumaré.</strong><footer><span>•••• 2026</span><span>SUMARÉ · SP</span></footer></div>
-  </div>
-</section>
-
-<section class="section partner" id="parceiros">
-  <div class="container partner-inner">
-    <div><span>PARA QUEM FAZ SUMARÉ ACONTECER</span><h2>Sua empresa também pode fazer parte.</h2><p>Cadastre seu negócio no Conheça Sumaré e prepare-se para alcançar moradores e visitantes que procuram onde comer, comprar, se hospedar e viver novas experiências.</p><div class="chips"><b>Perfil no guia</b><b>Presença nas categorias</b><b>Futuras campanhas e benefícios</b></div></div>
-    <aside><small>COMECE AGORA</small><strong>Cadastro inicial gratuito</strong><p>Inclua sua empresa na base do projeto. Recursos de destaque e Passaporte serão disponibilizados em etapas.</p><a class="btn yellow" href="https://conhecasumare.com.br/cadastro-empresa.php">Cadastrar minha empresa →</a></aside>
-  </div>
+<section class="ref-join">
+  <div><b>▤</b><span><strong>Faça parte do Conheça Sumaré</strong><small>Sua empresa, evento ou iniciativa no guia digital da cidade.<br>Ganhe visibilidade para moradores, visitantes e novos negócios em Sumaré.</small></span></div>
+  <div><a href="/cadastro-empresa.php">✚ Participe do Guia →</a><a class="outline" href="/cadastro-empresa.php">▤ Saiba como divulgar</a></div>
 </section>
 </main>
 
-<footer class="footer"><div class="footer-brand"><span class="brand-mark">CS</span><div><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></div></div><div class="tech"><span>VIA</span><div><small>TECNOLOGIA DESENVOLVIDA PELA</small><strong>Vitrine IA Pro</strong></div></div><small class="version">HML · <?=htmlspecialchars($version)?></small></footer>
+<footer class="ref-footer">
+  <div class="ref-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div>
+  <nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/explorar">Gastronomia</a><a href="/explorar">Negócios</a><a href="#mapa">Mapa</a><a href="#">Política de Privacidade</a><a href="https://turismo.sumare.sp.gov.br/" target="_blank" rel="noopener">Portal Oficial da Cidade</a></nav>
+  <div class="ref-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div>
+</footer>
 
 <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>No Android, use o Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”. No iPhone, use o Safari e escolha “Adicionar à Tela de Início”.</p></div>
-<script src="/assets/app.js?v=4.1"></script>
+<script src="/assets/app.js?v=4.2.0"></script>
 </body></html>
