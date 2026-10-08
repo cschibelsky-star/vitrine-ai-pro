@@ -1,5 +1,5 @@
 <?php
-$version='4.2.1-FAITHFUL-HML';
+$version='4.2.2-UNIFIED-HML';
 
 $imageSources = [
   'bosque-jardim-dallorto' => 'https://turismo.sumare.sp.gov.br/public/img/natural_atractives/bosque-dos-lagos-sumare.jpeg',
@@ -177,48 +177,42 @@ if ($pathOnly === 'eventos') {
   ?><!doctype html>
   <html lang="pt-BR"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Agenda Cultural — Conheça Sumaré</title>
-  <meta name="description" content="Agenda de eventos culturais, turísticos e gastronômicos confirmados em Sumaré.">
-  <meta name="theme-color" content="#0b3d2d">
-  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
-  </head><body class="explore-page">
-  <header class="site-header">
-    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
-    <nav><a href="/explorar">Explorar</a><a href="/eventos">Eventos</a><a href="/#roteiros">Roteiros</a><a href="/#parceiros">Participar</a></nav>
-    <a class="header-install detail-back" href="/">← Início</a>
+  <title>Eventos em Sumaré — Conheça Sumaré</title>
+  <meta name="description" content="Agenda cultural, turística e gastronômica de Sumaré.">
+  <meta name="theme-color" content="#006e68">
+  <link rel="manifest" href="/manifest.json?v=4.2.2">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  </head><body class="faithful-home internal-page">
+  <div class="faithful-page">
+  <header class="f-header">
+    <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
+    <nav><a href="/">Início</a><a href="/explorar">Turismo</a><a class="active" href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Buscar">⌕</a><button data-install>Baixar App</button></div>
   </header>
-  <main class="explore-main">
-    <section class="explore-hero">
-      <div class="container">
-        <span class="detail-kicker">AGENDA CULTURAL</span>
-        <h1>O que está acontecendo em Sumaré.</h1>
-        <p>Eventos confirmados em fontes públicas, organizados por data para moradores e visitantes.</p>
-      </div>
+  <main class="i-main">
+    <section class="i-hero i-events-hero">
+      <div class="i-hero-copy"><small>AGENDA DE SUMARÉ</small><h1>Eventos, cultura e experiências para viver a cidade.</h1><p>Programação confirmada em fontes públicas, apresentada no mesmo padrão visual do Conheça Sumaré.</p></div>
     </section>
-    <section class="container explore-grid">
+    <section class="i-section">
+      <div class="i-heading"><div><small>✦ CONTEÚDO OFICIAL</small><h2>Próximos eventos</h2></div><a href="/">← Voltar ao início</a></div>
       <?php if(!$publishedEvents): ?>
-        <article class="explore-card" style="padding:24px">
-          <div class="explore-card-body">
-            <small>AGENDA</small>
-            <h2>Novos eventos em monitoramento</h2>
-            <p>A agenda é atualizada a partir de anúncios públicos confirmados.</p>
-          </div>
-        </article>
+        <div class="i-empty"><b>▣</b><div><h3>Novos eventos em monitoramento</h3><p>A agenda é atualizada quando surgem anúncios públicos confirmados. Assim que um evento estiver validado, ele aparecerá aqui.</p></div></div>
+      <?php else: ?>
+        <div class="i-event-grid">
+        <?php foreach($publishedEvents as $event): ?>
+          <article class="i-event-card">
+            <?php if(!empty($event['image'])): ?><img src="<?=htmlspecialchars((string)$event['image'])?>" alt="<?=htmlspecialchars((string)($event['title']??''))?>" loading="lazy"><?php else: ?><div class="i-event-fallback">SUMARÉ</div><?php endif; ?>
+            <div><small><?=htmlspecialchars((string)($event['category']??'Evento'))?> · <?=htmlspecialchars(conheca_event_date_label($event))?></small><h3><?=htmlspecialchars((string)($event['title']??''))?></h3><p><?=htmlspecialchars((string)($event['place']??''))?><?php if(!empty($event['start_time'])): ?> · <?=htmlspecialchars((string)$event['start_time'])?><?php endif; ?></p><?php if(!empty($event['summary'])): ?><p><?=htmlspecialchars((string)$event['summary'])?></p><?php endif; ?><?php if(!empty($event['source_url'])): ?><a href="<?=htmlspecialchars((string)$event['source_url'])?>" target="_blank" rel="noopener">Ver fonte oficial →</a><?php endif; ?></div>
+          </article>
+        <?php endforeach; ?>
+        </div>
       <?php endif; ?>
-      <?php foreach($publishedEvents as $event): ?>
-        <article class="explore-card">
-          <?php if(!empty($event['image'])): ?><img src="<?=htmlspecialchars((string)$event['image'])?>" alt="<?=htmlspecialchars((string)($event['title']??''))?>" loading="lazy"><?php endif; ?>
-          <div class="explore-card-body">
-            <small><?=htmlspecialchars((string)($event['category']??'Evento'))?> · <?=htmlspecialchars(conheca_event_date_label($event))?></small>
-            <h2><?=htmlspecialchars((string)($event['title']??''))?></h2>
-            <p><?=htmlspecialchars((string)($event['place']??''))?><?php if(!empty($event['start_time'])): ?> · <?=htmlspecialchars((string)$event['start_time'])?><?php endif; ?></p>
-            <?php if(!empty($event['summary'])): ?><p><?=htmlspecialchars((string)$event['summary'])?></p><?php endif; ?>
-            <?php if(!empty($event['source_url'])): ?><a class="explore-action" href="<?=htmlspecialchars((string)$event['source_url'])?>" target="_blank" rel="noopener">Ver fonte oficial ↗</a><?php endif; ?>
-          </div>
-        </article>
-      <?php endforeach; ?>
     </section>
   </main>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  </div>
+  <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
+  <script src="/assets/app.js?v=4.2.2"></script>
   </body></html><?php
   exit;
 }
@@ -228,52 +222,44 @@ if ($pathOnly === 'explorar') {
   <html lang="pt-BR"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Explorar Sumaré — Conheça Sumaré</title>
-  <meta name="theme-color" content="#0b3d2d">
-  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
-  </head><body class="explore-page">
-  <header class="site-header">
-    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
-    <nav><a href="/explorar">Explorar</a><a href="/#agenda">Eventos</a><a href="/#roteiros">Roteiros</a><a href="/#parceiros">Participar</a></nav>
-    <a class="header-install detail-back" href="/">← Início</a>
+  <meta name="description" content="Atrativos, natureza, cultura e experiências para conhecer Sumaré.">
+  <meta name="theme-color" content="#006e68">
+  <link rel="manifest" href="/manifest.json?v=4.2.2">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  </head><body class="faithful-home internal-page">
+  <div class="faithful-page">
+  <header class="f-header">
+    <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
+    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <div class="f-actions"><span class="f-search">⌕</span><button data-install>Baixar App</button></div>
   </header>
-  <main class="explore-main">
-    <section class="explore-hero">
-      <div class="container">
-        <span class="detail-kicker">DESCUBRA SUMARÉ</span>
-        <h1>Explore os atrativos da cidade.</h1>
-        <p>Natureza, cultura, história, lazer e experiências para montar seu próprio roteiro.</p>
-        <input id="exploreSearch" class="explore-search" type="search" placeholder="Buscar atrativo...">
-      </div>
+  <main class="i-main">
+    <section class="i-hero i-explore-hero">
+      <div class="i-hero-copy"><small>DESCUBRA SUMARÉ</small><h1>Explore os atrativos da cidade.</h1><p>Natureza, cultura, história, lazer e experiências para montar seu próprio roteiro.</p>
+      <label class="i-searchbox">⌕<input id="exploreSearch" type="search" placeholder="Buscar atrativo, bairro ou categoria..."></label></div>
     </section>
-    <section class="container explore-grid" id="exploreGrid">
+    <section class="i-section">
+      <div class="i-heading"><div><small>✦ GUIA DA CIDADE</small><h2>Lugares para conhecer</h2></div><span><?=count($explorarItems)?> atrativos</span></div>
+      <div class="i-attraction-grid" id="exploreGrid">
       <?php foreach($explorarItems as $item): ?>
-      <?php
-        $exploreName = htmlspecialchars(strtolower($item['nome'].' '.$item['categoria'].' '.$item['bairro']), ENT_QUOTES, 'UTF-8');
-        $exploreHref = isset($atrativos[$item['slug']]) ? '/atrativo/'.rawurlencode($item['slug']) : '#';
-      ?>
-      <a class="explore-card" data-name="<?=$exploreName?>" href="<?=$exploreHref?>">
-        <?php if(!empty($item['imagem'])): ?>
-          <img src="<?=htmlspecialchars($item['imagem'])?>" alt="<?=htmlspecialchars($item['nome'])?>" loading="lazy">
-        <?php else: ?>
-          <div class="explore-photo-placeholder"><span>Foto em atualização</span></div>
-        <?php endif; ?>
-        <div class="explore-card-body">
-          <small><?=htmlspecialchars($item['categoria'])?></small>
-          <h2><?=htmlspecialchars($item['nome'])?></h2>
-          <p><?=htmlspecialchars($item['bairro'])?></p>
-          <span class="explore-action"><?=isset($atrativos[$item['slug']]) ? 'Ver detalhes →' : 'Conteúdo em atualização'?></span>
-        </div>
+      <?php $exploreName = htmlspecialchars(strtolower($item['nome'].' '.$item['categoria'].' '.$item['bairro']), ENT_QUOTES, 'UTF-8'); $exploreHref = isset($atrativos[$item['slug']]) ? '/atrativo/'.rawurlencode($item['slug']) : '#'; ?>
+      <a class="i-attraction-card" data-name="<?=$exploreName?>" href="<?=$exploreHref?>">
+        <div class="i-attraction-photo" style="background-image:url('<?=htmlspecialchars($item['imagem'])?>')"><span><?=htmlspecialchars(strtoupper($item['categoria']))?></span></div>
+        <div class="i-attraction-body"><h3><?=htmlspecialchars($item['nome'])?></h3><p>⌖ <?=htmlspecialchars($item['bairro'])?></p><b><?=isset($atrativos[$item['slug']]) ? 'Ver detalhes →' : 'Conteúdo em atualização'?></b></div>
       </a>
       <?php endforeach; ?>
+      </div>
     </section>
   </main>
-  <script>
-  const q=document.getElementById('exploreSearch');
-  q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.explore-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});
-  </script>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  </div>
+  <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
+  <script>const q=document.getElementById('exploreSearch');q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.i-attraction-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});</script>
+  <script src="/assets/app.js?v=4.2.2"></script>
   </body></html><?php
   exit;
 }
+
 $slug = isset($_GET['atrativo']) ? preg_replace('/[^a-z0-9-]/', '', strtolower($_GET['atrativo'])) : '';
 if ($slug && isset($atrativos[$slug])) {
   $a = $atrativos[$slug];
@@ -281,47 +267,36 @@ if ($slug && isset($atrativos[$slug])) {
   <html lang="pt-BR"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title><?=htmlspecialchars($a['nome'])?> — Conheça Sumaré</title>
-  <meta name="theme-color" content="#0b3d2d">
-  <link rel="stylesheet" href="/assets/style.css?v=4.1.10">
-  </head><body class="detail-page">
-  <header class="site-header">
-    <a class="brand" href="/"><span class="brand-mark">CS</span><span><strong>Conheça Sumaré</strong><small>Guia Digital da Cidade</small></span></a>
-    <a class="header-install detail-back" href="/#cultura">← Voltar</a>
+  <meta name="description" content="<?=htmlspecialchars($a['descricao'])?>">
+  <meta name="theme-color" content="#006e68">
+  <link rel="manifest" href="/manifest.json?v=4.2.2">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  </head><body class="faithful-home internal-page">
+  <div class="faithful-page">
+  <header class="f-header">
+    <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
+    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Voltar">←</a><button data-install>Baixar App</button></div>
   </header>
-  <main class="attraction-detail">
-    <section class="detail-hero">
+  <main class="i-main">
+    <section class="i-detail-hero">
       <img src="<?=htmlspecialchars($a['imagem'])?>" alt="<?=htmlspecialchars($a['nome'])?>">
-      <div class="detail-overlay"></div>
-      <div class="detail-copy">
-        <span><?=htmlspecialchars(strtoupper($a['categoria']))?></span>
-        <h1><?=htmlspecialchars($a['nome'])?></h1>
-        <p><?=htmlspecialchars($a['bairro'])?> · Sumaré</p>
-      </div>
+      <div class="i-detail-shade"></div>
+      <div class="i-detail-title"><small><?=htmlspecialchars(strtoupper($a['categoria']))?></small><h1><?=htmlspecialchars($a['nome'])?></h1><p>⌖ <?=htmlspecialchars($a['bairro'])?> · Sumaré</p></div>
     </section>
-    <section class="detail-content">
-      <div>
-        <span class="detail-kicker">CONHEÇA O LOCAL</span>
-        <h2>Sobre este atrativo</h2>
-        <p><?=htmlspecialchars($a['descricao'])?></p>
-        <div class="story-block">
-          <span class="detail-kicker">HISTÓRIA</span>
-          <h3>A história deste lugar</h3>
-          <p><?=htmlspecialchars($a['historia'])?></p>
-        </div>
-        <div class="story-block">
-          <span class="detail-kicker">POR QUE CONHECER</span>
-          <h3>O que torna este lugar especial</h3>
-          <p><?=htmlspecialchars($a['porque'])?></p>
-        </div>
-      </div>
-      <aside>
-        <strong>Planeje sua visita</strong>
-        <p><?=htmlspecialchars($a['endereco'])?></p>
-        <p class="visit-note">Confirme horários e condições de visitação antes de sair.</p>
-        <a class="btn yellow" href="https://www.google.com/maps/search/?api=1&query=<?=urlencode($a['nome'].' Sumaré SP')?>" target="_blank" rel="noopener">Abrir no mapa →</a>
-      </aside>
+    <section class="i-detail-content">
+      <article>
+        <small class="i-kicker">CONHEÇA O LOCAL</small><h2>Sobre este atrativo</h2><p><?=htmlspecialchars($a['descricao'])?></p>
+        <div class="i-story"><small class="i-kicker">HISTÓRIA</small><h3>A história deste lugar</h3><p><?=htmlspecialchars($a['historia'])?></p></div>
+        <div class="i-story"><small class="i-kicker">POR QUE CONHECER</small><h3>O que torna este lugar especial</h3><p><?=htmlspecialchars($a['porque'])?></p></div>
+      </article>
+      <aside><b>Planeje sua visita</b><p><?=htmlspecialchars($a['endereco'])?></p><small>Confirme horários e condições de visitação antes de sair.</small><a href="https://www.google.com/maps/search/?api=1&query=<?=urlencode($a['nome'].' Sumaré SP')?>" target="_blank" rel="noopener">Abrir no mapa →</a><a class="secondary" href="/explorar">← Ver outros atrativos</a></aside>
     </section>
   </main>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  </div>
+  <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
+  <script src="/assets/app.js?v=4.2.2"></script>
   </body></html><?php
   exit;
 }
@@ -333,8 +308,8 @@ if ($slug && isset($atrativos[$slug])) {
 <title>Conheça Sumaré — Turismo, cultura, eventos e negócios</title>
 <meta name="description" content="Conheça Sumaré: turismo, cultura, eventos, gastronomia, mapa e oportunidades da cidade.">
 <meta name="theme-color" content="#006e68">
-<link rel="manifest" href="/manifest.json?v=4.2.1">
-<link rel="stylesheet" href="/assets/style.css?v=4.2.1">
+<link rel="manifest" href="/manifest.json?v=4.2.2">
+<link rel="stylesheet" href="/assets/style.css?v=4.2.2">
 </head>
 <body class="faithful-home">
 <div class="faithful-page">
@@ -367,7 +342,7 @@ if ($slug && isset($atrativos[$slug])) {
         <span>⚑<small>Hospedagem</small></span><span>⌖<small>Mapas</small></span><span>▣<small>Negócios</small></span>
       </div>
       <div class="f-phone-label"><b>Destaques</b><small>Negócios →</small></div>
-      <div class="f-phone-card" style="background-image:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><span>Pró-Memória<br>de Sumaré</span></div>
+      <div class="f-phone-card" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><span>Pró-Memória<br>de Sumaré</span></div>
     </div>
   </div>
   <div class="f-script">História<br>Cultura<br>Pessoas<br>Oportunidades</div>
@@ -375,12 +350,12 @@ if ($slug && isset($atrativos[$slug])) {
 </section>
 
 <section class="f-categories" id="turismo">
-  <a href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-natureza'))?>')"><i>♧</i><strong>Natureza</strong></a>
-  <a href="#historia" style="--img:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><i>⌂</i><strong>Cultura</strong></a>
-  <a href="/eventos" style="--img:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')"><i>☕</i><strong>Eventos</strong></a>
-  <a href="#mapa" style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-comercio'))?>')"><i>●</i><strong>Mapa</strong></a>
-  <a id="gastronomia" href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-gastronomia'))?>')"><i>♨</i><strong>Gastronomia</strong></a>
-  <a href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-hospedagem'))?>')"><i>▰</i><strong>Hospedagem</strong></a>
+  <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><i>♧</i><strong>Natureza</strong></a>
+  <a href="#historia" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><i>⌂</i><strong>Cultura</strong></a>
+  <a href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><i>☕</i><strong>Eventos</strong></a>
+  <a href="#mapa" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/comercio.jpg')"><i>●</i><strong>Mapa</strong></a>
+  <a id="gastronomia" href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/gastronomia.jpg')"><i>♨</i><strong>Gastronomia</strong></a>
+  <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/hospedagem.jpg')"><i>▰</i><strong>Hospedagem</strong></a>
 </section>
 
 <section class="f-official">
@@ -390,8 +365,8 @@ if ($slug && isset($atrativos[$slug])) {
   </div>
   <div class="f-feature-grid">
     <a class="f-feature" href="/atrativo/bosque-jardim-dallorto" style="--img:url('<?=htmlspecialchars(conheca_image_url('bosque-jardim-dallorto'))?>')"><div><small>NATUREZA</small><h3>Bosque dos Lagos</h3><p>Lazer, contato com a natureza<br>e um dos principais cartões-postais<br>de Sumaré.</p><b>›</b></div></a>
-    <a class="f-feature" href="/atrativo/pro-memoria" style="--img:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
-    <a class="f-feature" href="/eventos" style="--img:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
+    <a class="f-feature" href="/atrativo/pro-memoria" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
+    <a class="f-feature" href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
   </div>
 </section>
 
@@ -402,11 +377,11 @@ if ($slug && isset($atrativos[$slug])) {
     <a href="/atrativo/pro-memoria">Conheça nossa história &nbsp;→</a>
     <div class="f-mini-grid">
       <a href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('igreja-matriz-de-santana'))?>')"><span>♟</span><b>Área Urbana e Rural</b></a>
-      <a href="/eventos" style="--img:url('<?=htmlspecialchars(conheca_image_url('evento-feira-artesanato'))?>')"><span>♚</span><b>Cultura popular</b></a>
-      <a href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('categoria-natureza'))?>')"><span>♧</span><b>Natureza e Lazer</b></a>
+      <a href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><span>♚</span><b>Cultura popular</b></a>
+      <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><span>♧</span><b>Natureza e Lazer</b></a>
     </div>
   </div>
-  <div class="f-history-photo" style="background-image:url('<?=htmlspecialchars(conheca_image_url('pro-memoria'))?>')">
+  <div class="f-history-photo" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')">
     <div class="f-patrimony"><b>▣</b><span>Patrimônio<br>que inspira<br>gerações</span></div>
   </div>
 </section>
@@ -445,5 +420,5 @@ if ($slug && isset($atrativos[$slug])) {
 </div>
 
 <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>No Android, use o Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”. No iPhone, use o Safari e escolha “Adicionar à Tela de Início”.</p></div>
-<script src="/assets/app.js?v=4.2.1"></script>
+<script src="/assets/app.js?v=4.2.2"></script>
 </body></html>
