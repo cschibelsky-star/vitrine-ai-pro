@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 Route::middleware('throttle:60,1')->group(function () {
     Route::post('/leads', [LeadCaptureController::class, 'store'])
@@ -301,11 +302,20 @@ Route::middleware('throttle:30,1')->group(function () {
         if (str_starts_with($jobRef, 'completed:')) {
             $payload = json_decode((string) base64_decode(substr($jobRef, strlen('completed:')), true), true);
             $assetUrl = trim((string) ($payload['asset_url'] ?? ''));
-            if ($assetUrl !== '' && str_starts_with($assetUrl, '/')) {
+            abort_if($assetUrl === '', 422, 'completed_video_job_ref_invalid');
+
+            $assetPath = (string) parse_url($assetUrl, PHP_URL_PATH);
+            if (preg_match('~^/marketing/native-preview/([^/]+)/([^/]+)$~', $assetPath, $match)) {
+                $relative = URL::temporarySignedRoute(
+                    'marketing.native-video-preview',
+                    now()->addMinutes(60),
+                    ['job' => $match[1], 'version' => $match[2]],
+                    absolute: false,
+                );
+                $assetUrl = $request->getSchemeAndHttpHost().$relative;
+            } elseif (str_starts_with($assetUrl, '/')) {
                 $assetUrl = $request->getSchemeAndHttpHost().$assetUrl;
             }
-
-            abort_if($assetUrl === '', 422, 'completed_video_job_ref_invalid');
 
             return response()->json([
                 'ok' => true,

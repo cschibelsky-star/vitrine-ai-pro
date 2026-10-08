@@ -345,6 +345,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('marketing.video-preview.sign');
 
     Route::get('/marketing/native-preview/{job}/{version}', [VideoPreviewController::class, 'nativePreview'])
+        ->withoutMiddleware(['auth'])
         ->middleware(['signed:relative', 'throttle:300,1'])
         ->where('job', '[A-Za-z0-9._-]+')
         ->where('version', '[A-Za-z0-9._-]+')
