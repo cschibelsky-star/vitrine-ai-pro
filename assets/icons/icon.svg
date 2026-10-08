@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Conheça Sumaré</title>
+  <rect width="512" height="512" rx="112" fill="#0b3d2d"/>
+  <circle cx="392" cy="118" r="52" fill="#f4c542"/>
+  <path d="M96 342c43-81 102-127 177-139 41-7 89-2 143 14v117H96z" fill="#1f6b4f"/>
+  <path d="M94 365c71-52 137-76 199-72 43 3 85 18 125 45v78H94z" fill="#ffffff" opacity=".94"/>
+  <text x="256" y="286" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="112" font-weight="700" fill="#ffffff">CS</text>
+</svg>
