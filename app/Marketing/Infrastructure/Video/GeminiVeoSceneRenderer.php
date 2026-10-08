@@ -22,7 +22,6 @@ final class GeminiVeoSceneRenderer implements VideoSceneRenderer
             throw new InvalidArgumentException('video_scene_prompt_required:'.$scene->sceneId);
         }
 
-        $model = trim((string) config('marketing_video.gemini_veo.model', 'veo-3.1-generate-preview'));
         $aspectRatio = (string) ($context['aspect_ratio'] ?? config('marketing_video.gemini_veo.aspect_ratio', '9:16'));
         $resolution = (string) ($context['resolution'] ?? config('marketing_video.gemini_veo.resolution', '720p'));
         $duration = (int) ($context['duration_seconds'] ?? 8);
