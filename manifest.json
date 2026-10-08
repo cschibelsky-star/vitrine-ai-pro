@@ -1,1 +1,37 @@
-{"name":"Conheça Sumaré — Guia Digital da Cidade","short_name":"Conheça Sumaré","description":"Descubra Sumaré: lugares, eventos, cultura, gastronomia e experiências.","start_url":"/?source=pwa","scope":"/","display":"standalone","orientation":"portrait-primary","background_color":"#0b3d2d","theme_color":"#0b3d2d","icons":[]}
+{
+  "name": "Conheça Sumaré — Guia Digital da Cidade",
+  "short_name": "Conheça Sumaré",
+  "description": "Descubra Sumaré: lugares, eventos, cultura, gastronomia e experiências.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0b3d2d",
+  "theme_color": "#0b3d2d",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["travel", "lifestyle", "navigation"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorar Sumaré",
+      "short_name": "Explorar",
+      "url": "/#descubra"
+    },
+    {
+      "name": "Agenda da cidade",
+      "short_name": "Agenda",
+      "url": "/#agenda"
+    }
+  ]
+}
