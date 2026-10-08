@@ -68,6 +68,30 @@
         </section>
 
         <section class="atlas-panel" style="margin-top:14px">
+            <div class="atlas-panel-head">
+                <div><h2>Homologação e publicação</h2><p>Controle obrigatório de ambientes antes da liberação em produção.</p></div>
+                <span class="atlas-pill">Publicação bloqueada sem aprovação HML</span>
+            </div>
+            <div class="atlas-product-grid">
+                <article class="atlas-product-card">
+                    <div class="atlas-product-head">
+                        <b>Conheça Sumaré · piloto</b>
+                        <span style="color:#b45309">HML não validada</span>
+                    </div>
+                    <p>HML configurada, porém sem DNS público confirmado. O isolamento do serviço de produção também não foi demonstrado.</p>
+                    <p><a href="https://conheca-sumare-hml.vitrineaipro.com.br" target="_blank" rel="noopener noreferrer">Abrir HML ↗</a> ·
+                    <a href="https://www.conhecasumare.com.br" target="_blank" rel="noopener noreferrer">Abrir produção ↗</a></p>
+                    <small>Liberação de produção: bloqueada. O estado não é um health check em tempo real.</small>
+                </article>
+                <article class="atlas-product-card">
+                    <div class="atlas-product-head"><b>Demais produtos</b><span>Inventário pendente</span></div>
+                    <p>Cada projeto precisa registrar HML e produção, DNS, TLS, isolamento, testes, versão e aprovação humana.</p>
+                    <small>Não autorizar publicação enquanto as evidências não forem integradas ao executor oficial.</small>
+                </article>
+            </div>
+        </section>
+
+        <section class="atlas-panel" style="margin-top:14px">
             <div class="atlas-panel-head"><div><h2>Licenças recentes</h2><p>Registros reais da base do Core.</p></div><a class="atlas-btn" href="/admin/licenses">Abrir licenças</a></div>
             <div class="atlas-table">
                 <div class="atlas-tr head"><div>Cliente</div><div>Produto</div><div>Plano</div><div>Situação</div></div>
