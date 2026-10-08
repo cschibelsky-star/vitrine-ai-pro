@@ -1,5 +1,5 @@
 <?php
-$version='4.2.2-UNIFIED-HML';
+$version='4.2.3-VISUAL-HML';
 
 $imageSources = [
   'bosque-jardim-dallorto' => 'https://turismo.sumare.sp.gov.br/public/img/natural_atractives/bosque-dos-lagos-sumare.jpeg',
@@ -180,8 +180,8 @@ if ($pathOnly === 'eventos') {
   <title>Eventos em Sumaré — Conheça Sumaré</title>
   <meta name="description" content="Agenda cultural, turística e gastronômica de Sumaré.">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.2">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  <link rel="manifest" href="/manifest.json?v=4.2.3">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -209,10 +209,10 @@ if ($pathOnly === 'eventos') {
       <?php endif; ?>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
-  <script src="/assets/app.js?v=4.2.2"></script>
+  <script src="/assets/app.js?v=4.2.3"></script>
   </body></html><?php
   exit;
 }
@@ -224,8 +224,8 @@ if ($pathOnly === 'explorar') {
   <title>Explorar Sumaré — Conheça Sumaré</title>
   <meta name="description" content="Atrativos, natureza, cultura e experiências para conhecer Sumaré.">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.2">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  <link rel="manifest" href="/manifest.json?v=4.2.3">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -255,7 +255,7 @@ if ($pathOnly === 'explorar') {
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script>const q=document.getElementById('exploreSearch');q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.i-attraction-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});</script>
-  <script src="/assets/app.js?v=4.2.2"></script>
+  <script src="/assets/app.js?v=4.2.3"></script>
   </body></html><?php
   exit;
 }
@@ -269,8 +269,8 @@ if ($slug && isset($atrativos[$slug])) {
   <title><?=htmlspecialchars($a['nome'])?> — Conheça Sumaré</title>
   <meta name="description" content="<?=htmlspecialchars($a['descricao'])?>">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.2">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+  <link rel="manifest" href="/manifest.json?v=4.2.3">
+  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -296,7 +296,7 @@ if ($slug && isset($atrativos[$slug])) {
   <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
-  <script src="/assets/app.js?v=4.2.2"></script>
+  <script src="/assets/app.js?v=4.2.3"></script>
   </body></html><?php
   exit;
 }
@@ -308,8 +308,8 @@ if ($slug && isset($atrativos[$slug])) {
 <title>Conheça Sumaré — Turismo, cultura, eventos e negócios</title>
 <meta name="description" content="Conheça Sumaré: turismo, cultura, eventos, gastronomia, mapa e oportunidades da cidade.">
 <meta name="theme-color" content="#006e68">
-<link rel="manifest" href="/manifest.json?v=4.2.2">
-<link rel="stylesheet" href="/assets/style.css?v=4.2.2">
+<link rel="manifest" href="/manifest.json?v=4.2.3">
+<link rel="stylesheet" href="/assets/style.css?v=4.2.3">
 </head>
 <body class="faithful-home">
 <div class="faithful-page">
@@ -342,7 +342,7 @@ if ($slug && isset($atrativos[$slug])) {
         <span>⚑<small>Hospedagem</small></span><span>⌖<small>Mapas</small></span><span>▣<small>Negócios</small></span>
       </div>
       <div class="f-phone-label"><b>Destaques</b><small>Negócios →</small></div>
-      <div class="f-phone-card" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><span>Pró-Memória<br>de Sumaré</span></div>
+      <div class="f-phone-card" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><span>Bosque dos Lagos<br>Sumaré</span></div>
     </div>
   </div>
   <div class="f-script">História<br>Cultura<br>Pessoas<br>Oportunidades</div>
@@ -351,7 +351,7 @@ if ($slug && isset($atrativos[$slug])) {
 
 <section class="f-categories" id="turismo">
   <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><i>♧</i><strong>Natureza</strong></a>
-  <a href="#historia" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><i>⌂</i><strong>Cultura</strong></a>
+  <a href="#historia" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/igreja-matriz-santana/capa.jpg')"><i>⌂</i><strong>Cultura</strong></a>
   <a href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><i>☕</i><strong>Eventos</strong></a>
   <a href="#mapa" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/comercio.jpg')"><i>●</i><strong>Mapa</strong></a>
   <a id="gastronomia" href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/gastronomia.jpg')"><i>♨</i><strong>Gastronomia</strong></a>
@@ -364,7 +364,7 @@ if ($slug && isset($atrativos[$slug])) {
     <a href="/explorar">Ver todos os atrativos &nbsp;→</a>
   </div>
   <div class="f-feature-grid">
-    <a class="f-feature" href="/atrativo/bosque-jardim-dallorto" style="--img:url('<?=htmlspecialchars(conheca_image_url('bosque-jardim-dallorto'))?>')"><div><small>NATUREZA</small><h3>Bosque dos Lagos</h3><p>Lazer, contato com a natureza<br>e um dos principais cartões-postais<br>de Sumaré.</p><b>›</b></div></a>
+    <a class="f-feature" href="/atrativo/bosque-jardim-dallorto" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><div><small>NATUREZA</small><h3>Bosque dos Lagos</h3><p>Lazer, contato com a natureza<br>e um dos principais cartões-postais<br>de Sumaré.</p><b>›</b></div></a>
     <a class="f-feature" href="/atrativo/pro-memoria" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
     <a class="f-feature" href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
   </div>
@@ -376,12 +376,12 @@ if ($slug && isset($atrativos[$slug])) {
     <p>Uma cidade com raízes fortes, patrimônio histórico<br>e uma identidade construída por sua gente.</p>
     <a href="/atrativo/pro-memoria">Conheça nossa história &nbsp;→</a>
     <div class="f-mini-grid">
-      <a href="/explorar" style="--img:url('<?=htmlspecialchars(conheca_image_url('igreja-matriz-de-santana'))?>')"><span>♟</span><b>Área Urbana e Rural</b></a>
+      <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/igreja-matriz-santana/capa.jpg')"><span>♟</span><b>Área Urbana e Rural</b></a>
       <a href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><span>♚</span><b>Cultura popular</b></a>
       <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><span>♧</span><b>Natureza e Lazer</b></a>
     </div>
   </div>
-  <div class="f-history-photo" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')">
+  <div class="f-history-photo" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/praca-das-bandeiras/capa-real.jpg')">
     <div class="f-patrimony"><b>▣</b><span>Patrimônio<br>que inspira<br>gerações</span></div>
   </div>
 </section>
@@ -389,10 +389,10 @@ if ($slug && isset($atrativos[$slug])) {
 <section class="f-business" id="negocios">
   <div class="f-business-copy"><i>↗</i><h2>Sumaré também é<br><em>destino de negócios.</em></h2><p>Localização estratégica, infraestrutura completa,<br>conexão com os maiores centros do país e um ambiente<br>convidativo e seguro, atraindo grandes empresas e novos<br>investimentos.</p></div>
   <div class="f-business-grid">
-    <article><b>▥</b><div><strong>Polo CKy Sumaré</strong><p>Um dos maiores polos<br>industriais da região.</p></div></article>
-    <article><b>↗</b><div><strong>Mercado Livre</strong><p>Centro de distribuição<br>e geração de oportunidades.</p></div></article>
-    <article><b>▰</b><div><strong>3M</strong><p>Inovação e tecnologia<br>na sua área.</p></div></article>
-    <article><b>♚</b><div><strong>Logística</strong><p>Malha viária e localização<br>privilegiada no estado de SP.</p></div></article>
+    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/shopping-parkcity/capa.jpg')"><div><strong>Shopping ParkCity Sumaré</strong><p>Comércio, serviços, lazer e fluxo regional.</p></div></article>
+    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/comercio.jpg')"><div><strong>Mercado Livre</strong><p>Operação logística e geração de oportunidades.</p></div></article>
+    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/empresas/hotel-fildi/capa-real.jpg')"><div><strong>3M</strong><p>Indústria, tecnologia e presença empresarial em Sumaré.</p></div></article>
+    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/empresas/hotel-jaguary/capa-real.jpg')"><div><strong>Logística e localização</strong><p>Conexão com os principais corredores rodoviários da região.</p></div></article>
   </div>
 </section>
 
@@ -420,5 +420,5 @@ if ($slug && isset($atrativos[$slug])) {
 </div>
 
 <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>No Android, use o Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”. No iPhone, use o Safari e escolha “Adicionar à Tela de Início”.</p></div>
-<script src="/assets/app.js?v=4.2.2"></script>
+<script src="/assets/app.js?v=4.2.3"></script>
 </body></html>
