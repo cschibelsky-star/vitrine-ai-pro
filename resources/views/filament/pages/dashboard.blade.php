@@ -68,6 +68,29 @@
         </section>
 
         <section class="atlas-panel" style="margin-top:14px">
+            <div class="atlas-panel-head">
+                <div><h2>Homologação e publicação</h2><p>Controle obrigatório de ambientes antes da liberação em produção.</p></div>
+                <span class="atlas-pill">Publicação bloqueada sem aprovação HML</span>
+            </div>
+            <div class="atlas-product-grid">
+                @foreach (config('homologation_projects.projects', []) as $project)
+                <article class="atlas-product-card">
+                    <div class="atlas-product-head"><b>{{ $project['name'] }}</b><span>{{ $project['status'] }}</span></div>
+                    <p>{{ $project['reason'] }}</p>
+                    <p><a href="{{ $project['hml_url'] }}" target="_blank" rel="noopener noreferrer">Abrir HML ↗</a> ·
+                    <a href="{{ $project['production_url'] }}" target="_blank" rel="noopener noreferrer">Abrir produção ↗</a></p>
+                    <small>Liberação não disponível: ausência de integração de evidências e aprovação.</small>
+                </article>
+                @endforeach
+                <article class="atlas-product-card">
+                    <div class="atlas-product-head"><b>Demais produtos</b><span>Inventário pendente</span></div>
+                    <p>Cada projeto precisa registrar HML e produção, DNS, TLS, isolamento, testes, versão e aprovação humana.</p>
+                    <small>Não autorizar publicação enquanto as evidências não forem integradas ao executor oficial.</small>
+                </article>
+            </div>
+        </section>
+
+        <section class="atlas-panel" style="margin-top:14px">
             <div class="atlas-panel-head"><div><h2>Licenças recentes</h2><p>Registros reais da base do Core.</p></div><a class="atlas-btn" href="/admin/licenses">Abrir licenças</a></div>
             <div class="atlas-table">
                 <div class="atlas-tr head"><div>Cliente</div><div>Produto</div><div>Plano</div><div>Situação</div></div>
