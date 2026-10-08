@@ -73,16 +73,15 @@
                 <span class="atlas-pill">Publicação bloqueada sem aprovação HML</span>
             </div>
             <div class="atlas-product-grid">
+                @foreach (config('homologation_projects.projects', []) as $project)
                 <article class="atlas-product-card">
-                    <div class="atlas-product-head">
-                        <b>Conheça Sumaré · piloto</b>
-                        <span style="color:#b45309">HML não validada</span>
-                    </div>
-                    <p>HML configurada, porém sem DNS público confirmado. O isolamento do serviço de produção também não foi demonstrado.</p>
-                    <p><a href="https://conheca-sumare-hml.vitrineaipro.com.br" target="_blank" rel="noopener noreferrer">Abrir HML ↗</a> ·
-                    <a href="https://www.conhecasumare.com.br" target="_blank" rel="noopener noreferrer">Abrir produção ↗</a></p>
-                    <small>Liberação de produção: bloqueada. O estado não é um health check em tempo real.</small>
+                    <div class="atlas-product-head"><b>{{ $project['name'] }}</b><span>{{ $project['status'] }}</span></div>
+                    <p>{{ $project['reason'] }}</p>
+                    <p><a href="{{ $project['hml_url'] }}" target="_blank" rel="noopener noreferrer">Abrir HML ↗</a> ·
+                    <a href="{{ $project['production_url'] }}" target="_blank" rel="noopener noreferrer">Abrir produção ↗</a></p>
+                    <small>Liberação não disponível: ausência de integração de evidências e aprovação.</small>
                 </article>
+                @endforeach
                 <article class="atlas-product-card">
                     <div class="atlas-product-head"><b>Demais produtos</b><span>Inventário pendente</span></div>
                     <p>Cada projeto precisa registrar HML e produção, DNS, TLS, isolamento, testes, versão e aprovação humana.</p>
