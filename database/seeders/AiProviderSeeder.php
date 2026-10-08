@@ -12,6 +12,19 @@ class AiProviderSeeder extends Seeder
     {
         $providers = [
             [
+                'name' => 'Vertex AI',
+                'provider_type' => 'vertex-ai',
+                'status' => 'ativo',
+                'notes' => 'Google Cloud Vertex AI para mídia elegível ao faturamento GCP. Só é roteado quando VERTEX_AI_ENABLED e autenticação do runtime estão configurados.',
+                'config' => [
+                    'capabilities' => ['image_generation', 'video_generation'],
+                    'models' => [
+                        'image_generation' => env('GOOGLE_VERTEX_IMAGE_MODEL', 'imagen-4.0-generate-001'),
+                        'video_generation' => env('GOOGLE_VERTEX_VIDEO_MODEL', 'veo-3.0-generate-001'),
+                    ],
+                ],
+            ],
+            [
                 'name' => 'Roteia',
                 'provider_type' => 'roteia',
                 'status' => 'ativo',
