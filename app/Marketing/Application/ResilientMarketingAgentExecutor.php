@@ -93,7 +93,13 @@ final class ResilientMarketingAgentExecutor implements MarketingAgentExecutor
             ->withToken($token)
             ->withHeaders(['X-Vitrine-Project' => $projectId])
             ->timeout(max(1, min($timeout, 120)))
-            ->retry(2, 250, throw: false)
+            ->retry(4, 500, function ($exception, $request): bool {
+                $status = method_exists($exception, 'response') && $exception->response
+                    ? $exception->response->status()
+                    : null;
+
+                return $status === null || in_array($status, [429, 500, 502, 503, 504], true);
+            }, throw: false)
             ->post($url, [
                 'project_id' => $projectId,
                 'capability' => $capability,
