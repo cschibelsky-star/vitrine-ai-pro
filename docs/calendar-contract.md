@@ -43,3 +43,5 @@ php tests/calendar.php
 php tests/calendar-integration.php
 
 O teste integrado cria dados temporários, importa o contrato React, aprova, renderiza homepage/agenda/PWA/feed, cancela e confirma remoção, backups e preservação. A imagem HML executa esses testes antes de iniciar. Produção só pode receber a mudança depois de revisão dos PRs, conferência administrativa dos candidatos e decisão explícita de promoção.
+
+HML PHP: p000095.hml.vitrineiapro.com.br. A curadoria reutiliza ADMIN_TOKEN do HML React por cópia server-side, sem rotação ou divulgação; usuário curadoria. A produção não recebe essa configuração.
