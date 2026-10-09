@@ -26,6 +26,16 @@ final class ReleaseLedger
         }
         try {
             $state = is_file($path) ? json_decode((string) file_get_contents($path), true, 64, JSON_THROW_ON_ERROR) : ['approval' => null, 'audit' => []];
+            $previous = '';
+            foreach ($state['audit'] as $event) {
+                $hash = $event['hash'] ?? '';
+                unset($event['hash']);
+                if (($event['previous_hash'] ?? null) !== $previous
+                    || !hash_equals(hash('sha256', json_encode($event, JSON_THROW_ON_ERROR)), $hash)) {
+                    throw new RuntimeException('ledger_integrity_failed');
+                }
+                $previous = $hash;
+            }
             // Callbacks return a decision; blocked decisions must persist invalidation too.
             $result = $operation($state);
             $temporary = tempnam($this->directory, '.release-');

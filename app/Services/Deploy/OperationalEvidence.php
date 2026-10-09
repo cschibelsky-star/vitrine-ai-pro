@@ -47,7 +47,25 @@ final class OperationalEvidence
                 && ($run['head_sha'] ?? '') === $sha && ($run['head_repository']['full_name'] ?? '') === $repo));
             usort($matching, static fn (array $a, array $b): int => $b['id'] <=> $a['id']);
             $latest = $matching[0] ?? [];
-            $ci = $ci && ($latest['status'] ?? '') === 'completed' && ($latest['conclusion'] ?? '') === 'success';
+            $passed = ($latest['status'] ?? '') === 'completed' && ($latest['conclusion'] ?? '') === 'success';
+            $requiredSteps = $project['required_steps'][$path] ?? [];
+            if (!$passed || $requiredSteps === []) {
+                $ci = false;
+                continue;
+            }
+            $jobs = $github->get('/actions/runs/'.$latest['id'].'/jobs', ['per_page' => 100])->throw()->json();
+            $jobList = $jobs['jobs'] ?? [];
+            $passed = count($jobList) > 0 && count($jobList) === ($jobs['total_count'] ?? 0);
+            $steps = [];
+            foreach ($jobList as $job) {
+                $passed = $passed && ($job['status'] ?? '') === 'completed' && ($job['conclusion'] ?? '') === 'success';
+                foreach ($job['steps'] ?? [] as $step) {
+                    if (($step['status'] ?? '') === 'completed' && ($step['conclusion'] ?? '') === 'success') {
+                        $steps[] = $step['name'];
+                    }
+                }
+            }
+            $ci = $ci && $passed && array_diff($requiredSteps, $steps) === [];
         }
         $host = parse_url($project['hml_url'], PHP_URL_HOST);
         $dns = filter_var(gethostbyname($host), FILTER_VALIDATE_IP) !== false;

@@ -12,6 +12,7 @@ on:
       - 'scripts/deploy/**'
       - 'tests/publication_gate.php'
       - 'tests/Feature/PublicationControlTest.php'
+      - 'tests/Feature/OperationalEvidenceTest.php'
       - '.github/workflows/*'
   push:
     branches: ['feature/hml-gate-enforcement-20261009']
@@ -36,7 +37,7 @@ jobs:
           APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
           CACHE_STORE: array
           SESSION_DRIVER: array
-        run: vendor/bin/phpunit tests/Feature/PublicationControlTest.php
+        run: vendor/bin/phpunit --filter 'PublicationControlTest|OperationalEvidenceTest' tests/Feature
       - run: php tests/publication_gate.php
       - run: find app/Services/Deploy app/Http/Controllers/Deploy -name '*.php' -exec php -l {} \;
       - run: python3 -m py_compile scripts/deploy/*.py
