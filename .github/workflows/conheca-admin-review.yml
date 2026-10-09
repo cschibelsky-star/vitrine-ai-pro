@@ -1,0 +1,19 @@
+name: Conheca Admin Review
+on:
+  push:
+    branches: [feature/conheca-admin-event-review]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  admin-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate PHP
+        run: |
+          php -l admin/index.php
+          php -l admin/login.php
+          php -l app/bootstrap.php
+      - name: Verify event review behavior
+        run: php tests/admin-event-review.php
