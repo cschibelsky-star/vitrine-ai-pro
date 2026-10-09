@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/app/calendar.php';
 $version='4.3.0-ECONOMIC-HML';
 
 $imageSources = [
@@ -150,26 +151,7 @@ if (is_file($eventsFile)) {
     $eventsData = $decodedEvents;
   }
 }
-$today = date('Y-m-d');
-$publishedEvents = array_values(array_filter($eventsData, static function(array $event) use ($today): bool {
-  if (($event['status'] ?? 'candidate') !== 'published') return false;
-  $end = trim((string)($event['end_date'] ?? ''));
-  $start = trim((string)($event['start_date'] ?? ''));
-  $lastDay = $end !== '' ? $end : $start;
-  return $start !== '' && ($lastDay === '' || $lastDay >= $today);
-}));
-usort($publishedEvents, static function(array $a, array $b): int {
-  return strcmp((string)($a['start_date'] ?? '9999-12-31'), (string)($b['start_date'] ?? '9999-12-31'));
-});
-
-function conheca_event_date_label(array $event): string {
-  $date = trim((string)($event['start_date'] ?? ''));
-  if ($date === '') return 'DATA A CONFIRMAR';
-  $ts = strtotime($date);
-  if (!$ts) return strtoupper($date);
-  $months = [1=>'JAN',2=>'FEV',3=>'MAR',4=>'ABR',5=>'MAI',6=>'JUN',7=>'JUL',8=>'AGO',9=>'SET',10=>'OUT',11=>'NOV',12=>'DEZ'];
-  return date('d', $ts) . ' ' . ($months[(int)date('n', $ts)] ?? '');
-}
+$publishedEvents = conheca_published_events($eventsData);
 
 $pathOnly = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 
