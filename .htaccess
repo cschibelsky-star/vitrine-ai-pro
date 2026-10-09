@@ -1,7 +1,26 @@
 DirectoryIndex index.php
 Options -Indexes
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^(explorar|eventos|empresas)/?$ index.php [L,QSA]
+RewriteRule ^atrativo/([a-z0-9-]+)/?$ index.php?atrativo=$1 [L,QSA]
+</IfModule>
 <IfModule mod_headers.c>
 Header always set X-Content-Type-Options "nosniff"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+<IfModule mod_headers.c>
+<FilesMatch "^(index\.php)?$">
+Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+Header always set Pragma "no-cache"
+Header always set Expires "0"
+</FilesMatch>
+<FilesMatch "^service-worker\.js$">
+Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+Header always set Service-Worker-Allowed "/"
+</FilesMatch>
 </IfModule>

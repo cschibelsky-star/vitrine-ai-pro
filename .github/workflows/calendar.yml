@@ -1,0 +1,20 @@
+name: Conheca Sumare Calendar
+on:
+  pull_request:
+    paths:
+      - 'index.php'
+      - 'app/calendar.php'
+      - 'tests/calendar.php'
+      - '.github/workflows/calendar.yml'
+permissions:
+  contents: read
+jobs:
+  calendar:
+    runs-on: ubuntu-latest
+    container: php:8.3-cli
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Calendar regression checks
+        run: php -d date.timezone=UTC tests/calendar.php
