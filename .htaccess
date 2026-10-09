@@ -5,7 +5,7 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
-RewriteRule ^(explorar|eventos)/?$ index.php [L,QSA]
+RewriteRule ^(explorar|eventos|empresas)/?$ index.php [L,QSA]
 RewriteRule ^atrativo/([a-z0-9-]+)/?$ index.php?atrativo=$1 [L,QSA]
 </IfModule>
 <IfModule mod_headers.c>
