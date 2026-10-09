@@ -4,6 +4,9 @@ services:
       context: .
     container_name: conheca_sumare_hml_web
     restart: unless-stopped
+    volumes:
+      - ./storage:/var/www/html/storage
+    command: ["sh", "-c", "chown -R www-data:www-data /var/www/html/storage && exec apache2-foreground"]
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-traefik_app_network"
@@ -11,7 +14,8 @@ services:
       - "traefik.http.routers.conheca-sumare-hml.entrypoints=websecure"
       - "traefik.http.routers.conheca-sumare-hml.tls=true"
       - "traefik.http.routers.conheca-sumare-hml.tls.certresolver=le"
-      - "traefik.http.services.conheca-sumare-hml.loadbalancer.server.port=80"
+      - "traefik.http.routers.conheca-sumare-hml.service=conheca-sumare"
+      - "traefik.http.services.conheca-sumare.loadbalancer.server.port=80"
     networks:
       - traefik
 

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+session_set_cookie_params(['secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
 session_start();
 
 define('APP_ROOT', dirname(__DIR__));
@@ -21,7 +22,12 @@ function data_write(string $file, array $data): bool {
     return rename($tmp, $path);
 }
 function e(?string $value): string { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
-function is_admin(): bool { return !empty($_SESSION['admin_logged']); }
+function is_admin(): bool {
+    if (isset($_SESSION['admin_sso_expires']) && (int)$_SESSION['admin_sso_expires'] < time()) {
+        unset($_SESSION['admin_logged'], $_SESSION['admin_email'], $_SESSION['admin_sso_expires']);
+    }
+    return !empty($_SESSION['admin_logged']);
+}
 function require_admin(): void {
     if (!is_admin()) { header('Location: /admin/login.php'); exit; }
 }
