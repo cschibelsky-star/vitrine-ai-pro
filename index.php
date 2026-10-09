@@ -468,7 +468,7 @@ if ($slug && isset($atrativos[$slug])) {
   <div class="f-feature-grid">
     <a class="f-feature" href="/atrativo/bosque-jardim-dallorto" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><div><small>NATUREZA</small><h3>Bosque dos Lagos</h3><p>Lazer, contato com a natureza<br>e um dos principais cartões-postais<br>de Sumaré.</p><b>›</b></div></a>
     <a class="f-feature" href="/atrativo/pro-memoria" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
-    <a class="f-feature" href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
+    <a class="f-feature" href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><div><small>EVENTOS</small><h3>Agenda de Sumaré</h3><p>Eventos com fonte pública,<br>datas conferidas e aprovação<br>administrativa.</p><b>›</b></div></a>
   </div>
 </section>
 
