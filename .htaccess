@@ -2,6 +2,9 @@ DirectoryIndex index.php
 Options -Indexes
 <IfModule mod_rewrite.c>
 RewriteEngine On
+RewriteRule ^cadastro-empresa\.php$ /empresas [R=302,L]
+RewriteRule ^negocios/?$ /empresas [R=302,L]
+RewriteRule ^admin/?$ /admin/login.php [R=302,L]
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
