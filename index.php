@@ -1,5 +1,5 @@
 <?php
-$version='4.2.3-VISUAL-HML';
+$version='4.3.0-ECONOMIC-HML';
 
 $imageSources = [
   'bosque-jardim-dallorto' => 'https://turismo.sumare.sp.gov.br/public/img/natural_atractives/bosque-dos-lagos-sumare.jpeg',
@@ -173,6 +173,134 @@ function conheca_event_date_label(array $event): string {
 
 $pathOnly = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 
+$economicCompanies = [
+  [
+    'name' => 'PPG',
+    'sector' => 'Indústria e revestimentos',
+    'fact' => 'A PPG concluiu em Sumaré uma expansão de US$ 2,7 milhões que elevou em 40% a capacidade de produção de revestimentos em pó.',
+    'source' => 'PPG',
+    'source_url' => 'https://news.ppg.com/Press-Releases/news-details/2023/PPG-completes-2-7-million-expansion-of-powder-coatings-factory-in-Sumar-Brazil/default.aspx',
+    'visual' => 'ppg',
+  ],
+  [
+    'name' => '3M do Brasil',
+    'sector' => 'Indústria, ciência e tecnologia',
+    'fact' => 'A 3M mantém unidade em Sumaré, na Rodovia Anhanguera, km 110, Jardim Manchester.',
+    'source' => '3M Brasil',
+    'source_url' => 'https://www.3m.com.br/3M/pt_BR/pelicula-vidro-comercial/suporte/fale-conosco/',
+    'visual' => '3m',
+  ],
+  [
+    'name' => 'Coca-Cola FEMSA',
+    'sector' => 'Bebidas e distribuição',
+    'fact' => 'A Coca-Cola FEMSA lista operação em Sumaré, no Distrito de Nova Veneza.',
+    'source' => 'Coca-Cola FEMSA',
+    'source_url' => 'https://coca-colafemsa.com/pt/junte-se-a-coca-cola-femsa/sua-carreira-na-coca-cola-femsa/brasil.html',
+    'visual' => 'femsa',
+  ],
+  [
+    'name' => 'Ascenty',
+    'sector' => 'Tecnologia e data centers',
+    'fact' => 'Sumaré foi escolhida para sediar cinco data centers da Ascenty, com infraestrutura voltada a conectividade, nuvem e cargas digitais críticas.',
+    'source' => 'Ascenty',
+    'source_url' => 'https://ascenty.com/data-centers/localizacao/brasil/sao-paulo-interior/sumare/',
+    'visual' => 'ascenty',
+  ],
+  [
+    'name' => 'Microsoft',
+    'sector' => 'Infraestrutura digital',
+    'fact' => 'O datacenter Sumaré Leste entrou em fase final de construção em 2026, com conclusão prevista para o segundo semestre do ano.',
+    'source' => 'Microsoft Local',
+    'source_url' => 'https://local.microsoft.com/br/blog/sumare-east-datacenter-construction-update/',
+    'visual' => 'microsoft',
+  ],
+  [
+    'name' => 'Shopping ParkCity Sumaré',
+    'sector' => 'Comércio, serviços e lazer',
+    'fact' => 'Inaugurado em 2019, é apresentado pelo empreendimento como o primeiro e único shopping da cidade.',
+    'source' => 'ParkCity Sumaré',
+    'source_url' => 'https://www.parkcitysumare.com.br/pt-BR/sobre',
+    'visual' => 'parkcity',
+  ],
+];
+
+$economicStats = [
+  ['value' => '292.307', 'label' => 'habitantes', 'note' => 'estimativa populacional 2026', 'source' => 'IBGE', 'url' => 'https://www.ibge.gov.br/cidades-e-estados/sp/sumare.html'],
+  ['value' => 'R$ 68.060,93', 'label' => 'PIB per capita', 'note' => 'referência 2023', 'source' => 'IBGE', 'url' => 'https://www.ibge.gov.br/cidades-e-estados/sp/sumare.html'],
+  ['value' => '5', 'label' => 'data centers Ascenty', 'note' => 'campus de Sumaré', 'source' => 'Ascenty', 'url' => 'https://ascenty.com/data-centers/localizacao/brasil/sao-paulo-interior/sumare/'],
+  ['value' => '91 MW', 'label' => 'capacidade somada Ascenty', 'note' => '14 + 20 + 19 + 19 + 19 MW', 'source' => 'Ascenty', 'url' => 'https://ascenty.com/data-centers/localizacao/brasil/sao-paulo-interior/sumare/'],
+];
+
+if ($pathOnly === 'empresas') {
+  ?><!doctype html>
+  <html lang="pt-BR"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Empresas e Investimentos em Sumaré — Conheça Sumaré</title>
+  <meta name="description" content="Empresas, indicadores econômicos, tecnologia, data centers e potencial de investimento em Sumaré.">
+  <meta name="theme-color" content="#006e68">
+  <link rel="manifest" href="/manifest.json?v=4.3.0">
+  <link rel="stylesheet" href="/assets/style.css?v=4.3.0">
+  </head><body class="faithful-home internal-page economic-page">
+  <div class="faithful-page">
+  <header class="f-header">
+    <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
+    <nav><a href="/">Início</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a class="active" href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Buscar">⌕</a><button data-install>Baixar App</button></div>
+  </header>
+  <main class="e-main">
+    <section class="e-hero">
+      <div class="e-hero-copy"><small>NEGÓCIOS E INVESTIMENTOS</small><h1>Sumaré produz, conecta e cresce.</h1><p>Uma vitrine econômica baseada em empresas com presença confirmada, investimentos anunciados e indicadores públicos do município.</p></div>
+      <div class="e-hero-badge"><b>Dados verificáveis</b><span>Fontes oficiais e institucionais</span></div>
+    </section>
+
+    <section class="e-stats">
+      <div class="e-heading"><div><small>✦ INDICADORES</small><h2>Sumaré em números</h2></div><p>Dados com ano e fonte identificados.</p></div>
+      <div class="e-stat-grid">
+      <?php foreach($economicStats as $stat): ?>
+        <a class="e-stat" href="<?=htmlspecialchars($stat['url'])?>" target="_blank" rel="noopener">
+          <strong><?=htmlspecialchars($stat['value'])?></strong><b><?=htmlspecialchars($stat['label'])?></b><span><?=htmlspecialchars($stat['note'])?></span><small>Fonte: <?=htmlspecialchars($stat['source'])?> ↗</small>
+        </a>
+      <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="e-companies">
+      <div class="e-heading"><div><small>✦ EMPRESAS E INFRAESTRUTURA</small><h2>Empresas que movimentam Sumaré</h2></div><p>Presença local confirmada em fonte pública ou institucional.</p></div>
+      <div class="e-company-grid">
+      <?php foreach($economicCompanies as $company): ?>
+        <article class="e-company">
+          <div class="e-company-visual e-company-<?=htmlspecialchars($company['visual'])?>">
+            <span><?=htmlspecialchars($company['name'])?></span>
+          </div>
+          <div class="e-company-body"><small><?=htmlspecialchars(strtoupper($company['sector']))?></small><h3><?=htmlspecialchars($company['name'])?></h3><p><?=htmlspecialchars($company['fact'])?></p><a href="<?=htmlspecialchars($company['source_url'])?>" target="_blank" rel="noopener">Fonte: <?=htmlspecialchars($company['source'])?> →</a></div>
+        </article>
+      <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="e-invest">
+      <div><small>POR QUE INVESTIR EM SUMARÉ</small><h2>Indústria, logística e infraestrutura digital no mesmo território.</h2><p>A combinação entre base industrial, acesso rodoviário, mercado consumidor regional e expansão de data centers cria um ambiente relevante para novos investimentos. O Conheça Sumaré apresenta esses dados de forma editorial, sempre com fonte e referência temporal.</p></div>
+      <div class="e-invest-points">
+        <article><b>01</b><span><strong>Localização</strong><small>Conexão com a Região Metropolitana de Campinas e os principais corredores rodoviários do interior paulista.</small></span></article>
+        <article><b>02</b><span><strong>Base empresarial</strong><small>Multinacionais, indústria, distribuição, varejo e serviços compondo uma economia diversificada.</small></span></article>
+        <article><b>03</b><span><strong>Infraestrutura digital</strong><small>Expansão de data centers e conectividade de alta capacidade no município.</small></span></article>
+      </div>
+    </section>
+
+    <section class="e-sources">
+      <small>TRANSPARÊNCIA EDITORIAL</small><h2>Como os dados são publicados</h2>
+      <p>Empresas entram nesta página somente quando sua presença em Sumaré pode ser confirmada por fonte pública confiável ou pela própria instituição. Indicadores exibem o ano de referência. Informações promocionais, contatos pessoais e dados não confirmados não são publicados.</p>
+      <div class="e-source-links"><a href="https://www.ibge.gov.br/cidades-e-estados/sp/sumare.html" target="_blank" rel="noopener">IBGE ↗</a><a href="https://ascenty.com/data-centers/localizacao/brasil/sao-paulo-interior/sumare/" target="_blank" rel="noopener">Ascenty ↗</a><a href="https://local.microsoft.com/br/blog/sumare-east-datacenter-construction-update/" target="_blank" rel="noopener">Microsoft Local ↗</a></div>
+    </section>
+  </main>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
+  </div>
+  <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
+  <script src="/assets/app.js?v=4.3.0"></script>
+  </body></html><?php
+  exit;
+}
+
 if ($pathOnly === 'eventos') {
   ?><!doctype html>
   <html lang="pt-BR"><head>
@@ -180,8 +308,8 @@ if ($pathOnly === 'eventos') {
   <title>Eventos em Sumaré — Conheça Sumaré</title>
   <meta name="description" content="Agenda cultural, turística e gastronômica de Sumaré.">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.3">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
+  <link rel="manifest" href="/manifest.json?v=4.3.0">
+  <link rel="stylesheet" href="/assets/style.css?v=4.3.0">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -212,7 +340,7 @@ if ($pathOnly === 'eventos') {
   <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
-  <script src="/assets/app.js?v=4.2.3"></script>
+  <script src="/assets/app.js?v=4.3.0"></script>
   </body></html><?php
   exit;
 }
@@ -224,8 +352,8 @@ if ($pathOnly === 'explorar') {
   <title>Explorar Sumaré — Conheça Sumaré</title>
   <meta name="description" content="Atrativos, natureza, cultura e experiências para conhecer Sumaré.">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.3">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
+  <link rel="manifest" href="/manifest.json?v=4.3.0">
+  <link rel="stylesheet" href="/assets/style.css?v=4.3.0">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -255,7 +383,7 @@ if ($pathOnly === 'explorar') {
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script>const q=document.getElementById('exploreSearch');q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.i-attraction-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});</script>
-  <script src="/assets/app.js?v=4.2.3"></script>
+  <script src="/assets/app.js?v=4.3.0"></script>
   </body></html><?php
   exit;
 }
@@ -269,8 +397,8 @@ if ($slug && isset($atrativos[$slug])) {
   <title><?=htmlspecialchars($a['nome'])?> — Conheça Sumaré</title>
   <meta name="description" content="<?=htmlspecialchars($a['descricao'])?>">
   <meta name="theme-color" content="#006e68">
-  <link rel="manifest" href="/manifest.json?v=4.2.3">
-  <link rel="stylesheet" href="/assets/style.css?v=4.2.3">
+  <link rel="manifest" href="/manifest.json?v=4.3.0">
+  <link rel="stylesheet" href="/assets/style.css?v=4.3.0">
   </head><body class="faithful-home internal-page">
   <div class="faithful-page">
   <header class="f-header">
@@ -296,7 +424,7 @@ if ($slug && isset($atrativos[$slug])) {
   <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
-  <script src="/assets/app.js?v=4.2.3"></script>
+  <script src="/assets/app.js?v=4.3.0"></script>
   </body></html><?php
   exit;
 }
@@ -308,8 +436,8 @@ if ($slug && isset($atrativos[$slug])) {
 <title>Conheça Sumaré — Turismo, cultura, eventos e negócios</title>
 <meta name="description" content="Conheça Sumaré: turismo, cultura, eventos, gastronomia, mapa e oportunidades da cidade.">
 <meta name="theme-color" content="#006e68">
-<link rel="manifest" href="/manifest.json?v=4.2.3">
-<link rel="stylesheet" href="/assets/style.css?v=4.2.3">
+<link rel="manifest" href="/manifest.json?v=4.3.0">
+<link rel="stylesheet" href="/assets/style.css?v=4.3.0">
 </head>
 <body class="faithful-home">
 <div class="faithful-page">
@@ -381,7 +509,7 @@ if ($slug && isset($atrativos[$slug])) {
       <a href="/explorar" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/bosque-dallorto/capa-real.jpg')"><span>♧</span><b>Natureza e Lazer</b></a>
     </div>
   </div>
-  <div class="f-history-photo" style="background-image:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/praca-das-bandeiras/capa-real.jpg')">
+  <div class="f-history-photo" style="background-image:url('<?=htmlspecialchars(conheca_image_url('casarao-sertaozinho'))?>')">
     <div class="f-patrimony"><b>▣</b><span>Patrimônio<br>que inspira<br>gerações</span></div>
   </div>
 </section>
@@ -389,11 +517,11 @@ if ($slug && isset($atrativos[$slug])) {
 <section class="f-business" id="negocios">
   <div class="f-business-copy"><i>↗</i><h2>Sumaré também é<br><em>destino de negócios.</em></h2><p>Localização estratégica, infraestrutura completa,<br>conexão com os maiores centros do país e um ambiente<br>convidativo e seguro, atraindo grandes empresas e novos<br>investimentos.</p></div>
   <div class="f-business-grid">
-    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/shopping-parkcity/capa.jpg')"><div><strong>Shopping ParkCity Sumaré</strong><p>Comércio, serviços, lazer e fluxo regional.</p></div></article>
-    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/assets/img/real/comercio.jpg')"><div><strong>Mercado Livre</strong><p>Operação logística e geração de oportunidades.</p></div></article>
-    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/empresas/hotel-fildi/capa-real.jpg')"><div><strong>3M</strong><p>Indústria, tecnologia e presença empresarial em Sumaré.</p></div></article>
-    <article class="f-business-card" style="--biz:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/empresas/hotel-jaguary/capa-real.jpg')"><div><strong>Logística e localização</strong><p>Conexão com os principais corredores rodoviários da região.</p></div></article>
-  </div>
+    <article class="f-business-card f-biz-parkcity"><div><strong>Shopping ParkCity Sumaré</strong><p>Comércio, serviços e lazer.</p></div></article>
+    <article class="f-business-card f-biz-ppg"><div><strong>PPG</strong><p>Indústria e expansão produtiva em Sumaré.</p></div></article>
+    <article class="f-business-card f-biz-3m"><div><strong>3M</strong><p>Ciência, indústria e tecnologia.</p></div></article>
+    <article class="f-business-card f-biz-femsa"><div><strong>Coca-Cola FEMSA</strong><p>Operação confirmada em Nova Veneza.</p></div></article>
+  </div><a class="f-business-more" href="/empresas">Conheça as empresas e o potencial econômico de Sumaré →</a>
 </section>
 
 <section class="f-opportunities" id="mapa">
@@ -420,5 +548,5 @@ if ($slug && isset($atrativos[$slug])) {
 </div>
 
 <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>No Android, use o Chrome e escolha “Instalar app” ou “Adicionar à tela inicial”. No iPhone, use o Safari e escolha “Adicionar à Tela de Início”.</p></div>
-<script src="/assets/app.js?v=4.2.3"></script>
+<script src="/assets/app.js?v=4.3.0"></script>
 </body></html>
