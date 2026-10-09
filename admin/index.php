@@ -58,7 +58,7 @@ function review_change(string $id, string $action, string $version): void {
         if ($action === 'publish' && ($problem = review_problem($event)) !== '') throw new RuntimeException($problem);
         $event['status'] = ['publish' => 'published', 'reject' => 'rejected', 'restore' => 'candidate'][$action];
         $event['reviewed_at'] = (new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo')))->format(DateTimeInterface::ATOM);
-        $event['reviewed_by'] = (string)getenv('ADMIN_USER');
+        $event['reviewed_by'] = (string)($_SESSION['admin_email'] ?? getenv('ADMIN_USER'));
         $events[$index] = $event;
         $json = json_encode($events, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . PHP_EOL;
         $tmp = tempnam(DATA_DIR, '.event-review-');
