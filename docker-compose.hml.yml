@@ -5,7 +5,7 @@ services:
     container_name: conheca_sumare_hml_web
     restart: unless-stopped
     env_file:
-      - .env.runtime
+      - ../.env.runtime
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-traefik_app_network"
