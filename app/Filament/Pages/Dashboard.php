@@ -20,6 +20,29 @@ class Dashboard extends Page
     protected static ?int $navigationSort = 1;
     protected static string $view = 'filament.pages.dashboard';
 
+    public function homologationProjects(): array
+    {
+        return array_map(function (array $project): array {
+            $project['sha'] = '';
+            $project['can_approve'] = false;
+            $project['blockers'] = ['Evidências operacionais indisponíveis'];
+            try {
+                $sha = \Illuminate\Support\Facades\Http::withToken(config('publication.github_token'))
+                    ->timeout(10)->get('https://api.github.com/repos/'.$project['repository'].'/commits/'.rawurlencode($project['candidate_ref']))
+                    ->throw()->json('sha');
+                $result = app(\App\Services\Deploy\PublicationControl::class)->act($project['id'], $sha, 'status', (string) auth()->id());
+                $project['sha'] = $sha;
+                $project['status'] = $result['allowed'] ? 'Aprovada' : 'Bloqueada';
+                $project['blockers'] = $result['blockers'];
+                $project['can_approve'] = $result['evidence_digest'] !== null
+                    && array_diff($result['blockers'], ['not_verified:approved_by_authorized_user', 'missing:approval_evidence_id']) === [];
+            } catch (\Throwable) {
+                $project['status'] = 'Bloqueada';
+            }
+            return $project;
+        }, config('homologation_projects.projects', []));
+    }
+
     public function metrics(): array
     {
         $activeLicenseStatuses = ['Ativa', 'Homologação', 'Trial'];

@@ -1,0 +1,41 @@
+name: Publication Gate Tests
+on:
+  pull_request:
+    paths:
+      - 'app/Services/Deploy/**'
+      - 'app/Http/Controllers/Deploy/**'
+      - 'app/Providers/AppServiceProvider.php'
+      - 'app/Filament/Pages/Dashboard.php'
+      - 'routes/publication*'
+      - 'config/publication.php'
+      - 'config/homologation_projects.php'
+      - 'scripts/deploy/**'
+      - 'tests/publication_gate.php'
+      - 'tests/Feature/PublicationControlTest.php'
+      - '.github/workflows/*'
+  push:
+    branches: ['feature/hml-gate-enforcement-20261009']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: sodium, mbstring, pdo_sqlite
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - name: HTTP authorization regression tests
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+        run: vendor/bin/phpunit tests/Feature/PublicationControlTest.php
+      - run: php tests/publication_gate.php
+      - run: find app/Services/Deploy app/Http/Controllers/Deploy -name '*.php' -exec php -l {} \;
+      - run: python3 -m py_compile scripts/deploy/*.py

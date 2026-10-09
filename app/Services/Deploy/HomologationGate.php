@@ -31,12 +31,15 @@ final class HomologationGate
         }
         foreach (['hml_url', 'production_url'] as $field) {
             $url = $release[$field] ?? null;
-            if (!is_string($url) || !filter_var($url, FILTER_VALIDATE_URL) || parse_url($url, PHP_URL_SCHEME) !== 'https') {
+            if (!is_string($url) || !filter_var($url, FILTER_VALIDATE_URL) || parse_url($url, PHP_URL_SCHEME) !== 'https' || parse_url($url, PHP_URL_USER) !== null || parse_url($url, PHP_URL_PASS) !== null) {
                 $blockers[] = "invalid_https_url:{$field}";
             }
         }
         if (($release['hml_url'] ?? null) === ($release['production_url'] ?? null)) {
             $blockers[] = 'same_url';
+        }
+        if (strtolower((string) parse_url($release['hml_url'] ?? '', PHP_URL_HOST)) === strtolower((string) parse_url($release['production_url'] ?? '', PHP_URL_HOST))) {
+            $blockers[] = 'same_host';
         }
         $tested = $release['tested_sha'] ?? null;
         $target = $release['target_sha'] ?? null;
