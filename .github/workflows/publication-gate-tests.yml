@@ -28,6 +28,7 @@ jobs:
           php-version: '8.3'
           extensions: sodium, mbstring, pdo_sqlite
           coverage: none
+      - run: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions bootstrap/cache
       - run: composer install --no-interaction --prefer-dist
       - name: HTTP authorization regression tests
         env:
