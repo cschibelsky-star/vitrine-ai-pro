@@ -1,5 +1,36 @@
 <?php
-require_once __DIR__ . '/app/calendar.php';
+declare(strict_types=1);
+
+function conheca_calendar_timezone(): DateTimeZone {
+  return new DateTimeZone('America/Sao_Paulo');
+}
+function conheca_calendar_today(?DateTimeImmutable $now = null): string {
+  return ($now ?? new DateTimeImmutable('now', conheca_calendar_timezone()))
+    ->setTimezone(conheca_calendar_timezone())->format('Y-m-d');
+}
+function conheca_published_events(array $events, ?DateTimeImmutable $now = null): array {
+  $today = conheca_calendar_today($now);
+  $published = array_values(array_filter($events, static function(array $event) use ($today): bool {
+    if (($event['status'] ?? 'candidate') !== 'published') return false;
+    $end = trim((string)($event['end_date'] ?? ''));
+    $start = trim((string)($event['start_date'] ?? ''));
+    $lastDay = $end !== '' ? $end : $start;
+    return $start !== '' && ($lastDay === '' || $lastDay >= $today);
+  }));
+  usort($published, static function(array $a, array $b): int {
+    return strcmp((string)($a['start_date'] ?? '9999-12-31'), (string)($b['start_date'] ?? '9999-12-31'));
+  });
+  return $published;
+}
+function conheca_event_date_label(array $event): string {
+  $date = trim((string)($event['start_date'] ?? ''));
+  if ($date === '') return 'DATA A CONFIRMAR';
+  $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date, conheca_calendar_timezone());
+  if ($parsed === false || $parsed->format('Y-m-d') !== $date) return strtoupper($date);
+  $months = [1=>'JAN',2=>'FEV',3=>'MAR',4=>'ABR',5=>'MAI',6=>'JUN',7=>'JUL',8=>'AGO',9=>'SET',10=>'OUT',11=>'NOV',12=>'DEZ'];
+  return $parsed->format('d') . ' ' . $months[(int)$parsed->format('n')];
+}
+
 $version='4.3.0-ECONOMIC-HML';
 
 $imageSources = [
@@ -296,7 +327,7 @@ if ($pathOnly === 'eventos') {
   <div class="faithful-page">
   <header class="f-header">
     <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
-    <nav><a href="/">Início</a><a href="/explorar">Turismo</a><a class="active" href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <nav><a href="/">Início</a><a href="/explorar">Turismo</a><a class="active" href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav>
     <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Buscar">⌕</a><button data-install>Baixar App</button></div>
   </header>
   <main class="i-main">
@@ -319,7 +350,7 @@ if ($pathOnly === 'eventos') {
       <?php endif; ?>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script src="/assets/app.js?v=4.3.0"></script>
@@ -340,7 +371,7 @@ if ($pathOnly === 'explorar') {
   <div class="faithful-page">
   <header class="f-header">
     <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
-    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav>
     <div class="f-actions"><span class="f-search">⌕</span><button data-install>Baixar App</button></div>
   </header>
   <main class="i-main">
@@ -361,7 +392,7 @@ if ($pathOnly === 'explorar') {
       </div>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script>const q=document.getElementById('exploreSearch');q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.i-attraction-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});</script>
@@ -385,7 +416,7 @@ if ($slug && isset($atrativos[$slug])) {
   <div class="faithful-page">
   <header class="f-header">
     <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
-    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav>
+    <nav><a href="/">Início</a><a class="active" href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav>
     <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Voltar">←</a><button data-install>Baixar App</button></div>
   </header>
   <main class="i-main">
@@ -403,7 +434,7 @@ if ($slug && isset($atrativos[$slug])) {
       <aside><b>Planeje sua visita</b><p><?=htmlspecialchars($a['endereco'])?></p><small>Confirme horários e condições de visitação antes de sair.</small><a href="https://www.google.com/maps/search/?api=1&query=<?=urlencode($a['nome'].' Sumaré SP')?>" target="_blank" rel="noopener">Abrir no mapa →</a><a class="secondary" href="/explorar">← Ver outros atrativos</a></aside>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/#negocios">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script src="/assets/app.js?v=4.3.0"></script>
@@ -425,7 +456,7 @@ if ($slug && isset($atrativos[$slug])) {
 <div class="faithful-page">
 <header class="f-header">
   <a class="f-logo" href="/"><span>CONHEÇA</span> <strong>SUMARÉ</strong></a>
-  <nav><a class="active" href="#inicio">Início</a><a href="#turismo">Turismo</a><a href="/eventos">Eventos</a><a href="#gastronomia">Gastronomia</a><a href="#negocios">Negócios</a><a href="#mapa">Mapa</a></nav>
+  <nav><a class="active" href="#inicio">Início</a><a href="#turismo">Turismo</a><a href="/eventos">Eventos</a><a href="#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="#mapa">Mapa</a></nav>
   <div class="f-actions"><a href="/explorar" class="f-search" aria-label="Buscar">⌕</a><button data-install>Baixar App</button></div>
 </header>
 
@@ -518,13 +549,13 @@ if ($slug && isset($atrativos[$slug])) {
 
 <section class="f-join">
   <div class="f-join-copy"><b>▤</b><span><strong>Faça parte do Conheça Sumaré</strong><small>Sua empresa, evento ou iniciativa no guia digital da cidade.<br>Ganhe visibilidade para moradores, visitantes e novos negócios em Sumaré.</small></span></div>
-  <div class="f-join-actions"><a href="/cadastro-empresa.php">✚ &nbsp; Participe do Guia &nbsp;→</a><a class="outline" href="/cadastro-empresa.php">▤ &nbsp; Saiba como divulgar</a></div>
+  <div class="f-join-actions"><a href="/empresas">✚ &nbsp; Participe do Guia &nbsp;→</a><a class="outline" href="/empresas">▤ &nbsp; Saiba como divulgar</a></div>
 </section>
 </main>
 
 <footer class="f-footer">
   <div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div>
-  <nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/explorar">Gastronomia</a><a href="/explorar">Negócios</a><a href="#mapa">Mapa</a><a href="#">Política de Privacidade</a><a href="https://turismo.sumare.sp.gov.br/" target="_blank" rel="noopener">Portal Oficial da Cidade</a></nav>
+  <nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/explorar">Gastronomia</a><a href="/empresas">Negócios</a><a href="#mapa">Mapa</a><a href="#">Política de Privacidade</a><a href="https://turismo.sumare.sp.gov.br/" target="_blank" rel="noopener">Portal Oficial da Cidade</a></nav>
   <div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div>
 </footer>
 </div>
