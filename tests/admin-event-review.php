@@ -6,7 +6,7 @@ define('DATA_DIR', $root);
 $_SESSION = ['admin_email' => 'reviewer@example.test'];
 $source = file_get_contents(__DIR__.'/../admin/index.php');
 $start = strpos($source, 'function review_url');
-$end = strpos($source, "if (empty($_SESSION['event_review_csrf']))");
+$end = strpos($source, 'if (empty(');
 if ($start === false || $end === false) throw new RuntimeException('Review functions missing');
 eval(substr($source, $start, $end - $start));
 $count = 0;
