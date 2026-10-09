@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/app/calendar.php';
+require_once __DIR__ . '/app/event-store.php';
+require_once __DIR__ . '/app/event-card.php';
+header('Cache-Control: no-store');
 $version='4.3.0-ECONOMIC-HML';
 
 $imageSources = [
@@ -143,16 +145,9 @@ $explorarItems = [
   ['slug'=>'capela-bom-jesus','nome'=>'Capela Bom Jesus','categoria'=>'Cultura e História','bairro'=>'Matão','imagem'=>conheca_image_url('capela-bom-jesus')],
   ['slug'=>'casarao-sertaozinho','nome'=>'Casarão Sertãozinho','categoria'=>'Cultura e História','bairro'=>'Sumaré','imagem'=>conheca_image_url('casarao-sertaozinho')]
 ];
-$eventsFile = __DIR__ . '/storage/data/events.json';
-$eventsData = [];
-if (is_file($eventsFile)) {
-  $decodedEvents = json_decode((string)file_get_contents($eventsFile), true);
-  if (is_array($decodedEvents)) {
-    $eventsData = $decodedEvents;
-  }
-}
+$agendaUnavailable = false;
+try { $eventsData = conheca_read_events(); } catch (Throwable $error) { $eventsData = []; $agendaUnavailable = true; }
 $publishedEvents = conheca_published_events($eventsData);
-
 $pathOnly = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 
 $economicCompanies = [
@@ -306,14 +301,11 @@ if ($pathOnly === 'eventos') {
     <section class="i-section">
       <div class="i-heading"><div><small>✦ CONTEÚDO OFICIAL</small><h2>Próximos eventos</h2></div><a href="/">← Voltar ao início</a></div>
       <?php if(!$publishedEvents): ?>
-        <div class="i-empty"><b>▣</b><div><h3>Novos eventos em monitoramento</h3><p>A agenda é atualizada quando surgem anúncios públicos confirmados. Assim que um evento estiver validado, ele aparecerá aqui.</p></div></div>
+        <div class="i-empty"><b>▣</b><div><h3><?= $agendaUnavailable ? "Agenda temporariamente indisponível" : "Novos eventos em conferência" ?></h3><p>Somente eventos com fonte pública, dados válidos e aprovação administrativa aparecem aqui.</p></div></div>
       <?php else: ?>
         <div class="i-event-grid">
         <?php foreach($publishedEvents as $event): ?>
-          <article class="i-event-card">
-            <?php if(!empty($event['image'])): ?><img src="<?=htmlspecialchars((string)$event['image'])?>" alt="<?=htmlspecialchars((string)($event['title']??''))?>" loading="lazy"><?php else: ?><div class="i-event-fallback">SUMARÉ</div><?php endif; ?>
-            <div><small><?=htmlspecialchars((string)($event['category']??'Evento'))?> · <?=htmlspecialchars(conheca_event_date_label($event))?></small><h3><?=htmlspecialchars((string)($event['title']??''))?></h3><p><?=htmlspecialchars((string)($event['place']??''))?><?php if(!empty($event['start_time'])): ?> · <?=htmlspecialchars((string)$event['start_time'])?><?php endif; ?></p><?php if(!empty($event['summary'])): ?><p><?=htmlspecialchars((string)$event['summary'])?></p><?php endif; ?><?php if(!empty($event['source_url'])): ?><a href="<?=htmlspecialchars((string)$event['source_url'])?>" target="_blank" rel="noopener">Ver fonte oficial →</a><?php endif; ?></div>
-          </article>
+          <?php conheca_render_event_card($event); ?>
         <?php endforeach; ?>
         </div>
       <?php endif; ?>
@@ -478,6 +470,13 @@ if ($slug && isset($atrativos[$slug])) {
     <a class="f-feature" href="/atrativo/pro-memoria" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/pro-memoria/capa-real.jpg')"><div><small class="yellow">CULTURA</small><h3>Pró-Memória de Sumaré</h3><p>História, memória e identidade<br>da nossa cidade.</p><b>›</b></div></a>
     <a class="f-feature" href="/eventos" style="--img:url('https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/eventos/feira-artesanato/capa-real.jpg')"><div><small>EVENTOS</small><h3>Feira de Artesanato</h3><p>Talento local, cultura e economia<br>criativa reunidos em um só lugar.</p><b>›</b></div></a>
   </div>
+</section>
+
+<section class="i-section home-agenda" id="agenda">
+  <div class="i-heading"><div><small>AGENDA DA CIDADE</small><h2>O que fazer em Sumaré</h2></div><a href="/eventos">Ver agenda completa →</a></div>
+  <?php if ($publishedEvents): ?><div class="i-event-grid">
+  <?php foreach(array_slice($publishedEvents,0,3) as $event) conheca_render_event_card($event); ?>
+  </div><?php else: ?><div class="i-empty"><p><?= $agendaUnavailable ? 'Agenda temporariamente indisponível. Tente novamente.' : 'Novos eventos em conferência. Nenhum evento aprovado e válido disponível no momento.' ?></p></div><?php endif; ?>
 </section>
 
 <section class="f-history" id="historia">

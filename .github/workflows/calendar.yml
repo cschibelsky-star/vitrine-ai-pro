@@ -3,8 +3,15 @@ on:
   pull_request:
     paths:
       - 'index.php'
-      - 'app/calendar.php'
-      - 'tests/calendar.php'
+      - 'app/**'
+      - 'admin/**'
+      - 'calendar-feed.php'
+      - 'service-worker.js'
+      - 'assets/**'
+      - 'Dockerfile*'
+      - 'hml/**'
+      - 'docker-compose.calendar-hml.yml'
+      - 'tests/**'
       - '.github/workflows/calendar.yml'
 permissions:
   contents: read
@@ -18,3 +25,6 @@ jobs:
         run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Calendar regression checks
         run: php -d date.timezone=UTC tests/calendar.php
+
+      - name: Approval, preservation and rendering integration
+        run: php tests/calendar-integration.php

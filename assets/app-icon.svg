@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Conheça Sumaré">
+  <rect width="512" height="512" rx="112" fill="#18743a"/>
+  <circle cx="256" cy="232" r="132" fill="#f4c430"/>
+  <path d="M256 116c-67 0-121 52-121 117 0 86 121 177 121 177s121-91 121-177c0-65-54-117-121-117zm0 166a52 52 0 1 1 0-104 52 52 0 0 1 0 104z" fill="#18743a"/>
+</svg>
+

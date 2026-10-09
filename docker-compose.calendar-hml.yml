@@ -1,0 +1,24 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.calendar-hml
+    container_name: conheca_sumare_calendar_hml
+    restart: unless-stopped
+    environment:
+      EVENTS_DATA_DIR: /var/www/html/storage/calendar
+    volumes:
+      - calendar_data:/var/www/html/storage/calendar
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(file_get_contents('http://127.0.0.1/health.php') === false ? 1 : 0);"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - traefik
+volumes:
+  calendar_data:
+networks:
+  traefik:
+    external: true
+    name: n8n-traefik_app_network
