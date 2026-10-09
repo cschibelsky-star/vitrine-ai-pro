@@ -20,3 +20,5 @@ Route::middleware('throttle:30,1')->group(function () {
 
 require __DIR__.'/site_factory_api.php';
 require __DIR__.'/heygen_callback.php';
+
+require __DIR__.'/publication_api.php';
