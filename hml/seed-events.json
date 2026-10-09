@@ -1,0 +1,30 @@
+[
+  {"id":1,"title":"Agenda Cultural","date":"Atualização oficial","place":"Sumaré/SP","summary":"Eventos e programações da cidade com referência nas fontes oficiais."},
+  {"id":2,"title":"Feiras e encontros","date":"Programação local","place":"Espaços públicos","summary":"Atividades locais, experiências e economia criativa."},
+  {"id":3,"title":"Cultura e memória","date":"Permanente","place":"Cidade","summary":"História, patrimônio e identidade de Sumaré."},
+  {
+    "id": 4,
+    "title": "SESI Diverte 2026 — Sumaré",
+    "category": "Cultura e lazer",
+    "date": "17/10/2026",
+    "start_date": "2026-10-17",
+    "end_date": "2026-10-17",
+    "start_time": "09:00",
+    "end_time": "16:00",
+    "place": "CAT SESI Sumaré",
+    "address": "Rua Amazonas, 99 — Jardim Nova Veneza, Sumaré/SP",
+    "summary": "Primeira edição com brincadeiras, atividades culturais e esportivas para famílias, praça de alimentação e show de Abelardo Bernardo às 15h.",
+    "image": "https://blobmeusesiprod.blob.core.windows.net/eventos/7041fc74-abe8-43b5-907e-5d934191e819",
+    "source_name": "SESI Sumaré — Comunicação Regional SESI Americana",
+    "source_url": "https://sumare.sesisp.org.br/noticia/sesi-diverte-proporciona-dia-de-lazer-cultura-esporte-e-recreacao-para-toda-a-familia-no-sesi-sumare",
+    "source_published_date": "2026-10-08",
+    "source_published_time": "11:38",
+    "source_updated_date": "2026-10-08",
+    "source_updated_time": "12:15",
+    "verified_at": "2026-10-09",
+    "access": "Participação gratuita, com reserva de ingresso pelo Meu SESI.",
+    "reservation_url": "https://www.sesisp.org.br/evento/0fa90931-af22-4e2b-b2f1-83a3eea7977b/sesi-diverte-2026",
+    "relevance": "Combina música e lazer gratuito em Nova Veneza, com potencial para um roteiro de famílias moradoras e visitantes.",
+    "status": "candidate"
+  }
+]

@@ -26,10 +26,14 @@ function require_admin(): void {
     if (!is_admin()) { header('Location: /admin/login.php'); exit; }
 }
 function admin_configured(): bool {
-    return (string)getenv('ADMIN_USER') !== '' && (string)getenv('ADMIN_PASSWORD_HASH') !== '';
+    return (string)getenv('ADMIN_USER') !== '' && ((string)getenv('ADMIN_PASSWORD_HASH') !== '' || (string)getenv('ADMIN_TOKEN') !== '');
 }
 function admin_credentials_valid(string $user, string $pass): bool {
     $expectedUser = (string)getenv('ADMIN_USER');
     $hash = (string)getenv('ADMIN_PASSWORD_HASH');
-    return $expectedUser !== '' && $hash !== '' && hash_equals($expectedUser, $user) && password_verify($pass, $hash);
+    if ($expectedUser === '' || !hash_equals($expectedUser, $user)) return false;
+    if ($hash !== '') return password_verify($pass, $hash);
+    $token = (string)getenv('ADMIN_TOKEN');
+    return $token !== '' && hash_equals($token, $pass);
 }
+
