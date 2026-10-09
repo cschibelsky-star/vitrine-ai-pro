@@ -15,11 +15,6 @@ services:
       - "traefik.http.routers.conheca-sumare-hml.tls=true"
       - "traefik.http.routers.conheca-sumare-hml.tls.certresolver=le"
       - "traefik.http.routers.conheca-sumare-hml.service=conheca-sumare"
-      - 'traefik.http.routers.conheca-sumare-public.rule=Host(`conhecasumare.com.br`) || Host(`www.conhecasumare.com.br`)'
-      - "traefik.http.routers.conheca-sumare-public.entrypoints=websecure"
-      - "traefik.http.routers.conheca-sumare-public.tls=true"
-      - "traefik.http.routers.conheca-sumare-public.tls.certresolver=le"
-      - "traefik.http.routers.conheca-sumare-public.service=conheca-sumare"
       - "traefik.http.services.conheca-sumare.loadbalancer.server.port=80"
     networks:
       - traefik
