@@ -2,6 +2,9 @@ name: Conheca Admin Review
 on:
   push:
     branches: [feature/conheca-admin-event-review]
+  pull_request:
+    branches: [deploy/conheca-sumare-hml]
+    paths: ['admin/**', 'app/bootstrap.php', 'tests/admin-event-review.php', '.github/workflows/conheca-admin-review.yml']
   workflow_dispatch:
 permissions:
   contents: read
