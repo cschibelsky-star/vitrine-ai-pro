@@ -14,7 +14,7 @@ services:
       - "traefik.http.routers.sumare-calendar-hml.tls.certresolver=le"
       - "traefik.http.services.sumare-calendar-hml.loadbalancer.server.port=80"
     env_file:
-      - ../.env.runtime
+      - /srv/projects/conheca-sumare-calendar-hml/.env.runtime
     environment:
       ADMIN_USER: curadoria
       EVENTS_DATA_DIR: /var/www/html/storage/calendar
