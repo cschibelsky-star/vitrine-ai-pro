@@ -1,0 +1,15 @@
+name: Conheca Admin Review
+on:
+  push:
+    branches: [fix/conheca-admin-review-live-20261009]
+  pull_request:
+    branches: [deploy/conheca-sumare-hml]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: php -l admin/index.php && php -l admin/login.php && php -l app/bootstrap.php
+      - name: Event review regression
+        run: php tests/admin-event-review.php
