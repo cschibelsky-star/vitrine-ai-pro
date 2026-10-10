@@ -20,6 +20,8 @@ services:
       - "traefik.http.routers.conheca-sumare-public.tls.certresolver=le"
       - "traefik.http.routers.conheca-sumare-public.service=conheca-sumare"
       - "traefik.http.services.conheca-sumare.loadbalancer.server.port=80"
+    volumes:
+      - conheca_sumare_data:/var/www/html/storage/data
     networks:
       - traefik
 
@@ -27,3 +29,7 @@ networks:
   traefik:
     external: true
     name: n8n-traefik_app_network
+
+volumes:
+  conheca_sumare_data:
+    name: conheca_sumare_data
