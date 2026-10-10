@@ -1,0 +1,5 @@
+CONHECA SUMARE CANONICAL RELEASE
+version=4.3.0-ECONOMIC-HML
+branch=deploy/conheca-sumare-hml
+visual_source=feature/conheca-sumare-reference-home-20261008
+policy=Do not build or publish if scripts/verify-conheca-sumare.sh fails.
