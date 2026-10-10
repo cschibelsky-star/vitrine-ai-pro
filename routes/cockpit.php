@@ -34,8 +34,10 @@ Route::post('/cockpit/forgot-password', function (Request $request) {
     return back()->with('status', 'Solicitacao de recuperacao registrada. O envio automatico por e-mail sera habilitado assim que o SMTP seguro do Cockpit estiver configurado.');
 })->middleware('throttle:3,5')->name('cockpit.password.email');
 
-Route::get('/cockpit/open/{slug}', function (string $slug) {
-    abort_unless(Auth::check(), 403);
+Route::get('/cockpit/open/{slug}', function (Request $request, string $slug) {
+    if (!Auth::check()) {
+        return redirect()->guest(route('cockpit.login'));
+    }
 
     $user = Auth::user();
     abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
@@ -46,6 +48,12 @@ Route::get('/cockpit/open/{slug}', function (string $slug) {
     $ssoUrl = $app['sso_url'] ?? ($slug === 'factory' ? 'https://factory.hml.vitrineiapro.com.br/sso/cockpit' : null);
     abort_unless($ssoUrl, 404);
 
+    if (!empty($app['sso_start_url']) && !$request->filled('state')) {
+        return redirect()->away($app['sso_start_url']);
+    }
+    $state = (string) $request->query('state', '');
+    abort_unless($state === '' || preg_match('/^[a-f0-9]{64}$/D', $state), 400);
+
     $token = Str::random(64);
     Cache::put('cockpit_sso_ticket:'.hash('sha256', $token), [
         'email' => $user->email,
@@ -54,7 +62,7 @@ Route::get('/cockpit/open/{slug}', function (string $slug) {
         'issued_at' => now()->timestamp,
     ], now()->addSeconds(60));
 
-    return redirect()->away($ssoUrl.'?token='.urlencode($token));
+    return redirect()->away($ssoUrl.'?token='.urlencode($token).($state !== '' ? '&state='.urlencode($state) : ''));
 })->middleware('throttle:10,1')->name('cockpit.open');
 
 Route::get('/cockpit/sso/consume', function (Request $request) {
@@ -92,7 +100,7 @@ Route::post('/cockpit/login', function (Request $request) {
         ]);
     }
 
-    return redirect()->route('cockpit.index');
+    return redirect()->intended(route('cockpit.index'));
 })->middleware('throttle:5,1')->name('cockpit.login.submit');
 
 Route::get('/cockpit', function () {
