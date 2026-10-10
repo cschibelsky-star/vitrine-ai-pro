@@ -20,8 +20,19 @@ RUN set -eu; \
     php -r '$d=json_decode(file_get_contents("storage/data/events.json"),true,512,JSON_THROW_ON_ERROR); if(!is_array($d)){exit(1);}'; \
     echo "CONHECA_SUMARE_REGRESSION_GUARD: OK"
 RUN mkdir -p /opt/conheca-defaults && cp -a /var/www/html/storage/data /opt/conheca-defaults/data
-COPY docker-entrypoint.sh /usr/local/bin/conheca-entrypoint
-RUN chmod +x /usr/local/bin/conheca-entrypoint && chown -R www-data:www-data /var/www/html
+RUN printf '%s\n' \
+  '#!/bin/sh' \
+  'set -eu' \
+  'DATA_DIR="/var/www/html/storage/data"' \
+  'DEFAULT_DIR="/opt/conheca-defaults/data"' \
+  'mkdir -p "$DATA_DIR"' \
+  'for f in items.json events.json settings.json; do' \
+  '  if [ ! -s "$DATA_DIR/$f" ] && [ -f "$DEFAULT_DIR/$f" ]; then cp "$DEFAULT_DIR/$f" "$DATA_DIR/$f"; fi' \
+  'done' \
+  'chown -R www-data:www-data "$DATA_DIR" 2>/dev/null || true' \
+  'exec docker-php-entrypoint "$@"' \
+  > /usr/local/bin/conheca-entrypoint && chmod +x /usr/local/bin/conheca-entrypoint
+RUN chown -R www-data:www-data /var/www/html
 ENTRYPOINT ["conheca-entrypoint"]
 CMD ["apache2-foreground"]
 EXPOSE 80
