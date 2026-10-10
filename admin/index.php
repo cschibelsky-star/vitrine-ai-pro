@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 require_admin();
+require_once __DIR__ . '/../app/event-store.php';
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
@@ -22,6 +23,7 @@ function review_problem(array $event): string {
     if (!review_day($last) || $last < $event['start_date']) return 'Confira a data final do evento.';
     if ($last < (new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d')) return 'Evento encerrado: publicação bloqueada.';
     if (review_url($event['source_url'] ?? '') === '' || trim((string)($event['source_name'] ?? '')) === '') return 'O evento precisa de uma fonte pública identificada.';
+    if (conheca_event_errors($event)) return 'Confira os dados e a data de verificação da fonte.';
     if (!review_day($event['verified_at'] ?? '')) return 'A data de verificação precisa ser registrada.';
     foreach (['start_time', 'end_time'] as $field) {
         if (!empty($event[$field]) && !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D', (string)$event[$field])) return 'Confira o horário informado.';
@@ -29,12 +31,7 @@ function review_problem(array $event): string {
     return '';
 }
 function review_events(): array {
-    $path = DATA_DIR . '/events.json';
-    if (!is_file($path)) return [];
-    $text = file_get_contents($path);
-    if ($text === false) throw new RuntimeException('Não foi possível ler a agenda.');
-    $events = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
-    if (!is_array($events) || !array_is_list($events)) throw new RuntimeException('Formato da agenda inválido; nenhum dado foi alterado.');
+    $events = conheca_read_events();
     foreach ($events as $event) if (!is_array($event)) throw new RuntimeException('Registro inválido na agenda; nenhum dado foi alterado.');
     return $events;
 }
@@ -42,11 +39,8 @@ function review_fingerprint(array $event): string {
     return hash('sha256', json_encode($event, JSON_THROW_ON_ERROR));
 }
 function review_change(string $id, string $action, string $version): void {
-    $lock = fopen(DATA_DIR . '/.events-review.lock', 'c');
-    if ($lock === false || !flock($lock, LOCK_EX)) throw new RuntimeException('Agenda ocupada. Tente novamente.');
-    $tmp = false;
-    try {
-        $events = review_events();
+    conheca_mutate_events(function (array $events) use ($id, $action, $version): array {
+        foreach ($events as $record) if (!is_array($record)) throw new RuntimeException('Registro inválido na agenda.');
         $matches = array_keys(array_filter($events, static fn(array $event): bool => (string)($event['id'] ?? '') === $id));
         if ($id === '' || count($matches) !== 1) throw new RuntimeException('Evento não encontrado ou identificador duplicado.');
         $index = $matches[0];
@@ -62,18 +56,8 @@ function review_change(string $id, string $action, string $version): void {
         if ($action === 'publish') { $event['approved_at'] = $event['reviewed_at']; $event['approved_by'] = $event['reviewed_by']; }
         if ($action === 'restore') unset($event['approved_at'], $event['approved_by']);
         $events[$index] = $event;
-        $json = json_encode($events, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . PHP_EOL;
-        if (!copy(DATA_DIR . '/events.json', DATA_DIR . '/events-backup-' . gmdate('YmdHis') . '-' . bin2hex(random_bytes(6)) . '.json')) throw new RuntimeException('Backup falhou; gravação cancelada.');
-        $tmp = tempnam(DATA_DIR, '.event-review-');
-        if ($tmp === false || file_put_contents($tmp, $json, LOCK_EX) === false) throw new RuntimeException('Falha ao salvar; o registro anterior foi preservado.');
-        chmod($tmp, 0664);
-        if (!rename($tmp, DATA_DIR . '/events.json')) throw new RuntimeException('Falha ao concluir a gravação.');
-        $tmp = false;
-    } finally {
-        if ($tmp !== false && is_file($tmp)) unlink($tmp);
-        flock($lock, LOCK_UN);
-        fclose($lock);
-    }
+        return $events;
+    });
 }
 
 if (empty($_SESSION['event_review_csrf'])) $_SESSION['event_review_csrf'] = bin2hex(random_bytes(32));

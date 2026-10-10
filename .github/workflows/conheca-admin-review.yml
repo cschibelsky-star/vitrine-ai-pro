@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: PHP syntax
-        run: php -l admin/index.php && php -l admin/login.php && php -l app/bootstrap.php
+        run: find app admin tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Homepage and feed syntax
+        run: php -l index.php && php -l calendar-feed.php
       - name: Event review regression
         run: php tests/admin-event-review.php

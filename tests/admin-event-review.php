@@ -2,7 +2,10 @@
 declare(strict_types=1);
 $root = sys_get_temp_dir().'/conheca-review-'.bin2hex(random_bytes(6));
 mkdir($root, 0775, true);
-define('DATA_DIR', $root);
+define('DATA_DIR', $root.'/legacy');
+mkdir(DATA_DIR);
+putenv('EVENTS_DATA_DIR='.$root);
+require_once __DIR__.'/../app/event-store.php';
 $_SESSION = ['admin_email' => 'reviewer@example.test'];
 $source = file_get_contents(__DIR__.'/../admin/index.php');
 $start = strpos($source, 'function review_url');
@@ -24,8 +27,9 @@ $base = ['id'=>4, 'title'=>'Future public event', 'category'=>'Cultura', 'place'
     'source_name'=>'Organizer', 'source_url'=>'https://example.test/event',
     'verified_at'=>'2026-10-09', 'status'=>'candidate', 'start_time'=>'09:00'];
 $legacy = ['id'=>1, 'title'=>'Legacy record', 'summary'=>'Keep this unchanged'];
-function save_events(array $events): void { file_put_contents(DATA_DIR.'/events.json', json_encode($events)); }
+function save_events(array $events): void { file_put_contents(conheca_events_directory().'/events.json', json_encode($events)); }
 try {
+    check(review_problem(array_replace($base,['verified_at'=>'2099-01-01']))!=='', 'Future verification accepted');
     check(review_problem($base)==='', 'Valid candidate rejected');
     check(review_problem($legacy)!=='', 'Incomplete legacy event can publish');
     check(review_problem(array_replace($base,['start_date'=>'2026-02-30']))!=='', 'Invalid date accepted');
@@ -40,6 +44,8 @@ try {
     $events=review_events();
     check($events[0]===$legacy,'Other records modified');
     check($events[1]['status']==='published','Publication failed');
+    check(count(conheca_published_events(conheca_read_events())) === 1, 'Canonical public reader does not see approval');
+    check(!is_file(DATA_DIR.'/events.json'), 'Legacy store was written');
     check($events[1]['reviewed_by']==='reviewer@example.test','Review audit missing');
     blocked(fn()=>review_change('4','publish',review_fingerprint($events[1])), 'Published event republished');
     review_change('4','restore',review_fingerprint($events[1]));
@@ -52,18 +58,19 @@ try {
     check(review_events()[1]['status']==='candidate','Restore rejected failed');
     save_events([$base,$base]);
     blocked(fn()=>review_change('4','publish',review_fingerprint($base)), 'Duplicate ID allowed');
-    file_put_contents(DATA_DIR.'/events.json','BROKEN JSON');
+    file_put_contents($root.'/events.json','BROKEN JSON');
     blocked(fn()=>review_change('4','publish',review_fingerprint($base)), 'Corrupt JSON overwritten');
-    check(file_get_contents(DATA_DIR.'/events.json')==='BROKEN JSON','Corrupt source discarded');
+    check(file_get_contents($root.'/events.json')==='BROKEN JSON','Corrupt source discarded');
     $candidate = array_replace($base, ['status'=>'review']);
     save_events([$legacy,$candidate]);
     review_change('4','publish',review_fingerprint($candidate));
     check(review_events()[1]['status']==='published', 'Reviewed candidate cannot publish');
     check(isset(review_events()[1]['approved_at'],review_events()[1]['approved_by']), 'Approval audit missing');
-    check(count(glob(DATA_DIR.'/events-backup-*.json'))>0, 'Backup missing');
+    check(count(glob($root.'/events-backup-*.json'))>0, 'Backup missing');
     echo "OK: $count checks\n";
 } finally {
-    foreach (glob($root.'/*') as $file) unlink($file);
+    foreach (glob($root.'/*') as $file) if (is_file($file)) unlink($file);
     foreach (glob($root.'/.*') as $file) if (is_file($file)) unlink($file);
+    rmdir(DATA_DIR);
     rmdir($root);
 }

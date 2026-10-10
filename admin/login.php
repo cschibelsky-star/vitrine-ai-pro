@@ -31,7 +31,7 @@ if (isset($_GET['token'])) {
     }
 }
 if (($_GET['sso'] ?? '') === 'start') {
-    if (($_SERVER['HTTP_HOST'] ?? '') !== 'conhecasumare.com.br') { header('Location: https://conhecasumare.com.br/admin/login.php?sso=start'); exit; }
+    if (strtolower((string)($_SERVER['HTTP_HOST'] ?? '')) !== 'p000095.hml.vitrineiapro.com.br') { http_response_code(403); exit('SSO disponível somente na homologação isolada.'); }
     $_SESSION['cockpit_sso_state'] = bin2hex(random_bytes(32));
     $_SESSION['cockpit_sso_started'] = time();
     header('Location: https://hml.vitrineiapro.com.br/cockpit/open/guia-digital?state=' . $_SESSION['cockpit_sso_state']);
