@@ -1,0 +1,30 @@
+name: Cockpit Guide Isolation
+on:
+  push:
+    branches: [fix/cockpit-conheca-admin-live-20261009]
+  pull_request:
+    paths: ['config/cockpit-applications.php', 'routes/cockpit.php', '.github/workflows/cockpit-guide-isolation.yml']
+permissions:
+  contents: read
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: php -l config/cockpit-applications.php && php -l routes/cockpit.php
+      - name: Guide HML destinations
+        run: |
+          php <<'PHP'
+          <?php
+          $apps = require 'config/cockpit-applications.php';
+          $guides = array_values(array_filter($apps, fn($app) => $app['slug'] === 'guia-digital'));
+          if (count($guides) !== 1) throw new RuntimeException('Expected one guide');
+          $guide = $guides[0];
+          if ($guide['stage'] !== 'hml' || $guide['roles'] !== ['admin'] || !$guide['sso']) throw new RuntimeException('Invalid HML permissions');
+          foreach (['admin_url', 'sso_url', 'sso_start_url'] as $key) {
+              $parts = parse_url($guide[$key]);
+              if (($parts['scheme'] ?? '') !== 'https' || ($parts['host'] ?? '') !== 'p000095.hml.vitrineiapro.com.br' || ($parts['path'] ?? '') !== '/admin/login.php') throw new RuntimeException('Cross-environment SSO');
+          }
+          echo "OK: isolated Guide configuration\n";
+          PHP
