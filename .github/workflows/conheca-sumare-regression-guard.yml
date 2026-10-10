@@ -1,0 +1,36 @@
+name: Conheca Sumare Regression Guard
+
+on:
+  push:
+    branches:
+      - deploy/conheca-sumare-hml
+      - feature/conheca-sumare-reference-home-20261008
+    paths:
+      - index.php
+      - assets/**
+      - admin/**
+      - app/**
+      - storage/data/events.json
+      - .htaccess
+      - Dockerfile
+      - scripts/verify-conheca-sumare.sh
+      - RELEASE-CONHECA-SUMARE.txt
+  pull_request:
+    paths:
+      - index.php
+      - assets/**
+      - admin/**
+      - app/**
+      - storage/data/events.json
+      - .htaccess
+      - Dockerfile
+      - scripts/verify-conheca-sumare.sh
+      - RELEASE-CONHECA-SUMARE.txt
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate canonical Conheca Sumare release
+        run: sh scripts/verify-conheca-sumare.sh
