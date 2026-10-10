@@ -47,6 +47,12 @@ Route::get('/cockpit/open/{slug}', function (Request $request, string $slug) {
 
     $ssoUrl = $app['sso_url'] ?? ($slug === 'factory' ? 'https://factory.hml.vitrineiapro.com.br/sso/cockpit' : null);
     abort_unless($ssoUrl, 404);
+    if ($slug === 'guia-digital') {
+        foreach (['admin_url', 'sso_url', 'sso_start_url'] as $key) {
+            $url = (string) ($app[$key] ?? '');
+            abort_unless(($app['stage'] ?? '') === 'hml' && parse_url($url, PHP_URL_SCHEME) === 'https' && parse_url($url, PHP_URL_HOST) === 'p000095.hml.vitrineiapro.com.br', 503);
+        }
+    }
 
     if (!empty($app['sso_start_url']) && !$request->filled('state')) {
         return redirect()->away($app['sso_start_url']);
