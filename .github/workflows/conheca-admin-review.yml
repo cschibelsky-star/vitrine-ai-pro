@@ -15,3 +15,6 @@ jobs:
         run: php -l index.php && php -l calendar-feed.php
       - name: Event review regression
         run: php tests/admin-event-review.php
+
+      - name: Canonical approval and home PWA feed integration
+        run: php tests/calendar-integration.php

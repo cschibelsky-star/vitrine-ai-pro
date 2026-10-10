@@ -1,0 +1,8 @@
+FROM php:8.3-apache
+RUN a2enmod rewrite headers expires
+COPY . /var/www/html/
+RUN find /var/www/html/app /var/www/html/admin /var/www/html/tests -name '*.php' -print0 | xargs -0 -n1 php -l \
+    && php /var/www/html/tests/admin-event-review.php \
+    && php /var/www/html/tests/calendar-integration.php \
+    && chown -R www-data:www-data /var/www/html
+RUN printf '<Directory /var/www/html/storage>\nRequire all denied\n</Directory>\n' > /etc/apache2/conf-available/conheca-storage.conf && a2enconf conheca-storage
