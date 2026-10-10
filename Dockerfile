@@ -19,5 +19,9 @@ RUN set -eu; \
     php -l app/bootstrap.php >/dev/null; \
     php -r '$d=json_decode(file_get_contents("storage/data/events.json"),true,512,JSON_THROW_ON_ERROR); if(!is_array($d)){exit(1);}'; \
     echo "CONHECA_SUMARE_REGRESSION_GUARD: OK"
-RUN chown -R www-data:www-data /var/www/html
+RUN mkdir -p /opt/conheca-defaults && cp -a /var/www/html/storage/data /opt/conheca-defaults/data
+COPY docker-entrypoint.sh /usr/local/bin/conheca-entrypoint
+RUN chmod +x /usr/local/bin/conheca-entrypoint && chown -R www-data:www-data /var/www/html
+ENTRYPOINT ["conheca-entrypoint"]
+CMD ["apache2-foreground"]
 EXPOSE 80
