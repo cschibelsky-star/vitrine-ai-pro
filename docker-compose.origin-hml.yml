@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:18896:80"
+    environment:
+      EVENTS_DATA_DIR: /var/www/html/storage/data
+      ADMIN_USER: ""
+      ADMIN_PASSWORD_HASH: ""
+    volumes:
+      - origin_hml_events:/var/www/html/storage/data
+    labels:
+      traefik.enable: "false"
+    networks:
+      - origin_hml
+volumes:
+  origin_hml_events:
+networks:
+  origin_hml:
+    internal: true
