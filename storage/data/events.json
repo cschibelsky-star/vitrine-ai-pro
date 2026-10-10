@@ -50,7 +50,7 @@
   {
     "id": "sesi-diverte-2026-sumare",
     "title": "SESI Diverte 2026 — Sumaré",
-    "status": "candidate",
+    "status": "published",
     "start_date": "2026-10-17",
     "end_date": "2026-10-17",
     "time": "09:00–16:00",
@@ -63,6 +63,9 @@
     "verified_at": "2026-10-09",
     "relevance": "Combina música, lazer e atividades para famílias, com potencial para roteiro de lazer e cultura em Sumaré.",
     "free": true,
-    "reservation_required": true
+    "reservation_required": true,
+    "category": "Cultura e Lazer",
+    "start_time": "09:00–16:00",
+    "published_at": "2026-10-10T18:08:00-03:00"
   }
 ]
