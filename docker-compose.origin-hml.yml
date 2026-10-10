@@ -2,6 +2,7 @@ services:
   web:
     build:
       context: .
+      dockerfile: Dockerfile.origin-hml
     ports:
       - "127.0.0.1:18896:80"
     environment:

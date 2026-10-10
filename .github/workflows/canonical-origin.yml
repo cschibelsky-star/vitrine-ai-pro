@@ -1,0 +1,24 @@
+name: Canonical Origin Homologation
+on:
+  pull_request:
+    paths: ['deployment-source.json', 'Dockerfile.origin-hml', 'docker-compose.origin-hml.yml', 'tests/canonical_source.py', 'index.php', 'assets/style.css', '.htaccess', '.github/workflows/canonical-origin.yml']
+permissions:
+  contents: read
+jobs:
+  origin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Approved homepage and isolation
+        run: python3 tests/canonical_source.py
+      - name: Compose validation
+        run: docker compose -f docker-compose.origin-hml.yml config --quiet
+  php:
+    runs-on: ubuntu-latest
+    container: php:8.3-cli
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Calendar regression checks
+        run: php -d date.timezone=UTC tests/calendar.php
