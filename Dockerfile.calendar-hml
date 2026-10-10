@@ -1,0 +1,8 @@
+FROM php:8.3-apache
+RUN a2enmod rewrite headers expires
+COPY . /var/www/html/
+RUN find /var/www/html -name '*.php' -print0 | xargs -0 -n1 php -l \
+    && php /var/www/html/tests/calendar.php \
+    && php /var/www/html/tests/calendar-integration.php \
+    && chown -R www-data:www-data /var/www/html
+CMD ["sh", "/var/www/html/hml/start.sh"]

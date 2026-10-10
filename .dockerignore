@@ -1,0 +1,6 @@
+.git
+.env*
+storage/image-cache
+storage/calendar
+**/*.bak*
+node_modules

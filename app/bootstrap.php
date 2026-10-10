@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+session_set_cookie_params(['secure'=>true,'httponly'=>true,'samesite'=>'Lax']);
 session_start();
 
 define('APP_ROOT', dirname(__DIR__));
@@ -21,15 +22,24 @@ function data_write(string $file, array $data): bool {
     return rename($tmp, $path);
 }
 function e(?string $value): string { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
-function is_admin(): bool { return !empty($_SESSION['admin_logged']); }
+function is_admin(): bool {
+    if (isset($_SESSION['admin_sso_expires']) && (int)$_SESSION['admin_sso_expires'] < time()) {
+        unset($_SESSION['admin_logged'], $_SESSION['admin_email'], $_SESSION['admin_sso_expires']);
+    }
+    return !empty($_SESSION['admin_logged']);
+}
 function require_admin(): void {
     if (!is_admin()) { header('Location: /admin/login.php'); exit; }
 }
 function admin_configured(): bool {
-    return (string)getenv('ADMIN_USER') !== '' && (string)getenv('ADMIN_PASSWORD_HASH') !== '';
+    return (string)getenv('ADMIN_USER') !== '' && ((string)getenv('ADMIN_PASSWORD_HASH') !== '' || (string)getenv('ADMIN_TOKEN') !== '');
 }
 function admin_credentials_valid(string $user, string $pass): bool {
     $expectedUser = (string)getenv('ADMIN_USER');
     $hash = (string)getenv('ADMIN_PASSWORD_HASH');
-    return $expectedUser !== '' && $hash !== '' && hash_equals($expectedUser, $user) && password_verify($pass, $hash);
+    if ($expectedUser === '' || !hash_equals($expectedUser, $user)) return false;
+    if ($hash !== '') return password_verify($pass, $hash);
+    $token = (string)getenv('ADMIN_TOKEN');
+    return $token !== '' && hash_equals($token, $pass);
 }
+
