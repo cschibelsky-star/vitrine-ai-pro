@@ -476,6 +476,19 @@ if ($slug && isset($atrativos[$slug])) {
   </div>
 </section>
 
+<section class="i-section" id="agenda">
+  <div class="i-heading"><div><small>AGENDA CONFIRMADA</small><h2>Próximos eventos</h2></div><a href="/eventos">Ver agenda completa</a></div>
+  <?php if (!$publishedEvents): ?><p>Novos eventos em monitoramento.</p><?php else: ?>
+  <div class="i-event-grid"><?php foreach ($publishedEvents as $event): ?>
+    <article class="i-event-card"><div>
+      <small><?=htmlspecialchars(conheca_event_date_label($event))?></small>
+      <h3><?=htmlspecialchars((string)$event['title'])?></h3>
+      <p><?=htmlspecialchars((string)$event['place'])?></p>
+      <p><?=htmlspecialchars((string)$event['summary'])?></p>
+      <a href="<?=htmlspecialchars((string)$event['source_url'])?>" target="_blank" rel="noopener noreferrer">Consultar fonte pública</a>
+    </div></article>
+  <?php endforeach; ?></div><?php endif; ?>
+</section>
 <section class="f-history" id="historia">
   <div class="f-history-copy">
     <h2>Cultura e História de Sumaré</h2>
