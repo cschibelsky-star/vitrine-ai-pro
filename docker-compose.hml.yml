@@ -4,6 +4,9 @@ services:
       context: .
     container_name: conheca_sumare_hml_web
     restart: unless-stopped
+    volumes:
+      - ./storage/data:/var/www/html/storage/data
+    command: ["sh", "-c", "chown -R www-data:www-data /var/www/html/storage/data && exec apache2-foreground"]
     env_file:
       - ../.env.runtime
     labels:

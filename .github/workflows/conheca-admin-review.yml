@@ -1,0 +1,20 @@
+name: Conheca Admin Review
+on:
+  push:
+    branches: [fix/conheca-admin-review-live-20261009]
+  pull_request:
+    branches: [deploy/conheca-sumare-hml]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find app admin tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Homepage and feed syntax
+        run: php -l index.php && php -l calendar-feed.php
+      - name: Event review regression
+        run: php tests/admin-event-review.php
+
+      - name: Canonical approval and home PWA feed integration
+        run: php tests/calendar-integration.php
