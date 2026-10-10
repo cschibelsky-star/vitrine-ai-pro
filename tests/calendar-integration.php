@@ -3,6 +3,9 @@ declare(strict_types=1);
 require_once __DIR__.'/../app/event-store.php';
 $dir=sys_get_temp_dir().'/sumare-calendar-'.bin2hex(random_bytes(6)); mkdir($dir);
 putenv('EVENTS_DATA_DIR='.$dir);
+$_SESSION=['admin_email'=>'test-reviewer'];
+$adminSource=file_get_contents(__DIR__.'/../admin/index.php');
+eval(substr($adminSource,strpos($adminSource,'function review_url'),strpos($adminSource,'if (empty(')-strpos($adminSource,'function review_url')));
 $checks=0;
 function verify(bool $condition,string $label): void { global $checks; $checks++; if(!$condition) throw new RuntimeException($label); }
 function render(string $script,string $uri): string {
@@ -15,7 +18,7 @@ function render(string $script,string $uri): string {
 try {
     $original=[['id'=>1,'title'=>'Legacy placeholder','date'=>'Permanente']];
     file_put_contents($dir.'/events.json',json_encode($original));
-    $react=[['id'=>'external-123','name'=>'TESTE TEMPORÁRIO Festival','location'=>'Praça de teste','date_start'=>'2099-10-10','date_end'=>'2099-10-11','source_url'=>'https://cultura.sumare.sp.gov.br/eventos','verified_at'=>conheca_calendar_today(),'status'=>'confirmed','admin_notes'=>'PRIVATE_MARKER']];
+    $react=[['id'=>'external-123','name'=>'TESTE TEMPORÁRIO Festival','location'=>'Praça de teste','description'=>'Evento sintético temporário','source_name'=>'Fonte de teste','date_start'=>'2099-10-10','date_end'=>'2099-10-11','source_url'=>'https://cultura.sumare.sp.gov.br/eventos','verified_at'=>conheca_calendar_today(),'status'=>'confirmed','admin_notes'=>'PRIVATE_MARKER']];
     $events=conheca_mutate_events(fn($e)=>conheca_import_candidates($e,$react,'visite-sumare'));
     verify($events[0]===$original[0],'Legacy row unchanged');
     verify(count($events)===2,'Candidate added without overwrite');
@@ -24,7 +27,8 @@ try {
     verify(conheca_published_events($events)===[],'Imported confirmation does not bypass admin');
     verify(!str_contains(render('index.php','/'),'TESTE TEMPORÁRIO Festival'),'Candidate hidden on homepage');
     $id=$events[1]['id'];
-    $events=conheca_mutate_events(fn($e)=>conheca_review_event($e,$id,'approve',[],'test-reviewer'));
+    review_change($id,'publish',review_fingerprint($events[1]));
+    $events=conheca_read_events();
     verify($events[1]['approved_by']==='test-reviewer','Administrative receipt');
     foreach (['/','/eventos','/?source=pwa'] as $uri) {
         $html=render('index.php',$uri);
@@ -35,7 +39,7 @@ try {
     $feed=json_decode(render('calendar-feed.php','/calendar-feed.php'),true,512,JSON_THROW_ON_ERROR);
     verify(count($feed)===1 && $feed[0]['id']===$id,'Same public feed');
     verify(!isset($feed[0]['admin_notes']),'Private notes absent from feed');
-    conheca_mutate_events(fn($e)=>conheca_review_event($e,$id,'cancel',[],'test-reviewer'));
+    review_change($id,'restore',review_fingerprint($events[1]));
     verify(!str_contains(render('index.php','/eventos'),'TESTE TEMPORÁRIO Festival'),'Cancellation removes event');
     verify(json_decode(render('calendar-feed.php','/calendar-feed.php'),true)===[],'Cancellation removes feed item');
     verify(count(conheca_read_events())===2,'Cancelled and legacy data preserved');

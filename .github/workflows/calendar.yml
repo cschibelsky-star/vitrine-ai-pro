@@ -28,3 +28,6 @@ jobs:
 
       - name: Approval, preservation and rendering integration
         run: php tests/calendar-integration.php
+
+      - name: Admin review regression
+        run: php tests/admin-event-review.php
