@@ -1,0 +1,10 @@
+{
+  "repository": "cschibelsky-star/vitrine-ai-pro",
+  "approved_layout_commit": "429b304e97b5fe59d05bd656f93c8767a1de8a7c",
+  "baseline_blobs": {
+    "index.php": "4c724e80fb783d5dd76f029ead7791fbf38c76b5",
+    "assets/style.css": "b4e31e28a94366740f8ac76f4a4cd906be0a319a",
+    ".htaccess": "6c8fd57f5a01c76a098f68392be186391934a75e"
+  },
+  "production_enabled": false
+}
