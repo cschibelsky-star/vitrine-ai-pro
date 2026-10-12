@@ -4,7 +4,7 @@ require_admin();
 
 date_default_timezone_set('America/Sao_Paulo');
 $items = data_read('items.json', []);
-$events = data_read('events.json', []);
+$events = events_read([]);
 $_SESSION['events_csrf'] ??= bin2hex(random_bytes(24));
 $notice = '';
 
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['event_action'], $_POS
             }
             unset($event);
 
-            if ($changed && data_write('events.json', $events)) {
+            if ($changed && events_write($events)) {
                 header('Location: /admin/index.php?event_updated=1#eventos');
                 exit;
             }

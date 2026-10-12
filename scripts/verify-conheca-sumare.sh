@@ -16,6 +16,16 @@ grep -q "e-main" assets/style.css || fail "economic styles missing"
 grep -q "empresas" .htaccess || fail "business rewrite missing"
 grep -q "cadastro-empresa" .htaccess || fail "legacy business redirect missing"
 grep -q "event_action" admin/index.php || fail "event review controls missing"
+! grep -q "conhecasumare.com.br" docker-compose.hml.yml || fail "production hostname leaked into HML compose"
+grep -q "EVENTS_DATA_DIR" docker-compose.hml.yml || fail "isolated events directory missing from HML compose"
+grep -q "EVENTS_DATA_DIR" app/bootstrap.php || fail "events storage contract missing"
+grep -q "events_write" admin/index.php || fail "admin is not writing through isolated events storage"
+grep -q "icon-192.png" manifest.json || fail "PWA 192 icon missing"
+grep -q "icon-512.png" manifest.json || fail "PWA 512 icon missing"
+grep -q "Você está offline" service-worker.js || fail "offline fallback missing"
+grep -q "logo-vitrine-ai-pro.png" index.php || fail "official Vitrine IA Pro logo missing"
+grep -q "/?img=shopping-parkcity-sumare" assets/style.css || fail "ParkCity controlled image route missing"
+grep -q "/?img=coca-cola-femsa" assets/style.css || fail "FEMSA controlled image route missing"
 
 php -l index.php >/dev/null
 php -l admin/index.php >/dev/null

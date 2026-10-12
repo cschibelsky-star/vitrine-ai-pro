@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     env_file:
       - ../.env.runtime
+    environment:
+      EVENTS_DATA_DIR: /var/www/html/storage/calendar
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-traefik_app_network"
@@ -14,14 +16,11 @@ services:
       - "traefik.http.routers.conheca-sumare-hml.tls=true"
       - "traefik.http.routers.conheca-sumare-hml.tls.certresolver=le"
       - "traefik.http.routers.conheca-sumare-hml.service=conheca-sumare"
-      - 'traefik.http.routers.conheca-sumare-public.rule=Host(`conhecasumare.com.br`) || Host(`www.conhecasumare.com.br`)'
-      - "traefik.http.routers.conheca-sumare-public.entrypoints=websecure"
-      - "traefik.http.routers.conheca-sumare-public.tls=true"
-      - "traefik.http.routers.conheca-sumare-public.tls.certresolver=le"
-      - "traefik.http.routers.conheca-sumare-public.service=conheca-sumare"
       - "traefik.http.services.conheca-sumare.loadbalancer.server.port=80"
     volumes:
       - conheca_sumare_data:/var/www/html/storage/data
+      - conheca_sumare_calendar:/var/www/html/storage/calendar
+      - conheca_sumare_image_cache:/var/www/html/storage/image-cache
     networks:
       - traefik
 
@@ -33,3 +32,7 @@ networks:
 volumes:
   conheca_sumare_data:
     name: conheca_sumare_data
+  conheca_sumare_calendar:
+    name: conheca_sumare_calendar_hml
+  conheca_sumare_image_cache:
+    name: conheca_sumare_image_cache_hml

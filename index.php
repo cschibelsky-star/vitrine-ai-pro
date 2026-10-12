@@ -44,6 +44,7 @@ $imageSources = [
   'igreja-matriz-de-santana' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/igreja-matriz-santana.jpg',
   'centro-historico-de-nova-veneza' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/centro-administrativo.jpeg',
   'shopping-parkcity-sumare' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/shopping-parkcity/capa.jpg',
+  'coca-cola-femsa' => 'https://coca-colafemsa.com/en/join-coca-cola-femsa/apply-here/assets/img/unete-a-coca-cola-femsa/BRASIL/kofbra-hero-banner-desk-1.jpg',
   'recanto-dos-animais-henrique-pedroni' => 'https://raw.githubusercontent.com/cschibelsky-star/VitrineAI-FACTORY-ENTERPRISE-X/main/products/guia-digital-turismo/implementacao_4_3/images/atrativos/recanto-dos-animais/capa.jpg',
   'estancia-arvore-da-vida' => 'https://turismo.sumare.sp.gov.br/public/img/cultural_atractives/estancia.jpg',
   'capela-bom-jesus' => 'https://turismo.sumare.sp.gov.br/public/img/historic_atractives/igreja-bom-jesus.jpg',
@@ -174,10 +175,13 @@ $explorarItems = [
   ['slug'=>'capela-bom-jesus','nome'=>'Capela Bom Jesus','categoria'=>'Cultura e História','bairro'=>'Matão','imagem'=>conheca_image_url('capela-bom-jesus')],
   ['slug'=>'casarao-sertaozinho','nome'=>'Casarão Sertãozinho','categoria'=>'Cultura e História','bairro'=>'Sumaré','imagem'=>conheca_image_url('casarao-sertaozinho')]
 ];
-$eventsFile = __DIR__ . '/storage/data/events.json';
+$eventsDir = trim((string)getenv('EVENTS_DATA_DIR'));
+$eventsFile = ($eventsDir !== '' ? rtrim($eventsDir, '/') : (__DIR__ . '/storage/data')) . '/events.json';
+$legacyEventsFile = __DIR__ . '/storage/data/events.json';
 $eventsData = [];
-if (is_file($eventsFile)) {
-  $decodedEvents = json_decode((string)file_get_contents($eventsFile), true);
+$eventsReadFile = is_file($eventsFile) ? $eventsFile : $legacyEventsFile;
+if (is_file($eventsReadFile)) {
+  $decodedEvents = json_decode((string)file_get_contents($eventsReadFile), true);
   if (is_array($decodedEvents)) {
     $eventsData = $decodedEvents;
   }
@@ -392,7 +396,7 @@ if ($pathOnly === 'explorar') {
       </div>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/#gastronomia">Gastronomia</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script>const q=document.getElementById('exploreSearch');q?.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();document.querySelectorAll('.i-attraction-card').forEach(c=>c.hidden=v&&!c.dataset.name.includes(v));});</script>
@@ -434,7 +438,7 @@ if ($slug && isset($atrativos[$slug])) {
       <aside><b>Planeje sua visita</b><p><?=htmlspecialchars($a['endereco'])?></p><small>Confirme horários e condições de visitação antes de sair.</small><a href="https://www.google.com/maps/search/?api=1&query=<?=urlencode($a['nome'].' Sumaré SP')?>" target="_blank" rel="noopener">Abrir no mapa →</a><a class="secondary" href="/explorar">← Ver outros atrativos</a></aside>
     </section>
   </main>
-  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div></footer>
+  <footer class="f-footer"><div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div><nav><a href="/">Conheça Sumaré</a><a href="/explorar">Turismo</a><a href="/eventos">Eventos</a><a href="/empresas">Negócios</a><a href="/#mapa">Mapa</a></nav><div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div></footer>
   </div>
   <div class="install-sheet" id="installSheet"><button id="closeSheet">×</button><h3>Instale o Conheça Sumaré</h3><p>Use “Instalar app” ou “Adicionar à tela inicial”.</p></div>
   <script src="/assets/app.js?v=4.3.0"></script>
@@ -556,7 +560,7 @@ if ($slug && isset($atrativos[$slug])) {
 <footer class="f-footer">
   <div class="f-footer-logo"><span>CONHEÇA</span> <strong>SUMARÉ</strong></div>
   <nav><a href="/">Conheça Sumaré</a><a href="/eventos">Eventos</a><a href="/explorar">Gastronomia</a><a href="/empresas">Negócios</a><a href="#mapa">Mapa</a><a href="#">Política de Privacidade</a><a href="https://turismo.sumare.sp.gov.br/" target="_blank" rel="noopener">Portal Oficial da Cidade</a></nav>
-  <div class="f-tech"><small>Tecnologia e desenvolvimento</small><strong>VITRINE<br><em>IA PRO</em></strong></div>
+  <div class="f-tech"><small>Tecnologia e desenvolvimento</small><img src="https://raw.githubusercontent.com/cschibelsky-star/vitrine-ai-pro/main/assets/img/logo-vitrine-ai-pro.png" alt="Vitrine IA Pro"></div>
 </footer>
 </div>
 
