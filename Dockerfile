@@ -19,6 +19,7 @@ RUN set -eu; \
     php -l app/bootstrap.php >/dev/null; \
     php -r '$d=json_decode(file_get_contents("storage/data/events.json"),true,512,JSON_THROW_ON_ERROR); if(!is_array($d)){exit(1);}'; \
     echo "CONHECA_SUMARE_REGRESSION_GUARD: OK"
+RUN sh scripts/verify-conheca-sumare.sh
 RUN mkdir -p /opt/conheca-defaults && cp -a /var/www/html/storage/data /opt/conheca-defaults/data
 RUN printf '%s\n' \
   '#!/bin/sh' \
