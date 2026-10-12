@@ -54,10 +54,15 @@ class NativePublicationServiceTest extends TestCase
     }
     public function test_pending_video_resumes_same_container_without_new_upload(): void
     {
-        $this->fake('IN_PROGRESS'); $service = new NativePublicationService;
+        Http::fake([
+            '*/ig-1/media' => Http::response(['id' => 'container-1']),
+            '*/container-1*' => Http::sequence()->push(['status_code' => 'IN_PROGRESS'])->push(['status_code' => 'FINISHED']),
+            '*/ig-1/media_publish' => Http::response(['id' => 'published-1']),
+        ]);
+        $service = new NativePublicationService;
         $result = $service->publish($this->payload, $this->account, 'marketing|piece-1', 'key-1');
         $this->assertSame('PROCESSING', $result['status']); Http::assertSentCount(2);
-        $this->fake(); $result = $service->publish($this->payload, $this->account, 'marketing|piece-1', 'key-1');
+        $result = $service->publish($this->payload, $this->account, 'marketing|piece-1', 'key-1');
         $this->assertSame('PUBLISHED', $result['status']);
         Http::assertSentCount(4); // total: create once, two status reads, one publish
     }

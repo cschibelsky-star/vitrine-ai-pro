@@ -646,6 +646,8 @@ class MarketingDashboard extends Page
             } elseif (in_array($publicationStatus, ['PUBLISHING', 'PROCESSING'], true)) {
                 $this->pieceFeedback = 'A mídia está em processamento. A retomada consulta o mesmo container; não cria uma nova publicação.';
                 $this->pieceError = null;
+            } elseif ($publicationStatus === 'DISABLED') {
+                $this->pieceError = 'Publicação nativa desativada; nada foi publicado.';
             } elseif ($publicationStatus === 'MEDIA_NOT_PUBLIC') {
                 $this->pieceError = 'A mídia precisa estar disponível por URL HTTPS pública antes do envio ao Meta. A peça foi preservada.';
             } else {

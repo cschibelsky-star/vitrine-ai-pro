@@ -19,6 +19,7 @@ final class NativePublicationService
             $piece['asset_url'] ?? '', $piece['provider_job_ref'] ?? '',
             $piece['final_path'] ?? '', $piece['director_job'] ?? [],
             $piece['type'] ?? '', $piece['format'] ?? '', $piece['channel'] ?? '', $piece['caption'] ?? '',
+            $piece['publication_mime_type'] ?? '', $piece['publication_asset_sha256'] ?? '',
         ], JSON_THROW_ON_ERROR));
     }
 
@@ -100,6 +101,9 @@ final class NativePublicationService
             && ($payload['mime_type'] ?? '') !== 'image/jpeg') {
             return ['ok' => false, 'status' => 'JPEG_REVIEW_REQUIRED'];
         }
+        if (($payload['type'] ?? '') === 'video' && ($payload['mime_type'] ?? '') !== 'video/mp4') {
+            return ['ok' => false, 'status' => 'INVALID_FORMAT'];
+        }
         if (($payload['placement'] ?? '') === 'reels' && ($payload['type'] ?? '') !== 'video') {
             return ['ok' => false, 'status' => 'INVALID_FORMAT'];
         }
@@ -117,6 +121,7 @@ final class NativePublicationService
             if (is_resource($lock)) { fclose($lock); }
             return ['ok' => true, 'status' => 'PROCESSING', 'idempotency_key' => $key];
         }
+        $entry = [];
         try {
             $entry = $disk->exists($path) ? json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR) : [];
             if ($entry !== []) {
@@ -172,6 +177,9 @@ final class NativePublicationService
             $entry['status'] = 'PUBLISHED'; $entry['phase'] = 'CONFIRMED'; $this->save($path, $entry);
             return $this->result($entry);
         } catch (Throwable) {
+            if (empty($entry['idempotency_key']) || empty($entry['channel'])) {
+                return ['ok' => false, 'status' => 'LEDGER_UNAVAILABLE'];
+            }
             $entry['status'] = 'UNKNOWN'; $this->save($path, $entry); return $this->result($entry);
         } finally { flock($lock, LOCK_UN); fclose($lock); }
     }
