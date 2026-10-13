@@ -20,9 +20,10 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, sqlite3, pdo_sqlite
+          extensions: mbstring, intl, sqlite3, pdo_sqlite
           coverage: none
       - run: php tests/Assessor/contracts.php
       - run: find app/Assessor app/Http/Middleware -name '*Trial*.php' -print0 | xargs -0 -n1 php -l
+      - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
       - run: composer install --no-interaction --prefer-dist
       - run: vendor/bin/phpunit tests/Assessor/TrialIntegrationTest.php
