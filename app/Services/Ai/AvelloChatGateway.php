@@ -15,21 +15,21 @@ final class AvelloChatGateway
 {
     public function complete(string $model, string $prompt, string $system = ''): array
     {
-        if (! (bool) config('services.avello.enabled', false)) {
+        if (! (bool) config('avello.enabled', false)) {
             throw new RuntimeException('avello_disabled');
         }
 
-        $key = trim((string) config('services.avello.key', ''));
+        $key = trim((string) config('avello.key', ''));
         if ($key === '') {
             throw new RuntimeException('avello_not_configured');
         }
 
-        $allowlist = (array) config('services.avello.models', ['gemini-3.1-flash-lite']);
+        $allowlist = (array) config('avello.models', ['gemini-3.1-flash-lite']);
         if (! in_array($model, $allowlist, true)) {
             throw new RuntimeException('avello_model_not_allowed');
         }
 
-        $base = rtrim((string) config('services.avello.base_url', 'https://avello.online/v1'), '/');
+        $base = rtrim((string) config('avello.base_url', 'https://avello.online/v1'), '/');
         if ($base !== 'https://avello.online/v1') {
             throw new RuntimeException('avello_base_url_invalid');
         }
