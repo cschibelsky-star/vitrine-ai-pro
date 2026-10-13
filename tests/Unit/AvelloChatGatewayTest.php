@@ -10,7 +10,7 @@ class AvelloChatGatewayTest extends TestCase
 {
     public function test_disabled_adapter_never_makes_http_call(): void
     {
-        config(['services.avello.enabled' => false]);
+        config(['avello.enabled' => false]);
         Http::fake();
 
         $this->expectExceptionMessage('avello_disabled');
@@ -23,7 +23,7 @@ class AvelloChatGatewayTest extends TestCase
 
     public function test_calls_allowed_model_and_extracts_usage(): void
     {
-        config(['services.avello' => [
+        config(['avello' => [
             'enabled' => true,
             'key' => 'fake-test-key',
             'base_url' => 'https://avello.online/v1',
