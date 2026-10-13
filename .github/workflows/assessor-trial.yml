@@ -1,0 +1,28 @@
+name: Assessor trial HML contracts
+on:
+  pull_request:
+    paths:
+      - 'app/Assessor/**'
+      - 'app/Http/**/AssessorTrial*'
+      - 'routes/assessor_trial.php'
+      - 'resources/views/assessor/**'
+      - 'config/assessor_trial.php'
+      - 'database/migrations/*assessor*'
+      - 'tests/Assessor/**'
+      - '.github/workflows/assessor-trial.yml'
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          coverage: none
+      - run: php tests/Assessor/contracts.php
+      - run: find app/Assessor app/Http/Middleware -name '*Trial*.php' -print0 | xargs -0 -n1 php -l
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/phpunit tests/Assessor/TrialIntegrationTest.php
