@@ -2,6 +2,8 @@ name: Assessor trial HML contracts
 on:
   pull_request:
     paths:
+      - 'docker/assessor/**'
+      - 'docker-compose.assessor-trial-hml.yml'
       - 'app/Assessor/**'
       - 'app/Http/**/AssessorTrial*'
       - 'routes/assessor_trial.php'
@@ -27,3 +29,25 @@ jobs:
       - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
       - run: composer install --no-interaction --prefer-dist
       - run: vendor/bin/phpunit tests/Assessor/TrialIntegrationTest.php
+
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated runtime
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml build
+      - name: Smoke test disabled trial and preserved demo
+        run: |
+          docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml up -d
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:18782/up >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:18782/up >/dev/null
+          curl -fsS http://127.0.0.1:18782/demo.html | grep -q 'Rafael Monteiro'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/assessor/avaliacao)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/admin)" = 404
+      - name: Cleanup synthetic CI runtime
+        if: always()
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml down -v
