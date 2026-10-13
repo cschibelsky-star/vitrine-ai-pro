@@ -76,4 +76,11 @@ final class TrialIntegrationTest extends TestCase
         $u=new \App\Models\User;$u->forceFill(['id'=>1,'company_id'=>7,'is_active'=>true,'email_verified_at'=>now()]);
         $this->actingAs($u)->get('/assessor/avaliacao')->assertNotFound();
     }
+    public function test_anonymous_requests_are_hidden_when_disabled_and_rejected_when_enabled():void
+    {
+        config(['assessor_trial.enabled'=>false]);
+        $this->get('/assessor/avaliacao')->assertNotFound();
+        config(['assessor_trial.enabled'=>true]);
+        $this->get('/assessor/avaliacao')->assertUnauthorized();
+    }
 }
