@@ -38,7 +38,7 @@ services:
       - /var/cache/nginx:mode=1777
       - /var/run:mode=1777
       - /tmp:mode=1777
-    networks: [assessor_internal]
+    networks: [assessor_internal, assessor_frontend]
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     mem_limit: 128m
@@ -50,6 +50,7 @@ services:
       retries: 3
       start_period: 30s
 networks:
+  assessor_frontend: {}
   assessor_internal:
     internal: true
 volumes:

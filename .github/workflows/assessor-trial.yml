@@ -41,13 +41,16 @@ jobs:
         run: |
           docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml up -d
           for i in {1..45}; do
-            if curl -fsS http://127.0.0.1:18782/up >/dev/null; then break; fi
+            if curl --max-time 5 -fsS http://127.0.0.1:18782/up >/dev/null; then break; fi
             sleep 2
           done
-          curl -fsS http://127.0.0.1:18782/up >/dev/null
-          curl -fsS http://127.0.0.1:18782/demo.html | grep -q 'Rafael Monteiro'
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/assessor/avaliacao)" = 404
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/admin)" = 404
+          curl --max-time 5 -fsS http://127.0.0.1:18782/up >/dev/null
+          curl --max-time 5 -fsS http://127.0.0.1:18782/demo.html | grep -q 'Rafael Monteiro'
+          test "$(curl --max-time 5 -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/assessor/avaliacao)" = 404
+          test "$(curl --max-time 5 -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/admin)" = 404
+      - name: Diagnose failed synthetic runtime
+        if: failure()
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml logs --tail=60
       - name: Cleanup synthetic CI runtime
         if: always()
         run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml down -v
