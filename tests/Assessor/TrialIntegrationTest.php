@@ -123,10 +123,10 @@ final class TrialIntegrationTest extends TestCase
         $trial->forceFill(['ends_at' => now('UTC')->subMinute()])->save();
 
         // Expiration denies access before the provider finishes revocation.
-        $this->assertFalse(TrialPolicy::accessible('active', $trial->ends_at, new \DateTimeImmutable('now')));
+        $this->assertFalse(TrialPolicy::accessible('active', $trial->starts_at, $trial->ends_at, new \DateTimeImmutable('now')));
         $this->artisan('assessor:trial expire')->assertExitCode(1);
         $this->assertSame('expired_pending', $trial->fresh()->status);
-        $this->assertFalse(TrialPolicy::accessible($trial->fresh()->status, $trial->ends_at, new \DateTimeImmutable('now')));
+        $this->assertFalse(TrialPolicy::accessible($trial->fresh()->status, $trial->fresh()->starts_at, $trial->ends_at, new \DateTimeImmutable('now')));
 
         $this->artisan('assessor:trial expire')->assertExitCode(0);
         $this->assertSame('expired', $trial->fresh()->status);
