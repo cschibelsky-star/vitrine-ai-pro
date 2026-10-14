@@ -6,7 +6,8 @@ const fs = require('node:fs');
   const browser = await chromium.launch();
   try {
     for (const [name, width, height] of [['desktop',1440,1000],['mobile',390,844]]) {
-      const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
+      const context = await browser.newContext({ viewport: { width, height }, reducedMotion: 'reduce' });
+      const page = await context.newPage();
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.goto('http://127.0.0.1:8088/', { waitUntil: 'networkidle' });
@@ -32,7 +33,7 @@ const fs = require('node:fs');
       if (errors.length) throw new Error(errors.join('; '));
       await page.screenshot({ path: 'preview-evidence/' + name + '.png', fullPage: true });
       console.log(name + ': layout, images, navigation and accessibility PASS');
-      await page.close();
+      await context.close();
     }
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });
