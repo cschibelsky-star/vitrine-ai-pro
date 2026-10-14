@@ -39,3 +39,5 @@
  .footer-main{padding-top:18px;padding-bottom:15px;gap:18px}.footer-bottom{padding-top:13px;padding-bottom:13px}
 }
 
+
+.brand-official{display:block;width:216px;height:auto;max-width:100%;object-fit:contain}.footer .brand-official{width:216px}@media(max-width:500px){.brand-official{width:168px}.footer .brand-official{width:196px}}
