@@ -670,6 +670,9 @@ class CentroIaBrokerController extends Controller
             $license = $subscription->license;
             $isActive = $isActive
                 && $license !== null
+                && (int) $license->company_id === (int) $subscription->company_id
+                && (int) $license->product_id === (int) $plan->product_id
+                && (int) $license->plan_id === (int) $plan->getKey()
                 && app(\App\Services\Licensing\TrialLicenseService::class)->isTrialAccessAllowed($license)
                 && $periodStart !== null
                 && $periodEnd !== null
