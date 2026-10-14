@@ -659,11 +659,26 @@ class CentroIaBrokerController extends Controller
         }
 
         $status = (string) $subscription->status;
-        $isActive = $status === 'Ativa';
-
         $plan = $subscription->plan;
         $limits = $this->parsePlanEntitlements((string) ($plan->recursos ?? ''));
         [$periodStart, $periodEnd] = $this->resolveEntitlementPeriod($subscription, (string) $plan->ciclo_cobranca);
+
+        $isActive = $status === 'Ativa';
+        if ((string) $plan->ciclo_cobranca === 'trial') {
+            // Trial must have an explicit, non-expired window and a valid linked license.
+            // Do not grant credits based solely on an active subscription status.
+            $license = $subscription->license;
+            $isActive = $isActive
+                && $license !== null
+                && (int) $license->company_id === (int) $subscription->company_id
+                && (int) $license->product_id === (int) $plan->product_id
+                && (int) $license->plan_id === (int) $plan->getKey()
+                && app(\App\Services\Licensing\TrialLicenseService::class)->isTrialAccessAllowed($license)
+                && $periodStart !== null
+                && $periodEnd !== null
+                && now()->greaterThanOrEqualTo(\Carbon\Carbon::parse($periodStart))
+                && now()->lessThan(\Carbon\Carbon::parse($periodEnd));
+        }
 
         return response()->json([
             'ok' => true,

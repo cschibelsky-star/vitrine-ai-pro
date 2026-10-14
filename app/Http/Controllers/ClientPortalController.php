@@ -7,6 +7,8 @@ use App\Models\CompanyModule;
 use App\Models\Contract;
 use App\Models\License;
 use App\Models\Payment;
+use App\Models\Plan;
+use App\Services\Licensing\TrialLicenseService;
 use App\Models\SupportTicket;
 use Illuminate\Http\Request;
 
@@ -94,6 +96,16 @@ class ClientPortalController extends Controller
             ? SupportTicket::query()->where('company_id', $company->id)->latest()->get()
             : collect();
 
+        $trialPlans = collect();
+        if ($user->isClient() && $user->is_active && $user->email_verified_at && $user->company_id) {
+            $licensedProductIds = $licenses->pluck('product_id')->all();
+            $trialPlans = Plan::query()->where('ciclo_cobranca', 'trial')
+                ->where('status', 'Ativo')->whereNotIn('product_id', $licensedProductIds)
+                ->with('product')->orderBy('nome')->get();
+        }
+
+        $trialAccess = app(TrialLicenseService::class);
+
         return view('client-portal.dashboard', compact(
             'user',
             'company',
@@ -104,7 +116,9 @@ class ClientPortalController extends Controller
             'modules',
             'contracts',
             'payments',
-            'tickets'
+            'tickets',
+            'trialPlans',
+            'trialAccess'
         ));
     }
 }
