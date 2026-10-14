@@ -7,7 +7,7 @@ final class AssessorTrialController extends Controller
 {
     private function company(Request $r): int
     {
-        abort_unless($r->user()->is_active && $r->user()->hasVerifiedEmail() && $r->user()->company_id,403);
+        abort_unless($r->user()->isClient() && $r->user()->is_active && $r->user()->hasVerifiedEmail() && $r->user()->company_id,403);
         return (int)$r->user()->company_id;
     }
     public function index(Request $r)
