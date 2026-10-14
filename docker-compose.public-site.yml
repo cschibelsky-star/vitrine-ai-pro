@@ -54,6 +54,14 @@ services:
     networks:
       - vitrine_net
       - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.vitrine-premium-hml.rule=Host(`site.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.vitrine-premium-hml.entrypoints=websecure"
+      - "traefik.http.routers.vitrine-premium-hml.tls=true"
+      - "traefik.http.routers.vitrine-premium-hml.tls.certresolver=le"
+      - "traefik.http.services.vitrine-premium-hml.loadbalancer.server.port=80"
     ports:
       - "127.0.0.1:19080:80"
     healthcheck:
