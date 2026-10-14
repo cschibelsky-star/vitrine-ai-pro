@@ -19,7 +19,7 @@ const fs = require('node:fs');
       }
       const images = await page.locator('img').evaluateAll(imgs => imgs.map(img => ({ src: img.getAttribute('src'), ok: img.complete && img.naturalWidth > 0 })));
       // Load lazy images before checking them.
-      await page.locator('.site-footer').scrollIntoViewIfNeeded();
+      await page.locator('.footer').scrollIntoViewIfNeeded();
       await page.waitForTimeout(500);
       const broken = await page.locator('img').evaluateAll(imgs => imgs.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src));
       if (broken.length) throw new Error('Broken images: ' + broken.join(', '));
