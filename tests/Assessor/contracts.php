@@ -21,11 +21,15 @@ rejects(fn()=>P::host('../admin'));
 [$start,$end]=P::dates(new DateTimeImmutable('2026-10-13T19:41:21-03:00'));
 check($start->format('c')==='2026-10-13T22:41:21+00:00');
 check($end->getTimestamp()-$start->getTimestamp()===30*86400);
-check(P::accessible('active',$end,$end->modify('-1 second')));
-check(!P::accessible('active',$end,$end));
-check(!P::accessible('active',$end,$end->modify('+1 second')));
-foreach(['requested','blocked','cancelled','expired','cancelled_pending','expired_pending'] as $s) { check(!P::accessible($s,$end,$start)); }
-check(!P::accessible('active',null,$start));
+check(P::accessible('active',$start,$end,$start));
+check(P::accessible('active',$start,$end,$end->modify('-1 second')));
+check(!P::accessible('active',$start,$end,$start->modify('-1 second')));
+check(!P::accessible('active',$start,$end,$end));
+check(!P::accessible('active',$start,$end,$end->modify('+1 second')));
+check(!P::accessible('active',$end,$start,$start));
+foreach(['requested','blocked','cancelled','expired','cancelled_pending','expired_pending'] as $s) { check(!P::accessible($s,$start,$end,$start)); }
+check(!P::accessible('active',null,$end,$start));
+check(!P::accessible('active',$start,null,$start));
 try { (new App\Assessor\UnavailableHmlTrialProvider)->provision($id,7,P::host($id)); throw new LogicException('must block'); }
 catch (RuntimeException $e) { check($e->getMessage()==='official_hml_trial_adapter_not_configured'); }
 echo "{$count} contract checks passed\n";
