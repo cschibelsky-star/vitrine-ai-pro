@@ -12,7 +12,11 @@ const fs = require('node:fs');
       page.on('pageerror', e => errors.push(e.message));
       await page.goto('http://127.0.0.1:8088/', { waitUntil: 'networkidle' });
       await page.getByRole('heading', { level: 1 }).waitFor();
-      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error(name + ': horizontal overflow');
+      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) {
+        console.log(await page.evaluate(() => Array.from(document.querySelectorAll('body *')).map(el => ({tag:el.tagName, cls:el.className, left:el.getBoundingClientRect().left, right:el.getBoundingClientRect().right})).filter(el => el.right > innerWidth + 1 || el.left < -1)));
+        await page.screenshot({ path: 'preview-evidence/' + name + '-overflow.png', fullPage: true });
+        throw new Error(name + ': horizontal overflow');
+      }
       const images = await page.locator('img').evaluateAll(imgs => imgs.map(img => ({ src: img.getAttribute('src'), ok: img.complete && img.naturalWidth > 0 })));
       // Load lazy images before checking them.
       await page.locator('.site-footer').scrollIntoViewIfNeeded();
