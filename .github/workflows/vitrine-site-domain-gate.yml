@@ -1,0 +1,29 @@
+name: Vitrine site domain recovery gate
+on:
+  push:
+    branches: [fix/vitrine-site-domain-20261014]
+    paths: [docker-compose.site-prod.yml, .github/workflows/vitrine-site-domain-gate.yml]
+  pull_request:
+    paths: [docker-compose.site-prod.yml, .github/workflows/vitrine-site-domain-gate.yml]
+permissions:
+  contents: read
+jobs:
+  compose-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose without modifying runtime
+        run: docker compose -f docker-compose.site-prod.yml config --quiet
+      - name: Validate canonical domain and data volume
+        shell: python
+        run: |
+          import json, subprocess
+          cfg = json.loads(subprocess.check_output(["docker", "compose", "-f", "docker-compose.site-prod.yml", "config", "--format", "json"]))
+          web = cfg["services"]["web"]
+          labels = web["labels"]
+          expected = "Host(`vitrineiapro.com.br`) || Host(`www.vitrineiapro.com.br`)"
+          assert labels["traefik.http.routers.vitrine-site-prod.rule"] == expected
+          assert labels["traefik.http.routers.vitrine-site-prod-http.rule"] == expected
+          assert labels["traefik.http.middlewares.vitrine-site-prod-https.redirectscheme.scheme"] == "https"
+          assert any(v.get("target") == "/var/www/html/data" and v.get("source") == "vitrine_site_prod_data" for v in web["volumes"])
+          print("Canonical domain, HTTPS redirect and persistent data volume: PASS")

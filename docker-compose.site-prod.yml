@@ -57,11 +57,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-traefik_app_network"
-      - "traefik.http.routers.vitrine-site-prod.rule=Host(`vitrineaipro.com.br`) || Host(`www.vitrineaipro.com.br`)"
+      - "traefik.http.routers.vitrine-site-prod.rule=Host(`vitrineiapro.com.br`) || Host(`www.vitrineiapro.com.br`)"
       - "traefik.http.routers.vitrine-site-prod.entrypoints=websecure"
       - "traefik.http.routers.vitrine-site-prod.tls=true"
       - "traefik.http.routers.vitrine-site-prod.tls.certresolver=le"
       - "traefik.http.services.vitrine-site-prod.loadbalancer.server.port=80"
+      - "traefik.http.routers.vitrine-site-prod-http.rule=Host(`vitrineiapro.com.br`) || Host(`www.vitrineiapro.com.br`)"
+      - "traefik.http.routers.vitrine-site-prod-http.entrypoints=web"
+      - "traefik.http.routers.vitrine-site-prod-http.middlewares=vitrine-site-prod-https"
+      - "traefik.http.routers.vitrine-site-prod-http.service=vitrine-site-prod"
+      - "traefik.http.middlewares.vitrine-site-prod-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.vitrine-site-prod-https.redirectscheme.permanent=true"
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/index.php')===false?1:0);"]
       interval: 15s
