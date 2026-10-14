@@ -15,7 +15,7 @@ jobs:
         shell: python
         run: |
           import socket, urllib.request, urllib.error, ssl, re, json
-          for host in ["vitrineaipro.com.br", "www.vitrineaipro.com.br", "vitrineiapro.com.br"]:
+          for host in ["vitrineaipro.com.br", "www.vitrineaipro.com.br", "vitrineiapro.com.br", "www.vitrineiapro.com.br"]:
               result = {"host": host}
               try:
                   result["addresses"] = sorted({entry[4][0] for entry in socket.getaddrinfo(host, 443)})
