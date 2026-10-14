@@ -19,6 +19,7 @@ final class TrialLicenseServiceTest extends TestCase
 
         $service = new TrialLicenseService();
 
+        $this->assertFalse($service->isTrialAccessAllowed($license, CarbonImmutable::parse('2026-10-12')));
         $this->assertTrue($service->isTrialAccessAllowed($license, CarbonImmutable::parse('2026-10-13')));
         $this->assertTrue($service->isTrialAccessAllowed($license, CarbonImmutable::parse('2026-11-11')));
         $this->assertFalse($service->isTrialAccessAllowed($license, CarbonImmutable::parse('2026-11-12')));
