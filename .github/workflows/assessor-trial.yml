@@ -11,6 +11,7 @@ on:
       - 'config/assessor_trial.php'
       - 'database/migrations/*assessor*'
       - 'tests/Assessor/**'
+      - 'routes/console.php'
       - '.github/workflows/assessor-trial.yml'
 permissions:
   contents: read
