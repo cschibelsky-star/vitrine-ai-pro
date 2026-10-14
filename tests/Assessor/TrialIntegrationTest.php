@@ -124,13 +124,13 @@ final class TrialIntegrationTest extends TestCase
 
         // Expiration denies access before the provider finishes revocation.
         $this->assertFalse(TrialPolicy::accessible('active', $trial->starts_at, $trial->ends_at, new \DateTimeImmutable('now')));
-        $this->artisan('assessor:trial expire')->assertExitCode(1);
+        $this->assertSame(1, \Illuminate\Support\Facades\Artisan::call('assessor:trial', ['operation' => 'expire']));
         $this->assertSame('expired_pending', $trial->fresh()->status);
         $this->assertFalse(TrialPolicy::accessible($trial->fresh()->status, $trial->fresh()->starts_at, $trial->ends_at, new \DateTimeImmutable('now')));
 
-        $this->artisan('assessor:trial expire')->assertExitCode(0);
+        $this->assertSame(0, \Illuminate\Support\Facades\Artisan::call('assessor:trial', ['operation' => 'expire']));
         $this->assertSame('expired', $trial->fresh()->status);
-        $this->artisan('assessor:trial expire')->assertExitCode(0);
+        $this->assertSame(0, \Illuminate\Support\Facades\Artisan::call('assessor:trial', ['operation' => 'expire']));
         $this->assertSame(2, $provider->revokeCalls);
         $this->assertSame(1, TrialRequest::count());
         $this->assertFalse(Schema::hasTable('payments'));
