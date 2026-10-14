@@ -23,7 +23,7 @@ final class TrialIntegrationTest extends TestCase
         $t=$s->provision($t->id);
         $this->assertSame('blocked',$t->status);$this->assertNull($t->starts_at);$this->assertNull($t->ends_at);
         $t=$s->stop($t->id,'cancelled');$this->assertSame('cancelled_pending',$t->status);
-        $this->assertFalse(TrialPolicy::accessible($t->status,$t->ends_at,new \DateTimeImmutable));
+        $this->assertFalse(TrialPolicy::accessible($t->status,$t->starts_at,$t->ends_at,new \DateTimeImmutable));
     }
     public function test_activation_retry_cancel_and_no_billing(): void
     {
@@ -69,6 +69,18 @@ final class TrialIntegrationTest extends TestCase
         $this->actingAs($u)->post('/assessor/avaliacao/'.$t->id.'/cancelar')->assertNotFound();
         $this->actingAs($u)->get('/assessor/avaliacao')->assertOk()->assertDontSee('Sintético');
         $this->assertSame('requested',$t->fresh()->status);
+    }
+    public function test_non_client_user_is_denied_trial_enrollment():void
+    {
+        $u=new \App\Models\User;
+        $u->forceFill(['id'=>1,'company_id'=>7,'is_active'=>true,'email_verified_at'=>now(),'role'=>'admin']);
+        $this->actingAs($u)->post('/assessor/avaliacao',[
+            'cabinet_name'=>'Gabinete sintético',
+            'mandate_type'=>'vereador',
+            'terms_version'=>config('assessor_trial.terms_version'),
+            'consent'=>1,
+        ])->assertForbidden();
+        $this->assertSame(0,TrialRequest::count());
     }
     public function test_routes_hidden_when_disabled():void
     {
