@@ -11,9 +11,9 @@ final class AssessorTrialAccess
     {
         abort_unless(app()->environment('hml','testing') && config('assessor_trial.enabled')===true,403);
         $u=$r->user();
-        abort_unless($u && $u->is_active && $u->hasVerifiedEmail() && $u->company_id,403);
+        abort_unless($u && $u->isClient() && $u->is_active && $u->hasVerifiedEmail() && $u->company_id,403);
         $t=TrialRequest::where('company_id',$u->company_id)->where('hostname',$r->getHost())->first();
-        abort_unless($t && TrialPolicy::accessible($t->status,$t->ends_at,new \DateTimeImmutable('now')),403);
+        abort_unless($t && TrialPolicy::accessible($t->status,$t->starts_at,$t->ends_at,new \DateTimeImmutable('now')),403);
         $response=$next($r);
         $response->headers->set('Cache-Control','private, no-store');
         return $response;
