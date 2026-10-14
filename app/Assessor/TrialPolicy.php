@@ -28,8 +28,14 @@ final class TrialPolicy
         $start = $now->setTimezone(new DateTimeZone('UTC'));
         return [$start, $start->modify('+30 days')];
     }
-    public static function accessible(string $status, ?DateTimeImmutable $end, DateTimeImmutable $now): bool
+    public static function accessible(string $status, ?DateTimeImmutable $start, ?DateTimeImmutable $end, DateTimeImmutable $now): bool
     {
-        return $status === 'active' && $end !== null && $now < $end;
+        // Fail closed unless the entire validity window exists and is well-formed.
+        return $status === 'active'
+            && $start !== null
+            && $end !== null
+            && $start < $end
+            && $now >= $start
+            && $now < $end;
     }
 }
