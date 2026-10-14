@@ -100,7 +100,7 @@ $showcaseVersion = @filemtime(__DIR__ . '/assets/css/vitrine-showcase.css') ?: 1
 </section>
 </main>
 <footer class="footer"><div class="section-shell footer-main">
- <div class="footer-brand"><a class="brand" href="/" aria-label="Vitrine IA Pro — início"><span class="brand-v" aria-hidden="true"><span></span><span></span></span><span class="brand-words"><strong>VITRINE</strong><small>— IA PRO —</small></span></a><p>Tecnologia com propósito<br>para projetos reais.</p></div>
+ <div class="footer-brand"><a class="brand" href="/" aria-label="Vitrine IA Pro — início"><img src="/assets/img/logo-vitrine-approved.webp" alt="Vitrine IA Pro" class="brand-official" width="216" height="72"></a><p>Tecnologia com propósito<br>para projetos reais.</p></div>
  <div class="footer-column"><h3>Institucional</h3><a href="#inicio">Início</a><a href="#projetos">Projetos</a><a href="#aplicacoes">No mundo real</a><a href="#ecossistema">Ecossistema</a><a href="/contato.php">Contato</a></div>
  <div class="footer-column"><h3>Projetos</h3><a href="/guia-digital.php">Guia Digital da Cidade</a><a href="/tv-digital.php">TV Digital Enterprise</a><a href="/governo.php">Governo Digital IA</a><span>SISMED</span></div>
  <div class="footer-column"><h3>Ecossistema</h3><span>Cidades</span><span>Comunicação</span><span>Gestão pública</span><span>Inteligência artificial</span></div>
