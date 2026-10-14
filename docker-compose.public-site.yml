@@ -1,0 +1,84 @@
+services:
+  web:
+    image: php:8.3-apache
+    container_name: vitrine_site_web_hml
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+        a2enmod rewrite headers >/dev/null
+        sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+        find /var/www/html -mindepth 1 -maxdepth 1 ! -name data -exec rm -rf {} +
+        cp -a /var/www/source/assets /var/www/html/
+        cp -a /var/www/source/includes /var/www/html/
+        cp -a /var/www/source/demos /var/www/html/
+        cp -a /var/www/source/documentos /var/www/html/
+        cp /var/www/source/.htaccess /var/www/html/.htaccess
+        cp /var/www/source/config.php /var/www/html/config.php
+        cp /var/www/source/index.php /var/www/html/index.php
+        cp /var/www/source/casos-reais.php /var/www/html/casos-reais.php
+        cp /var/www/source/contato.php /var/www/html/contato.php
+        cp /var/www/source/contratacao-publica.php /var/www/html/contratacao-publica.php
+        cp /var/www/source/demonstracoes.php /var/www/html/demonstracoes.php
+        cp /var/www/source/desenvolvimento.php /var/www/html/desenvolvimento.php
+        cp /var/www/source/diagnostico.php /var/www/html/diagnostico.php
+        cp /var/www/source/diagnostico-resultado.php /var/www/html/diagnostico-resultado.php
+        cp /var/www/source/documentos-publicos.php /var/www/html/documentos-publicos.php
+        cp /var/www/source/governo.php /var/www/html/governo.php
+        cp /var/www/source/guia-digital.php /var/www/html/guia-digital.php
+        cp /var/www/source/lgpd.php /var/www/html/lgpd.php
+        cp /var/www/source/news.php /var/www/html/news.php
+        cp /var/www/source/produtos.php /var/www/html/produtos.php
+        cp /var/www/source/salvar-lead.php /var/www/html/salvar-lead.php
+        cp /var/www/source/salvar-solicitacao.php /var/www/html/salvar-solicitacao.php
+        cp /var/www/source/seguranca.php /var/www/html/seguranca.php
+        cp /var/www/source/sla.php /var/www/html/sla.php
+        cp /var/www/source/social-media.php /var/www/html/social-media.php
+        cp /var/www/source/solicitacao-institucional.php /var/www/html/solicitacao-institucional.php
+        cp /var/www/source/solicitacao-recebida.php /var/www/html/solicitacao-recebida.php
+        cp /var/www/source/solucoes.php /var/www/html/solucoes.php
+        cp /var/www/source/termos.php /var/www/html/termos.php
+        cp /var/www/source/tv-digital.php /var/www/html/tv-digital.php
+        if [ ! -f /var/www/html/data/.seeded ]; then
+          cp -a /var/www/source/data/. /var/www/html/data/
+          touch /var/www/html/data/.seeded
+        fi
+        chown -R www-data:www-data /var/www/html/data
+        apache2-foreground
+    volumes:
+      - .:/var/www/source:ro
+      - vitrine_site_data:/var/www/html/data
+    networks:
+      - vitrine_net
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      - "traefik.http.routers.vitrine-premium-hml.rule=Host(`site.hml.vitrineiapro.com.br`)"
+      - "traefik.http.routers.vitrine-premium-hml.entrypoints=websecure"
+      - "traefik.http.routers.vitrine-premium-hml.tls=true"
+      - "traefik.http.routers.vitrine-premium-hml.tls.certresolver=le"
+      - "traefik.http.services.vitrine-premium-hml.loadbalancer.server.port=80"
+    ports:
+      - "127.0.0.1:19080:80"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/index.php')===false?1:0);"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  vitrine_site_data:
+    name: vitrine_site_data
+
+networks:
+  vitrine_net:
+    external: true
+    name: vitrine_net
+  traefik_net:
+    external: true
+    name: n8n-traefik_app_network

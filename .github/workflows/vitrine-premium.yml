@@ -1,0 +1,34 @@
+name: Vitrine premium layout validation
+on:
+  push:
+    branches: [design/vitrine-premium-20261014]
+    paths: [scripts/vitrine-premium-review.cjs, index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
+  pull_request:
+    paths: [scripts/vitrine-premium-review.cjs, index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax and HML compose
+        run: |
+          docker run --rm -v "$PWD:/site:ro" -w /site php:8.3-cli php -l index.php
+          docker compose -f docker-compose.public-site.yml config --quiet
+      - name: Prepare browser review
+        run: |
+          npm install --no-save playwright @axe-core/playwright
+          npx playwright install --with-deps chromium
+          docker run -d --name premium-preview -p 8088:8088 -v "$PWD:/site:ro" -w /site php:8.3-cli php -S 0.0.0.0:8088
+      - name: Desktop mobile and accessibility review
+        run: node scripts/vitrine-premium-review.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vitrine-premium-review
+          path: preview-evidence/
+      - name: Cleanup isolated preview
+        if: always()
+        run: docker rm -f premium-preview || true
