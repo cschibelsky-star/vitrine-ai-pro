@@ -83,4 +83,44 @@ final class TrialIntegrationTest extends TestCase
         config(['assessor_trial.enabled'=>true]);
         $this->get('/assessor/avaliacao')->assertUnauthorized();
     }
+
+    public function test_expired_trial_reconciles_pending_revocation_without_reopening_access(): void
+    {
+        $provider = new class implements HmlTrialProvider {
+            public int $revokeCalls = 0;
+            public function provision(string $id, int $company, string $host): array
+            {
+                return ['tenant_id'=>$id,'company_id'=>$company,'hostname'=>$host,
+                    'environment'=>'hml','route_id'=>'route-hml-synthetic',
+                    'dns_valid'=>true,'tls_valid'=>true,'healthy'=>true,
+                    'isolated'=>true,'cockpit_registered'=>true,'access_ready'=>true];
+            }
+            public function revoke(string $tenantId): void
+            {
+                $this->revokeCalls++;
+                if ($this->revokeCalls === 1) {
+                    throw new \RuntimeException('synthetic revocation failure');
+                }
+            }
+        };
+        $this->app->instance(HmlTrialProvider::class, $provider);
+        $service = $this->app->make(TrialService::class);
+        $trial = $service->request(1, 7, 'Gabinete de teste', 'vereador');
+        $trial = $service->provision($trial->id);
+        $this->assertSame('active', $trial->status);
+        $trial->forceFill(['ends_at' => now('UTC')->subMinute()])->save();
+
+        // Expiration denies access before the provider finishes revocation.
+        $this->assertFalse(TrialPolicy::accessible('active', $trial->ends_at, new \DateTimeImmutable('now')));
+        $this->artisan('assessor:trial expire')->assertExitCode(1);
+        $this->assertSame('expired_pending', $trial->fresh()->status);
+        $this->assertFalse(TrialPolicy::accessible($trial->fresh()->status, $trial->ends_at, new \DateTimeImmutable('now')));
+
+        $this->artisan('assessor:trial expire')->assertExitCode(0);
+        $this->assertSame('expired', $trial->fresh()->status);
+        $this->artisan('assessor:trial expire')->assertExitCode(0);
+        $this->assertSame(2, $provider->revokeCalls);
+        $this->assertSame(1, TrialRequest::count());
+        $this->assertFalse(Schema::hasTable('payments'));
+    }
 }
