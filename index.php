@@ -19,8 +19,7 @@ $showcaseVersion = @filemtime(__DIR__ . '/assets/css/vitrine-showcase.css') ?: 1
 <header class="header" id="inicio">
  <div class="nav-wrap">
   <a class="brand" href="/" aria-label="Vitrine IA Pro — página inicial">
-   <span class="brand-v" aria-hidden="true"><span></span><span></span></span>
-   <span class="brand-words"><strong>VITRINE</strong><small>— IA PRO —</small></span>
+   <img src="/assets/img/logo-vitrine-approved.webp" class="brand-official" width="216" height="72" alt="Vitrine IA Pro">
   </a>
   <button class="menu-toggle" aria-controls="nav-menu" aria-expanded="false" type="button"><span>Menu</span><span class="hamburger">☰</span></button>
   <nav class="nav" id="nav-menu" aria-label="Menu principal">
