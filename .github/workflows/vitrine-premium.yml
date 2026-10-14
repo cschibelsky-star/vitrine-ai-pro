@@ -2,9 +2,9 @@ name: Vitrine premium layout validation
 on:
   push:
     branches: [design/vitrine-premium-20261014]
-    paths: [index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
+    paths: [scripts/vitrine-premium-review.cjs, index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
   pull_request:
-    paths: [index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
+    paths: [scripts/vitrine-premium-review.cjs, index.php, assets/css/vitrine-premium.css, assets/js/vitrine-premium.js, docker-compose.public-site.yml, .github/workflows/vitrine-premium.yml]
 permissions:
   contents: read
 jobs:
