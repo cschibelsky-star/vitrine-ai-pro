@@ -29,3 +29,11 @@
 6. Não publicar na Home oficial antes de concluir os cinco itens de assets e o comparativo visual.
 
 **Governança:** Vitrine é portfólio institucional, não funil de vendas. Cada produto conserva sua landing própria. Core administra os produtos comercializados, Cockpit homologa, Factory desenvolve. Preservar a produção até o gate de qualidade visual.
+
+## Recursos binários identificados e impedimento de transporte (14/10/2026)
+
+Os recursos existem como arquivos originais/recortes da imagem aprovada no ambiente de trabalho: logo, visual do globo e skyline, cartões dos quatro projetos, cases Conheça Sumaré e TV Sumaré. O **logo** já foi integrado à branch e comprovado em HML.
+
+A tentativa de criar diretamente o blob binário do recorte do hero pelo conector GitHub foi **bloqueada pela camada de segurança da ferramenta**; nenhum arquivo do hero foi publicado. Não codificar os recortes como inline base64 no PHP/CSS, nem reconstruir um globo genérico fingindo fidelidade. Para resolver, utilizar um caminho autorizado de upload binário ao GitHub/VPS que preserve os bytes originais, inserir os assets como arquivos versionados e usar HTML/CSS responsivo sobre eles.
+
+**Critério obrigatório:** testes de sintaxe e Playwright não atestam igualdade visual por si sós. Produção permanece bloqueada até comparação de capturas da HML com a arte canônica de 1024×1536, inclusive header, hero, cards, cases, conceito e footer.
