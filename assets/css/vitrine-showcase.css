@@ -41,3 +41,8 @@
 
 
 .brand-official{display:block;width:216px;height:auto;max-width:100%;object-fit:contain}.footer .brand-official{width:216px}@media(max-width:500px){.brand-official{width:168px}.footer .brand-official{width:196px}}
+
+/* The approved artwork supersedes the generated globe only after the original file is deployed. */
+.hero-visual:has(.hero-approved-art) .platform-glow,.hero-visual:has(.hero-approved-art) .holo-ring{display:none}
+.hero-approved-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;z-index:1;pointer-events:none}
+.hero-visual:has(.hero-approved-art) .holo-card{display:none}
