@@ -49,3 +49,10 @@
 **Resolver H02 com a integração autenticada já construída no PR #16**, preferindo um host isolado e sem afetar o V5 compartilhado. Testar transferência integral do arquivo canônico, publicar os assets no GitHub (H03) e só depois alterar a Home, sincronizar HML e comparar screenshots. Sem alternativa autorizada que receba bytes, registrar bloqueio real em vez de anunciar entrega.
 
 **Definição de pronto:** a Home aprovada é visível na HML, todos os recursos são os originais, há comparação visual comprovada e nenhuma regressão. Até lá: `NÃO HOMOLOGADA`.
+
+## Execução 15/10 — materialização em andamento
+- Commit `5d211dcc`: suporte PHP para carregar arte de hero, cards e cases somente quando os arquivos oficiais existirem na HML; mantém fallback atual e impede imagens quebradas.
+- Commit `dacd6094`: CSS prioriza a arte de hero aprovada e oculta a renderização provisória concorrente quando presente.
+- Verificação após commits: `hero-approved.webp` na HML ainda retorna HTTP 404; portanto **H03/H05/H06 continuam PENDENTES**. CI de PHP, layout e assets ainda em andamento na consulta.
+- Recursos locais encontrados no ambiente de trabalho em `/mnt/data/vitrine_original_assets/`: sete WebP de destino, mas ainda sem transferência comprovada ao GitHub/VPS. Não declarar materialização completa nem homologação.
+- Próxima etapa única: transferência/versionamento seguro dos sete binários oficiais, atualização segura da HML, HTTP 200 dos assets e comparação visual real.
