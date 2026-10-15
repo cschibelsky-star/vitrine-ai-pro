@@ -33,11 +33,18 @@ const fs = require('node:fs');
         }
         fs.writeFileSync('preview-evidence/reference-1024-layout.json', JSON.stringify(rects, null, 2));
       }
-      const images = await page.locator('img').evaluateAll(imgs => imgs.map(img => ({ src: img.getAttribute('src'), ok: img.complete && img.naturalWidth > 0 })));
-      // Load lazy images before checking them.
-      await page.locator('.footer').scrollIntoViewIfNeeded();
-      await page.waitForTimeout(500);
-      const broken = await page.locator('img').evaluateAll(imgs => imgs.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src));
+      // Scroll each image into view: jumping straight to the footer can skip
+      // native lazy-loaded images between the top and bottom of the page.
+      const imageElements = page.locator('img');
+      for (let i = 0, count = await imageElements.count(); i < count; i++) {
+        const img = imageElements.nth(i);
+        await img.scrollIntoViewIfNeeded();
+        await img.evaluate(el => {
+          if (el.loading === 'lazy') el.loading = 'eager';
+        });
+        await img.evaluate(el => el.decode().catch(() => {}));
+      }
+      const broken = await imageElements.evaluateAll(imgs => imgs.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src));
       if (broken.length) throw new Error('Broken images: ' + broken.join(', '));
       await page.evaluate(() => scrollTo(0,0));
       if (name === 'mobile') {
