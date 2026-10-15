@@ -1,0 +1,23 @@
+# Isolated preview of the institutional Home PR. No Core, database, or production services.
+# Run only from a clean, dedicated checkout of the reviewed PR commit.
+# Internal Docker network only: no host ports, proxy, DNS, or automatic promotion.
+name: vitrine-home-review
+services:
+  home:
+    image: php:8.3-apache
+    restart: "no"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:ro
+    command: ["apache2-foreground"]
+    expose:
+      - "80"
+    networks:
+      - review_internal
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+networks:
+  review_internal:
+    internal: true
