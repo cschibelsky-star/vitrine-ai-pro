@@ -1,0 +1,26 @@
+name: Approved visual asset gate
+on:
+  push:
+    branches: [design/vitrine-showcase-approved-20261014]
+    paths:
+      - 'index.php'
+      - 'assets/img/**'
+      - 'assets/reference/**'
+      - 'scripts/vitrine-approved-assets-check.cjs'
+      - '.github/workflows/vitrine-approved-visual-gate.yml'
+  pull_request:
+    paths:
+      - 'index.php'
+      - 'assets/img/**'
+      - 'assets/reference/**'
+      - 'scripts/vitrine-approved-assets-check.cjs'
+      - '.github/workflows/vitrine-approved-visual-gate.yml'
+permissions:
+  contents: read
+jobs:
+  approved-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify canonical reference and approved assets
+        run: node scripts/vitrine-approved-assets-check.cjs
