@@ -1,6 +1,7 @@
 # Isolated preview of the institutional Home PR. No Core, database, or production services.
 # Run only from a clean, dedicated checkout of the reviewed PR commit.
-# Internal Docker network only: no host ports, proxy, DNS, or automatic promotion.
+# HML-only backend: no host ports, no automatic DNS, proxy activation or production promotion.
+# Shared proxy network is required only for the official route provisioner; no labels auto-publish routes.
 name: vitrine-home-review
 services:
   home:
@@ -13,7 +14,10 @@ services:
     expose:
       - "80"
     networks:
-      - review_internal
+      review_internal: {}
+      hml_proxy:
+        aliases:
+          - vitrine_home_review_web
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -21,3 +25,6 @@ services:
 networks:
   review_internal:
     internal: true
+  hml_proxy:
+    external: true
+    name: n8n-traefik_app_network
