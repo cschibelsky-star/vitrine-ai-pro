@@ -1,0 +1,30 @@
+# Isolated preview of the institutional Home PR. No Core, database, or production services.
+# Run only from a clean, dedicated checkout of the reviewed PR commit.
+# HML-only backend: no host ports, no automatic DNS, proxy activation or production promotion.
+# Shared proxy network is required only for the official route provisioner; no labels auto-publish routes.
+name: vitrine-home-review
+services:
+  home:
+    image: php:8.3-apache
+    restart: "no"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:ro
+    command: ["apache2-foreground"]
+    expose:
+      - "80"
+    networks:
+      review_internal: {}
+      hml_proxy:
+        aliases:
+          - vitrine_home_review_web
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+networks:
+  review_internal:
+    internal: true
+  hml_proxy:
+    external: true
+    name: n8n-traefik_app_network

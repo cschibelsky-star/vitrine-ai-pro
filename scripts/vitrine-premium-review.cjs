@@ -5,7 +5,7 @@ const fs = require('node:fs');
   fs.mkdirSync('preview-evidence', { recursive: true });
   const browser = await chromium.launch();
   try {
-    for (const [name, width, height] of [['desktop',1440,1000],['mobile',390,844]]) {
+    for (const [name, width, height] of [['reference-1024',1024,1536],['desktop',1440,1000],['mobile',390,844]]) {
       const context = await browser.newContext({ viewport: { width, height }, reducedMotion: 'reduce' });
       const page = await context.newPage();
       const errors = [];
@@ -17,11 +17,34 @@ const fs = require('node:fs');
         await page.screenshot({ path: 'preview-evidence/' + name + '-overflow.png', fullPage: true });
         throw new Error(name + ': horizontal overflow');
       }
-      const images = await page.locator('img').evaluateAll(imgs => imgs.map(img => ({ src: img.getAttribute('src'), ok: img.complete && img.naturalWidth > 0 })));
-      // Load lazy images before checking them.
-      await page.locator('.site-footer').scrollIntoViewIfNeeded();
-      await page.waitForTimeout(500);
-      const broken = await page.locator('img').evaluateAll(imgs => imgs.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src));
+      const logo = page.locator('.header .brand-official');
+      await logo.waitFor();
+      if ((await logo.getAttribute('src')) !== '/assets/img/logo-vitrine-approved.webp') {
+        throw new Error(name + ': official logo asset not applied');
+      }
+      if (name === 'reference-1024') {
+        const required = ['.header', '.hero', '#projetos', '#aplicacoes', '#ecossistema', '.footer'];
+        const rects = [];
+        for (const selector of required) {
+          const el = page.locator(selector);
+          await el.waitFor();
+          const r = await el.boundingBox();
+          rects.push({ selector, y: Math.round(r.y), height: Math.round(r.height), width: Math.round(r.width) });
+        }
+        fs.writeFileSync('preview-evidence/reference-1024-layout.json', JSON.stringify(rects, null, 2));
+      }
+      // Scroll each image into view: jumping straight to the footer can skip
+      // native lazy-loaded images between the top and bottom of the page.
+      const imageElements = page.locator('img');
+      for (let i = 0, count = await imageElements.count(); i < count; i++) {
+        const img = imageElements.nth(i);
+        await img.scrollIntoViewIfNeeded();
+        await img.evaluate(el => {
+          if (el.loading === 'lazy') el.loading = 'eager';
+        });
+        await img.evaluate(el => el.decode().catch(() => {}));
+      }
+      const broken = await imageElements.evaluateAll(imgs => imgs.filter(img => !img.complete || img.naturalWidth === 0).map(img => img.src));
       if (broken.length) throw new Error('Broken images: ' + broken.join(', '));
       await page.evaluate(() => scrollTo(0,0));
       if (name === 'mobile') {
