@@ -1,0 +1,23 @@
+/* Vitrine IA Pro - conceito implementavel. Apenas na pagina de preview. */
+:root{--vi-ink:#e7f5ff;--vi-cyan:#45e0d8;--vi-blue:#55a8ff;--vi-deep:#06121e;--vi-line:rgba(85,182,218,.22)}
+body.salesHome{background:#06121e;color:var(--vi-ink)}
+.salesHome .salesHero{background:radial-gradient(ellipse 67% 82% at 78% 36%,rgba(17,103,124,.28),transparent 70%),linear-gradient(130deg,#040e18 4%,#071a29 52%,#08283a 100%);border-bottom:1px solid var(--vi-line);min-height:min(760px,90vh)}
+.salesHome .salesHero:after{background:radial-gradient(circle,rgba(48,207,191,.19),transparent 72%)}
+.salesHome .salesHeroInner{max-width:1280px;margin:0 auto;gap:clamp(28px,4vw,68px);align-items:center}
+.salesHome .salesHeroCopy{max-width:720px}
+.salesHome .salesHero h1{font-weight:800;letter-spacing:-.055em;line-height:1.04;text-wrap:balance}
+.salesHome .salesHero h1 em{font-style:normal;color:#63e5da}
+.salesHome .salesHeroCopy>p{max-width:610px;color:#bed5e3;line-height:1.7}
+.salesHome .salesTags span{border-color:rgba(111,207,222,.23);background:rgba(13,47,62,.54);color:#d3f7f4}
+.salesHome .salesPrimary{background:linear-gradient(110deg,#30cbbd,#57d7dd)!important;color:#05252d!important;border-color:transparent!important}
+.salesHome .salesGhost{border-color:rgba(123,220,226,.48)!important;color:#e2f9fb!important}
+.salesHome .salesHeroVisual{position:relative;filter:drop-shadow(0 26px 40px rgba(0,0,0,.25))}
+.salesHome .salesHeroVisual:after{content:'ECOSSISTEMA DIGITAL • VITRINE IA PRO';display:block;text-align:center;font-size:11px;letter-spacing:.17em;color:#7edbdc;padding-top:16px}
+.salesHome .salesSection,.salesHome .salesBenefits,.salesHome .salesCases{scroll-margin-top:85px}
+.salesHome .salesSectionHead h2,.salesHome .salesBenefits h2{letter-spacing:-.035em}
+.salesHome .segmentGrid article,.salesHome .productSalesGrid>a,.salesHome .modelGrid article{border-radius:18px}
+.salesHome .productSalesGrid>a:focus-visible,.salesHome a:focus-visible{outline:3px solid #32d9cf;outline-offset:4px}
+.salesHome .caseSalesGrid img{object-fit:cover}
+@media(max-width:800px){.salesHome .salesHero{min-height:auto}.salesHome .salesHeroInner{gap:28px}.salesHome .salesHeroCopy{text-align:left}.salesHome .salesHeroVisual{max-width:560px;margin:auto}}
+@media(max-width:480px){.salesHome .salesHero h1{font-size:clamp(2.2rem,11vw,3.5rem)}.salesHome .salesHeroCopy>p{font-size:1rem}.salesHome .salesHeroVisual:after{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.salesHome .salesHeroVisual,.salesHome .salesHeroVisual img{animation:none!important}}
