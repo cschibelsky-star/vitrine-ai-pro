@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 final class HeygenVoiceCatalogTest extends TestCase
 {
-    public function test_only_selected_male_voices_are_approved(): void
+    public function test_only_user_selected_voices_are_approved(): void
     {
         $catalog = require __DIR__ . '/../../../config/heygen_voice_catalog.php';
 
@@ -14,9 +14,11 @@ final class HeygenVoiceCatalogTest extends TestCase
         self::assertSame('pt', $catalog['tts_language']);
         self::assertSame('orca', $catalog['tts_engine']);
         self::assertSame('adriano', $catalog['default_voice_key']);
-        self::assertSame(['adriano', 'yuri'], array_keys($catalog['approved']));
+        self::assertSame(['adriano', 'yuri', 'aida'], array_keys($catalog['approved']));
         self::assertSame('c8ac31e97555494fb8502599e6bc5461', $catalog['approved']['adriano']['voice_id']);
         self::assertSame('14be84ff0ad848d79bd867a79a870f4a', $catalog['approved']['yuri']['voice_id']);
+        self::assertSame('2799eccbd72d48e0af3202a147d51146', $catalog['approved']['aida']['voice_id']);
+        self::assertSame('female', $catalog['approved']['aida']['gender']);
 
         foreach ($catalog['candidates'] as $candidate) {
             self::assertSame('female', $candidate['gender']);
