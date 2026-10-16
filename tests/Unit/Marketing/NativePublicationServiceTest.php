@@ -229,9 +229,9 @@ class NativePublicationServiceTest extends TestCase
         $this->bridgeRequest($payload)->assertJson(['status' => 'PROCESSING']);
         $this->bridgeRequest($payload, 'publication-status')->assertJson(['status' => 'PROCESSING']);
         Http::assertSentCount(2);
-        $this->artisan('marketing:resume-native-publications')->assertExitCode(0);
+        $this->assertSame(0, \Illuminate\Support\Facades\Artisan::call('marketing:resume-native-publications'));
         $this->bridgeRequest($payload, 'publication-status')->assertJson(['status' => 'PUBLISHED']);
-        $this->artisan('marketing:resume-native-publications')->assertExitCode(0);
+        $this->assertSame(0, \Illuminate\Support\Facades\Artisan::call('marketing:resume-native-publications'));
         Http::assertSentCount(4);
     }
 
