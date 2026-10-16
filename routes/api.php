@@ -414,6 +414,9 @@ Route::post('/internal/marketing/publisher/meta/status', function (Request $requ
         'page_name' => $payload['page_name'] ?? null,
         'instagram_username' => $payload['instagram_username'] ?? null,
         'connected_at' => $payload['connected_at'] ?? null,
+        'contract_version' => 2,
+        'durable_idempotency' => true,
+        'capabilities' => app(\App\Marketing\Application\NativePublicationService::class)->capabilities($payload + ['facebook_page_id' => $payload['page_id'] ?? '']),
     ]);
 })->middleware('throttle:60,1')->name('api.internal.marketing.publisher.meta.status');
 
@@ -429,36 +432,49 @@ Route::post('/internal/marketing/publisher/meta/disconnect', function (Request $
     return response()->json(['ok' => true]);
 })->middleware('throttle:20,1')->name('api.internal.marketing.publisher.meta.disconnect');
 
-Route::post('/internal/marketing/publisher/meta/publish', function (Request $request, SocialDistributionHandoff $publisher) use ($assertMarketingEngine, $metaBridgeConnectionPath) {
+Route::post('/internal/marketing/publisher/meta/publish', function (Request $request, \App\Marketing\Application\NativePublicationService $publisher) use ($assertMarketingEngine, $metaBridgeConnectionPath) {
     $assertMarketingEngine($request);
     $data = $request->validate([
-        'project_id' => ['required', 'string', 'max:120'],
+        'contract_version' => ['required', 'integer', 'in:2'],
+        'project_id' => ['required', 'in:vitrine-ai-social-enterprise'],
         'client_id' => ['required', 'integer', 'min:1'],
+        'content_project_id' => ['required', 'integer', 'min:1'],
         'channel' => ['required', 'in:instagram,facebook'],
-        'asset_url' => ['required', 'url', 'max:2048'],
+        'placement' => ['required', 'in:feed,stories,reels'],
+        'asset_url' => ['required', 'url', 'max:4096'],
+        'asset_sha256' => ['required', 'regex:/^[a-f0-9]{64}$/'],
+        'mime_type' => ['required', 'in:image/jpeg,image/png,video/mp4'],
         'caption' => ['nullable', 'string', 'max:10000'],
-        'type' => ['nullable', 'in:image,video'],
+        'type' => ['required', 'in:image,video'],
+        'idempotency_key' => ['required', 'regex:/^[a-f0-9]{64}$/'],
     ]);
-
-    $path = $metaBridgeConnectionPath((string) $data['project_id'], (int) $data['client_id']);
+    $path = $metaBridgeConnectionPath($data['project_id'], (int) $data['client_id']);
     abort_unless(Storage::disk('local')->exists($path), 409, 'publisher_not_connected');
-
     $connection = json_decode(Crypt::decryptString(Storage::disk('local')->get($path)), true, 512, JSON_THROW_ON_ERROR);
-
-    $account = [
-        'access_token' => (string) ($connection['access_token'] ?? ''),
-        'instagram_user_id' => $data['channel'] === 'instagram' ? (string) ($connection['instagram_user_id'] ?? '') : '',
-        'facebook_page_id' => $data['channel'] === 'facebook' ? (string) ($connection['page_id'] ?? '') : '',
-        'graph_version' => (string) ($connection['graph_version'] ?? config('marketing_agents.publisher.meta.graph_version')),
-        'base_url' => (string) config('marketing_agents.publisher.meta.base_url', 'https://graph.facebook.com'),
-    ];
-
-    return response()->json($publisher->publishMetaNow([
-        'type' => (string) ($data['type'] ?? 'image'),
-        'asset_url' => (string) $data['asset_url'],
-        'caption' => (string) ($data['caption'] ?? ''),
-    ], $account));
+    $account = $connection + ['facebook_page_id' => $connection['page_id'] ?? '',
+        'graph_version' => config('marketing_agents.publisher.meta.graph_version'),
+        'base_url' => config('marketing_agents.publisher.meta.base_url', 'https://graph.facebook.com')];
+    $identity = $data['project_id'].'|'.$data['client_id'].'|'.$data['content_project_id'];
+    $result = $publisher->publish($data, $account, $identity, $data['idempotency_key']);
+    if (($result['status'] ?? '') === 'PROCESSING') {
+        Storage::disk('local')->put('marketing/publisher/native-pending/'.hash('sha256', $identity).'.enc',
+            Crypt::encryptString(json_encode(['payload' => $data, 'connection_path' => $path,
+                'identity' => $identity, 'idempotency_key' => $data['idempotency_key']], JSON_THROW_ON_ERROR)));
+    }
+    return response()->json($result);
 })->middleware('throttle:20,1')->name('api.internal.marketing.publisher.meta.publish');
+
+Route::post('/internal/marketing/publisher/meta/publication-status', function (Request $request, \App\Marketing\Application\NativePublicationService $publisher) use ($assertMarketingEngine) {
+    $assertMarketingEngine($request);
+    $data = $request->validate([
+        'project_id' => ['required', 'in:vitrine-ai-social-enterprise'],
+        'client_id' => ['required', 'integer', 'min:1'],
+        'content_project_id' => ['required', 'integer', 'min:1'],
+        'idempotency_key' => ['required', 'regex:/^[a-f0-9]{64}$/'],
+    ]);
+    return response()->json($publisher->lookup($data['project_id'].'|'.$data['client_id'].'|'.$data['content_project_id'], $data['idempotency_key']));
+})->middleware('throttle:60,1')->name('api.internal.marketing.publisher.meta.publication-status');
+
 
 $decodeMetaSignedRequest = static function (Request $request): array {
     $signedRequest = trim((string) $request->input('signed_request', ''));
@@ -510,7 +526,7 @@ $decodeMetaSignedRequest = static function (Request $request): array {
 $removeMetaPublisherConnections = static function (string $metaUserId): int {
     $removed = 0;
 
-    foreach (Storage::disk('local')->files('marketing/publisher/meta') as $path) {
+    foreach (Storage::disk('local')->allFiles('marketing/publisher/meta') as $path) {
         if (! str_ends_with($path, '.enc')) {
             continue;
         }
@@ -597,3 +613,4 @@ Route::get('/marketing/publisher/meta/data-deletion/{confirmationCode}', functio
 })->middleware('throttle:60,1')->name('api.marketing.publisher.meta.data-deletion-status');
 
 require __DIR__.'/site_factory_api.php';
+

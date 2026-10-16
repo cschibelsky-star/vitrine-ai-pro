@@ -9,16 +9,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Storage;
 
-$pieceVersion = static function (array $job): string {
-    return hash('sha256', json_encode([
-        $job['id'] ?? '',
-        $job['revision_count'] ?? 0,
-        $job['asset_url'] ?? '',
-        $job['provider_job_ref'] ?? '',
-        $job['final_path'] ?? '',
-        $job['director_job'] ?? [],
-    ], JSON_THROW_ON_ERROR));
-};
+$pieceVersion = static fn (array $job): string => \App\Marketing\Application\NativePublicationService::version($job);
 
 $resolvePublisherAccount = static function (array $job): array {
     $path = trim((string) ($job['publisher_connection_path'] ?? ''));
@@ -105,6 +96,7 @@ Artisan::command('marketing:video-finalize {request_id} {version_id} {source_url
 Artisan::command('marketing:publish-due', function (SocialDistributionHandoff $distribution) use ($pieceVersion, $resolvePublisherAccount, $writePiece) {
     $disk = Storage::disk('local');
     $now = CarbonImmutable::now('UTC');
+    if (! config('marketing_publishing.enabled', false)) { $this->info('Publicação nativa desativada.'); return 0; }
     $summary = ['due' => 0, 'published' => 0, 'processing' => 0, 'skipped' => 0, 'failed' => 0];
 
     foreach ($disk->allFiles('marketing/gallery') as $path) {
@@ -112,7 +104,7 @@ Artisan::command('marketing:publish-due', function (SocialDistributionHandoff $d
             continue;
         }
 
-        Cache::lock('marketing-scheduler:'.hash('sha256', $path), 55)->get(function () use (
+        Cache::lock('marketing-gallery:'.hash('sha256', $path), 120)->get(function () use (
             $disk,
             $path,
             $now,
@@ -130,7 +122,7 @@ Artisan::command('marketing:publish-due', function (SocialDistributionHandoff $d
                 }
 
                 $publicationStatus = (string) ($job['publication_status'] ?? '');
-                if (! in_array($publicationStatus, ['SCHEDULED_PENDING_EXECUTOR', 'PUBLISHING'], true)) {
+                if (! in_array($publicationStatus, ['SCHEDULED_PENDING_EXECUTOR', 'PUBLISHING', 'PROCESSING'], true)) {
                     return;
                 }
 
@@ -166,7 +158,7 @@ Artisan::command('marketing:publish-due', function (SocialDistributionHandoff $d
                     return;
                 }
 
-                $result = $distribution->publishMetaNow($job, $account);
+                $result = app(\App\Marketing\Application\NativePublicationService::class)->publishApproved($job, $account, dirname($path));
                 $status = (string) ($result['status'] ?? 'FAILED');
 
                 $job['publication_status'] = $status;
@@ -184,7 +176,7 @@ Artisan::command('marketing:publish-due', function (SocialDistributionHandoff $d
                     $job['metrics_status'] = 'PENDING';
                     $job['metrics_next_sync_at'] = now()->addMinutes(10)->toISOString();
                     $summary['published']++;
-                } elseif ($status === 'PUBLISHING') {
+                } elseif (in_array($status, ['PUBLISHING', 'PROCESSING'], true)) {
                     $summary['processing']++;
                 } else {
                     $job['publication_retry_count'] = ((int) ($job['publication_retry_count'] ?? 0)) + 1;
@@ -414,3 +406,29 @@ Schedule::command('marketing:sync-metrics')
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->sendOutputTo('/proc/1/fd/1');
+
+
+
+Artisan::command('marketing:resume-native-publications', function (\App\Marketing\Application\NativePublicationService $publisher) {
+    if (! config('marketing_publishing.enabled', false)) { return 0; }
+    $disk = Storage::disk('local');
+    foreach ($disk->files('marketing/publisher/native-pending') as $path) {
+        if (! str_ends_with($path, '.enc')) { continue; }
+        try {
+            $pending = json_decode(Crypt::decryptString($disk->get($path)), true, 512, JSON_THROW_ON_ERROR);
+            $status = $publisher->lookup($pending['identity'], $pending['idempotency_key']);
+            if (($status['status'] ?? '') !== 'PROCESSING') { continue; }
+            if (! $disk->exists($pending['connection_path'])) { continue; }
+            $connection = json_decode(Crypt::decryptString($disk->get($pending['connection_path'])), true, 512, JSON_THROW_ON_ERROR);
+            $account = $connection + ['facebook_page_id' => $connection['page_id'] ?? '',
+                'graph_version' => config('marketing_agents.publisher.meta.graph_version'),
+                'base_url' => config('marketing_agents.publisher.meta.base_url', 'https://graph.facebook.com')];
+            $publisher->publish($pending['payload'], $account, $pending['identity'], $pending['idempotency_key']);
+        } catch (Throwable) {
+            $this->warn('Tentativa pendente preservada para reconciliação.');
+        }
+    }
+    return 0;
+})->purpose('Retoma containers conhecidos sem duplicar uploads ou reenviar resultados incertos.');
+
+Schedule::command('marketing:resume-native-publications')->everyMinute()->withoutOverlapping();

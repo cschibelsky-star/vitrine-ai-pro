@@ -221,11 +221,7 @@ class MarketingDashboard extends Page
 
     private function pieceVersion(array $job): string
     {
-        return hash('sha256', json_encode([
-            $job['id'] ?? '', $job['revision_count'] ?? 0,
-            $job['asset_url'] ?? '', $job['provider_job_ref'] ?? '',
-            $job['final_path'] ?? '', $job['director_job'] ?? [],
-        ], JSON_THROW_ON_ERROR));
+        return \App\Marketing\Application\NativePublicationService::version($job);
     }
 
     private function galleryDirectory(): string
@@ -243,6 +239,11 @@ class MarketingDashboard extends Page
         Cache::lock('marketing-gallery:'.hash('sha256', $path), 10)->block(5, function () use ($disk, $directory, $path, &$job): void {
             if ($disk->exists($path)) {
                 $stored = json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
+                if (app(\App\Marketing\Application\NativePublicationService::class)->hasAttempt($directory.'|'.$job['id'])
+                    && (\App\Marketing\Application\NativePublicationService::version($stored) !== \App\Marketing\Application\NativePublicationService::version($job)
+                        || ($job['publication_status'] ?? '') === 'NOT_REQUESTED')) {
+                    throw new \RuntimeException('Envio registrado. Preserve a peça e reconcilie antes de alterar.');
+                }
                 if ($stored === $job) {
                     return;
                 }
@@ -623,7 +624,7 @@ class MarketingDashboard extends Page
         }
 
         try {
-            $result = app(SocialDistributionHandoff::class)->publishMetaNow($job, $this->selectedMetaPublisherAccount());
+            $result = app(\App\Marketing\Application\NativePublicationService::class)->publishGallery($this->galleryDirectory().'/'.hash('sha256', (string) $job['id']).'.json', $version, $this->selectedMetaPublisherAccount());
             $publicationStatus = (string) ($result['status'] ?? 'FAILED');
 
             $job['publication_status'] = $publicationStatus;
@@ -642,13 +643,15 @@ class MarketingDashboard extends Page
                 $job['metrics_next_sync_at'] = now()->addMinutes(10)->toISOString();
                 $this->pieceFeedback = 'Publicação confirmada pelo provedor. ID externo: '.(string) ($job['publication_external_id'] ?? '');
                 $this->pieceError = null;
-            } elseif ($publicationStatus === 'PUBLISHING') {
-                $this->pieceFeedback = 'A mídia foi enviada ao Meta e está em processamento. Use Publicar agora novamente para concluir quando o provedor liberar o container.';
+            } elseif (in_array($publicationStatus, ['PUBLISHING', 'PROCESSING'], true)) {
+                $this->pieceFeedback = 'A mídia está em processamento. A retomada consulta o mesmo container; não cria uma nova publicação.';
                 $this->pieceError = null;
+            } elseif ($publicationStatus === 'DISABLED') {
+                $this->pieceError = 'Publicação nativa desativada; nada foi publicado.';
             } elseif ($publicationStatus === 'MEDIA_NOT_PUBLIC') {
                 $this->pieceError = 'A mídia precisa estar disponível por URL HTTPS pública antes do envio ao Meta. A peça foi preservada.';
             } else {
-                $this->pieceError = 'Conta Meta publicadora ainda não configurada no Marketing IA. A peça foi preservada e nada foi publicado.';
+                $this->pieceError = 'Publicação não confirmada ('.$publicationStatus.'). Confira aprovação, formato e autorização; resultados incertos não serão reenviados.';
             }
 
             $this->saveGalleryPiece($job);
@@ -656,8 +659,8 @@ class MarketingDashboard extends Page
             $this->persistFlowWorkstation();
         } catch (Throwable $exception) {
             report($exception);
-            $job['publication_status'] = 'FAILED';
-            $job['publication_error'] = $exception->getMessage();
+            $job['publication_status'] = 'UNKNOWN';
+            $job['publication_error'] = 'publication_unconfirmed';
             $job['updated_at'] = now()->toISOString();
             $this->saveGalleryPiece($job);
             $this->flowJobs[$index] = $job;
@@ -2582,3 +2585,4 @@ class MarketingDashboard extends Page
         ];
     }
 }
+

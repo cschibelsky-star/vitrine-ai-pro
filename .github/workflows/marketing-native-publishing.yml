@@ -1,0 +1,28 @@
+name: Marketing native publishing safety
+on:
+  pull_request:
+    paths: ['app/Marketing/**', 'app/Filament/Pages/MarketingDashboard.php', 'routes/**', 'config/marketing_publishing.php', 'tests/Unit/Marketing/**', '.github/workflows/marketing-native-publishing.yml']
+permissions:
+  contents: read
+jobs:
+  publishing:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      MARKETING_NATIVE_PUBLISHING_ENABLED: 'false'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3
+          coverage: none
+      - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - run: find app/Marketing/Application/NativePublicationService.php app/Filament/Pages/MarketingDashboard.php routes config/marketing_publishing.php tests/Unit/Marketing/NativePublicationServiceTest.php -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: vendor/bin/phpunit tests/Unit/Marketing/NativePublicationServiceTest.php --colors=never
+      - run: php artisan view:cache

@@ -599,7 +599,7 @@
                             @if($calendarJobs->count())
                                 <div class="vm-campaigns">
                                     @foreach($calendarJobs as $job)
-                                        <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">Planejamento editorial</span><span class="vm-time">{{ \Carbon\CarbonImmutable::parse($job['scheduled_at'])->setTimezone('America/Sao_Paulo')->format('d/m/Y H:i') }} BRT</span></div>
+                                        <div class="vm-campaign-row"><div class="vm-thumb">✓</div><div><div class="vm-campaign-name">{{ $job['title'] ?? ($job['campaign'] ?? 'Conteúdo') }}</div><div class="vm-campaign-type">{{ $job['format'] ?? '' }}</div></div><span class="vm-status green">Agendamento orgânico</span><span class="vm-time">{{ \Carbon\CarbonImmutable::parse($job['scheduled_at'])->setTimezone('America/Sao_Paulo')->format('d/m/Y H:i') }} BRT</span></div>
                                     @endforeach
                                 </div>
                             @else
@@ -728,7 +728,7 @@
                                                     <input type="datetime-local" wire:model="pieceScheduleInputs.{{ $job['id'] }}" style="width:100%;margin-top:6px;background:#17142e;color:#f7f5ff;border:1px solid #706a82;border-radius:8px">
                                                 </label>
                                                 <button type="button" class="vm-action-link" wire:click="planPiecePublication('{{ $job['id'] }}', '{{ $this->getPieceVersion($job) }}')" wire:loading.attr="disabled">Salvar data editorial</button>
-                                                <p class="vm-result-meta">Esta data não ativa publicação automática.</p>
+                                                <p class="vm-result-meta">Envio automático depende do publicador nativo habilitado, arquivo aprovado e conta autorizada.</p>
                                                 
                                                 <div style="margin-top:12px">
                                                     @if(in_array($job['status'] ?? '', ['EM_QA', 'GERADO'], true))
@@ -1183,3 +1183,4 @@ FINALIZAÇÃO: FFmpeg + logo oficial + QA</pre>
         </div>
     </div>
 </x-filament-panels::page>
+
