@@ -526,7 +526,7 @@ $decodeMetaSignedRequest = static function (Request $request): array {
 $removeMetaPublisherConnections = static function (string $metaUserId): int {
     $removed = 0;
 
-    foreach (Storage::disk('local')->files('marketing/publisher/meta') as $path) {
+    foreach (Storage::disk('local')->allFiles('marketing/publisher/meta') as $path) {
         if (! str_ends_with($path, '.enc')) {
             continue;
         }
