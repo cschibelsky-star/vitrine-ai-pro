@@ -1,0 +1,36 @@
+name: Connector Git Preservation
+
+on:
+  push:
+    branches:
+      - agent/connector-git-preservation
+    paths:
+      - "services/vps-mcp-connector/**"
+      - ".github/workflows/connector-git-preservation.yml"
+  pull_request:
+    paths:
+      - "services/vps-mcp-connector/**"
+      - ".github/workflows/connector-git-preservation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: python -m pip install -r services/vps-mcp-connector/requirements.txt
+
+      - name: Teste de preservação
+        working-directory: services/vps-mcp-connector
+        run: python -m unittest tests/test_ops_broker.py -v
