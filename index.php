@@ -71,12 +71,12 @@ $showcaseVersion = @filemtime(__DIR__ . '/assets/css/vitrine-showcase.css') ?: 1
   </article>
   <article class="project-card gov" data-keywords="governo digital inteligência artificial gestão pública serviços">
     <div class="project-inner"><div class="project-title-row"><span class="project-icon">▥</span><h3>Governo<br>Digital IA</h3></div><p>Soluções para gestão pública com inteligência artificial, transparência e serviços digitais.</p></div>
-    <div class="project-image art-building" role="img" aria-label="Representação arquitetônica de um projeto de governo digital"><span class="building-roof"></span><span class="building-body"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+    <?php if (is_file(__DIR__ . '/assets/img/home/gov-approved.webp')): ?><div class="project-image"><img src="/assets/img/home/gov-approved.webp" loading="lazy" width="232" height="167" alt="Arte de referência para Governo Digital IA"></div><?php else: ?><div class="project-image art-building" role="img" aria-label="Representação arquitetônica de um projeto de governo digital"><span class="building-roof"></span><span class="building-body"><i></i><i></i><i></i><i></i><i></i><i></i></span></div><?php endif; ?>
     <a href="/governo.php" class="project-link">Ver projeto <span aria-hidden="true">→</span></a>
   </article>
   <article class="project-card med" data-keywords="sismed saúde tecnologia sistema médico em desenvolvimento">
     <div class="project-inner"><div class="project-title-row"><span class="project-icon">✚</span><h3>SISMED<br><small>Em desenvolvimento</small></h3></div><p>Uma frente do ecossistema de soluções digitais para a área da saúde.</p></div>
-    <div class="project-image art-health" role="img" aria-label="Ilustração conceitual de painéis de saúde e tecnologia"><div class="health-screen"><span>✚</span><i></i><i></i><i></i></div></div>
+    <?php if (is_file(__DIR__ . '/assets/img/home/sismed-approved.webp')): ?><div class="project-image"><img src="/assets/img/home/sismed-approved.webp" loading="lazy" width="239" height="167" alt="Arte conceitual do SISMED, em desenvolvimento"></div><?php else: ?><div class="project-image art-health" role="img" aria-label="Ilustração conceitual de painéis de saúde e tecnologia"><div class="health-screen"><span>✚</span><i></i><i></i><i></i></div></div><?php endif; ?>
     <span class="project-link disabled">Em desenvolvimento</span>
   </article>
  </div>
