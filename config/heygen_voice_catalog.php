@@ -31,6 +31,13 @@ return [
             'status' => 'approved',
             'use' => 'alternative_narration',
         ],
+        'aida' => [
+            'voice_id' => '2799eccbd72d48e0af3202a147d51146',
+            'name' => 'Aida',
+            'gender' => 'female',
+            'status' => 'approved',
+            'use' => 'female_institutional_narration',
+        ],
     ],
     // As vozes abaixo existem no catálogo, mas NÃO estão aprovadas.
     'candidates' => [
@@ -46,12 +53,7 @@ return [
             'gender' => 'female',
             'status' => 'pending_user_selection',
         ],
-        'aida' => [
-            'voice_id' => '2799eccbd72d48e0af3202a147d51146',
-            'name' => 'Aida',
-            'gender' => 'female',
-            'status' => 'pending_user_selection',
-        ],
+
     ],
     // O nome permanece sem acento nos elementos de marca.
     'brand_name_written' => 'Vitrine IA Pro',
