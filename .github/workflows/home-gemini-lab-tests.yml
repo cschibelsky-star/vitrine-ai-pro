@@ -1,0 +1,26 @@
+name: Home Gemini Lab Tests
+on:
+  pull_request:
+    paths:
+      - 'tools/home_lab_*.py'
+      - 'tests/test_home_lab_generator.py'
+      - '.github/workflows/home-gemini-lab-tests.yml'
+  push:
+    branches:
+      - 'experiment/home-gemini-direct-20261016'
+    paths:
+      - 'tools/home_lab_*.py'
+      - 'tests/test_home_lab_generator.py'
+      - '.github/workflows/home-gemini-lab-tests.yml'
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test artifact contract without secrets or external API calls
+        run: python -m unittest discover -s tests -p 'test_home_lab_generator.py' -v
