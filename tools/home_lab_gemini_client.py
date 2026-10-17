@@ -1,4 +1,5 @@
 """Generate Home files with Gemini inside the isolated authorized lab."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -26,3 +27,16 @@ def generate(brief_file, destination):
         result = json.load(response)
     content = result['candidates'][0]['content']['parts'][0]['text']
     return save_response(content, destination)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Run the isolated Gemini Home generation')
+    parser.add_argument('--brief', required=True, type=Path)
+    parser.add_argument('--output', required=True, type=Path)
+    args = parser.parse_args()
+    files = generate(args.brief, args.output)
+    print(json.dumps({'status': 'generated', 'file_count': len(files)}, sort_keys=True))
+
+
+if __name__ == '__main__':
+    main()
