@@ -3,10 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 import sys
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from home_lab_generator import save_response
 from home_lab_contract import validate_home
+from home_lab_gemini_client import generate
 
 
 class HomeLabGeneratorTests(unittest.TestCase):
@@ -44,9 +46,62 @@ class HomeLabGeneratorTests(unittest.TestCase):
     def test_rejects_missing_local_assets(self):
         payload = json.loads(self.valid)
         payload['index.html'] = '<html></html>'
-        save_response(json.dumps(payload), self.output)
         with self.assertRaises(ValueError):
-            validate_home(self.output)
+            save_response(json.dumps(payload), self.output)
+        self.assertFalse(self.output.exists())
+
+    def test_rejects_invalid_html_without_output(self):
+        payload = json.loads(self.valid)
+        payload['index.html'] = 'not html styles.css script.js'
+        with self.assertRaises(ValueError):
+            save_response(json.dumps(payload), self.output)
+        self.assertFalse(self.output.exists())
+
+    def test_validator_rejects_remote_assets_and_base_urls(self):
+        save_response(self.valid, self.output)
+        original = json.loads(self.valid)['index.html']
+        variants = [
+            original.replace('href="styles.css"', 'href="https://example.invalid/styles.css"'),
+            original.replace('src="script.js"', 'src="//example.invalid/script.js"'),
+            original.replace('</body>', '<script src="https://example.invalid/extra.js"></script></body>'),
+            original.replace('<head>', '<head><base href="https://example.invalid/">'),
+            '<html><!-- styles.css script.js --></html>',
+        ]
+        for html in variants:
+            with self.subTest(html=html):
+                (self.output / 'index.html').write_text(html)
+                with self.assertRaises(ValueError):
+                    validate_home(self.output)
+
+    def test_accepts_dot_relative_assets_and_empty_destination(self):
+        self.output.mkdir()
+        payload = json.loads(self.valid)
+        payload['index.html'] = payload['index.html'].replace('"styles.css"', '"./styles.css"').replace('"script.js"', '"./script.js"')
+        save_response(json.dumps(payload), self.output)
+        self.assertTrue(validate_home(self.output)['validated'])
+
+    def test_invalid_generation_preserves_empty_destination_and_cleans_staging(self):
+        self.output.mkdir()
+        payload = json.loads(self.valid)
+        payload['index.html'] = 'not html'
+        with self.assertRaises(ValueError):
+            save_response(json.dumps(payload), self.output)
+        self.assertEqual(list(self.output.iterdir()), [])
+        self.assertEqual(list(self.output.parent.glob('.home-lab-*')), [])
+
+    def test_gemini_client_rejects_invalid_response_without_network(self):
+        brief = self.output.parent / 'brief.md'
+        brief.write_text('Institutional homepage')
+        response = MagicMock()
+        payload = json.loads(self.valid)
+        payload['index.html'] = 'not html'
+        response.__enter__.return_value.read.return_value = json.dumps({
+            'candidates': [{'content': {'parts': [{'text': json.dumps(payload)}]}}]
+        }).encode()
+        with patch.dict('os.environ', {'GEMINI_API_KEY': 'test-only'}), patch('home_lab_gemini_client.urlopen', return_value=response):
+            with self.assertRaises(ValueError):
+                generate(brief, self.output)
+        self.assertFalse(self.output.exists())
 
 
 if __name__ == '__main__':
