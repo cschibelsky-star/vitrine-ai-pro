@@ -3,13 +3,6 @@ on:
   push:
     branches:
       - feature/assessor-online-landing-hml
-    paths:
-      - 'app/AssessorOnline/**'
-      - 'database/migrations/2026_10_20_000001_create_assessor_core_tables.php'
-      - 'tests/Feature/AssessorDemandIsolationTest.php'
-      - 'tests/TestCase.php'
-      - 'phpunit.xml'
-      - '.github/workflows/assessor-online-core.yml'
   workflow_dispatch:
 jobs:
   assessor-core:
