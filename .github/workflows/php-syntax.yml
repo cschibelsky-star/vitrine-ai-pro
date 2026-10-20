@@ -36,7 +36,7 @@ jobs:
         run: find . -maxdepth 1 -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l && find includes app bootstrap config database routes -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
 
   assessor-online-core:
-    if: github.ref == 'refs/heads/feature/assessor-online-landing-hml'
+    if: github.ref == 'refs/heads/feature/assessor-online-landing-hml' || (github.event_name == 'pull_request' && github.head_ref == 'feature/assessor-online-landing-hml')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
