@@ -49,6 +49,7 @@ class AssessorDemandIsolationTest extends TestCase
 
     public function test_other_tenant_cannot_register_case_for_citizen(): void
     {
+        DB::table('assessor_tenants')->insert(['id' => 10, 'name' => 'Gabinete 10', 'slug' => 'gab-10']);
         $id = DB::table('assessor_citizens')->insertGetId(['tenant_id' => 10, 'name' => 'Pessoa fictícia']);
         try {
             DB::table('assessor_tenants')->insert(['id' => 11, 'name' => 'Gabinete 11', 'slug' => 'gab-11']);
