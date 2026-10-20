@@ -136,6 +136,20 @@ try {
         'auto_publish' => false,
     ], JSON_UNESCAPED_SLASHES).PHP_EOL;
 } catch (Throwable $exception) {
+    if ($personal && preg_match('/HTTP ([0-9]{3}): (.*)/s', $exception->getMessage(), $matches)) {
+        $providerError = json_decode($matches[2], true);
+        fwrite(STDERR, json_encode([
+            'ok' => false,
+            'model' => 'veo-3.1-lite-generate-preview',
+            'http_status' => (int) $matches[1],
+            'provider_status' => $providerError['error']['status'] ?? null,
+            'message' => $providerError['error']['message'] ?? 'Provider rejected request',
+            'quota_details' => $providerError['error']['details'] ?? [],
+            'generation_executed' => false,
+            'http_attempts' => 1,
+        ], JSON_UNESCAPED_SLASHES).PHP_EOL;
+        exit(1);
+    }
     fwrite(STDERR, json_encode([
         'ok' => false,
         'error' => $exception::class,
