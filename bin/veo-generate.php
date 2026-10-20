@@ -92,7 +92,7 @@ if (is_array($envelope) && array_key_exists('execution_context', $envelope)) {
             'resolution' => $resolution, 'estimated_cost_usd' => $costUsd,
             'source' => 'personal', 'campaign_created' => false,
             'http_attempts' => 1, 'auto_regenerate' => false, 'auto_publish' => false,
-        ], JSON_UNESCAPED_SLASHES).PHP_EOL;
+        ], JSON_UNESCAPED_SLASHES).PHP_EOL);
         exit(0);
     }
 }
