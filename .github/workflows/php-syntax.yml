@@ -1,6 +1,9 @@
 name: PHP Syntax
 
 on:
+  push:
+    branches:
+      - feature/assessor-online-landing-hml
   pull_request:
     paths:
       - '*.php'
@@ -31,3 +34,24 @@ jobs:
 
       - name: Validate PHP syntax
         run: find . -maxdepth 1 -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l && find includes app bootstrap config database routes -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
+
+  assessor-online-core:
+    if: github.ref == 'refs/heads/feature/assessor-online-landing-hml'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3, dom, fileinfo
+          tools: composer:v2
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Run isolated Assessor tests
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: vendor/bin/phpunit --testsuite 'Assessor Online Core' --display-warnings --fail-on-warning
