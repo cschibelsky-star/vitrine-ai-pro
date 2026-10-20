@@ -18,30 +18,12 @@ class AssessorDemandIsolationTest extends TestCase
         if (DB::getDriverName() !== 'sqlite') {
             $this->markTestSkipped('Isolated SQLite test database required.');
         }
-        Schema::create('assessor_citizens', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
-            $table->string('name');
         });
-        Schema::create('assessor_cases', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('tenant_id');
-            $table->unsignedBigInteger('citizen_id');
-            $table->uuid('protocol')->unique();
-            $table->string('subject');
-            $table->text('description');
-            $table->text('issue_location')->nullable();
-            $table->string('status');
-            $table->timestamps();
-        });
-        Schema::create('assessor_case_events', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('tenant_id');
-            $table->unsignedBigInteger('case_id');
-            $table->string('event_type');
-            $table->string('to_status');
-            $table->timestamps();
-        });
+        $migration = require base_path('database/migrations/2026_10_20_000001_create_assessor_core_tables.php');
+        $migration->up();
+
     }
 
     protected function tearDown(): void
@@ -49,11 +31,14 @@ class AssessorDemandIsolationTest extends TestCase
         Schema::dropIfExists('assessor_case_events');
         Schema::dropIfExists('assessor_cases');
         Schema::dropIfExists('assessor_citizens');
+        Schema::dropIfExists('assessor_tenants');
+        Schema::dropIfExists('users');
         parent::tearDown();
     }
 
     public function test_registered_case_has_protocol_and_audit_event(): void
     {
+        DB::table('assessor_tenants')->insert(['id' => 10, 'name' => 'Gabinete 10', 'slug' => 'gab-10']);
         $id = DB::table('assessor_citizens')->insertGetId(['tenant_id' => 10, 'name' => 'Pessoa fictícia']);
         $registered = app(DemandIntakeService::class)->register(10, $id, 'Iluminação', 'Lâmpada apagada');
         $this->assertSame('received', $registered['status']);
@@ -66,6 +51,7 @@ class AssessorDemandIsolationTest extends TestCase
     {
         $id = DB::table('assessor_citizens')->insertGetId(['tenant_id' => 10, 'name' => 'Pessoa fictícia']);
         try {
+            DB::table('assessor_tenants')->insert(['id' => 11, 'name' => 'Gabinete 11', 'slug' => 'gab-11']);
             app(DemandIntakeService::class)->register(11, $id, 'Solicitação', 'Tentativa entre gabinetes');
             $this->fail('Expected validation failure');
         } catch (ValidationException $exception) {
