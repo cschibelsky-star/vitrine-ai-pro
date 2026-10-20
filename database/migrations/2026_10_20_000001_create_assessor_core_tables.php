@@ -24,11 +24,13 @@ return new class extends Migration {
             $table->json('residential_address')->nullable();
             $table->timestamps();
             $table->index(['tenant_id', 'name']);
+            $table->unique(['tenant_id', 'id']);
         });
         Schema::create('assessor_cases', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('assessor_tenants')->cascadeOnDelete();
-            $table->foreignId('citizen_id')->constrained('assessor_citizens')->restrictOnDelete();
+            $table->unsignedBigInteger('citizen_id');
+            $table->foreign(['tenant_id', 'citizen_id'])->references(['tenant_id', 'id'])->on('assessor_citizens')->restrictOnDelete();
             $table->uuid('protocol')->unique();
             $table->string('subject', 180);
             $table->text('description');
@@ -37,11 +39,13 @@ return new class extends Migration {
             $table->timestamp('due_at')->nullable();
             $table->timestamps();
             $table->index(['tenant_id', 'status', 'created_at']);
+            $table->unique(['tenant_id', 'id']);
         });
         Schema::create('assessor_case_events', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('assessor_tenants')->cascadeOnDelete();
-            $table->foreignId('case_id')->constrained('assessor_cases')->cascadeOnDelete();
+            $table->unsignedBigInteger('case_id');
+            $table->foreign(['tenant_id', 'case_id'])->references(['tenant_id', 'id'])->on('assessor_cases')->cascadeOnDelete();
             $table->foreignId('actor_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('event_type', 50);
             $table->string('from_status', 30)->nullable();
