@@ -1,0 +1,45 @@
+name: Assessor Online Core CI
+on:
+  push:
+    branches:
+      - feature/assessor-online-landing-hml
+    paths:
+      - 'app/AssessorOnline/**'
+      - 'database/migrations/2026_10_20_000001_create_assessor_core_tables.php'
+      - 'tests/Feature/AssessorDemandIsolationTest.php'
+      - 'tests/TestCase.php'
+      - 'phpunit.xml'
+      - '.github/workflows/assessor-online-core.yml'
+  workflow_dispatch:
+jobs:
+  assessor-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3, dom, fileinfo
+          tools: composer:v2
+          coverage: none
+      - name: Syntax check
+        run: |
+          php -l app/AssessorOnline/DemandIntakeService.php
+          php -l database/migrations/2026_10_20_000001_create_assessor_core_tables.php
+          php -l tests/Feature/AssessorDemandIsolationTest.php
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Verify isolated test configuration
+        run: |
+          test -f vendor/bin/phpunit
+          grep -q 'DB_DATABASE.*:memory:' phpunit.xml
+          grep -q 'DB_CONNECTION.*sqlite' phpunit.xml
+      - name: Assessor Online core tests
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: vendor/bin/phpunit --testsuite 'Assessor Online Core' --display-warnings --display-deprecations
