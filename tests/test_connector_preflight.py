@@ -173,6 +173,27 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("SECRET_IMPORT_POLICY", codes)
         self.assertIn("NO_AUTHORIZED_ROUTE", codes)
 
+    def test_operation_gate_requires_hml_and_explicit_authorization(self):
+        from ops.preflight.operation_gate import gate_operation
+        from ops.preflight.connector_runner import READ_ONLY_KEYS
+        for environment, authorized in (("production", True), ("hml", False)):
+            plan = gate_operation(
+                {"project_id": "factory", "capability": "compose_up",
+                 "environment": environment, "mutation_authorized": authorized},
+                {})
+            self.assertEqual(plan["status"], "blocked")
+            self.assertIsNone(plan["route"])
+            self.assertFalse(plan["executed"])
+
+    def test_operation_gate_cannot_authorize_without_observations(self):
+        from ops.preflight.operation_gate import gate_operation
+        plan = gate_operation(
+            {"project_id": "factory", "capability": "import_secret",
+             "environment": "hml", "mutation_authorized": True},
+            {})
+        self.assertEqual(plan["status"], "blocked")
+        self.assertIn("PROBE_UNVERIFIED", [x["code"] for x in plan["findings"]])
+
 
 if __name__ == "__main__":
     unittest.main()
