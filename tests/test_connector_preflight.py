@@ -65,6 +65,39 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(result["status"], "blocked")
         self.assertTrue(result["findings"])
 
+    def test_adapter_uses_real_shaped_read_only_responses(self):
+        from ops.preflight.connector_observations import build_observations
+        facts = build_observations(
+            git={"ok": True, "dirty": False, "ahead": 0, "behind": 0},
+            ci={"status": "completed", "conclusion": "success"},
+            docker={"ok": True, "network_exists": True, "port_available": True, "cache_ready": True},
+            secret={"ok": True, "source_present": True, "source_authorized": False,
+                    "destination_key_allowed": True, "migration_allowed": False},
+            connector_inventory={"super": {"available": True, "capabilities": ["import_secret"],
+                                            "policy_allowed": True, "project_allowed": True,
+                                            "project_ids": ["factory"]}},
+            project_id="factory", capability="import_secret",
+        )
+        plan = self.run_check("import_secret", facts)
+        self.assertEqual(plan["status"], "blocked")
+        self.assertIn("SECRET_IMPORT_POLICY", [x["code"] for x in plan["findings"]])
+
+    def test_adapter_rejects_missing_permissions_and_string_booleans(self):
+        from ops.preflight.connector_observations import build_observations
+        facts = build_observations(
+            git={"ok": True, "dirty": "false", "ahead": 0, "behind": 0},
+            ci={"status": "pending", "conclusion": None},
+            docker={"ok": True, "network_exists": "true", "port_available": True},
+            secret={"ok": False, "source_present": True},
+            connector_inventory={"v5": {"available": True, "capabilities": ["compose_up"],
+                                        "policy_allowed": True, "project_allowed": True,
+                                        "project_ids": ["via"]}},
+            project_id="factory", capability="compose_up",
+        )
+        plan = self.run_check("compose_up", facts)
+        self.assertEqual(plan["status"], "blocked")
+        self.assertIsNone(plan["route"])
+
 
 if __name__ == "__main__":
     unittest.main()
