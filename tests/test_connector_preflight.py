@@ -98,6 +98,36 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(plan["status"], "blocked")
         self.assertIsNone(plan["route"])
 
+    def test_versioned_connector_bridge_accepts_authorized_contract(self):
+        from ops.preflight.connector_bridge import plan_from_readonly_responses
+        responses = {
+            "git": {"ok": True, "dirty": False, "ahead": 0, "behind": 0},
+            "ci": {"status": "completed", "conclusion": "success"},
+            "docker": {"ok": True, "network_exists": True, "port_available": True, "cache_ready": True},
+            "secret": {"ok": True, "source_present": True, "source_authorized": True,
+                       "destination_key_allowed": True, "migration_allowed": True},
+            "connectors": {"super": {"ok": True, "contract_version": 1, "available": True,
+                                     "capabilities": ["compose_up"], "project_ids": ["factory"],
+                                     "policy_allowed": True}},
+        }
+        plan = plan_from_readonly_responses({"project_id": "factory", "capability": "compose_up"}, responses)
+        self.assertEqual(plan["status"], "ready")
+        self.assertEqual(plan["route"], "super")
+
+    def test_bridge_rejects_unknown_contract_version(self):
+        from ops.preflight.connector_bridge import plan_from_readonly_responses
+        responses = {
+            "git": {"ok": True, "dirty": False, "ahead": 0, "behind": 0},
+            "ci": {"status": "completed", "conclusion": "success"},
+            "docker": {"ok": True, "network_exists": True, "port_available": True, "cache_ready": True},
+            "connectors": {"super": {"ok": True, "contract_version": 2, "available": True,
+                                     "capabilities": ["compose_up"], "project_ids": ["factory"],
+                                     "policy_allowed": True}},
+        }
+        plan = plan_from_readonly_responses({"project_id": "factory", "capability": "compose_up"}, responses)
+        self.assertEqual(plan["status"], "blocked")
+        self.assertIn("NO_AUTHORIZED_ROUTE", [f["code"] for f in plan["findings"]])
+
 
 if __name__ == "__main__":
     unittest.main()
