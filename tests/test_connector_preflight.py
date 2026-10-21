@@ -128,6 +128,34 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(plan["status"], "blocked")
         self.assertIn("NO_AUTHORIZED_ROUTE", [f["code"] for f in plan["findings"]])
 
+    def test_runner_collects_authorized_probe_contracts(self):
+        from ops.preflight.connector_runner import collect_and_plan
+        probes = {
+            "git": lambda: {"ok": True, "dirty": False, "ahead": 0, "behind": 0},
+            "ci": lambda: {"status": "completed", "conclusion": "success"},
+            "docker": lambda: {"ok": True, "network_exists": True, "port_available": True, "cache_ready": True},
+            "secret": lambda: {"ok": True, "source_present": True, "source_authorized": True,
+                               "destination_key_allowed": True, "migration_allowed": True},
+            "connectors": lambda: {"super": {"ok": True, "contract_version": 1, "available": True,
+                                              "capabilities": ["compose_up"], "project_ids": ["factory"],
+                                              "policy_allowed": True}},
+        }
+        result = collect_and_plan({"project_id": "factory", "capability": "compose_up"}, probes)
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["route"], "super")
+        self.assertFalse(result["executed"])
+
+    def test_runner_blocks_when_probe_missing_or_raises(self):
+        from ops.preflight.connector_runner import collect_and_plan
+        def failed():
+            raise RuntimeError("sensitive details must not leak")
+        result = collect_and_plan({"project_id": "factory", "capability": "import_secret"},
+                                  {"git": failed})
+        self.assertEqual(result["status"], "blocked")
+        self.assertIsNone(result["route"])
+        self.assertNotIn("sensitive details", str(result))
+        self.assertIn("PROBE_UNVERIFIED", [x["code"] for x in result["findings"]])
+
 
 if __name__ == "__main__":
     unittest.main()
