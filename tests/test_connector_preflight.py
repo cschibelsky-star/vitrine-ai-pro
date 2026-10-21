@@ -194,6 +194,67 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(plan["status"], "blocked")
         self.assertIn("PROBE_UNVERIFIED", [x["code"] for x in plan["findings"]])
 
+    def test_executor_boundary_blocks_without_probes(self):
+        from ops.preflight.executor_boundary import execute_hml_operation, PreflightDenied
+        calls = []
+        with self.assertRaises(PreflightDenied):
+            execute_hml_operation(
+                {"project_id": "factory", "capability": "compose_up",
+                 "environment": "hml", "mutation_authorized": True},
+                {}, lambda operation, route: calls.append(route))
+        self.assertEqual(calls, [])
+
+    def test_executor_boundary_runs_only_after_double_preflight(self):
+        from ops.preflight.executor_boundary import execute_hml_operation
+        counts = {"git": 0, "writes": 0}
+        def git_probe():
+            counts["git"] += 1
+            return {"ok": True, "dirty": False, "ahead": 0, "behind": 0}
+        probes = {
+            "git": git_probe,
+            "ci": lambda: {"status": "completed", "conclusion": "success"},
+            "docker": lambda: {"ok": True, "network_exists": True,
+                                "port_available": True, "cache_ready": True},
+            "secret": lambda: {"ok": True},
+            "connectors": lambda: {"super": {"ok": True, "contract_version": 1,
+                "available": True, "capabilities": ["compose_up"],
+                "project_ids": ["factory"], "policy_allowed": True}},
+        }
+        def executor(operation, route):
+            counts["writes"] += 1
+            return {"ok": True}
+        result = execute_hml_operation({"project_id": "factory",
+                "capability": "compose_up", "environment": "hml",
+                "mutation_authorized": True}, probes, executor)
+        self.assertEqual(result["status"], "executed")
+        self.assertEqual(counts["git"], 2)
+        self.assertEqual(counts["writes"], 1)
+
+    def test_executor_boundary_rejects_changed_state_without_writing(self):
+        from ops.preflight.executor_boundary import execute_hml_operation, PreflightDenied
+        calls = {"git": 0, "writes": 0}
+        def changing_git():
+            calls["git"] += 1
+            return {"ok": True, "dirty": calls["git"] > 1,
+                    "ahead": 0, "behind": 0}
+        probes = {
+            "git": changing_git,
+            "ci": lambda: {"status": "completed", "conclusion": "success"},
+            "docker": lambda: {"ok": True, "network_exists": True,
+                                "port_available": True, "cache_ready": True},
+            "secret": lambda: {"ok": True},
+            "connectors": lambda: {"super": {"ok": True, "contract_version": 1,
+                "available": True, "capabilities": ["compose_up"],
+                "project_ids": ["factory"], "policy_allowed": True}},
+        }
+        def write(operation, route):
+            calls["writes"] += 1
+        with self.assertRaises(PreflightDenied):
+            execute_hml_operation({"project_id": "factory",
+                "capability": "compose_up", "environment": "hml",
+                "mutation_authorized": True}, probes, write)
+        self.assertEqual(calls["writes"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
