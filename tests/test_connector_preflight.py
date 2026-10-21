@@ -1,0 +1,70 @@
+"""Contract checks for the read-only connector preflight."""
+import unittest
+from ops.preflight.connector_preflight import preflight
+
+
+def baseline(capability):
+    return {
+        "git": {"dirty": False, "synced": True},
+        "docker": {"network_exists": True, "port_available": True, "cache_ready": True},
+        "ci": {"success": True},
+        "secret": {"source_present": True, "source_authorized": True, "destination_key_allowed": True, "migration_allowed": True},
+        "connectors": {
+            "super": {"available": True, "capabilities": [capability], "policy_allowed": True, "project_allowed": True},
+            "v5": {"available": True, "capabilities": [capability], "policy_allowed": True, "project_allowed": True},
+        },
+    }
+
+
+class PreflightTests(unittest.TestCase):
+    def run_check(self, capability, facts):
+        return preflight({"project_id": "factory", "capability": capability}, facts)
+
+    def test_ready_prefers_super_and_never_executes(self):
+        result = self.run_check("compose_up", baseline("compose_up"))
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["route"], "super")
+        self.assertFalse(result["executed"])
+
+    def test_exhausted_docker_network_blocks(self):
+        facts = baseline("compose_up")
+        facts["docker"]["network_exists"] = False
+        result = self.run_check("compose_up", facts)
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("NETWORK_UNAVAILABLE", [f["code"] for f in result["findings"]])
+
+    def test_cache_not_ready_blocks(self):
+        facts = baseline("compose_up")
+        facts["docker"]["cache_ready"] = False
+        result = self.run_check("compose_up", facts)
+        self.assertIn("CACHE_UNVERIFIED", [f["code"] for f in result["findings"]])
+
+    def test_container_secret_import_policy_blocks(self):
+        facts = baseline("import_secret")
+        facts["secret"]["migration_allowed"] = False
+        result = self.run_check("import_secret", facts)
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("SECRET_IMPORT_POLICY", [f["code"] for f in result["findings"]])
+
+    def test_fallback_requires_explicit_policy_approval(self):
+        facts = baseline("compose_up")
+        facts["connectors"]["super"]["policy_allowed"] = False
+        result = self.run_check("compose_up", facts)
+        self.assertEqual(result["route"], "v5")
+
+    def test_no_route_fails_closed(self):
+        facts = baseline("import_secret")
+        facts["connectors"]["super"]["project_allowed"] = False
+        facts["connectors"]["v5"]["policy_allowed"] = False
+        result = self.run_check("import_secret", facts)
+        self.assertEqual(result["status"], "blocked")
+        self.assertIsNone(result["route"])
+
+    def test_unverified_state_is_not_success(self):
+        result = self.run_check("compose_up", {"connectors": {}})
+        self.assertEqual(result["status"], "blocked")
+        self.assertTrue(result["findings"])
+
+
+if __name__ == "__main__":
+    unittest.main()
