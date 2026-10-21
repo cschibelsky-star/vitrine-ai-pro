@@ -156,6 +156,23 @@ class PreflightTests(unittest.TestCase):
         self.assertNotIn("sensitive details", str(result))
         self.assertIn("PROBE_UNVERIFIED", [x["code"] for x in result["findings"]])
 
+    def test_factory_live_shape_does_not_fake_secret_policy(self):
+        from ops.preflight.factory_connector_adapter import plan_factory_via_readonly
+        plan = plan_factory_via_readonly(
+            git_compare={"ok": True, "dirty": False, "ahead": 0, "behind": 0},
+            runtime_status={"ok": True, "secrets": {"FACTORY_VIA_READ_TOKEN": {"present": False}}},
+            binding_status={"ok": True, "bindings": [{"target_key": "FACTORY_VIA_READ_TOKEN",
+                            "source_project_id": "factory", "source_present": False}]},
+            health_status={"ok": True, "health": "healthy"},
+            capability_contracts={},
+        )
+        self.assertEqual(plan["status"], "blocked")
+        self.assertIsNone(plan["route"])
+        codes = [x["code"] for x in plan["findings"]]
+        self.assertIn("SECRET_SOURCE_UNAVAILABLE", codes)
+        self.assertIn("SECRET_IMPORT_POLICY", codes)
+        self.assertIn("NO_AUTHORIZED_ROUTE", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
