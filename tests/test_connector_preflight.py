@@ -255,6 +255,36 @@ class PreflightTests(unittest.TestCase):
                 "mutation_authorized": True}, probes, write)
         self.assertEqual(calls["writes"], 0)
 
+    def test_integration_readiness_does_not_confuse_tool_coverage_with_e2e(self):
+        from ops.preflight.integration_readiness import integration_readiness
+        result = integration_readiness(
+            factory_capabilities={"ok": True, "fully_supported": True},
+            via_capabilities={"ok": True, "fully_supported": True},
+            factory_runtime={"ok": True, "secrets": {"FACTORY_VIA_READ_TOKEN": {"present": False}}},
+            via_binding={"ok": True, "bindings": [{"target_key": "FACTORY_VIA_READ_TOKEN",
+                          "source_project_id": "factory", "enabled": True,
+                          "source_present": False, "target_present": False}]},
+            factory_health={"ok": True, "health": "healthy"},
+        )
+        self.assertEqual(result["status"], "blocked")
+        codes = {entry["code"] for entry in result["findings"]}
+        self.assertEqual(codes, {"FACTORY_TOKEN_ABSENT", "VIA_BINDING_UNREADY",
+                                 "E2E_AUTH_NOT_VERIFIED"})
+
+    def test_integration_readiness_requires_real_authenticated_proof(self):
+        from ops.preflight.integration_readiness import integration_readiness
+        result = integration_readiness(
+            factory_capabilities={"ok": True, "fully_supported": True},
+            via_capabilities={"ok": True, "fully_supported": True},
+            factory_runtime={"ok": True, "secrets": {"FACTORY_VIA_READ_TOKEN": {"present": True}}},
+            via_binding={"ok": True, "bindings": [{"target_key": "FACTORY_VIA_READ_TOKEN",
+                          "source_project_id": "factory", "enabled": True,
+                          "source_present": True, "target_present": True}]},
+            factory_health={"ok": True, "health": "healthy"},
+            authenticated_probe={"ok": True, "authenticated": True, "target": "factory_hml"},
+        )
+        self.assertEqual(result["status"], "ready")
+
 
 if __name__ == "__main__":
     unittest.main()
