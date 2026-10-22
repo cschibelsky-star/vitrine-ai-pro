@@ -47,6 +47,8 @@
                     <div class="actions">
                         @if(!empty($app['sso']))
                             <a class="button" href="{{ route('cockpit.open', ['slug' => $app['slug']]) }}">Abrir com SSO</a>
+                        @elseif(!empty($app['preview_url']))
+                            <a class="button" href="{{ $app['preview_url'] }}" rel="noopener noreferrer" target="_blank">Abrir demonstracao HML</a>
                         @elseif(!empty($app['admin_url']))
                             <a class="button" href="{{ $app['admin_url'] }}" rel="noopener">Abrir Administracao</a>
                         @else
