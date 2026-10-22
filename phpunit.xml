@@ -8,6 +8,10 @@
         <testsuite name="Marketing Agents Core">
             <directory>tests/Unit/Marketing</directory>
         </testsuite>
+        <testsuite name="Assessor Online Core">
+            <file>tests/Feature/AssessorDemandIsolationTest.php</file>
+            <file>tests/Feature/AssessorCaseWorkflowTest.php</file>
+        </testsuite>
     </testsuites>
     <php>
         <env name="APP_ENV" value="testing"/>
