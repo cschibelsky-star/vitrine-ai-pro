@@ -16,7 +16,7 @@ const assert=require('node:assert/strict');
    async function capture(name){
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'overflow '+width+' '+name);
     const path='qa/'+name+'-'+width+'.png';
-    await page.screenshot({path,fullPage:true});
+    await page.screenshot({path,fullPage:true,animations:'disabled'});
     const bytes=fs.readFileSync(path);
     assert.equal(bytes.subarray(1,4).toString(),'PNG');
     assert.equal(bytes.readUInt32BE(16),width);
