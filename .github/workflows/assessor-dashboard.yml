@@ -1,0 +1,34 @@
+name: Assessor dashboard visual QA
+on:
+  push:
+    branches: ['design/assessor-panel-audit-20261014']
+  pull_request:
+    paths: ['hml/assessor/**', 'tests/Assessor/dashboard.cjs', '.github/workflows/assessor-dashboard.yml']
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p qa
+          python3 -m http.server 8765 --directory hml/assessor &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8765/demo.html > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8765/demo.html > /dev/null
+          node tests/Assessor/dashboard.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: assessor-dashboard-review
+          path: qa/
+          if-no-files-found: error
