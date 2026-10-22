@@ -105,18 +105,35 @@ class AiMediaGenerationService
         // quando a documentação/conta Roteia definir um endpoint de mídia específico.
         $path = trim((string) data_get($provider->config, 'endpoints.'.$capability, ''));
         if ($path === '') {
-            throw new RuntimeException('Endpoint Roteia para '.$capability.' ainda não configurado.');
+            if ($capability !== 'image_generation') {
+                throw new RuntimeException('Endpoint Roteia para '.$capability.' ainda não configurado.');
+            }
+
+            $path = 'images/generations';
+        }
+
+        // A URL base oficial termina em /v1. Evite duplicar o prefixo quando
+        // uma configuração antiga já trouxer /v1 no início do caminho.
+        $path = ltrim($path, '/');
+        if (str_ends_with($baseUrl, '/v1') && str_starts_with($path, 'v1/')) {
+            $path = substr($path, 3);
+        }
+        if ($capability === 'image_generation' && (! is_string($model) || trim($model) === '')) {
+            throw new RuntimeException('Modelo de imagem Roteia não selecionado.');
+        }
+
+        // A API de imagens segue o contrato compatível: model e prompt.
+        // O campo interno capability não faz parte da solicitação de imagens.
+        $requestBody = ['model' => $model, 'prompt' => $prompt];
+        if ($capability !== 'image_generation') {
+            $requestBody['capability'] = $capability;
         }
 
         $started = microtime(true);
         $response = Http::withToken($apiKey)
             ->acceptJson()
             ->timeout(120)
-            ->post($baseUrl.'/'.ltrim($path, '/'), [
-                'model' => $model,
-                'prompt' => $prompt,
-                'capability' => $capability,
-            ]);
+            ->post($baseUrl.'/'.$path, $requestBody);
 
         $payload = (array) $response->json();
         $requestId = trim((string) ($payload['request_id'] ?? ''))
