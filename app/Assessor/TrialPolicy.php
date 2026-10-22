@@ -26,7 +26,7 @@ final class TrialPolicy
     public static function dates(DateTimeImmutable $now): array
     {
         $start = $now->setTimezone(new DateTimeZone('UTC'));
-        return [$start, $start->modify('+30 days')];
+        return [$start, $start->modify('+15 days')];
     }
     public static function accessible(string $status, ?DateTimeImmutable $end, DateTimeImmutable $now): bool
     {
