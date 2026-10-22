@@ -25,7 +25,9 @@ const assert=require('node:assert/strict');
    }
    function navigate(options){return {click:async()=>{
     if(width<=950)await page.locator('#menu-toggle').click();
-    await page.locator('nav').getByRole('button',options).click();
+    const view=await page.locator('nav [data-view]').evaluateAll((xs,name)=>xs.find(x=>x.textContent.trim()===name)?.dataset.view,options.name);
+    assert.ok(view,'Navigation target '+options.name);
+    await page.locator('nav [data-view="'+view+'"]').click();
     if(width<=950)assert.equal(await page.locator('#menu-toggle').getAttribute('aria-expanded'),'false');
    }}}
    if(width<=950)await page.locator('#menu-toggle').click();
