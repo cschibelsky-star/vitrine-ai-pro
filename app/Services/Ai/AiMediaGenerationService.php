@@ -199,7 +199,11 @@ class AiMediaGenerationService
         // O ID financeiro é distinto do ID de operação e deve sobreviver à falha de entrega.
         $payload['request_id'] = $requestId;
         $payload['id'] = $requestId;
-        $result['metadata']['provider_cost_brl'] = data_get($payload, 'billing.cost_brl') ?? $payload['cost_brl'] ?? data_get($payload, 'usage.cost') ?? null;
+        // usage.cost does not declare a currency in the observed image response.
+        // Only explicitly BRL-denominated fields may feed financial totals in reais.
+        $result['metadata']['provider_cost_brl'] = data_get($payload, 'billing.cost_brl') ?? $payload['cost_brl'] ?? null;
+        $result['metadata']['provider_reported_cost'] = data_get($payload, 'usage.cost');
+        $result['metadata']['provider_reported_cost_currency'] = data_get($payload, 'usage.cost_currency') ?? null;
         $result['metadata']['provider_usage'] = $payload['usage'] ?? null;
         $result['metadata']['telemetry_available'] = class_exists(AiUsageTelemetry::class);
         if ($result['metadata']['telemetry_available']) {
