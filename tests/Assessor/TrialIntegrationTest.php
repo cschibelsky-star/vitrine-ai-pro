@@ -39,7 +39,7 @@ final class TrialIntegrationTest extends TestCase
         $s=new TrialService($provider);$t=$s->request(1,7,'Gabinete sintético','deputado');
         $t=$s->provision($t->id);$start=$t->starts_at;
         $this->assertSame('active',$t->status);
-        $this->assertSame(30*86400,$t->ends_at->getTimestamp()-$start->getTimestamp());
+        $this->assertSame(15*86400,$t->ends_at->getTimestamp()-$start->getTimestamp());
         $s->provision($t->id);$this->assertSame(1,$provider->calls);
         $t=$s->stop($t->id,'cancelled');$this->assertSame('cancelled',$t->status);
         $this->assertSame($start->getTimestamp(),$t->starts_at->getTimestamp());
