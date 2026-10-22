@@ -23,6 +23,9 @@ jobs:
           php -l app/AssessorOnline/DemandIntakeService.php
           php -l database/migrations/2026_10_20_000001_create_assessor_core_tables.php
           php -l tests/Feature/AssessorDemandIsolationTest.php
+          php -l app/AssessorOnline/CaseWorkflowService.php
+          php -l database/migrations/2026_10_22_000002_create_assessor_memberships_table.php
+          php -l tests/Feature/AssessorCaseWorkflowTest.php
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
       - name: Verify isolated test configuration
