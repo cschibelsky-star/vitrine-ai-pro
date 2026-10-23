@@ -15,7 +15,7 @@ services:
           head -c 48 /dev/urandom | od -An -tx1 | tr -d ' \n' > /secrets/db-password
         fi
         if [ ! -s /secrets/app-key ]; then
-          printf 'base64:%s' "$$(head -c 32 /dev/urandom | base64 | tr -d '\n')" > /secrets/app-key
+          printf 'base64:%s' "$(head -c 32 /dev/urandom | base64 | tr -d '\n')" > /secrets/app-key
         fi
         chmod 0444 /secrets/db-password /secrets/app-key
         test -s /secrets/db-password && test -s /secrets/app-key
@@ -56,7 +56,7 @@ services:
     command:
       - |
         export DB_PASSWORD="$(cat /run/hml-secrets/db-password)"
-        export APP_KEY="$$(cat /run/hml-secrets/app-key)"
+        export APP_KEY="$(cat /run/hml-secrets/app-key)"
         mkdir -p storage/app/private
         chown -R www-data:www-data storage/app/private
         exec php-fpm
