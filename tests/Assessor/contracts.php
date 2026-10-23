@@ -20,11 +20,22 @@ foreach(['tenant_id'=>'wrong','company_id'=>8,'hostname'=>'evil.test','environme
 rejects(fn()=>P::host('../admin'));
 [$start,$end]=P::dates(new DateTimeImmutable('2026-10-13T19:41:21-03:00'));
 check($start->format('c')==='2026-10-13T22:41:21+00:00');
-check($end->getTimestamp()-$start->getTimestamp()===30*86400);
+check($end->getTimestamp()-$start->getTimestamp()===15*86400);
+check($end->format('c')==='2026-10-28T22:41:21+00:00');
+// Calendar boundaries and DST must still yield fifteen complete UTC days.
+foreach (['2026-01-31T23:59:59+14:00', '2028-02-20T12:00:00Z', '2026-03-01T12:00:00 America/New_York', '2026-10-25T12:00:00 America/New_York'] as $input) {
+ $now=new DateTimeImmutable($input);
+ [$from,$until]=P::dates($now);
+ check($from->getTimestamp()===$now->getTimestamp());
+ check($from->getTimezone()->getName()==='UTC');
+ check($until->getTimestamp()-$from->getTimestamp()===15*86400);
+ check(!P::accessible('active',$until,$from->modify('+30 days')));
+ check(!P::accessible('active',$until,$from->modify('+12 months')));
+}
 check(P::accessible('active',$end,$end->modify('-1 second')));
 check(!P::accessible('active',$end,$end));
 check(!P::accessible('active',$end,$end->modify('+1 second')));
-foreach(['requested','blocked','cancelled','expired','cancelled_pending','expired_pending'] as $s) { check(!P::accessible($s,$end,$start)); }
+foreach(['requested','blocked','cancelled','expired','cancelled_pending','expired_pending','trial','active_prepaid_30d','active_annual','active_site_only','suspended','canceled'] as $s) { check(!P::accessible($s,$end,$start)); }
 check(!P::accessible('active',null,$start));
 try { (new App\Assessor\UnavailableHmlTrialProvider)->provision($id,7,P::host($id)); throw new LogicException('must block'); }
 catch (RuntimeException $e) { check($e->getMessage()==='official_hml_trial_adapter_not_configured'); }
