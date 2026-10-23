@@ -104,6 +104,9 @@ services:
 networks:
   pr122_internal:
     internal: true
+    ipam:
+      config:
+        - subnet: ${PR122_HML_SUBNET:?Run scripts/roteia-pr122-up.sh to select a non-conflicting subnet}
 
 volumes:
   pr122_secrets:
