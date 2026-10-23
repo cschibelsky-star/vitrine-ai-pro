@@ -49,6 +49,15 @@ PY
 export PR122_HML_SUBNET="$subnet"
 echo "PR122_HML_SUBNET=$PR122_HML_SUBNET"
 docker compose -f "$compose" config --quiet
-echo "Compose valido; iniciando somente a stack isolada, sem novo build nem migracoes..."
-docker compose -f "$compose" up -d --no-build
-docker compose -f "$compose" ps
+case "${1:-up}" in
+  status)
+    docker compose -f "$compose" ps
+    exit 0
+    ;;
+  up)
+    echo "Compose valido; iniciando somente a stack isolada, sem novo build nem migracoes..."
+    docker compose -f "$compose" up -d --no-build
+    docker compose -f "$compose" ps
+    ;;
+  *) echo "Uso: bash scripts/roteia-pr122-up.sh [up|status]"; exit 2 ;;
+esac
