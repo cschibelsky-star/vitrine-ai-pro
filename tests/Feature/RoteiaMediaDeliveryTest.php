@@ -10,15 +10,21 @@ use Tests\TestCase;
 
 class RoteiaMediaDeliveryTest extends TestCase
 {
-    private function dispatchPayload(array $payload, int $status = 200, array $headers = ['x-request-id' => 'billing-id']): array
+    private function dispatchPayload(
+        array $payload,
+        int $status = 200,
+        array $headers = ['x-request-id' => 'billing-id'],
+        array $providerConfig = ['endpoints' => ['image_generation' => 'images']],
+        string $baseUrl = 'https://roteia.example',
+    ): array
     {
         config(['filesystems.default' => 'local']);
         Storage::fake('local');
         putenv('ROTEIA_API_KEY=test-only-key');
-        putenv('ROTEIA_BASE_URL=https://roteia.example');
+        putenv('ROTEIA_BASE_URL='.$baseUrl);
         Http::preventStrayRequests();
-        Http::fake(['roteia.example/*' => Http::response($payload, $status, $headers)]);
-        $provider = new AiProvider(['slug' => 'roteia', 'config' => ['endpoints' => ['image_generation' => 'images']]]);
+        Http::fake([parse_url($baseUrl, PHP_URL_HOST).'/*' => Http::response($payload, $status, $headers)]);
+        $provider = new AiProvider(['slug' => 'roteia', 'config' => $providerConfig]);
         $service = new class extends AiMediaGenerationService {
             public function run(AiProvider $provider): array
             {
@@ -32,6 +38,45 @@ class RoteiaMediaDeliveryTest extends TestCase
             putenv('ROTEIA_API_KEY');
             putenv('ROTEIA_BASE_URL');
         }
+    }
+
+    public function test_default_image_endpoint_matches_roteia_api_contract(): void
+    {
+        $png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1sAAAAASUVORK5CYII=';
+        $result = $this->dispatchPayload(
+            ['data' => [['b64_json' => $png]]],
+            200,
+            [],
+            [],
+            'https://api.roteia.ai/v1',
+        );
+
+        $this->assertSame('Concluído', $result['status']);
+        Storage::disk('local')->assertExists($result['asset_path']);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) =>
+            $request->url() === 'https://api.roteia.ai/v1/images/generations'
+            && $request['model'] === 'test-model'
+            && $request['prompt'] === 'Test image'
+            && ! isset($request['capability'])
+        );
+    }
+
+    public function test_legacy_v1_path_does_not_duplicate_api_version(): void
+    {
+        $result = $this->dispatchPayload(
+            ['status' => 'pending', 'job_id' => 'job-one'],
+            200,
+            [],
+            ['endpoints' => ['image_generation' => '/v1/images/generations']],
+            'https://api.roteia.ai/v1',
+        );
+
+        $this->assertSame('Pendente', $result['status']);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) =>
+            $request->url() === 'https://api.roteia.ai/v1/images/generations'
+        );
     }
 
     public function test_completed_without_image_is_error_and_keeps_request_id(): void

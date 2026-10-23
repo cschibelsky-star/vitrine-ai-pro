@@ -59,3 +59,8 @@ if (file_exists(__DIR__.'/master_2_0.php')) {
     require __DIR__.'/master_2_0.php';
 }
 
+
+// Private image previews require a logged-in administrator.
+Route::middleware(['auth'])->get('/admin/centro-ia/imagens/{generation}', \App\Http\Controllers\AiImagePreviewController::class)
+    ->whereNumber('generation')
+    ->name('centro-ia.images.preview');
