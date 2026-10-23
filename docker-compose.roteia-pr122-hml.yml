@@ -44,7 +44,9 @@ services:
       timeout: 5s
       retries: 12
     networks:
-      - pr122_internal
+      pr122_internal:
+        aliases:
+          - core_db
 
   core_app:
     build:
@@ -85,7 +87,9 @@ services:
       hml_secrets:
         condition: service_completed_successfully
     networks:
-      - pr122_internal
+      pr122_internal:
+        aliases:
+          - core_app
 
   core_web:
     image: nginx:stable
