@@ -61,6 +61,9 @@ services:
         export APP_KEY="$(cat /run/hml-secrets/app-key)"
         mkdir -p storage/app/private
         chown -R www-data:www-data storage/app/private
+        # Permit isolated PHP-FPM workers to inherit DB_PASSWORD and APP_KEY.
+        # No provider API key is provided to this HML instance.
+        printf '%s\n' '[www]' 'clear_env = no' > /usr/local/etc/php-fpm.d/zz-pr122-hml-env.conf
         exec php-fpm
     environment:
       APP_NAME: "Centro IA Roteia PR122 HML"
@@ -109,7 +112,8 @@ services:
 
 networks:
   pr122_internal:
-    internal: true
+    # Only 127.0.0.1:18997 is published; no Traefik router is enabled.
+    internal: false
     ipam:
       config:
         - subnet: ${PR122_HML_SUBNET:?Run scripts/roteia-pr122-up.sh to select a non-conflicting subnet}
