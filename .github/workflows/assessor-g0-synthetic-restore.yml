@@ -1,0 +1,28 @@
+name: Assessor G0 synthetic restore
+
+on:
+  push:
+    branches:
+      - feature/assessor-commercial-gates-20261022
+    paths:
+      - 'scripts/assessor/g0-synthetic-restore-drill.py'
+      - '.github/workflows/assessor-g0-synthetic-restore.yml'
+  pull_request:
+    paths:
+      - 'scripts/assessor/g0-synthetic-restore-drill.py'
+      - '.github/workflows/assessor-g0-synthetic-restore.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python version
+        run: python3 --version
+      - name: Verify isolated synthetic backup and restore
+        run: python3 scripts/assessor/g0-synthetic-restore-drill.py
