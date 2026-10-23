@@ -41,4 +41,6 @@ jobs:
       - run: php -l app/Http/Controllers/AiImagePreviewController.php
       - run: php -l app/Filament/Pages/AiCenterEnterprise.php
       - run: php -l routes/web.php
+      - run: php artisan route:list --name=centro-ia.images.preview
+      - run: php artisan view:cache
       - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php tests/Feature/RoteiaImageSmokeCommandTest.php tests/Feature/AiImagePreviewAccessTest.php
