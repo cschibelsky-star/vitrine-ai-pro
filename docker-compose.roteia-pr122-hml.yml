@@ -1,0 +1,111 @@
+# Dedicated, non-public Roteia PR #122 homologation stack.
+# It does not share containers, data volumes, credentials, public routes or DB with Core HML.
+# No ROTEIA_API_KEY is mounted, and no migrate/seed job runs automatically.
+name: centro-ia-roteia-pr122-hml
+
+services:
+  hml_secrets:
+    image: alpine:3.21
+    restart: "no"
+    entrypoint: ["/bin/sh", "-ec"]
+    command: |
+      umask 077
+      if [ ! -s /secrets/db-password ]; then
+        head -c 48 /dev/urandom | od -An -tx1 | tr -d ' \n' > /secrets/db-password
+      fi
+      if [ ! -s /secrets/app-key ]; then
+        printf 'base64:%s' "$$(head -c 32 /dev/urandom | base64 | tr -d '\n')" > /secrets/app-key
+      fi
+      chmod 0444 /secrets/db-password /secrets/app-key
+      test -s /secrets/db-password && test -s /secrets/app-key
+    volumes:
+      - pr122_secrets:/secrets
+    networks:
+      - pr122_internal
+
+  core_db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+      MARIADB_DATABASE: centro_ia_pr122
+      MARIADB_USER: centro_ia_pr122
+      MARIADB_PASSWORD_FILE: /run/hml-secrets/db-password
+    volumes:
+      - pr122_database:/var/lib/mysql
+      - pr122_secrets:/run/hml-secrets:ro
+    depends_on:
+      hml_secrets:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+    networks:
+      - pr122_internal
+
+  core_app:
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile
+    image: centro-ia-roteia-pr122-app:local
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-ec"]
+    command: |
+      export DB_PASSWORD="$$(cat /run/hml-secrets/db-password)"
+      export APP_KEY="$$(cat /run/hml-secrets/app-key)"
+      mkdir -p storage/app/private
+      chown -R www-data:www-data storage/app/private
+      exec php-fpm
+    environment:
+      APP_NAME: "Centro IA Roteia PR122 HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_URL: "http://127.0.0.1:18997"
+      DB_CONNECTION: mysql
+      DB_HOST: core_db
+      DB_PORT: "3306"
+      DB_DATABASE: centro_ia_pr122
+      DB_USERNAME: centro_ia_pr122
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      FILESYSTEM_DISK: local
+      ROTEIA_API_KEY: ""
+      ROTEIA_BASE_URL: ""
+    volumes:
+      - pr122_secrets:/run/hml-secrets:ro
+      - pr122_assets:/var/www/html/storage/app/private
+    depends_on:
+      core_db:
+        condition: service_healthy
+      hml_secrets:
+        condition: service_completed_successfully
+    networks:
+      - pr122_internal
+
+  core_web:
+    image: nginx:stable
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18997:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/core/nginx/roteia-pr122-hml.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      core_app:
+        condition: service_healthy
+    labels:
+      traefik.enable: "false"
+    networks:
+      - pr122_internal
+
+networks:
+  pr122_internal:
+    internal: true
+
+volumes:
+  pr122_secrets:
+  pr122_database:
+  pr122_assets:
