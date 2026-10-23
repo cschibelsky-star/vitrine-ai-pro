@@ -82,7 +82,7 @@ class AiImagePreviewAccessTest extends TestCase
 
         $response->assertOk()
             ->assertHeader('Content-Type', 'image/png')
-            ->assertHeader('Cache-Control', 'private, no-store, max-age=0')
+            ->assertHeader('Cache-Control', 'max-age=0, no-store, private')
             ->assertHeader('X-Content-Type-Options', 'nosniff');
         $this->assertSame($bytes, $response->getContent());
     }
