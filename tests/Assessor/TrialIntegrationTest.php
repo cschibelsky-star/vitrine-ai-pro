@@ -24,6 +24,10 @@ final class TrialIntegrationTest extends TestCase
         $this->assertSame('2026-11-06T15:00:00+00:00', $end->format('c'));
         $this->assertTrue(TrialPolicy::accessible('active', $end, $end->modify('-1 second')));
         $this->assertFalse(TrialPolicy::accessible('active', $end, $end));
+        $this->assertFalse(TrialPolicy::accessible('active', $end, $end->modify('+1 second')));
+        foreach (['active_prepaid_30d', 'active_annual', 'active_site_only', 'expired', 'expired_pending', 'cancelled_pending'] as $status) {
+            $this->assertFalse(TrialPolicy::accessible($status, $end, $start));
+        }
         $this->assertFalse(TrialPolicy::accessible('cancelled', $end, $start));
         $this->assertFalse(TrialPolicy::accessible('active', null, $start));
     }
@@ -51,7 +55,13 @@ final class TrialIntegrationTest extends TestCase
         $t=$s->provision($t->id);$start=$t->starts_at;
         $this->assertSame('active',$t->status);
         $this->assertSame(15*86400,$t->ends_at->getTimestamp()-$start->getTimestamp());
-        $s->provision($t->id);$this->assertSame(1,$provider->calls);
+        $end=$t->ends_at;
+        $retry=$s->provision($t->id);$this->assertSame(1,$provider->calls);
+        $this->assertSame($start->getTimestamp(),$retry->starts_at->getTimestamp());
+        $this->assertSame($end->getTimestamp(),$retry->ends_at->getTimestamp());
+        $this->assertTrue(TrialPolicy::accessible($retry->status,$retry->ends_at,$end->modify('-1 second')));
+        $this->assertFalse(TrialPolicy::accessible($retry->status,$retry->ends_at,$end));
+        $this->assertFalse(TrialPolicy::accessible($retry->status,$retry->ends_at,$end->modify('+1 second')));
         $t=$s->stop($t->id,'cancelled');$this->assertSame('cancelled',$t->status);
         $this->assertSame($start->getTimestamp(),$t->starts_at->getTimestamp());
         $this->assertFalse(Schema::hasTable('payments'));
