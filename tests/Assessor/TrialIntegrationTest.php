@@ -16,6 +16,17 @@ final class TrialIntegrationTest extends TestCase
         (require __DIR__.'/../../database/migrations/2026_10_13_230000_create_assessor_trial_requests.php')->up();
         DB::table('users')->insert(['id'=>1]); DB::table('companies')->insert(['id'=>7]);
     }
+    public function test_trial_policy_is_exactly_fifteen_days_and_expires_at_boundary(): void
+    {
+        $now = new \DateTimeImmutable('2026-10-22T12:00:00-03:00');
+        [$start, $end] = TrialPolicy::dates($now);
+        $this->assertSame('2026-10-22T15:00:00+00:00', $start->format('c'));
+        $this->assertSame('2026-11-06T15:00:00+00:00', $end->format('c'));
+        $this->assertTrue(TrialPolicy::accessible('active', $end, $end->modify('-1 second')));
+        $this->assertFalse(TrialPolicy::accessible('active', $end, $end));
+        $this->assertFalse(TrialPolicy::accessible('cancelled', $end, $start));
+        $this->assertFalse(TrialPolicy::accessible('active', null, $start));
+    }
     public function test_unconfigured_provider_never_starts_clock(): void
     {
         $s=new TrialService(new UnavailableHmlTrialProvider);
