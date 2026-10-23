@@ -8,16 +8,17 @@ services:
     image: alpine:3.21
     restart: "no"
     entrypoint: ["/bin/sh", "-ec"]
-    command: |
-      umask 077
-      if [ ! -s /secrets/db-password ]; then
-        head -c 48 /dev/urandom | od -An -tx1 | tr -d ' \n' > /secrets/db-password
-      fi
-      if [ ! -s /secrets/app-key ]; then
-        printf 'base64:%s' "$$(head -c 32 /dev/urandom | base64 | tr -d '\n')" > /secrets/app-key
-      fi
-      chmod 0444 /secrets/db-password /secrets/app-key
-      test -s /secrets/db-password && test -s /secrets/app-key
+    command:
+      - |
+        umask 077
+        if [ ! -s /secrets/db-password ]; then
+          head -c 48 /dev/urandom | od -An -tx1 | tr -d ' \n' > /secrets/db-password
+        fi
+        if [ ! -s /secrets/app-key ]; then
+          printf 'base64:%s' "$$(head -c 32 /dev/urandom | base64 | tr -d '\n')" > /secrets/app-key
+        fi
+        chmod 0444 /secrets/db-password /secrets/app-key
+        test -s /secrets/db-password && test -s /secrets/app-key
     volumes:
       - pr122_secrets:/secrets
     networks:
@@ -52,12 +53,13 @@ services:
     image: centro-ia-roteia-pr122-app:local
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-ec"]
-    command: |
-      export DB_PASSWORD="$$(cat /run/hml-secrets/db-password)"
-      export APP_KEY="$$(cat /run/hml-secrets/app-key)"
-      mkdir -p storage/app/private
-      chown -R www-data:www-data storage/app/private
-      exec php-fpm
+    command:
+      - |
+        export DB_PASSWORD="$(cat /run/hml-secrets/db-password)"
+        export APP_KEY="$$(cat /run/hml-secrets/app-key)"
+        mkdir -p storage/app/private
+        chown -R www-data:www-data storage/app/private
+        exec php-fpm
     environment:
       APP_NAME: "Centro IA Roteia PR122 HML"
       APP_ENV: homologation
