@@ -41,7 +41,7 @@
                     </p>
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                    Atualizado: {{ IlluminateSupportCarbon::parse($orchestratorUpdatedAt)->format('d/m/Y H:i:s') }}
+                    Atualizado: {{ \Illuminate\Support\Carbon::parse($orchestratorUpdatedAt)->format('d/m/Y H:i:s') }}
                 </div>
             </div>
 
