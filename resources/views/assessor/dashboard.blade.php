@@ -31,6 +31,11 @@ $open = count(array_filter($demands, fn($d) => $d->status === 'open'));
 $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress'));
 @endphp
 <div class="grid"><div class="card"><span>Demandas registradas</span><strong>{{ $total }}</strong></div><div class="card"><span>Aguardando atendimento</span><strong>{{ $open }}</strong></div><div class="card"><span>Em andamento</span><strong>{{ $progress }}</strong></div></div>
+<div class="grid">
+<div class="card"><span>Cidadãos cadastrados</span><strong>{{ $metrics['citizens'] }}</strong></div>
+<div class="card"><span>Demandas resolvidas</span><strong>{{ $metrics['demands_resolved'] }}</strong></div>
+<div class="card"><span>Compromissos agendados</span><strong>{{ $metrics['appointments'] }}</strong></div>
+</div>
 <section>
 <div class="panel"><h2>Nova demanda</h2>
 <form id="demand-form"><label>Assunto<input name="subject" maxlength="200" required></label><label>Descrição<textarea name="description" maxlength="10000" rows="5" required></textarea></label><button type="submit">Registrar demanda</button></form><p id="feedback" role="status"></p>
@@ -46,6 +51,35 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 </select></td></tr>
 @empty<tr><td colspan="4">Nenhuma demanda registrada.</td></tr>@endforelse
 </tbody></table></div></div></section>
+<section style="margin-top:18px">
+<div class="panel"><h2>Cadastro de cidadãos</h2>
+<form id="citizen-form">
+<input name="name" maxlength="160" placeholder="Nome completo" required>
+<input name="phone" maxlength="32" placeholder="Telefone">
+<input name="email" type="email" maxlength="180" placeholder="E-mail">
+<input name="neighborhood" maxlength="120" placeholder="Bairro">
+<button type="submit">Cadastrar cidadão</button></form>
+<p id="citizen-feedback" role="status"></p>
+<h2>Lista de cidadãos</h2>
+@forelse($citizens as $citizen)<p>{{ $citizen->name }} <small>{{ $citizen->neighborhood }}</small></p>
+@empty<p>Nenhum cidadão cadastrado.</p>@endforelse
+</div>
+<div class="panel"><h2>Agenda do gabinete</h2>
+<form id="appointment-form">
+<input name="title" maxlength="180" placeholder="Assunto do compromisso" required>
+<label>Início<input type="datetime-local" name="starts_at" required></label>
+<label>Fim<input type="datetime-local" name="ends_at" required></label>
+<select name="citizen_id"><option value="">Cidadão (opcional)</option>
+@foreach($citizens as $citizen)<option value="{{ $citizen->id }}">{{ $citizen->name }}</option>@endforeach
+</select>
+<select name="assessor_id"><option value="">Assessor (opcional)</option>
+@foreach($members as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach
+</select>
+<button type="submit">Agendar compromisso</button></form>
+<p id="appointment-feedback" role="status"></p>
+@forelse($appointments as $appointment)<p><strong>{{ $appointment->title }}</strong><br><small>{{ $appointment->starts_at }} — {{ $appointment->ends_at }}</small></p>
+@empty<p>Sem compromissos agendados.</p>@endforelse
+</div></section>
 </main>
 <script>
 const base = @json(url('/assessor/gabinetes/'.$cabinet));
@@ -55,6 +89,16 @@ const res=await fetch(base+path,{method,headers:{'Content-Type':'application/jso
 if(!res.ok)throw new Error('Operação não concluída ('+res.status+').');
 location.reload();
 }
+function wireForm(id,path,feedbackId){
+document.querySelector(id).addEventListener('submit',async e=>{
+e.preventDefault();const feedback=document.querySelector(feedbackId);
+const values=Object.fromEntries(new FormData(e.currentTarget));
+for(const key of ['citizen_id','assessor_id'])if(values[key]==='')delete values[key];
+try{await send(path,'POST',values)}catch(err){feedback.className='error';feedback.textContent=err.message}
+});
+}
+wireForm('#citizen-form','/cidadaos','#citizen-feedback');
+wireForm('#appointment-form','/agenda','#appointment-feedback');
 document.querySelector('#demand-form').addEventListener('submit',async e=>{
 e.preventDefault();const f=e.currentTarget,feedback=document.querySelector('#feedback');
 try{await send('/demandas','POST',Object.fromEntries(new FormData(f)))}catch(err){feedback.className='error';feedback.textContent=err.message}
