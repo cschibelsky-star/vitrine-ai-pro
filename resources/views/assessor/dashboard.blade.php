@@ -41,16 +41,16 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 <form id="demand-form"><label>Assunto<input name="subject" maxlength="200" required></label><label>Descrição<textarea name="description" maxlength="10000" rows="5" required></textarea></label><button type="submit">Registrar demanda</button></form><p id="feedback" role="status"></p>
 <h2>Equipe</h2>@foreach($members as $member)<p>{{ $member->name }} <small>({{ $member->role }})</small></p>@endforeach
 </div>
-<div class="panel"><h2>Acompanhamento das demandas</h2><div style="overflow-x:auto"><table><thead><tr><th>Protocolo</th><th>Assunto</th><th>Responsável</th><th>Situação</th></tr></thead><tbody>
+<div class="panel"><h2>Acompanhamento das demandas</h2><div style="overflow-x:auto"><table><thead><tr><th>Protocolo</th><th>Assunto</th><th>Responsável</th><th>Situação</th><th>Histórico</th></tr></thead><tbody>
 @forelse($demands as $d)
 <tr><td>#{{ $d->id }}</td><td>{{ $d->subject }}</td><td>
 <select aria-label="Responsável pela demanda {{ $d->id }}" onchange="assignDemand({{ $d->id }},this.value)">
 <option value="">Não atribuído</option>@foreach($members as $m)<option value="{{ $m->id }}" @selected($d->assigned_to == $m->id)>{{ $m->name }}</option>@endforeach
 </select></td><td><select aria-label="Situação da demanda {{ $d->id }}" onchange="changeStatus({{ $d->id }},this.value)">
 @foreach(['open'=>'Aberta','in_progress'=>'Em andamento','resolved'=>'Resolvida'] as $value=>$label)<option value="{{ $value }}" @selected($d->status === $value)>{{ $label }}</option>@endforeach
-</select></td></tr>
-@empty<tr><td colspan="4">Nenhuma demanda registrada.</td></tr>@endforelse
-</tbody></table></div></div></section>
+</select></td><td><button type="button" onclick="showHistory({{ $d->id }})">Consultar</button></td></tr>
+@empty<tr><td colspan="5">Nenhuma demanda registrada.</td></tr>@endforelse
+</tbody></table></div><div id="history-panel" aria-live="polite"></div></div></section>
 <section style="margin-top:18px">
 <div class="panel"><h2>Cadastro de cidadãos</h2>
 <form id="citizen-form">
@@ -103,6 +103,22 @@ document.querySelector('#demand-form').addEventListener('submit',async e=>{
 e.preventDefault();const f=e.currentTarget,feedback=document.querySelector('#feedback');
 try{await send('/demandas','POST',Object.fromEntries(new FormData(f)))}catch(err){feedback.className='error';feedback.textContent=err.message}
 });
+async function showHistory(id){
+const target=document.querySelector('#history-panel');target.textContent='Carregando histórico...';
+try{
+const response=await fetch(base+'/demandas/'+id+'/historico',{headers:{'Accept':'application/json'}});
+if(!response.ok)throw new Error('Histórico indisponível');
+const result=await response.json();
+target.replaceChildren();
+const title=document.createElement('h2');title.textContent='Histórico do protocolo #'+id;target.appendChild(title);
+for(const event of result.data){
+const row=document.createElement('p');
+row.textContent=event.created_at+' — '+event.event+(event.note?' ('+event.note+')':'');
+target.appendChild(row);
+}
+if(!result.data.length){const empty=document.createElement('p');empty.textContent='Sem eventos registrados';target.appendChild(empty)}
+}catch(err){target.textContent=err.message}
+}
 async function assignDemand(id,assessor){if(!assessor)return;try{await send('/demandas/'+id+'/atribuir','POST',{assessor_id:Number(assessor)})}catch(e){alert(e.message);location.reload()}}
 async function changeStatus(id,status){try{await send('/demandas/'+id+'/status','PATCH',{status})}catch(e){alert(e.message);location.reload()}}
 </script></body></html>
