@@ -45,6 +45,17 @@ final class CabinetWorkflow
         ]);
     }
 
+    public function changeStatus(int $cabinetId, int $actorId, int $demandId, string $status): void
+    {
+        $this->requireMember($cabinetId, $actorId);
+        if (!in_array($status, ['open', 'in_progress', 'resolved'], true)) {
+            throw new DomainException('invalid_demand_status');
+        }
+        $updated = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
+            ->where('id', $demandId)->update(['status' => $status, 'updated_at' => now()]);
+        if (!$updated) { throw new DomainException('demand_not_found'); }
+    }
+
     public function createDemand(int $cabinetId, int $actorId, string $subject, string $description): int
     {
         $this->requireMember($cabinetId, $actorId);
