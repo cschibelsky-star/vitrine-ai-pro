@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 use App\Assessor\CabinetWorkflow;
 use App\Assessor\CabinetOperations;
 use App\Assessor\CabinetTasks;
+use App\Assessor\CabinetAiAssistant;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 
 final class AssessorDashboardController extends Controller
 {
-    public function index(Request $request, int $cabinet, CabinetWorkflow $workflow, CabinetOperations $operations, CabinetTasks $tasksService): View
+    public function index(Request $request, int $cabinet, CabinetWorkflow $workflow, CabinetOperations $operations, CabinetTasks $tasksService, CabinetAiAssistant $assistant): View
     {
         $demands = $workflow->listDemands($cabinet, (int) $request->user()->id);
         $members = \Illuminate\Support\Facades\DB::table('assessor_cabinet_members')
@@ -22,6 +23,7 @@ final class AssessorDashboardController extends Controller
         $appointments = $operations->appointments($cabinet, (int) $request->user()->id);
         $metrics = $operations->metrics($cabinet, (int) $request->user()->id);
         $tasks = $tasksService->all($cabinet, (int) $request->user()->id);
-        return view('assessor.dashboard', compact('cabinet', 'demands', 'members', 'cabinetName', 'citizens', 'appointments', 'metrics', 'tasks'));
+        $insights = $assistant->recommendations($cabinet, (int) $request->user()->id);
+        return view('assessor.dashboard', compact('cabinet', 'demands', 'members', 'cabinetName', 'citizens', 'appointments', 'metrics', 'tasks', 'insights'));
     }
 }
