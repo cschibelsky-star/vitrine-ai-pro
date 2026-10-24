@@ -61,3 +61,5 @@ if (file_exists(__DIR__.'/master_2_0.php')) {
 
 
 require __DIR__.'/assessor_trial.php';
+
+require __DIR__.'/assessor_cabinet.php';
