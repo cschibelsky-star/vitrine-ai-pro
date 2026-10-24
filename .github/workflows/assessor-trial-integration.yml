@@ -1,0 +1,43 @@
+name: Assessor trial 15-day integration
+on:
+  pull_request:
+    paths:
+      - 'app/Assessor/**'
+      - 'tests/Assessor/**'
+      - 'routes/assessor_trial.php'
+      - 'config/assessor_trial.php'
+      - 'database/migrations/*assessor_trial*'
+      - '.github/workflows/assessor-trial-integration.yml'
+  workflow_dispatch:
+jobs:
+  trial-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      ASSESSOR_TRIAL_HML_ENABLED: 'true'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP 8.3 and SQLite
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3, bcmath, gd, zip
+          coverage: none
+      - name: Prepare Laravel writable paths
+        run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Generate isolated test key
+        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Run Assessor trial integration tests
+        run: php artisan test tests/Assessor/TrialIntegrationTest.php --stop-on-failure

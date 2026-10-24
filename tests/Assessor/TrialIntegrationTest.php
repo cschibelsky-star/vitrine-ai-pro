@@ -16,6 +16,21 @@ final class TrialIntegrationTest extends TestCase
         (require __DIR__.'/../../database/migrations/2026_10_13_230000_create_assessor_trial_requests.php')->up();
         DB::table('users')->insert(['id'=>1]); DB::table('companies')->insert(['id'=>7]);
     }
+    public function test_trial_policy_is_exactly_fifteen_days_and_expires_at_boundary(): void
+    {
+        $now = new \DateTimeImmutable('2026-10-22T12:00:00-03:00');
+        [$start, $end] = TrialPolicy::dates($now);
+        $this->assertSame('2026-10-22T15:00:00+00:00', $start->format('c'));
+        $this->assertSame('2026-11-06T15:00:00+00:00', $end->format('c'));
+        $this->assertTrue(TrialPolicy::accessible('active', $end, $end->modify('-1 second')));
+        $this->assertFalse(TrialPolicy::accessible('active', $end, $end));
+        $this->assertFalse(TrialPolicy::accessible('active', $end, $end->modify('+1 second')));
+        foreach (['active_prepaid_30d', 'active_annual', 'active_site_only', 'expired', 'expired_pending', 'cancelled_pending'] as $status) {
+            $this->assertFalse(TrialPolicy::accessible($status, $end, $start));
+        }
+        $this->assertFalse(TrialPolicy::accessible('cancelled', $end, $start));
+        $this->assertFalse(TrialPolicy::accessible('active', null, $start));
+    }
     public function test_unconfigured_provider_never_starts_clock(): void
     {
         $s=new TrialService(new UnavailableHmlTrialProvider);
@@ -39,8 +54,14 @@ final class TrialIntegrationTest extends TestCase
         $s=new TrialService($provider);$t=$s->request(1,7,'Gabinete sintético','deputado');
         $t=$s->provision($t->id);$start=$t->starts_at;
         $this->assertSame('active',$t->status);
-        $this->assertSame(30*86400,$t->ends_at->getTimestamp()-$start->getTimestamp());
-        $s->provision($t->id);$this->assertSame(1,$provider->calls);
+        $this->assertSame(15*86400,$t->ends_at->getTimestamp()-$start->getTimestamp());
+        $end=$t->ends_at;
+        $retry=$s->provision($t->id);$this->assertSame(1,$provider->calls);
+        $this->assertSame($start->getTimestamp(),$retry->starts_at->getTimestamp());
+        $this->assertSame($end->getTimestamp(),$retry->ends_at->getTimestamp());
+        $this->assertTrue(TrialPolicy::accessible($retry->status,$retry->ends_at,$end->modify('-1 second')));
+        $this->assertFalse(TrialPolicy::accessible($retry->status,$retry->ends_at,$end));
+        $this->assertFalse(TrialPolicy::accessible($retry->status,$retry->ends_at,$end->modify('+1 second')));
         $t=$s->stop($t->id,'cancelled');$this->assertSame('cancelled',$t->status);
         $this->assertSame($start->getTimestamp(),$t->starts_at->getTimestamp());
         $this->assertFalse(Schema::hasTable('payments'));

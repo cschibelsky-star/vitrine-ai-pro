@@ -1,5 +1,8 @@
 # Assessor Online — avaliação experimental de 30 dias
 
+> **AVISO HISTÓRICO — política substituída em 22/10/2026.** Este documento registra o escopo experimental anterior e não deve ser utilizado para implementar ou divulgar uma avaliação gratuita de 30 dias. A política comercial vigente está em [`commercial-launch-gates-20261022.md`](commercial-launch-gates-20261022.md): **trial gratuito de 15 dias**, sem consumo de provedores pagos; **plano de 30 dias exclusivamente pré-pago**, com preço proposto de R$ 249 e sem renovação automática. Os gates e as pendências técnicas descritos abaixo são registros históricos e não comprovam homologação atual. G0–G7 permanecem sujeitos a validação antes de vendas ou produção.
+
+
 ## Auditoria 13/10/2026
 PR #108 aberto/draft, head 61ca813ea5c0491e6d7d45089c3460f7a5356ddd. Landing PHP e demonstração estática Rafael Monteiro/Vila Esperança preservadas. Nginx demonstrativo serve somente HTML; NÃO executa Laravel nem oferece API de cadastro.
 
