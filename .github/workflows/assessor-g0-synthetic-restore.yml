@@ -8,7 +8,6 @@ on:
       - 'scripts/assessor/g0-synthetic-restore-drill.py'
       - '.github/workflows/assessor-g0-synthetic-restore.yml'
       - 'tests/Assessor/IsolatedRestoreTest.php'
-      - 'tests/Assessor/IsolatedRestoreTest.php'
   pull_request:
     paths:
       - 'scripts/assessor/g0-synthetic-restore-drill.py'
