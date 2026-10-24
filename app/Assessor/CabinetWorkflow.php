@@ -53,6 +53,25 @@ final class CabinetWorkflow
         ]);
     }
 
+    private function recordEvent(int $cabinetId, int $demandId, int $actorId, string $event, ?string $note = null): void
+    {
+        DB::table('assessor_demand_events')->insert([
+            'cabinet_id' => $cabinetId, 'demand_id' => $demandId,
+            'actor_id' => $actorId, 'event' => $event, 'note' => $note,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    public function history(int $cabinetId, int $actorId, int $demandId): array
+    {
+        $this->requireMember($cabinetId, $actorId);
+        if (!DB::table('assessor_demands')->where('cabinet_id', $cabinetId)->where('id', $demandId)->exists()) {
+            throw new DomainException('demand_not_found');
+        }
+        return DB::table('assessor_demand_events')->where('cabinet_id', $cabinetId)
+            ->where('demand_id', $demandId)->orderBy('id')->get()->toArray();
+    }
+
     public function changeStatus(int $cabinetId, int $actorId, int $demandId, string $status): void
     {
         $this->requireMember($cabinetId, $actorId);
@@ -62,6 +81,7 @@ final class CabinetWorkflow
         $updated = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
             ->where('id', $demandId)->update(['status' => $status, 'updated_at' => now()]);
         if (!$updated) { throw new DomainException('demand_not_found'); }
+        $this->recordEvent($cabinetId, $demandId, $actorId, 'status_changed', $status);
     }
 
     public function createDemand(int $cabinetId, int $actorId, string $subject, string $description): int
@@ -70,11 +90,15 @@ final class CabinetWorkflow
         if (trim($subject) === '' || trim($description) === '') {
             throw new DomainException('invalid_demand');
         }
-        return DB::table('assessor_demands')->insertGetId([
+        return DB::transaction(function () use ($cabinetId, $actorId, $subject, $description) {
+        $id = DB::table('assessor_demands')->insertGetId([
             'cabinet_id' => $cabinetId, 'created_by' => $actorId,
             'subject' => trim($subject), 'description' => trim($description),
             'status' => 'open', 'created_at' => now(), 'updated_at' => now(),
         ]);
+        $this->recordEvent($cabinetId, $id, $actorId, 'created');
+        return $id;
+        });
     }
 
     public function assignDemand(int $cabinetId, int $actorId, int $demandId, int $assessorId): void
@@ -85,6 +109,7 @@ final class CabinetWorkflow
             ->where('id', $demandId)->update(['assigned_to' => $assessorId,
                 'status' => 'in_progress', 'updated_at' => now()]);
         if (!$updated) { throw new DomainException('demand_not_found'); }
+        $this->recordEvent($cabinetId, $demandId, $actorId, 'assigned', (string) $assessorId);
     }
 
     public function listDemands(int $cabinetId, int $actorId): array
