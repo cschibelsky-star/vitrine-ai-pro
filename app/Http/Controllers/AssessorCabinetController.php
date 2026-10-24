@@ -27,6 +27,9 @@ final class AssessorCabinetController extends Controller
         if ((int) $request->user()->company_id !== (int) $data['company_id']) {
             return response()->json(['error' => 'company_access_denied'], 403);
         }
+        if (!$request->user()->isAdmin()) {
+            return response()->json(['error' => 'cabinet_admin_required'], 403);
+        }
         return $this->execute(fn () => ['id' => $workflow->createCabinet(
             (int) $data['company_id'], (int) $request->user()->id, $data['name'], $data['mandate_type']
         )]);
