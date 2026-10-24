@@ -3,6 +3,7 @@ use App\Http\Controllers\AssessorCabinetController;
 use App\Http\Controllers\AssessorDashboardController;
 use App\Http\Controllers\AssessorOperationsController;
 use App\Http\Controllers\AssessorTasksController;
+use App\Http\Controllers\AssessorIntelligenceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('assessor/gabinetes')->group(function () {
@@ -18,6 +19,8 @@ Route::middleware(['auth'])->prefix('assessor/gabinetes')->group(function () {
     Route::post('/{cabinet}/tarefas', [AssessorTasksController::class, 'store'])->whereNumber('cabinet');
     Route::patch('/{cabinet}/tarefas/{task}/status', [AssessorTasksController::class, 'update'])
         ->whereNumber('cabinet')->whereNumber('task');
+    Route::get('/{cabinet}/inteligencia', [AssessorIntelligenceController::class, 'index'])
+        ->whereNumber('cabinet');
     Route::post('/', [AssessorCabinetController::class, 'createCabinet']);
     Route::post('/{cabinet}/assessores', [AssessorCabinetController::class, 'addMember'])->whereNumber('cabinet');
     Route::get('/{cabinet}/demandas', [AssessorCabinetController::class, 'index'])->whereNumber('cabinet');
