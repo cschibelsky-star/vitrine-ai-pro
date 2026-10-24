@@ -19,6 +19,9 @@ final class CabinetWorkflow
         if (trim($name) === '' || !in_array($mandateType, ['vereador', 'deputado_estadual', 'deputado_federal'], true)) {
             throw new DomainException('invalid_cabinet');
         }
+        if ((int) DB::table('users')->where('id', $ownerId)->value('company_id') !== $companyId) {
+            throw new DomainException('owner_company_mismatch');
+        }
         return DB::transaction(function () use ($companyId, $ownerId, $name, $mandateType) {
             $cabinetId = DB::table('assessor_cabinets')->insertGetId([
                 'company_id' => $companyId, 'name' => trim($name), 'mandate_type' => $mandateType,
@@ -38,6 +41,11 @@ final class CabinetWorkflow
         if (!DB::table('assessor_cabinet_members')->where('cabinet_id', $cabinetId)
             ->where('user_id', $actorId)->where('role', 'admin')->exists()) {
             throw new DomainException('cabinet_admin_required');
+        }
+        $companyId = DB::table('assessor_cabinets')->where('id', $cabinetId)->value('company_id');
+        $userCompanyId = DB::table('users')->where('id', $userId)->value('company_id');
+        if ($companyId === null || $userCompanyId === null || (int) $companyId !== (int) $userCompanyId) {
+            throw new DomainException('assessor_company_mismatch');
         }
         DB::table('assessor_cabinet_members')->insert([
             'cabinet_id' => $cabinetId, 'user_id' => $userId, 'role' => 'assessor',
