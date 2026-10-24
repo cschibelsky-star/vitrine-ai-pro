@@ -73,6 +73,11 @@ final class AssessorCabinetController extends Controller
         });
     }
 
+    public function history(Request $request, int $cabinet, int $demand, CabinetWorkflow $workflow): JsonResponse
+    {
+        return $this->execute(fn () => $workflow->history($cabinet, (int) $request->user()->id, $demand));
+    }
+
     public function index(Request $request, int $cabinet, CabinetWorkflow $workflow): JsonResponse
     {
         return $this->execute(fn () => $workflow->listDemands($cabinet, (int) $request->user()->id));
