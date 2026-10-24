@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Assessor\CabinetWorkflow;
+use App\Assessor\CabinetDemandNotes;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,6 +72,14 @@ final class AssessorCabinetController extends Controller
             $workflow->changeStatus($cabinet, (int) $request->user()->id, $demand, $data['status']);
             return ['updated' => true];
         });
+    }
+
+    public function addNote(Request $request, int $cabinet, int $demand, CabinetDemandNotes $notes): JsonResponse
+    {
+        $data = $request->validate(['note' => ['required', 'string', 'max:500']]);
+        return $this->execute(fn () => ['id' => $notes->add(
+            $cabinet, (int) $request->user()->id, $demand, $data['note']
+        )]);
     }
 
     public function history(Request $request, int $cabinet, int $demand, CabinetWorkflow $workflow): JsonResponse
