@@ -22,6 +22,8 @@ Route::middleware(['auth'])->prefix('assessor/gabinetes')->group(function () {
     Route::post('/{cabinet}/tarefas', [AssessorTasksController::class, 'store'])->whereNumber('cabinet');
     Route::patch('/{cabinet}/tarefas/{task}/status', [AssessorTasksController::class, 'update'])
         ->whereNumber('cabinet')->whereNumber('task');
+    Route::post('/{cabinet}/inteligencia', [AssessorIntelligenceController::class, 'generate'])
+        ->whereNumber('cabinet')->middleware('throttle:3,1');
     Route::get('/{cabinet}/inteligencia', [AssessorIntelligenceController::class, 'index'])
         ->whereNumber('cabinet');
     Route::get('/{cabinet}/assinatura', [AssessorEntitlementsController::class, 'index'])
