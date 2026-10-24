@@ -115,6 +115,17 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 </div>
 @empty<p>Nenhuma pendência prioritária identificada pelas regras atuais.</p>@endforelse
 </div>
+<div class="panel" style="margin-top:18px">
+<h2>Plano e avaliação</h2>
+<p>Período de avaliação gratuita: <strong>{{ $subscription['trial_days'] }} dias</strong>.</p>
+@if($subscription['trial_status'])
+<p>Situação registrada: <strong>{{ $subscription['trial_status'] }}</strong></p>
+@if($subscription['trial_ends_at'])<p>Término previsto: {{ $subscription['trial_ends_at'] }}</p>@endif
+@else
+<p>Nenhuma avaliação vinculada ao gabinete foi identificada.</p>
+@endif
+<p><small>Acesso comercial: {{ $subscription['access'] === 'active' ? 'avaliação ativa' : 'não verificado' }}. Planos pagos ainda não estão conectados a este painel.</small></p>
+</div>
 </main>
 <script>
 const base = @json(url('/assessor/gabinetes/'.$cabinet));
