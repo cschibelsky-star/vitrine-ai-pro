@@ -1,0 +1,25 @@
+name: Assessor Centro IA integration
+on:
+  pull_request:
+    paths:
+      - 'app/Assessor/**'
+      - 'app/Http/Controllers/AssessorIntelligenceController.php'
+      - 'config/assessor_ai.php'
+      - 'routes/assessor_cabinet.php'
+      - 'tests/Feature/AssessorCentroIaIntegrationTest.php'
+      - '.github/workflows/assessor-centro-ia.yml'
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          coverage: none
+      - run: mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/phpunit tests/Feature/AssessorCentroIaIntegrationTest.php tests/Feature/CentroIaBrokerTest.php
