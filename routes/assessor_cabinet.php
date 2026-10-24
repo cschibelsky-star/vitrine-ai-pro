@@ -11,6 +11,8 @@ Route::middleware(['auth'])->prefix('assessor/gabinetes')->group(function () {
     Route::get('/{cabinet}/agenda', [AssessorOperationsController::class, 'appointments'])->whereNumber('cabinet');
     Route::post('/{cabinet}/agenda', [AssessorOperationsController::class, 'schedule'])->whereNumber('cabinet');
     Route::get('/{cabinet}/indicadores', [AssessorOperationsController::class, 'metrics'])->whereNumber('cabinet');
+    Route::get('/{cabinet}/demandas/{demand}/historico', [AssessorCabinetController::class, 'history'])
+        ->whereNumber('cabinet')->whereNumber('demand');
     Route::post('/', [AssessorCabinetController::class, 'createCabinet']);
     Route::post('/{cabinet}/assessores', [AssessorCabinetController::class, 'addMember'])->whereNumber('cabinet');
     Route::get('/{cabinet}/demandas', [AssessorCabinetController::class, 'index'])->whereNumber('cabinet');
