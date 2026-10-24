@@ -105,6 +105,16 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 </select></div>
 @empty<p>Sem tarefas cadastradas.</p>@endforelse
 </div></section>
+<div class="panel" style="margin-top:18px">
+<h2>Inteligência operacional</h2>
+<p>Recomendações automáticas baseadas nos indicadores do gabinete. Integração com o Centro IA em preparação.</p>
+@forelse($insights['recommendations'] as $recommendation)
+<div style="padding:12px 0;border-bottom:1px solid #29445d">
+<strong>{{ $recommendation['title'] }}</strong>
+<p>{{ $recommendation['reason'] }}</p>
+</div>
+@empty<p>Nenhuma pendência prioritária identificada pelas regras atuais.</p>@endforelse
+</div>
 </main>
 <script>
 const base = @json(url('/assessor/gabinetes/'.$cabinet));
