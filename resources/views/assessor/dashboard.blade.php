@@ -158,6 +158,15 @@ if(!response.ok)throw new Error('Histórico indisponível');
 const result=await response.json();
 target.replaceChildren();
 const title=document.createElement('h2');title.textContent='Histórico do protocolo #'+id;target.appendChild(title);
+const form=document.createElement('form');
+const input=document.createElement('textarea');input.maxLength=500;input.required=true;input.placeholder='Registrar anotação interna';input.rows=2;
+const submit=document.createElement('button');submit.type='submit';submit.textContent='Salvar anotação';
+form.append(input,submit);target.appendChild(form);
+form.addEventListener('submit',async e=>{
+e.preventDefault();submit.disabled=true;
+try{await send('/demandas/'+id+'/anotacoes','POST',{note:input.value})}
+catch(err){alert(err.message);submit.disabled=false}
+});
 for(const event of result.data){
 const row=document.createElement('p');
 row.textContent=event.created_at+' — '+event.event+(event.note?' ('+event.note+')':'');
