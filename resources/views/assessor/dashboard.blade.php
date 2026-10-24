@@ -80,6 +80,31 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 @forelse($appointments as $appointment)<p><strong>{{ $appointment->title }}</strong><br><small>{{ $appointment->starts_at }} — {{ $appointment->ends_at }}</small></p>
 @empty<p>Sem compromissos agendados.</p>@endforelse
 </div></section>
+<section style="margin-top:18px">
+<div class="panel"><h2>Nova tarefa da equipe</h2>
+<form id="task-form">
+<input name="title" maxlength="200" placeholder="Título da tarefa" required>
+<textarea name="description" maxlength="10000" placeholder="Orientações" rows="3"></textarea>
+<label>Prazo<input type="date" name="due_date"></label>
+<select name="assigned_to"><option value="">Sem responsável</option>
+@foreach($members as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach
+</select>
+<select name="demand_id"><option value="">Sem demanda vinculada</option>
+@foreach($demands as $demand)<option value="{{ $demand->id }}">#{{ $demand->id }} — {{ $demand->subject }}</option>@endforeach
+</select>
+<button type="submit">Criar tarefa</button></form><p id="task-feedback" role="status"></p>
+</div>
+<div class="panel"><h2>Atividades da equipe</h2>
+@forelse($tasks as $task)
+<div style="padding:12px 0;border-bottom:1px solid #29445d">
+<strong>{{ $task->title }}</strong><br><small>Prazo: {{ $task->due_date ?? 'não definido' }}</small>
+<select aria-label="Situação da tarefa {{ $task->id }}" onchange="changeTaskStatus({{ $task->id }},this.value)">
+@foreach(['pending'=>'Pendente','in_progress'=>'Em andamento','completed'=>'Concluída','cancelled'=>'Cancelada'] as $value=>$label)
+<option value="{{ $value }}" @selected($task->status === $value)>{{ $label }}</option>
+@endforeach
+</select></div>
+@empty<p>Sem tarefas cadastradas.</p>@endforelse
+</div></section>
 </main>
 <script>
 const base = @json(url('/assessor/gabinetes/'.$cabinet));
@@ -93,12 +118,13 @@ function wireForm(id,path,feedbackId){
 document.querySelector(id).addEventListener('submit',async e=>{
 e.preventDefault();const feedback=document.querySelector(feedbackId);
 const values=Object.fromEntries(new FormData(e.currentTarget));
-for(const key of ['citizen_id','assessor_id'])if(values[key]==='')delete values[key];
+for(const key of ['citizen_id','assessor_id','assigned_to','demand_id','due_date'])if(values[key]==='')delete values[key];
 try{await send(path,'POST',values)}catch(err){feedback.className='error';feedback.textContent=err.message}
 });
 }
 wireForm('#citizen-form','/cidadaos','#citizen-feedback');
 wireForm('#appointment-form','/agenda','#appointment-feedback');
+wireForm('#task-form','/tarefas','#task-feedback');
 document.querySelector('#demand-form').addEventListener('submit',async e=>{
 e.preventDefault();const f=e.currentTarget,feedback=document.querySelector('#feedback');
 try{await send('/demandas','POST',Object.fromEntries(new FormData(f)))}catch(err){feedback.className='error';feedback.textContent=err.message}
@@ -118,6 +144,10 @@ target.appendChild(row);
 }
 if(!result.data.length){const empty=document.createElement('p');empty.textContent='Sem eventos registrados';target.appendChild(empty)}
 }catch(err){target.textContent=err.message}
+}
+async function changeTaskStatus(id,status){
+try{await send('/tarefas/'+id+'/status','PATCH',{status})}
+catch(e){alert(e.message);location.reload()}
 }
 async function assignDemand(id,assessor){if(!assessor)return;try{await send('/demandas/'+id+'/atribuir','POST',{assessor_id:Number(assessor)})}catch(e){alert(e.message);location.reload()}}
 async function changeStatus(id,status){try{await send('/demandas/'+id+'/status','PATCH',{status})}catch(e){alert(e.message);location.reload()}}
