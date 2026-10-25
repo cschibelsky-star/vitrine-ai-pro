@@ -46,6 +46,10 @@ final class AiChatOrchestrator
         }
 
         // Fail closed: without trusted usage counts and verified price, no provider call.
+        if ($budgetRequest === [] || $verifiedQuote === []) {
+            return ['ok' => false, 'status' => 'blocked_preflight',
+                'reason' => 'budget_or_quote_missing', 'execution_id' => null];
+        }
         $decision = $this->budgetGuard->check($budgetRequest, $verifiedQuote);
         if ($decision['allowed'] !== true) {
             return ['ok' => false, 'status' => 'blocked_preflight',
