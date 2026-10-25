@@ -165,6 +165,47 @@ Route::get('/cockpit/webmail/probe', [WebmailController::class, 'probe'])
     ->middleware('throttle:10,1')
     ->name('cockpit.webmail.probe');
 
+
+Route::get('/cockpit/centro-ia', function () {
+    abort_unless(Auth::check() && Auth::user()->isAdmin() && (Auth::user()->is_active ?? true), 403);
+    $root = '/mnt/centro-ia-pr122-assets/ai-generated/marketing';
+    $available = is_dir($root) && is_readable($root);
+    $images = [];
+    if ($available) {
+        $base = realpath($root);
+        foreach (glob($root.'/*/*/*/*.{png,jpg,webp}', GLOB_BRACE) ?: [] as $file) {
+            $real = realpath($file);
+            if (!$real || !str_starts_with($real, $base.DIRECTORY_SEPARATOR)) continue;
+            $relative = substr($real, strlen($base) + 1);
+            if (!preg_match('~^([0-9]{4})/([0-9]{2})/([0-9]{2})/([a-f0-9-]{36}\.(?:png|jpg|webp))$~D', $relative, $parts)) continue;
+            $size = filesize($real);
+            if (!$size || $size > 20 * 1024 * 1024) continue;
+            $images[] = ['year'=>$parts[1], 'month'=>$parts[2], 'day'=>$parts[3], 'filename'=>$parts[4], 'bytes'=>$size, 'mtime'=>filemtime($real) ?: 0];
+        }
+        usort($images, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
+        $images = array_slice($images, 0, 12);
+    }
+    return view('cockpit.centro-ia-gallery', compact('available','images'));
+})->name('cockpit.centro-ia.index');
+
+Route::get('/cockpit/centro-ia/image/{year}/{month}/{day}/{filename}', function (string $year, string $month, string $day, string $filename) {
+    abort_unless(Auth::check() && Auth::user()->isAdmin() && (Auth::user()->is_active ?? true), 403);
+    abort_unless(preg_match('~^[a-f0-9-]{36}\.(?:png|jpg|webp)$~D', $filename), 404);
+    $root = realpath('/mnt/centro-ia-pr122-assets/ai-generated/marketing');
+    abort_unless($root !== false, 404);
+    $file = realpath($root.'/'.$year.'/'.$month.'/'.$day.'/'.$filename);
+    abort_unless($file !== false && str_starts_with($file, $root.DIRECTORY_SEPARATOR), 404);
+    abort_unless(is_file($file) && is_readable($file), 404);
+    $size = filesize($file);
+    abort_unless($size !== false && $size > 0 && $size <= 20 * 1024 * 1024, 404);
+    $bytes = file_get_contents($file);
+    abort_unless($bytes !== false, 404);
+    $info = @getimagesizefromstring($bytes);
+    $mime = is_array($info) ? ($info['mime'] ?? '') : '';
+    abort_unless(in_array($mime, ['image/png','image/jpeg','image/webp'], true), 404);
+    return response($bytes, 200, ['Content-Type'=>$mime, 'Content-Disposition'=>'inline', 'Cache-Control'=>'private, no-store, max-age=0', 'X-Content-Type-Options'=>'nosniff']);
+})->where(['year'=>'[0-9]{4}','month'=>'[0-9]{2}','day'=>'[0-9]{2}'])->name('cockpit.centro-ia.image');
+
 Route::post('/cockpit/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
