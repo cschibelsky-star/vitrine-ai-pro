@@ -25,6 +25,8 @@ services:
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
+    volumes:
+      - centro_ia_pr122_assets:/mnt/centro-ia-pr122-assets:ro
     networks:
       - cockpit_internal
       - core_internal
@@ -64,6 +66,11 @@ services:
       cockpit_internal: {}
       traefik_net:
         ipv4_address: 172.24.0.19
+
+volumes:
+  centro_ia_pr122_assets:
+    external: true
+    name: centro-ia-roteia-pr122-hml_pr122_assets
 
 networks:
   cockpit_internal:
