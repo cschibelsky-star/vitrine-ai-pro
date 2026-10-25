@@ -18,11 +18,20 @@ use InvalidArgumentException;
  */
 final class AiChatOrchestrator
 {
-    public function __construct(private readonly AiRoutingService $routing)
+    public function __construct(
+        private readonly AiRoutingService $routing,
+        private readonly RequestBudgetGuard $budgetGuard,
+    )
     {
     }
 
-    public function send(AiAgent $agent, string $message, ?string $capability = 'copy'): array
+    public function send(
+        AiAgent $agent,
+        string $message,
+        ?string $capability = 'copy',
+        array $budgetRequest = [],
+        array $verifiedQuote = [],
+    ): array
     {
         $message = trim($message);
         if ($message === '' || mb_strlen($message) > 120000) {
@@ -34,6 +43,13 @@ final class AiChatOrchestrator
         $allowed = ['copy', 'critical_review', 'marketing_strategy'];
         if (! in_array($capability, $allowed, true)) {
             throw new InvalidArgumentException('Unsupported chat capability.');
+        }
+
+        // Fail closed: without trusted usage counts and verified price, no provider call.
+        $decision = $this->budgetGuard->check($budgetRequest, $verifiedQuote);
+        if ($decision['allowed'] !== true) {
+            return ['ok' => false, 'status' => 'blocked_preflight',
+                'reason' => $decision['reason'], 'execution_id' => null];
         }
 
         $execution = $this->routing->execute($agent, $message, $capability);
@@ -48,7 +64,12 @@ final class AiChatOrchestrator
      * @param array<string, AiAgent> $agents
      * @return array<string, array<string, mixed>>
      */
-    public function compare(array $agents, string $message): array
+    public function compare(
+        array $agents,
+        string $message,
+        array $budgetRequest = [],
+        array $verifiedQuote = [],
+    ): array
     {
         if (count($agents) < 2 || count($agents) > 3) {
             throw new InvalidArgumentException('Comparison requires two or three agents.');
@@ -59,7 +80,10 @@ final class AiChatOrchestrator
             if (! $agent instanceof AiAgent) {
                 throw new InvalidArgumentException('Every comparison participant must be an AI agent.');
             }
-            $results[(string) $label] = $this->send($agent, $message);
+            $results[(string) $label] = $this->send($agent, $message, 'copy', $budgetRequest, $verifiedQuote);
+            if ($results[(string) $label]['ok'] !== true) {
+                break; // Never fan out additional paid calls after a preflight/execution failure.
+            }
         }
 
         return $results;
