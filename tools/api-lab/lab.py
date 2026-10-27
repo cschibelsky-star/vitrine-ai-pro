@@ -81,6 +81,7 @@ class Lab:
         CREATE TABLE IF NOT EXISTS attempts(id TEXT PRIMARY KEY, run TEXT, idem TEXT, fingerprint TEXT, reserve INTEGER, state TEXT, evidence TEXT, UNIQUE(run,idem));
         CREATE TABLE IF NOT EXISTS grants(nonce TEXT PRIMARY KEY);
         CREATE TABLE IF NOT EXISTS artifacts(run TEXT, name TEXT, content TEXT, PRIMARY KEY(run,name));
+        CREATE TABLE IF NOT EXISTS authorization_audit(nonce TEXT PRIMARY KEY, action TEXT, args_hash TEXT, authorization_ref TEXT, instance_id TEXT, run_id TEXT, consumed_at REAL, expires REAL);
         ''')
 
     def grant(self, action, args, token):
@@ -91,14 +92,24 @@ class Lab:
             obj = json.loads(bytes.fromhex(body))
             expected = hmac.new(key.encode(), body.encode(), hashlib.sha256).hexdigest()
             valid = (len(key) >= 32 and hmac.compare_digest(expected, signature)
+                and isinstance(self.config.get('instance_id'), str) and bool(self.config['instance_id'].strip())
+                and obj.get('instance_id') == self.config['instance_id']
                 and obj['action'] == action and obj['hash'] == hashlib.sha256(canonical(args).encode()).hexdigest()
                 and type(obj['expires']) in (int, float) and time.time() < obj['expires'] <= time.time() + 300
                 and isinstance(obj.get('authorization_ref'), str) and obj['authorization_ref'].strip()
                 and isinstance(obj.get('nonce'), str) and 1 <= len(obj['nonce']) <= 128)
             if not valid:
                 raise ValueError()
+            self.db.execute('BEGIN IMMEDIATE')
             self.db.execute('INSERT INTO grants VALUES(?)', (obj['nonce'],))
+            self.db.execute('INSERT INTO authorization_audit VALUES(?,?,?,?,?,?,?,?)',
+                (obj['nonce'], action, obj['hash'], obj['authorization_ref'], obj['instance_id'],
+                 args.get('run_id'), time.time(), obj['expires']))
+            self.db.execute('COMMIT')
+            return obj['nonce']
         except Exception:
+            if self.db.in_transaction:
+                self.db.execute('ROLLBACK')
             raise ValueError('specific_operator_authorization_required') from None
 
     def run(self, run_id):
@@ -112,6 +123,8 @@ class Lab:
         if action == 'lab_status':
             return {'mode': 'test_only', 'transports_implemented': ['stdio','http_loopback_single_operator'], 'implemented': ['catalog', 'chat', 'run_evidence', 'artifact_write'],
                     'pending': ['voice', 'image', 'video', 'tls_remote_deployment', 'cockpit_approval'],
+                    'positive_budget_requires_external_grant': True,
+                    'approval_instance_configured': bool(self.config.get('instance_id')),
                     'credentials': {p: bool(os.environ.get(v[2])) for p, v in PROVIDERS.items()}}
         if action == 'run_create':
             if set(args) != {'purpose', 'budget_brl', 'ttl_seconds', 'approval'}:
@@ -124,8 +137,15 @@ class Lab:
                 raise ValueError('run_budget_exceeded')
             if purpose == 'exception':
                 raise ValueError('exception_requires_per_call_grant_not_unrestricted_run')
+            if budget > 0:
+                scoped = {k: v for k, v in args.items() if k != 'approval'}
+                consumed_nonce = self.grant(action, scoped, args['approval'])
+            elif args['approval']:
+                raise ValueError('zero_budget_requires_empty_approval')
             rid = secrets.token_hex(16)
             self.db.execute('INSERT INTO runs(id,purpose,expires,budget) VALUES(?,?,?,?)', (rid, purpose, time.time()+ttl, budget))
+            if budget > 0:
+                self.db.execute('UPDATE authorization_audit SET run_id=? WHERE nonce=?', (rid, consumed_nonce))
             return {'run_id': rid}
         rid = args.get('run_id')
         row = self.run(rid)

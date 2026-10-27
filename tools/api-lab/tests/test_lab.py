@@ -8,16 +8,26 @@ import unittest
 from unittest.mock import patch
 from lab import Lab, canonical, rpc, PinnedHTTPS
 
+def create_run(lab, **args):
+    # External operator fixture; signing is not exposed by the Lab API.
+    scoped = {k: v for k, v in args.items() if k != 'approval'}
+    body=canonical(dict(instance_id=lab.config['instance_id'], action='run_create',
+        hash=hashlib.sha256(canonical(scoped).encode()).hexdigest(), expires=time.time()+120,
+        nonce=os.urandom(16).hex(), authorization_ref='external budget fixture')).encode().hex()
+    token=body+'.'+hmac.new(b'a'*32,body.encode(),hashlib.sha256).hexdigest()
+    with patch.dict(os.environ, {'LAB_APPROVAL_SECRET':'a'*32}):
+        return lab.call('run_create', **dict(args, approval=token if args['budget_brl'] != '0' else ''))
+
 class LabTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory()
         self.calls=[]
-        self.config={'max_total_brl':'2','max_run_brl':'2','providers':{'invision':{'models':{'demo':{'max_charge_brl':'0.10','ceiling_verified':True,'price_source':'test fixture'}}}}}
+        self.config={'instance_id':'hml-fixture-one','max_total_brl':'2','max_run_brl':'2','providers':{'invision':{'models':{'demo':{'max_charge_brl':'0.10','ceiling_verified':True,'price_source':'test fixture'}}}}}
         def transport(provider,path,payload=None):
             self.calls.append((provider,path,payload))
             return {'http_status':200,'data':{'model':'demo','choices':[{'message':{'content':'OK'}}],'usage':{'prompt_tokens':4,'completion_tokens':1}}}
         self.lab=Lab(self.temp.name+'/db',self.config,transport)
-        self.rid=self.lab.call('run_create',purpose='test',budget_brl='0.20',ttl_seconds=60,approval='')['run_id']
+        self.rid=create_run(self.lab,purpose='test',budget_brl='0.20',ttl_seconds=60,approval='')['run_id']
     def tearDown(self):
         self.lab.db.close(); self.temp.cleanup()
     def chat(self,idem='a',**extra):
@@ -32,7 +42,7 @@ class LabTests(unittest.TestCase):
     def test_global_budget_across_runs(self):
         self.config['max_total_brl']='0.10'
         self.chat()
-        self.rid=self.lab.call('run_create',purpose='test',budget_brl='0.20',ttl_seconds=60,approval='')['run_id']
+        self.rid=create_run(self.lab,purpose='test',budget_brl='0.20',ttl_seconds=60,approval='')['run_id']
         with self.assertRaisesRegex(ValueError,'global_budget'):self.chat()
         self.assertEqual(len(self.calls),1)
     def test_idempotency(self):
@@ -53,7 +63,7 @@ class LabTests(unittest.TestCase):
         self.assertEqual(self.calls,[])
     def test_specific_single_use_grant(self):
         args=dict(run_id=self.rid,provider='invision',model='demo',prompt='Hello',idempotency_key='a',purpose='exception')
-        body={'action':'chat_test','hash':hashlib.sha256(canonical(args).encode()).hexdigest(),'expires':time.time()+120,'authorization_ref':'operator fixture','nonce':'unique'}
+        body={'instance_id':self.config['instance_id'],'action':'chat_test','hash':hashlib.sha256(canonical(args).encode()).hexdigest(),'expires':time.time()+120,'authorization_ref':'operator fixture','nonce':'unique'}
         encoded=canonical(body).encode().hex()
         secret='a'*32
         token=encoded+'.'+hmac.new(secret.encode(),encoded.encode(),hashlib.sha256).hexdigest()

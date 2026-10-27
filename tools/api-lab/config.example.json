@@ -1,4 +1,5 @@
 {
+  "instance_id": "REPLACE_WITH_UNIQUE_HML_INSTALLATION_ID",
   "max_total_brl": "1.00",
   "max_run_brl": "1.00",
   "providers": {

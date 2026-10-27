@@ -13,7 +13,7 @@ class SecurityTests(unittest.TestCase):
     tearDown = test_lab.LabTests.tearDown
     chat = test_lab.LabTests.chat
     def token(self, args, action='chat_test', expires=None, nonce='fixture', ref='external-fixture'):
-        body=canonical(dict(action=action, hash=hashlib.sha256(canonical(args).encode()).hexdigest(),
+        body=canonical(dict(instance_id=self.config['instance_id'], action=action, hash=hashlib.sha256(canonical(args).encode()).hexdigest(),
             expires=time.time()+120 if expires is None else expires, nonce=nonce, authorization_ref=ref)).encode().hex()
         return body+'.'+hmac.new(b'a'*32,body.encode(),hashlib.sha256).hexdigest()
 
@@ -75,7 +75,7 @@ class SecurityTests(unittest.TestCase):
     def test_expired_runs_keep_global_reserve(self):
         self.config['max_total_brl']='0.1';self.chat()
         self.lab.db.execute('UPDATE runs SET expires=0')
-        self.rid=self.lab.call('run_create',purpose='test',budget_brl='0.2',ttl_seconds=60,approval='')['run_id']
+        self.rid=test_lab.create_run(self.lab,purpose='test',budget_brl='0.2',ttl_seconds=60,approval='')['run_id']
         with self.assertRaises(ValueError):self.chat()
         self.assertEqual(len(self.calls),1)
 
@@ -87,7 +87,7 @@ class SecurityTests(unittest.TestCase):
 
     def test_other_namespace_not_returned(self):
         self.lab.call('artifact_write',run_id=self.rid,name='private',content='run-one')
-        other=self.lab.call('run_create',purpose='test',budget_brl='0',ttl_seconds=60,approval='')['run_id']
+        other=test_lab.create_run(self.lab,purpose='test',budget_brl='0',ttl_seconds=60,approval='')['run_id']
         self.assertEqual(self.lab.call('run_evidence',run_id=other)['artifacts'],[])
 
     def test_rpc_types_and_purpose_fail_closed(self):
@@ -130,7 +130,7 @@ class SecurityTests(unittest.TestCase):
 
     def test_grant_binds_every_operation_argument(self):
         args=self.args();token=self.token(args)
-        other=self.lab.call('run_create',purpose='test',budget_brl='0.2',ttl_seconds=60,approval='')['run_id']
+        other=test_lab.create_run(self.lab,purpose='test',budget_brl='0.2',ttl_seconds=60,approval='')['run_id']
         changes=[{'run_id':other},{'provider':'roteia'},{'model':'other'}, {'idempotency_key':'b'}]
         with patch.dict(os.environ,{'LAB_APPROVAL_SECRET':'a'*32}):
             for change in changes:
