@@ -70,9 +70,9 @@ def request(provider, path, payload=None):
         conn.close()
 
 class Lab:
-    def __init__(self, database, config, transport=request):
+    def __init__(self, database, config, transport=request, threaded=False):
         self.config, self.transport = config, transport
-        self.db = sqlite3.connect(database, isolation_level=None, timeout=10)
+        self.db = sqlite3.connect(database, isolation_level=None, timeout=10, check_same_thread=not threaded)
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.executescript('''
         CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY, purpose TEXT, expires REAL, budget INTEGER, reserved INTEGER DEFAULT 0);
@@ -106,8 +106,8 @@ class Lab:
 
     def call(self, action, **args):
         if action == 'lab_status':
-            return {'mode': 'test_only', 'transport': 'stdio', 'implemented': ['catalog', 'chat', 'run_evidence', 'artifact_write'],
-                    'pending': ['voice', 'image', 'video', 'remote_http', 'cockpit_approval'],
+            return {'mode': 'test_only', 'transports_implemented': ['stdio','http_loopback_single_operator'], 'implemented': ['catalog', 'chat', 'run_evidence', 'artifact_write'],
+                    'pending': ['voice', 'image', 'video', 'tls_remote_deployment', 'cockpit_approval'],
                     'credentials': {p: bool(os.environ.get(v[2])) for p, v in PROVIDERS.items()}}
         if action == 'run_create':
             if set(args) != {'purpose', 'budget_brl', 'ttl_seconds', 'approval'}:

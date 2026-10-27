@@ -1,6 +1,6 @@
 # Vitrine API Lab — piloto 0.1
 
-Servidor MCP stdio isolado, sem dependências de terceiros. Não é um endpoint remoto conectado ao ChatGPT. Este piloto implementa catálogo, chat curto, evidências e escrita de artefatos em SQLite. Voz, imagem, vídeo, HTTP remoto, aprovação pelo Cockpit e integração do orquestrador estão pendentes.
+Servidor MCP stdio/HTTP loopback isolado, sem dependências de terceiros. Não é um endpoint remoto conectado ao ChatGPT. Este piloto implementa catálogo, chat curto, evidências e escrita de artefatos em SQLite. Voz, imagem, vídeo, implantação remota com TLS/OAuth, aprovação pelo Cockpit e integração do orquestrador estão pendentes.
 
 ## Executar em homologação
 
@@ -35,4 +35,13 @@ A exceção não desbloqueia métodos inexistentes ou destinos arbitrários: nes
 
 `python3 -m unittest discover -s tests -v`
 
-Os testes são locais com transporte simulado; não gastam saldo e não comprovam entrega dos provedores. Antes de publicar um endpoint remoto, adicionar autenticação/identidade por usuário, transporte HTTP MCP, aprovação externa integrada, rate limits globais e validação em homologação/Cockpit. Aplicar a skill vitrine-api-benchmark para comparações; este servidor não decide ranking nem roteamento do Centro IA.
+Os testes são locais com transporte simulado; não gastam saldo e não comprovam entrega dos provedores. Antes de publicar um endpoint remoto, adicionar identidade por usuário/OAuth conforme cliente, proxy TLS, aprovação externa integrada, rate limits globais e validação em homologação/Cockpit. Aplicar a skill vitrine-api-benchmark para comparações; este servidor não decide ranking nem roteamento do Centro IA.
+
+
+## Transporte HTTP local implementado
+
+Executar `python3 http_server.py` com LAB_ACCESS_TOKEN forte (mínimo 32 caracteres), LAB_ALLOWED_HOSTS (valores exatos de Host separados por vírgula), LAB_ALLOWED_ORIGINS (origens exatas autorizadas), LAB_PORT e as configurações de dados/credenciais acima. O listener fica obrigatoriamente em 127.0.0.1, nunca público. O processo é de operador único; quem possui o token possui acesso a todas as execuções deste banco. Não compartilhar banco/token entre clientes.
+
+POST /mcp exige Bearer, Content-Type application/json e Accept application/json, text/event-stream. Exigir MCP-Protocol-Version nas chamadas após initialize. Responder notificações com 202 sem corpo e GET com 405 (sem SSE separado). Bloquear Host e Origin não permitidos; não confiar em X-Forwarded-Host. Configurar o proxy para preservar um Host explicitamente autorizado. Limitar conexões no proxy; o processo aceita no máximo oito workers e só uma operação simultânea.
+
+Este transporte foi testado por HTTP em loopback com credenciais sintéticas. Não há domínio, certificado, proxy, credenciais reais ou conexão ChatGPT provisionados. O suporte a Bearer por cliente deve ser verificado antes de tentar conexão remota. Não declarar compatibilidade com autenticação do ChatGPT sem essa validação.
