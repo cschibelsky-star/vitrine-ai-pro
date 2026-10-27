@@ -27,6 +27,8 @@ def amount(value):
     n = Decimal(str(value))
     if not n.is_finite() or n < 0 or n.as_tuple().exponent < -6:
         raise ValueError('invalid_amount')
+    if n > Decimal('9223372036854.775807'):
+        raise ValueError('invalid_amount')
     return int(n * 1000000)
 
 class PinnedHTTPS(http.client.HTTPSConnection):
@@ -61,7 +63,7 @@ def request(provider, path, payload=None):
             return {'http_status': response.status, 'error': 'provider_rejected_request'}
         data = json.loads(body)
         clean = canonical(data)
-        for name in [p[2] for p in PROVIDERS.values()]:
+        for name in [p[2] for p in PROVIDERS.values()] + ['LAB_APPROVAL_SECRET', 'LAB_ACCESS_TOKEN']:
             secret = os.environ.get(name)
             if secret:
                 clean = clean.replace(secret, '[REDACTED]')
@@ -90,8 +92,9 @@ class Lab:
             expected = hmac.new(key.encode(), body.encode(), hashlib.sha256).hexdigest()
             valid = (len(key) >= 32 and hmac.compare_digest(expected, signature)
                 and obj['action'] == action and obj['hash'] == hashlib.sha256(canonical(args).encode()).hexdigest()
-                and time.time() < obj['expires'] <= time.time() + 900
-                and obj.get('authorization_ref') and obj.get('nonce'))
+                and type(obj['expires']) in (int, float) and time.time() < obj['expires'] <= time.time() + 300
+                and isinstance(obj.get('authorization_ref'), str) and obj['authorization_ref'].strip()
+                and isinstance(obj.get('nonce'), str) and 1 <= len(obj['nonce']) <= 128)
             if not valid:
                 raise ValueError()
             self.db.execute('INSERT INTO grants VALUES(?)', (obj['nonce'],))
@@ -105,6 +108,7 @@ class Lab:
         return row
 
     def call(self, action, **args):
+        validate_arguments(action, args)
         if action == 'lab_status':
             return {'mode': 'test_only', 'transports_implemented': ['stdio','http_loopback_single_operator'], 'implemented': ['catalog', 'chat', 'run_evidence', 'artifact_write'],
                     'pending': ['voice', 'image', 'video', 'tls_remote_deployment', 'cockpit_approval'],
@@ -137,7 +141,7 @@ class Lab:
                 raise ValueError('artifact_too_large')
             if self.db.execute('SELECT count(*) FROM artifacts WHERE run=?', (rid,)).fetchone()[0] >= 20:
                 raise ValueError('artifact_limit')
-            for env in [x[2] for x in PROVIDERS.values()] + ['LAB_APPROVAL_SECRET']:
+            for env in [x[2] for x in PROVIDERS.values()] + ['LAB_APPROVAL_SECRET', 'LAB_ACCESS_TOKEN']:
                 secret = os.environ.get(env)
                 if secret:
                     content = content.replace(secret, '[REDACTED]')
@@ -165,7 +169,7 @@ class Lab:
         if not isinstance(idem,str) or not 1<=len(idem)<=100:
             raise ValueError('invalid_idempotency_key')
         # Operator must certify a conservative bound for THIS bounded payload and account.
-        if not settings.get('ceiling_verified') or not settings.get('price_source'):
+        if settings.get('ceiling_verified') is not True or not isinstance(settings.get('price_source'), str) or not settings['price_source'].strip():
             raise ValueError('verified_cost_ceiling_required')
         reserve=amount(settings['max_charge_brl'])
         if reserve <= 0:
@@ -220,6 +224,19 @@ REQUIRED = {name:list(props) for name,props in SCHEMAS.items()}
 for name, props in SCHEMAS.items():
     if name not in ('lab_status', 'run_create'):
         props.update(purpose={'enum':['test','exception']}, approval={'type':'string'})
+
+def validate_arguments(action, args):
+    if action not in SCHEMAS:
+        raise ValueError('operation_not_allowed')
+    props = SCHEMAS[action]
+    if not set(REQUIRED[action]).issubset(args) or not set(args).issubset(props):
+        raise ValueError('invalid_tool_arguments')
+    for key, value in args.items():
+        spec = props[key]
+        if ('enum' in spec and value not in spec['enum']
+            or spec.get('type') == 'string' and not isinstance(value, str)
+            or spec.get('type') == 'integer' and type(value) is not int):
+            raise ValueError('invalid_tool_arguments')
 
 def rpc(lab, msg):
     method=msg.get('method'); ident=msg.get('id')

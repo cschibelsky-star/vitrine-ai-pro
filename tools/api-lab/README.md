@@ -45,3 +45,9 @@ Executar `python3 http_server.py` com LAB_ACCESS_TOKEN forte (mínimo 32 caracte
 POST /mcp exige Bearer, Content-Type application/json e Accept application/json, text/event-stream. Exigir MCP-Protocol-Version nas chamadas após initialize. Responder notificações com 202 sem corpo e GET com 405 (sem SSE separado). Bloquear Host e Origin não permitidos; não confiar em X-Forwarded-Host. Configurar o proxy para preservar um Host explicitamente autorizado. Limitar conexões no proxy; o processo aceita no máximo oito workers e só uma operação simultânea.
 
 Este transporte foi testado por HTTP em loopback com credenciais sintéticas. Não há domínio, certificado, proxy, credenciais reais ou conexão ChatGPT provisionados. O suporte a Bearer por cliente deve ser verificado antes de tentar conexão remota. Não declarar compatibilidade com autenticação do ChatGPT sem essa validação.
+
+## Homologação de segurança — 27/10/2026
+
+A suíte ampliada possui 46 testes locais distintos, com transporte simulado e HTTP loopback. Consulte [HML-SECURITY.md](HML-SECURITY.md) para falhas reproduzidas/corrigidas, matriz de evidências, plano isolado de HML e gates de integração. Validar tipos e finalidade no servidor é obrigatório; teto de custo exige ceiling_verified booleano true e fonte não vazia. Grants expiram em no máximo cinco minutos e não ampliam o orçamento.
+
+A ausência de ferramenta MCP de emissão não comprova segregação do host: o verificador HMAC possui o segredo e exige isolamento do agente. run_create recebe orçamento declarado pelo chamador; a aprovação financeira humana autenticada ainda precisa de integração externa. Não habilitar integração remota, credenciais ou uso operacional com base apenas nos testes locais.

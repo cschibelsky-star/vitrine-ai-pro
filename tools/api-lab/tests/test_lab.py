@@ -49,7 +49,7 @@ class LabTests(unittest.TestCase):
     def test_unknown_operation(self):
         with self.assertRaises(ValueError):self.lab.call('deploy',run_id=self.rid)
     def test_exception_needs_grant(self):
-        with self.assertRaisesRegex(ValueError,'authorization'):self.chat(purpose='operational')
+        with self.assertRaisesRegex(ValueError,'authorization'):self.chat(purpose='exception')
         self.assertEqual(self.calls,[])
     def test_specific_single_use_grant(self):
         args=dict(run_id=self.rid,provider='invision',model='demo',prompt='Hello',idempotency_key='a',purpose='exception')
