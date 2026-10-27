@@ -1,0 +1,9 @@
+{
+  "max_total_brl": "1.00",
+  "max_run_brl": "1.00",
+  "providers": {
+    "invision": {"models": {}},
+    "roteia": {"models": {}},
+    "openrouter": {"models": {}}
+  }
+}
