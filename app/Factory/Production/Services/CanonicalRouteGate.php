@@ -13,7 +13,7 @@ final class CanonicalRouteGate
     public function evaluate(array $deployment): array
     {
         $required = ['project_id', 'environment', 'hostname', 'provider_verified', 'registry_verified',
-            'dns_verified', 'proxy_verified', 'tls_verified', 'upstream_verified', 'http_verified'];
+            'dns_verified', 'proxy_verified', 'tls_verified', 'upstream_verified', 'http_verified', 'route_status'];
         $reasons = [];
         foreach ($required as $field) {
             if (! array_key_exists($field, $deployment) || $deployment[$field] === null || $deployment[$field] === '') {
@@ -29,13 +29,13 @@ final class CanonicalRouteGate
         if (! in_array(($deployment['environment'] ?? null), ['homologation', 'production'], true)) {
             $reasons[] = 'invalid_environment';
         }
-        if (in_array(($deployment['route_status'] ?? null), ['planned', 'draft'], true)) {
+        if (($deployment['route_status'] ?? null) !== 'active') {
             $reasons[] = 'route_not_publishable';
         }
-        if (($deployment['duplicate_route'] ?? false) !== false) {
+        if (($deployment['duplicate_route'] ?? null) !== false) {
             $reasons[] = 'duplicate_route';
         }
-        if (($deployment['hostname_conflict'] ?? false) !== false) {
+        if (($deployment['hostname_conflict'] ?? null) !== false) {
             $reasons[] = 'hostname_conflict';
         }
         if (($deployment['environment'] ?? null) === 'production' &&
