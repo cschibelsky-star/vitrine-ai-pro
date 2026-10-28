@@ -70,3 +70,13 @@ jobs:
           with open(environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('\n'.join(report)+'\n')
           if passed!=3:raise SystemExit(3)
           PY
+
+      - name: Export short-lived WAV test artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vox-ptbr-samples-${{ github.run_id }}
+          path: ${{ runner.temp }}/vox-hml/output/tts*.wav
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 6
