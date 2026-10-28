@@ -1,6 +1,17 @@
 name: VOX HML manual voice benchmark
 on:
   workflow_dispatch:
+    inputs:
+      piper_voice:
+        description: 'Piper Brazilian voice for HML testing'
+        type: choice
+        required: true
+        default: pt_BR-cadu-medium
+        options:
+          - pt_BR-cadu-medium
+          - pt_BR-faber-medium
+          - pt_BR-jeff-medium
+          - pt_BR-edresson-low
 permissions:
   contents: read
 concurrency:
@@ -40,9 +51,11 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/vox-hml/output"
           export VOX_TIMINGS=1
-          timeout 150 vox -b piper -l pt -o tts01.wav "Olá, sou a VIA. Este é um teste de voz em português brasileiro."
-          timeout 150 vox -b piper -l pt -o tts02.wav "Hoje é vinte e oito de outubro de dois mil e vinte e seis, em Sumaré, São Paulo."
-          timeout 150 vox -b piper -l pt -o tts03.wav "Protocolo quarenta e dois. Atendimento marcado para treze horas e quarenta minutos."
+          VOICE='${{ inputs.piper_voice }}'
+          echo "Testing Piper voice: $VOICE" >> "$GITHUB_STEP_SUMMARY"
+          timeout 150 vox -b piper -l pt -v "$VOICE" -o tts01.wav "Olá, sou a VIA. Este é um teste de voz em português brasileiro."
+          timeout 150 vox -b piper -l pt -v "$VOICE" -o tts02.wav "Hoje é vinte e oito de outubro de dois mil e vinte e seis, em Sumaré, São Paulo."
+          timeout 150 vox -b piper -l pt -v "$VOICE" -o tts03.wav "Protocolo quarenta e dois. Atendimento marcado para treze horas e quarenta minutos."
       - name: Validate WAV structure and report
         if: always()
         shell: bash
@@ -75,7 +88,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: vox-ptbr-samples-${{ github.run_id }}
+          name: vox-ptbr-${{ inputs.piper_voice }}-${{ github.run_id }}
           path: ${{ runner.temp }}/vox-hml/output/tts*.wav
           if-no-files-found: error
           retention-days: 1
