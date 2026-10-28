@@ -59,3 +59,6 @@ if (file_exists(__DIR__.'/master_2_0.php')) {
     require __DIR__.'/master_2_0.php';
 }
 
+
+// Assessor Online: painel autenticado de demandas.
+require __DIR__.'/assessor_online.php';
