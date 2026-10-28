@@ -17,7 +17,7 @@ final class CanonicalRouteGateTest extends TestCase
             'provider_verified' => true, 'registry_verified' => true,
             'dns_verified' => true, 'proxy_verified' => true,
             'tls_verified' => true, 'upstream_verified' => true,
-            'http_verified' => true,
+            'http_verified' => true, 'duplicate_route' => false, 'hostname_conflict' => false,
         ];
     }
 
@@ -44,6 +44,13 @@ final class CanonicalRouteGateTest extends TestCase
     {
         $deployment = $this->valid();
         $deployment['duplicate_route'] = true;
+        self::assertFalse((new CanonicalRouteGate())->evaluate($deployment)['allowed']);
+    }
+
+    public function test_unknown_conflict_evidence_blocks(): void
+    {
+        $deployment = $this->valid();
+        unset($deployment['duplicate_route']);
         self::assertFalse((new CanonicalRouteGate())->evaluate($deployment)['allowed']);
     }
 
