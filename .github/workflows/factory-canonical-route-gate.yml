@@ -1,0 +1,24 @@
+name: Factory Canonical Route Gate
+
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/Production/Services/CanonicalRouteGate.php'
+      - 'tests/Unit/Factory/CanonicalRouteGateTest.php'
+      - '.github/workflows/factory-canonical-route-gate.yml'
+  push:
+    branches:
+      - 'feature/factory-provider-canonical-routing-policy'
+
+jobs:
+  gate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: phpunit
+      - name: Run isolated route gate unit tests
+        run: phpunit --no-configuration --bootstrap app/Factory/Production/Services/CanonicalRouteGate.php tests/Unit/Factory/CanonicalRouteGateTest.php
