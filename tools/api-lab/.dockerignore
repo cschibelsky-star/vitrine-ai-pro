@@ -1,0 +1,11 @@
+*
+!Dockerfile.hml-test
+!lab.py
+!http_server.py
+!approve.py
+!offline_hml.py
+!container_hml.py
+!tests/
+!tests/*.py
+**/__pycache__
+**/*.pyc

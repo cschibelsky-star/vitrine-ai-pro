@@ -1,0 +1,8 @@
+# Offline acceptance harness only; never deploy as a provider-connected service.
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /lab
+COPY lab.py http_server.py approve.py offline_hml.py container_hml.py ./
+COPY tests/ ./tests/
+USER 65532:65532
+CMD ["python", "container_hml.py"]

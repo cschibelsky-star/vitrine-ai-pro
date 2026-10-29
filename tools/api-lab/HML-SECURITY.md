@@ -53,3 +53,13 @@ O servidor passou a exigir grant assinado para todo run_create com orçamento po
 O consumo dos grants e a auditoria mínima de consumo são gravados na mesma transação SQLite. Guarda nonce, ação, hash dos argumentos, referência externa, instalação, execução e tempos; não guarda token. A criação de uma execução positiva vincula o registro ao run_id criado. Não há endpoint MCP de emissão ou alteração dessa auditoria.
 
 Continuam pendentes: consentimento humano verificado no Cockpit, isolamento comprovado do emissor/servidor/agente, auditoria de negativas e trilha externa imutável, TLS/OAuth, HML remota, rate limit global, conciliação real e integração controlada. O HMAC ainda põe o segredo também no verificador; assinatura não comprova segregação do host. Não há autorização permanente nem promoção automática para uso operacional.
+
+## HML descartável em contêiner — 29/10/2026
+
+Base: 2ed991340ec7064370a68450b84716fcde0da7ef; API Lab e Architecture Inventory concluídos com sucesso nessa base. A próxima camada adiciona Dockerfile.hml-test e o job container-hml. Não é serviço persistente, implantação na VPS ou integração ao Cockpit. O host local não possui Docker; a execução efetiva da imagem e das proteções de SO será verificada nos logs do job do GitHub.
+
+O job constrói uma imagem somente com código de teste permitido pelo .dockerignore, sem configuração privada ou banco. Executa como UID/GID 65532, sem rede externa (--network none), raiz somente leitura, sem capabilities e com no-new-privileges. Limites: 1 CPU, 256MiB de memória, 64 processos, /tmp temporário de 64MiB com noexec/nosuid. Não monta host, socket Docker, credenciais ou dados de produção. O job não solicita secrets nem usa ambientes de deployment. O Docker build precisa obter a imagem-base; somente o contêiner de testes é sem rede externa.
+
+Antes da suíte, container_hml.py verifica usuário não root, CapEff zero, NoNewPrivs ativo, mount raiz ro, interfaces limitadas a lo e ausência de credenciais conhecidas. Se qualquer condição falhar, encerra sem executar a suíte. Sete testes negativos/de admissão verificam as condições; a comprovação real de SO depende do job container-hml, não desses mocks. Total esperado: 65 testes, incluindo os 58 anteriores.
+
+A imagem contém approve.py e fixtures de assinatura sintética para testar o protocolo. Não usar esta imagem como servidor conectado: não comprova segregação entre emissor e verificador reais. O job valida a camada de isolamento da suíte, sem inferência, custo ou autorização humana reais. TLS/OAuth, Cockpit, consentimento autenticado e conciliação continuam pendentes.

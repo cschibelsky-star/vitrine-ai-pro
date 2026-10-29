@@ -61,3 +61,9 @@ Definir instance_id único por instalação na configuração privada e LAB_INST
 Após consentimento específico, o operador externo pode usar approve.py com --action run_create, --args-file e --authorization-ref. O arquivo contém exatamente purpose=test, budget_brl e ttl_seconds, sem approval. Para as demais ações, continuam necessários os argumentos completos com purpose=exception. O cliente apenas apresenta o token já emitido; não existe ferramenta MCP de emissão. A aprovação de orçamento não concede finalidade excepcional, nem amplia os tetos administrativos ou a allowlist de modelos/provedores.
 
 O SQLite registra consumo, ação, hash dos argumentos, referência externa, instalação, execução e expiração na tabela authorization_audit, sem armazenar o token. O consumo do nonce e a gravação dessa auditoria são atômicos. A referência ainda não é verificada no Cockpit; assinatura válida comprova posse da chave pelo emissor, não consentimento humano por si só. Uma falha após consumir o grant exige nova aprovação. Preserve o banco; restauração de snapshot antigo pode reabrir nonces já usados e precisa de procedimento próprio antes da integração remota.
+
+## Contêiner descartável de homologação
+
+O job container-hml constrói Dockerfile.hml-test e executa a suíte sob isolamento de SO, sem rede externa, usuário root, escrita na raiz, capabilities ou credenciais. container_hml.py deve aprovar todas as proteções antes dos testes. O protocolo inclui 65 testes após adicionar as verificações de admissão. Consulte HML-SECURITY.md para limites e distinção entre teste em contêiner, HML remota e integração.
+
+A imagem serve exclusivamente para testes sintéticos descartáveis. Não é o serviço MCP de produção nem o emissor externo; contém o emissor de fixtures para os testes e não deve receber credenciais reais. Não disponibiliza porta pública ou endpoint remoto.

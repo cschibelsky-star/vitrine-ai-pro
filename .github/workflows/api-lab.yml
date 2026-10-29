@@ -16,3 +16,22 @@ jobs:
           python-version: '3.11'
       - run: python offline_hml.py
         working-directory: tools/api-lab
+  container-hml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build disposable offline HML test harness
+        run: docker build --tag vitrine-api-lab-hml-test --file tools/api-lab/Dockerfile.hml-test tools/api-lab
+      - name: Validate OS isolation and offline security tests
+        run: >-
+          docker run --rm
+          --network none
+          --read-only
+          --cap-drop ALL
+          --security-opt no-new-privileges
+          --pids-limit 64
+          --memory 256m
+          --cpus 1
+          --tmpfs /tmp:rw,noexec,nosuid,size=64m,mode=1777
+          vitrine-api-lab-hml-test
