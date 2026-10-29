@@ -11,6 +11,9 @@
         <testsuite name="Assessor Online Core">
             <file>tests/Feature/AssessorDemandIsolationTest.php</file>
             <file>tests/Feature/AssessorCaseWorkflowTest.php</file>
+            <file>tests/Feature/AssessorOnline/DemandManagementTest.php</file>
+            <file>tests/Feature/AssessorOnline/DemandTenantIsolationTest.php</file>
+            <file>tests/Feature/AssessorOnline/CitizenManagementTest.php</file>
         </testsuite>
     </testsuites>
     <php>
