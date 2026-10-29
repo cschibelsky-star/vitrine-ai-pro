@@ -63,3 +63,13 @@ O job constrói uma imagem somente com código de teste permitido pelo .dockerig
 Antes da suíte, container_hml.py verifica usuário não root, CapEff zero, NoNewPrivs ativo, mount raiz ro, interfaces limitadas a lo e ausência de credenciais conhecidas. Se qualquer condição falhar, encerra sem executar a suíte. Sete testes negativos/de admissão verificam as condições; a comprovação real de SO depende do job container-hml, não desses mocks. Total esperado: 65 testes, incluindo os 58 anteriores.
 
 A imagem contém approve.py e fixtures de assinatura sintética para testar o protocolo. Não usar esta imagem como servidor conectado: não comprova segregação entre emissor e verificador reais. O job valida a camada de isolamento da suíte, sem inferência, custo ou autorização humana reais. TLS/OAuth, Cockpit, consentimento autenticado e conciliação continuam pendentes.
+
+## Preparação da suíte na VPS — 29/10/2026
+
+Evidência confirmada do commit eed3818: GitHub Actions 40942737540, job container-hml 123690059369, build e proteções de SO aprovados, 65 testes passaram dentro do contêiner; Architecture Inventory também aprovado.
+
+Inspeção do Super Centro confirmou que vitrine-ai-pro é o Core HML, no workspace /srv/projects/vitrine-ai-pro, com branch e integrações de provedores próprias. Não reutilizar esse checkout/runtime. O identificador proposto vitrine-api-lab-hml não estava registrado na inspeção inicial. Preparar projeto e workspace separados /srv/projects/vitrine-api-lab-hml, sem copiar configuração, tokens, volumes ou bancos do Core.
+
+compose.hml-test.yml executa somente api_lab_hml_test, a suíte descartável já validada no GitHub: network_mode none, usuário 65532, raiz ro, capabilities removidas, no-new-privileges, limites de CPU/memória/processos e /tmp temporário. Não há portas, domínio, env_file, volumes persistentes ou credenciais de fornecedor. O resultado esperado é contêiner encerrado com exit code 0 e log de 65 testes aprovados; não é servidor MCP permanente e não exige restart automático. Não interpretar registro/clonagem como teste executado.
+
+Implantação efetiva, SHA do checkout, build e exit code devem ser confirmados pelos conectores antes de marcar a validação na VPS concluída. Nenhuma rota pública deve ser criada para esta suíte. O futuro serviço MCP HML e sua integração ao Cockpit continuam sujeitos aos gates anteriores.

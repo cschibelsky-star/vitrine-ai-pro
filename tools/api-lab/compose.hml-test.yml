@@ -1,0 +1,25 @@
+# Disposable offline suite only. No provider-connected MCP service.
+services:
+  api_lab_hml_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.hml-test
+    image: vitrine-api-lab-hml-test:isolated
+    user: "65532:65532"
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 1.0
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    restart: "no"
+    logging:
+      driver: local
+      options:
+        max-size: 1m
+        max-file: "2"

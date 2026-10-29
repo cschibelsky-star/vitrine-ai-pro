@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Validate offline HML Compose profile
+        run: docker compose --file tools/api-lab/compose.hml-test.yml config --quiet
       - name: Build disposable offline HML test harness
         run: docker build --tag vitrine-api-lab-hml-test --file tools/api-lab/Dockerfile.hml-test tools/api-lab
       - name: Validate OS isolation and offline security tests
