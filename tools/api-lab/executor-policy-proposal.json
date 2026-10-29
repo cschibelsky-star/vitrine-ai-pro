@@ -1,0 +1,60 @@
+{
+  "status": "proposal_not_installed",
+  "project_id": "vitrine-api-lab-hml",
+  "workspace_root": "/srv/projects/vitrine-api-lab-hml",
+  "repository_commit": "0584a1c8955225767ef783957f5a33d30f1dc252",
+  "compose_file": "tools/api-lab/compose.hml-test.yml",
+  "service": "api_lab_hml_test",
+  "allowed_mutations": [
+    "build",
+    "run_once"
+  ],
+  "read_operations": [
+    "status",
+    "logs"
+  ],
+  "forbidden_mutations": [
+    "up",
+    "restart",
+    "exec",
+    "shell",
+    "down",
+    "connector_update"
+  ],
+  "runtime_allowed_keys": [],
+  "approval": "explicit_per_operation",
+  "reviewed_files_sha256": {
+    "tools/api-lab/.dockerignore": "5a7338ed94caca5678329777a4e3830c22378d15dad280db4e404166e2dd40b2",
+    "tools/api-lab/Dockerfile.hml-test": "d7257b3ac7e960191a7edc960370c169750ce6c096c212d66592f3aede8018d1",
+    "tools/api-lab/approve.py": "3b1447783ce0c920902396831fe55116f8343f1b9dd73c0608dc75f036239ece",
+    "tools/api-lab/compose.hml-test.yml": "2fcfb450dfc8ad97d89a94b17c4aa9e22f2409522f4bd482df12f4e2dd598e88",
+    "tools/api-lab/container_hml.py": "c84e9cd9d53c8fd7ccf6b4d2b3528244b33028470c88f71dd24d99dc1e46fc76",
+    "tools/api-lab/http_server.py": "7acb870a89217cb4c9e38d350287405ac86250946fc2fb243adf1e4ab0f99c6b",
+    "tools/api-lab/lab.py": "035eff254fc28133b75503ed3a476e65700c0c26489ba5565794ec7a8eca6669",
+    "tools/api-lab/offline_hml.py": "f7d00c12863a8dc15f4df1cbe2b4ed14c3eadaf56c489be1dacaac2b8f64f69f",
+    "tools/api-lab/tests/test_budget_authorization.py": "d9a5fc5b44f535c90c68bbec48858dd5cc582ca1757a3a6ca43b66130b37c8c2",
+    "tools/api-lab/tests/test_container_hml.py": "e1358c652ee482892a28bc78f8233676767f201ebe6d2d04cf77ab5f9e2eddab",
+    "tools/api-lab/tests/test_http.py": "d7304887dfa8b507f4c5c311e07615e400e9f5a72eff982514b5d16293025137",
+    "tools/api-lab/tests/test_lab.py": "de7008ae6dfc551b5bd7491952bc9552a3d11f0956e8504102d18ae3f1d4793e",
+    "tools/api-lab/tests/test_security.py": "367b6558a904982130d1c2c827f31afd36546459462bd54176504b317d6d4dea"
+  },
+  "requirements": [
+    "exact project/workspace/service/Compose match",
+    "reviewed commit only",
+    "verify hashes and copy verified bytes into private temporary build context",
+    "no unreviewed files or dotenv in snapshot",
+    "no runtime credential import",
+    "loopback-only offline test container",
+    "no public ports or host mounts",
+    "nonroot readonly no capabilities no-new-privileges",
+    "bounded CPU memory pids tmpfs",
+    "no automatic authorization of future commits"
+  ],
+  "validation": {
+    "local_policy_tests_passed": 17,
+    "local_overlay_tests_passed": 6,
+    "remote_executor_policy_installed": false,
+    "vps_lab_suite_executed": false
+  },
+  "blocker": "Cross-repository executor code publication rejected by automatic approval review; explicit authorization for a narrowly scoped VPS PR is required."
+}
