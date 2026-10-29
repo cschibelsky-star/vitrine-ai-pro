@@ -17,3 +17,5 @@ Route::middleware(['web', 'auth'])->prefix('assessor/cidadaos')->name('assessor.
     Route::get('/{citizenId}', [\App\Http\Controllers\AssessorOnline\CitizenController::class, 'show'])->whereNumber('citizenId')->name('show');
     Route::post('/{citizenId}/demandas', [\App\Http\Controllers\AssessorOnline\CitizenController::class, 'registerDemand'])->whereNumber('citizenId')->name('demand');
 });
+
+Route::middleware(['web', 'auth'])->get('/assessor/painel', [\App\Http\Controllers\AssessorOnline\DashboardController::class, 'index'])->name('assessor.dashboard');
