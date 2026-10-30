@@ -10,13 +10,13 @@ final class DemandManagementTest extends TestCase
     public function test_guest_cannot_access_demand_listing(): void
     {
         $response = $this->get('/assessor/demandas');
-        $response->assertRedirect('/admin/login');
+        $response->assertRedirect('/login');
     }
 
     public function test_guest_cannot_read_demand_details(): void
     {
         $response = $this->get('/assessor/demandas/1');
-        $response->assertRedirect('/admin/login');
+        $response->assertRedirect('/login');
     }
 
     public function test_guest_cannot_change_demand_status(): void
@@ -25,6 +25,6 @@ final class DemandManagementTest extends TestCase
             'status' => 'closed',
             'note' => 'Tentativa sem autenticação',
         ]);
-        $response->assertRedirect('/admin/login');
+        $response->assertRedirect('/login');
     }
 }
