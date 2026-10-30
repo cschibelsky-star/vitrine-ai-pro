@@ -105,6 +105,9 @@ final class VideoPreviewController extends Controller
     {
         $allowed = [
             'vitrine-ia-pro-logo-master.png' => base_path('assets/img/logo-vitrine-ai-pro.png'),
+            // Approved IA para Empresas assets only; files must be installed via the asset intake workflow.
+            'vitrine_ia_pro_ia_empresas_feed_01.png' => storage_path('app/marketing/approved/ia-para-empresas-2026-10/vitrine_ia_pro_ia_empresas_feed_01.png'),
+            'vitrine_ia_pro_ia_empresas_feed_02.png' => storage_path('app/marketing/approved/ia-para-empresas-2026-10/vitrine_ia_pro_ia_empresas_feed_02.png'),
         ];
 
         abort_unless(array_key_exists($filename, $allowed), 404);
