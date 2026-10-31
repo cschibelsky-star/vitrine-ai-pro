@@ -10,6 +10,28 @@
         </div>
 
         <section class="space-y-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-950 dark:text-white">Imagens geradas</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Somente arquivos concluídos e registrados no Centro IA. Nenhuma geração é iniciada ao abrir esta página.</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @forelse ($recentImages as $image)
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                        <a href="{{ route('centro-ia.images.preview', ['generation' => $image->id]) }}" target="_blank" rel="noopener noreferrer">
+                            <img src="{{ route('centro-ia.images.preview', ['generation' => $image->id]) }}" alt="Imagem gerada pelo Centro IA" loading="lazy" class="h-48 w-full object-contain" />
+                        </a>
+                        <div class="p-3 text-sm">
+                            <div class="font-mono text-xs text-gray-700 dark:text-gray-200">{{ $image->model_name ?: 'Modelo não informado' }}</div>
+                            <div class="text-gray-500">{{ $image->created_at?->format('d/m/Y H:i') }}</div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500">Nenhuma imagem concluída no banco do Centro IA. O PNG do teste SSH não foi cadastrado automaticamente.</p>
+                @endforelse
+            </div>
+        </section>
+
+        <section class="space-y-4">
             <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-widest text-primary-600">Orquestrador</div>
@@ -19,7 +41,7 @@
                     </p>
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                    Atualizado: {{ IlluminateSupportCarbon::parse($orchestratorUpdatedAt)->format('d/m/Y H:i:s') }}
+                    Atualizado: {{ \Illuminate\Support\Carbon::parse($orchestratorUpdatedAt)->format('d/m/Y H:i:s') }}
                 </div>
             </div>
 

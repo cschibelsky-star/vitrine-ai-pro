@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
+use App\Models\AiMediaGeneration;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -40,6 +42,11 @@ class AiCenterEnterprise extends Page
                 'video' => $this->rankForPanel($items, 'video', $profiles['balanced'] ?? [], $capabilities['video'] ?? []),
             ],
             'orchestratorUpdatedAt' => now()->toIso8601String(),
+            'recentImages' => Schema::hasTable('ai_media_generations')
+                ? AiMediaGeneration::query()->where('capability', 'image_generation')
+                    ->where('status', 'Concluído')->whereNotNull('asset_path')
+                    ->latest('id')->limit(12)->get(['id', 'model_name', 'created_at', 'asset_path'])
+                : collect(),
         ];
     }
 

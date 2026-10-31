@@ -3,8 +3,15 @@ on:
   pull_request:
     paths:
       - 'app/Services/Ai/AiMediaGenerationService.php'
+      - 'app/Http/Controllers/AiImagePreviewController.php'
+      - 'app/Filament/Pages/AiCenterEnterprise.php'
+      - 'resources/views/filament/pages/ai-center-enterprise.blade.php'
+      - 'routes/web.php'
+      - 'app/Console/Commands/RoteiaImageSmokeCommand.php'
       - 'app/Console/Commands/RoteiaUsageAuditCommand.php'
       - 'tests/Feature/RoteiaMediaDeliveryTest.php'
+      - 'tests/Feature/AiImagePreviewAccessTest.php'
+      - 'tests/Feature/RoteiaImageSmokeCommandTest.php'
       - '.github/workflows/roteia-media-delivery.yml'
   workflow_dispatch:
 permissions:
@@ -31,4 +38,9 @@ jobs:
       - run: mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: php -l app/Services/Ai/AiMediaGenerationService.php
-      - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php
+      - run: php -l app/Http/Controllers/AiImagePreviewController.php
+      - run: php -l app/Filament/Pages/AiCenterEnterprise.php
+      - run: php -l routes/web.php
+      - run: php artisan route:list --name=centro-ia.images.preview
+      - run: php artisan view:cache
+      - run: vendor/bin/phpunit tests/Feature/RoteiaMediaDeliveryTest.php tests/Feature/RoteiaImageSmokeCommandTest.php tests/Feature/AiImagePreviewAccessTest.php
