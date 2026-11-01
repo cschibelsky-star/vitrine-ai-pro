@@ -30,3 +30,6 @@ jobs:
           php -l docs/indoor/pilot-adapter/src/IndoorRequestNonceStore.php
           php -l docs/indoor/pilot-adapter/tests/nonce_store_test.php
           php docs/indoor/pilot-adapter/tests/nonce_store_test.php
+          php -l docs/indoor/pilot-adapter/src/IndoorServiceGateway.php
+          php -l docs/indoor/pilot-adapter/tests/service_gateway_test.php
+          php docs/indoor/pilot-adapter/tests/service_gateway_test.php
