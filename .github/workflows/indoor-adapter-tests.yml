@@ -1,0 +1,26 @@
+name: Indoor adapter isolated PHP checks
+
+on:
+  pull_request:
+    paths:
+      - 'docs/indoor/pilot-adapter/**'
+      - '.github/workflows/indoor-adapter-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adapter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run isolated Indoor adapter tests
+        run: |
+          php -v
+          php -l docs/indoor/pilot-adapter/src/TvSumareIndoorAdapter.php
+          php -l docs/indoor/pilot-adapter/tests/adapter_test.php
+          php -l docs/indoor/pilot-adapter/tests/export_contract_test.php
+          php docs/indoor/pilot-adapter/tests/adapter_test.php
+          php docs/indoor/pilot-adapter/tests/export_contract_test.php
