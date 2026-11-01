@@ -37,6 +37,8 @@ jobs:
           chmod -R u+rwX bootstrap/cache storage
       - name: Install full development dependencies
         run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+      - name: Install Mockery for isolated test runtime
+        run: composer require --dev mockery/mockery:^1.6 --no-interaction --no-progress
       - name: Verify test dependencies
         run: |
           php -r "require 'vendor/autoload.php'; if (!class_exists('Mockery')) {fwrite(STDERR, 'Mockery missing'.PHP_EOL); exit(1);}"
