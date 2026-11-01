@@ -1,0 +1,44 @@
+services:
+  assessor_laravel:
+    build:
+      context: .
+      dockerfile: docker/assessor-laravel/Dockerfile
+    image: assessor-pr137-current-laravel-hml:local
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - assessor_proxy
+    ports:
+      - "127.0.0.1:18893:8080"
+    environment:
+      APP_NAME: "Assessor Online HML"
+      APP_ENV: homologation
+      APP_DEBUG: "false"
+      APP_KEY: "${ASSESSOR_HML_APP_KEY:?ASSESSOR_HML_APP_KEY required}"
+      APP_URL: "https://p000009.hml.vitrineiapro.com.br"
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/html/storage/assessor.sqlite
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    volumes:
+      - assessor_laravel_storage:/var/www/html/storage
+    tmpfs:
+      - /tmp
+      - /var/www/html/bootstrap/cache:uid=33,gid=33,mode=0770
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/login')===false ? 1 : 0);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  assessor_proxy:
+    external: true
+    name: n8n-traefik_app_network
+volumes:
+  assessor_laravel_storage:

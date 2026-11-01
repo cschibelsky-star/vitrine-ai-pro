@@ -7,6 +7,7 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -37,17 +38,24 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        /*
-         * Segurança 1.7.1:
-         * - Admin interno acessa /admin.
-         * - Usuário cliente não acessa /admin; usa /cliente.
-         * - Usuários antigos sem role continuam tratados como admin para não bloquear o painel.
-         */
-        return ($this->is_active ?? true)
-            && (
-                $this->role === 'admin'
-                || blank($this->role)
-            );
+        if (($this->is_active ?? true) === false) {
+            return false;
+        }
+
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        if (! blank($this->role)) {
+            return false;
+        }
+
+        // Legacy accounts without a role may access Core only when they are
+        // not associated with an Assessor cabinet. Explicit Core admins remain allowed.
+        return ! DB::table('assessor_memberships')
+            ->where('user_id', $this->getAuthIdentifier())
+            ->where('active', true)
+            ->exists();
     }
 
     public function company()
