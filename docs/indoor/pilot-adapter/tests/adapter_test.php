@@ -1,51 +1,44 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../src/TvSumareIndoorAdapter.php';
-
-function assertSameCount(int $count, array $items, string $label): void {
-    if (count($items) !== $count) {
-        throw new RuntimeException($label . ': esperado ' . $count . ', encontrado ' . count($items));
-    }
+function check(bool $condition, string $message): void {
+    if (!$condition) throw new RuntimeException($message);
 }
 $valid = [
-    'source_id' => 'n-001',
-    'type' => 'news',
-    'title' => 'Reportagem de teste',
-    'editorial_status' => 'approved',
-    'indoor_consent' => true,
+    'source' => 'tvsumare', 'source_id' => 'news_1', 'type' => 'news',
+    'title' => 'Boletim piloto', 'destination' => 'indoor_only',
+    'editorial_status' => 'approved', 'indoor_consent' => true,
     'rights' => ['indoor_allowed' => true, 'valid_until' => '2099-01-01T00:00:00Z'],
-    'media_url' => 'https://example.invalid/news.jpg',
+    'media_path' => 'uploads/noticias/news_1.jpg',
     'slot' => 'central',
 ];
-$pending = $valid;
-$pending['source_id'] = 'n-002';
-$pending['editorial_status'] = 'pending';
-$noConsent = $valid;
-$noConsent['source_id'] = 'n-003';
-$noConsent['indoor_consent'] = false;
-$expired = $valid;
-$expired['source_id'] = 'n-004';
-$expired['rights']['valid_until'] = '2000-01-01T00:00:00Z';
-$unsafeUrl = $valid;
-$unsafeUrl['source_id'] = 'n-005';
-$unsafeUrl['media_url'] = 'file:///etc/passwd';
 $ad = $valid;
-$ad['source_id'] = 'ad-001';
+$ad['source_id'] = 'ad_1';
 $ad['type'] = 'ad';
+$ad['destination'] = 'both';
+$ad['media_path'] = 'uploads/anuncios/ad_1.mp4';
 $ad['slot'] = 'lateral';
-$data = TvSumareIndoorAdapter::preview(
-    [$valid, $valid, $pending, $noConsent, $expired, $unsafeUrl, $ad], 'tvsumare-pilot'
-);
-assertSameCount(2, $data, 'Filtro de elegibilidade, duplicados e direitos');
-if ($data[0]['import_state'] !== 'pending_indoor_review') {
-    throw new RuntimeException('Nunca publicar automaticamente');
-}
-if ($data[1]['slot'] !== 'lateral') {
-    throw new RuntimeException('Área comercial lateral');
+$items = TvSumareIndoorAdapter::preview([$valid, $valid, $ad], 'tvsumare_pilot');
+check(count($items) === 2, 'Deduplicação e compatibilidade');
+check($items[0]['import_state'] === 'pending_indoor_review', 'Revisão é obrigatória');
+check($items[1]['slot'] === 'lateral', 'Anúncio lateral');
+check(!isset($items[0]['media_url']), 'Não transformar caminho em URL pública');
+foreach ([
+    ['source' => 'other'],
+    ['destination' => 'tvsumare_only'],
+    ['editorial_status' => 'pending'],
+    ['indoor_consent' => false],
+    ['rights' => ['indoor_allowed' => false]],
+    ['rights' => ['indoor_allowed' => true, 'valid_until' => '2020-01-01T00:00:00Z']],
+    ['media_path' => '../private/file.mp4'],
+    ['media_path' => 'https://example.invalid/file.mp4'],
+    ['slot' => 'lateral'],
+] as $bad) {
+    check(TvSumareIndoorAdapter::preview([array_replace($valid, $bad)], 'tvsumare_pilot') === [], 'Negar registro inválido');
 }
 try {
     TvSumareIndoorAdapter::preview([$valid], '');
-    throw new RuntimeException('Tenant vazio aceito');
+    throw new RuntimeException('Tenant vazio foi aceito');
 } catch (InvalidArgumentException $expected) {
 }
-echo "OK: contrato de leitura e revisão Indoor\n";
+echo "OK: contrato TV Sumare -> Indoor compatível e fechado por padrão\n";
