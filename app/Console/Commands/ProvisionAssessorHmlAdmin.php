@@ -7,81 +7,79 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use RuntimeException;
 
 final class ProvisionAssessorHmlAdmin extends Command
 {
     protected $signature = 'assessor:provision-hml-admin {email} {--tenant=gabinete-demonstracao}';
-    protected $description = 'Provision an Assessor cabinet administrator in explicitly authorized HML only';
+    protected $description = 'Invite a cabinet administrator by email in isolated HML only';
 
     public function handle(): int
     {
-        $url = (string) config('app.url');
+        $host = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
         if (config('app.env') !== 'homologation'
-            || ! str_ends_with((string) parse_url($url, PHP_URL_HOST), '.hml.vitrineiapro.com.br')
+            || ! str_ends_with($host, '.hml.vitrineiapro.com.br')
             || env('ASSESSOR_HML_PROVISION_ENABLED') !== 'true') {
-            $this->error('Provisioning is disabled outside explicitly enabled HML.');
+            $this->error('Provisioning disabled outside explicitly enabled HML.');
+            return self::FAILURE;
+        }
+
+        // Never create an account when a real delivery channel is unavailable.
+        if (config('mail.default') !== 'smtp'
+            || ! filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)
+            || ! filled(config('mail.mailers.smtp.host'))) {
+            $this->error('SMTP is not configured. No account was created.');
             return self::FAILURE;
         }
 
         $email = Str::lower(trim((string) $this->argument('email')));
-        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->error('Invalid email.');
-            return self::FAILURE;
-        }
-
         $slug = (string) $this->option('tenant');
-        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
-            $this->error('Invalid tenant slug.');
-            return self::FAILURE;
-        }
-
-        $password = $this->secret('Set a new HML-only password (not logged)');
-        if (! is_string($password) || strlen($password) < 16) {
-            $this->error('Password must contain at least 16 characters.');
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)
+            || ! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+            $this->error('Invalid email or tenant slug.');
             return self::FAILURE;
         }
 
         try {
-            DB::transaction(function () use ($email, $slug, $password): void {
+            $user = DB::transaction(function () use ($email, $slug): User {
                 if (User::where('email', $email)->exists()) {
-                    throw new RuntimeException('User already exists; refusing to change existing access.');
+                    throw new RuntimeException('Existing user: refusing duplicate invitation.');
                 }
-
                 $tenant = DB::table('assessor_tenants')->where('slug', $slug)->first();
                 $tenantId = $tenant?->id ?? DB::table('assessor_tenants')->insertGetId([
-                    'name' => 'Gabinete Demonstração',
-                    'slug' => $slug,
-                    'kind' => 'vereador',
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'name' => 'Gabinete Demonstração', 'slug' => $slug,
+                    'kind' => 'vereador', 'created_at' => now(), 'updated_at' => now(),
                 ]);
-
                 $user = User::create([
                     'name' => 'Administrador do Gabinete',
                     'email' => $email,
-                    'password' => Hash::make($password),
+                    'password' => Hash::make(Str::random(96)),
                     'role' => 'assessor',
                     'is_active' => true,
                 ]);
                 DB::table('assessor_memberships')->insert([
-                    'tenant_id' => $tenantId,
-                    'user_id' => $user->id,
-                    'role' => 'admin',
-                    'active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'tenant_id' => $tenantId, 'user_id' => $user->id,
+                    'role' => 'admin', 'active' => true,
+                    'created_at' => now(), 'updated_at' => now(),
                 ]);
+                return $user;
+            });
+
+            $token = Password::broker('users')->createToken($user);
+            $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
+            Mail::raw("Ative seu acesso ao Assessor Online definindo sua senha: {$url}\nLink válido por 60 minutos e de uso único.", function ($message) use ($email): void {
+                $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
             });
         } catch (\Throwable $exception) {
-            $this->error('Provisioning aborted: '.$exception->getMessage());
+            // No sensitive details or activation token in console output.
+            $this->error('Invitation could not be completed; check secure operational logs.');
             return self::FAILURE;
-        } finally {
-            unset($password);
         }
 
-        $this->info('HML Assessor account provisioned. No Core administrator role granted.');
+        $this->info('HML invitation dispatched. Core administrator privileges were not granted.');
         return self::SUCCESS;
     }
 }
