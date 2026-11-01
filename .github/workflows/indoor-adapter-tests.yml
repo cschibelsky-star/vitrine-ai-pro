@@ -24,3 +24,6 @@ jobs:
           php -l docs/indoor/pilot-adapter/tests/export_contract_test.php
           php docs/indoor/pilot-adapter/tests/adapter_test.php
           php docs/indoor/pilot-adapter/tests/export_contract_test.php
+          php -l docs/indoor/pilot-adapter/src/IndoorServiceAuth.php
+          php -l docs/indoor/pilot-adapter/tests/service_auth_test.php
+          php docs/indoor/pilot-adapter/tests/service_auth_test.php
