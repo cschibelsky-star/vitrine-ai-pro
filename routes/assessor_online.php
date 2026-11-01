@@ -2,7 +2,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AssessorOnline\DemandController;
+use App\Http\Controllers\AssessorOnline\AssessorAuthController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware('web')->prefix('assessor')->name('assessor.')->group(function () {
+    Route::get('/login', [AssessorAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AssessorAuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
+    Route::post('/logout', [AssessorAuthController::class, 'logout'])->middleware('auth')->name('logout');
+});
 
 Route::middleware(['web', 'auth'])->prefix('assessor/demandas')->name('assessor.demands.')->group(function () {
     Route::get('/', [DemandController::class, 'index'])->name('index');
