@@ -1,76 +1,60 @@
 <?php
 /**
- * Vitrine Indoor IA — adaptador de catálogo TV Sumaré v1 (HML).
- * Transformação pura de registros fornecidos pelo backend. Não lê arquivos,
- * não expõe endpoints e não autoriza a publicação.
+ * Vitrine Indoor IA: transformação pura do catálogo privado da TV Sumaré.
+ * Não faz requisições, lê arquivos, autentica dispositivos ou publica conteúdo.
+ * O chamador valida a autorização do tenant e assina URLs de distribuição.
  */
 declare(strict_types=1);
 
 final class TvSumareIndoorAdapter
 {
-    private const ALLOWED_TYPES = ['news', 'ad', 'video', 'podcast'];
-    private const ALLOWED_SLOTS = ['central', 'lateral'];
+    private const TYPES = ['news', 'ad', 'video', 'podcast'];
 
-    /** @param array<int,array<string,mixed>> $records */
+    /** @param array<int,mixed> $records */
     public static function preview(array $records, string $tenantId): array
     {
-        if (trim($tenantId) === '') {
-            throw new InvalidArgumentException('Tenant obrigatório');
+        if (!preg_match('/^[A-Za-z0-9_-]{1,100}$/D', $tenantId)) {
+            throw new InvalidArgumentException('Tenant inválido');
         }
         $result = [];
         $seen = [];
         foreach ($records as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $sourceId = trim((string) ($row['source_id'] ?? ''));
-            $type = (string) ($row['type'] ?? '');
-            $title = trim((string) ($row['title'] ?? ''));
-            $status = (string) ($row['editorial_status'] ?? '');
-            $consent = $row['indoor_consent'] ?? false;
-            $rights = $row['rights'] ?? [];
-            if ($sourceId === '' || $title === '' || !in_array($type, self::ALLOWED_TYPES, true)) {
-                continue;
-            }
-            // Pendente, rejeitado e descartado nunca são importáveis.
-            if ($status !== 'approved' || $consent !== true || !is_array($rights)) {
-                continue;
-            }
-            if (($rights['indoor_allowed'] ?? false) !== true) {
-                continue;
-            }
+            if (!is_array($row) || ($row['source'] ?? null) !== 'tvsumare') continue;
+            $id = $row['source_id'] ?? null;
+            $type = $row['type'] ?? null;
+            $title = $row['title'] ?? null;
+            $rights = $row['rights'] ?? null;
+            if (!is_string($id) || !preg_match('/^[A-Za-z0-9_-]{1,100}$/D', $id)) continue;
+            if (!is_string($type) || !in_array($type, self::TYPES, true)) continue;
+            if (!is_string($title) || trim($title) === '') continue;
+            if (!in_array($row['destination'] ?? null, ['indoor_only', 'both'], true)) continue;
+            if (($row['editorial_status'] ?? null) !== 'approved') continue;
+            if (($row['indoor_consent'] ?? null) !== true || !is_array($rights)) continue;
+            if (($rights['indoor_allowed'] ?? null) !== true) continue;
             $validUntil = $rights['valid_until'] ?? null;
-            if ($validUntil !== null) {
-                $timestamp = is_string($validUntil) ? strtotime($validUntil) : false;
-                if ($timestamp === false || $timestamp <= time()) {
-                    continue;
-                }
-            }
-            $mediaUrl = (string) ($row['media_url'] ?? '');
-            $urlParts = parse_url($mediaUrl);
-            if (!is_array($urlParts) || strtolower((string) ($urlParts['scheme'] ?? '')) !== 'https'
-                || empty($urlParts['host'])) {
-                continue;
-            }
-            $slot = (string) ($row['slot'] ?? 'central');
-            if (!in_array($slot, self::ALLOWED_SLOTS, true)) {
-                continue;
-            }
-            $key = $type . ':' . $sourceId;
-            if (isset($seen[$key])) {
-                continue;
-            }
+            if ($validUntil !== null &&
+                (!is_string($validUntil) || ($expiry = strtotime($validUntil)) === false || $expiry <= time())) continue;
+            $mediaPath = $row['media_path'] ?? null;
+            if (!is_string($mediaPath) || !preg_match(
+                '~^uploads/(?:anuncios|videos|noticias|indoor)/[A-Za-z0-9_-]+[.](?:jpe?g|png|webp|mp4)$~iD',
+                $mediaPath
+            )) continue;
+            $slot = $row['slot'] ?? ($type === 'ad' ? 'lateral' : 'central');
+            if ($slot !== ($type === 'ad' ? 'lateral' : 'central')) continue;
+            $key = $type . ':' . $id;
+            if (isset($seen[$key])) continue;
             $seen[$key] = true;
             $result[] = [
                 'source' => 'tvsumare',
                 'tenant_id' => $tenantId,
-                'source_id' => $sourceId,
+                'source_id' => $id,
                 'type' => $type,
-                'title' => $title,
-                'media_url' => $mediaUrl,
+                'title' => trim($title),
+                'media_path' => $mediaPath,
                 'slot' => $slot,
+                'destination' => $row['destination'],
                 'rights_valid_until' => $validUntil,
-                'import_state' => 'pending_indoor_review',
+                'import_state' => 'pending_indoor_review'
             ];
         }
         return $result;
