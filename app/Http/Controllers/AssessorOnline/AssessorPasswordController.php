@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -30,7 +31,15 @@ final class AssessorPasswordController extends Controller
         if ($user && $user->is_active && DB::table('assessor_memberships')
             ->where('user_id', $user->id)->where('active', true)
             ->whereIn('role', ['admin', 'assessor'])->exists()) {
-            Password::broker('users')->sendResetLink(['email' => $email]);
+            // Never log password-reset tokens to the default log mailer.
+            if (config('mail.default') === 'smtp'
+                && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)) {
+                $token = Password::broker('users')->createToken($user);
+                $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
+                Mail::raw("Para definir sua senha do Assessor Online, acesse: {$url}\nEste link expira em 60 minutos.", function ($message) use ($email): void {
+                    $message->to($email)->subject('Assessor Online - Definir senha');
+                });
+            }
         }
 
         return back()->with('status', 'Se o e-mail estiver autorizado, enviaremos as instruções.');
