@@ -9,6 +9,10 @@ Route::middleware('web')->prefix('assessor')->name('assessor.')->group(function 
     Route::get('/login', [AssessorAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AssessorAuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
     Route::post('/logout', [AssessorAuthController::class, 'logout'])->middleware('auth')->name('logout');
+    Route::get('/esqueci-senha', [\App\Http\Controllers\AssessorOnline\AssessorPasswordController::class, 'requestForm'])->name('password.request');
+    Route::post('/esqueci-senha', [\App\Http\Controllers\AssessorOnline\AssessorPasswordController::class, 'sendLink'])->middleware('throttle:3,1')->name('password.email');
+    Route::get('/redefinir-senha/{token}', [\App\Http\Controllers\AssessorOnline\AssessorPasswordController::class, 'resetForm'])->name('password.reset');
+    Route::post('/redefinir-senha', [\App\Http\Controllers\AssessorOnline\AssessorPasswordController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
 });
 
 Route::middleware(['web', 'auth'])->prefix('assessor/demandas')->name('assessor.demands.')->group(function () {
