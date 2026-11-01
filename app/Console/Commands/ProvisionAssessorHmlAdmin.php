@@ -37,6 +37,11 @@ final class ProvisionAssessorHmlAdmin extends Command
 
         $email = Str::lower(trim((string) $this->argument('email')));
         $slug = (string) $this->option('tenant');
+        $allowedEmail = Str::lower(trim((string) env('ASSESSOR_HML_ADMIN_EMAIL', '')));
+        if ($allowedEmail === '' || ! hash_equals($allowedEmail, $email)) {
+            $this->error('Recipient is not explicitly authorized for HML provisioning.');
+            return self::FAILURE;
+        }
         if (! filter_var($email, FILTER_VALIDATE_EMAIL)
             || ! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
             $this->error('Invalid email or tenant slug.');
@@ -74,6 +79,14 @@ final class ProvisionAssessorHmlAdmin extends Command
                 $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
             });
         } catch (\Throwable $exception) {
+            // Do not leave an unusable administrative account after delivery failure.
+            if (isset($user) && $user instanceof User) {
+                DB::transaction(function () use ($user): void {
+                    DB::table('assessor_memberships')->where('user_id', $user->id)->delete();
+                    DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+                    $user->delete();
+                });
+            }
             // No sensitive details or activation token in console output.
             $this->error('Invitation could not be completed; check secure operational logs.');
             return self::FAILURE;
