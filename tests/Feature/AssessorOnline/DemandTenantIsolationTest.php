@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace Tests\Feature\AssessorOnline;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\AssessorOnline\Concerns\UsesIsolatedAssessorDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 final class DemandTenantIsolationTest extends TestCase
 {
-    use RefreshDatabase;
+    use UsesIsolatedAssessorDatabase;
 
     private function seedCabinet(int $userId, string $slug): array
     {
