@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Middleware padrão do Laravel 12.
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            return $request->is('assessor', 'assessor/*')
+                ? route('assessor.login')
+                : route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Tratamento padrão de exceções.
