@@ -18,11 +18,18 @@ final class AssessorPasswordController extends Controller
 {
     public function requestForm(): View
     {
-        return view('assessor-online.auth.forgot-password');
+        return view('assessor-online.auth.forgot-password', [
+            'mailReady' => config('mail.default') === 'smtp'
+                && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL),
+        ]);
     }
 
     public function sendLink(Request $request): RedirectResponse
     {
+        if (config('mail.default') !== 'smtp'
+            || ! filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)) {
+            return back()->withErrors(['email' => 'Recuperação por e-mail temporariamente indisponível.']);
+        }
         $data = $request->validate(['email' => ['required', 'email']]);
         $email = Str::lower(trim($data['email']));
         $user = User::where('email', $email)->first();
