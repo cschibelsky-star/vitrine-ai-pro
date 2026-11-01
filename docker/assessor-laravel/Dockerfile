@@ -8,4 +8,4 @@ COPY . .
 RUN composer dump-autoload --no-dev --optimize --no-scripts && chown -R www-data:www-data storage bootstrap/cache
 USER www-data
 EXPOSE 8080
-CMD ["php","artisan","serve","--host=0.0.0.0","--port=8080"]
+CMD ["sh","-lc","mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs && touch storage/assessor.sqlite && php artisan migrate --path=database/migrations/2024_01_01_000001_create_users_table.php --force && php artisan migrate --path=database/migrations/2026_10_20_000001_create_assessor_core_tables.php --force && php artisan migrate --path=database/migrations/2026_10_22_000002_create_assessor_memberships_table.php --force && php artisan serve --host=0.0.0.0 --port=8080"]
