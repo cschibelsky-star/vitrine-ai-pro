@@ -33,3 +33,20 @@ jobs:
           php -l docs/indoor/pilot-adapter/src/IndoorServiceGateway.php
           php -l docs/indoor/pilot-adapter/tests/service_gateway_test.php
           php docs/indoor/pilot-adapter/tests/service_gateway_test.php
+      - name: Local-only HTTP signed request smoke
+        run: |
+          set -eu
+          php -l docs/indoor/pilot-adapter/tests/http_loopback_router.php
+          php -l docs/indoor/pilot-adapter/tests/http_loopback_client.php
+          export INDOOR_TEST_SECRET="$(openssl rand -hex 32)"
+          export INDOOR_TEST_NONCE_DB="$RUNNER_TEMP/indoor-nonces.sqlite"
+          php -r '$db=new PDO("sqlite:".getenv("INDOOR_TEST_NONCE_DB")); $db->exec("CREATE TABLE indoor_request_nonces (service_id TEXT NOT NULL, nonce_hash TEXT NOT NULL, expires_at INTEGER NOT NULL, PRIMARY KEY(service_id,nonce_hash))");'
+          php -S 127.0.0.1:18743 docs/indoor/pilot-adapter/tests/http_loopback_router.php > "$RUNNER_TEMP/indoor-http.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in 1 2 3 4 5; do
+            if php docs/indoor/pilot-adapter/tests/http_loopback_client.php; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/indoor-http.log"
+          exit 1
