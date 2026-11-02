@@ -36,3 +36,12 @@ A semantica financeira deve ser harmonizada com o Budget Planner e Credit Ledger
 5. Somente apos servico remoto independente e seguranca aprovados, autorizar integracao real.
 
 O backend offline v0.2.1 implementa as tres rotas GET somente em loopback, com LAB_FINANCE_READ_TOKEN diferente do token administrativo. Ainda nao existe implantacao TLS, reverso-proxy ou secret de leitura configurado para o Cockpit.
+
+
+## Virada de homologacao para consumo real (baseline financeiro)
+- **Nao apagar** transacoes reais, reservas pendentes, falhas possivelmente cobradas ou historico de auditoria.
+- Manter testes e fixtures marcados `environment=test` / `is_synthetic=true`, fora dos totais operacionais. Nao apresentar estimativas locais como debitos da Roteia.
+- Antes da primeira consulta produtiva, exigir reconciliacao real de saldo e transacoes usando identificadores da Roteia, salvo se a conta for comprovadamente sem consumo anterior. O ponto inicial e um **baseline datado**, nao a afirmacao de que o saldo historico da Roteia e zero.
+- O painel podera mostrar consumo **desde a ativacao** igual a R$ 0,00 somente quando houver prova de que nenhuma chamada real foi feita no periodo. Na ausencia de prova, mostrar `Nao conciliado`.
+- Separar dados de laboratorio (testes) dos dados reais por tenant/projeto, ambiente, fonte, timestamp e `request_id`; nao reutilizar IDs de fixtures. Desativar ou arquivar dados sinteticos antes de disponibilizar a pagina em HML.
+- Nao executar truncamento, DELETE, migration destrutiva ou reset de ledger sem inventario de registros e aprovacao especifica, nem descartar eventuais debitos desconhecidos.
