@@ -1,0 +1,42 @@
+# Isolated single-service HTTP contract sandbox for Vitrine Social Hub.
+# No shared networks, ports, volumes, database, scheduler, Meta or Traefik.
+# Run only under the dedicated isolated project, never the existing Marketing HML.
+name: vitrine-social-hub-marketing-contract
+services:
+  status_contract:
+    build:
+      context: .
+      dockerfile: docker/core/php/Dockerfile.test
+    image: vitrine-social-hub-marketing-contract:test
+    command: ["php", "artisan", "serve", "--host=127.0.0.1", "--port=8080"]
+    network_mode: none
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      APP_NAME: "Marketing IA - Social Hub Contract"
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      APP_KEY: "base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      APP_URL: "http://127.0.0.1:8080"
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      MARKETING_NATIVE_PUBLISHING_ENABLED: "false"
+      SOCIAL_HUB_MARKETING_LOOKUP_ENABLED: "false"
+      # Deliberately no MARKETING_ENGINE_TOKEN and no Meta credentials.
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+      - /project/storage/framework/cache:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/framework/sessions:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/framework/views:rw,noexec,nosuid,nodev,size=16m
+      - /project/storage/logs:rw,noexec,nosuid,nodev,size=16m
+      - /project/bootstrap/cache:rw,noexec,nosuid,nodev,size=16m
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1.0
