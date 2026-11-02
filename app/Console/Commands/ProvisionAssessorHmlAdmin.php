@@ -59,11 +59,11 @@ final class ProvisionAssessorHmlAdmin extends Command
                 $user = User::create([
                     'name' => 'Administrador do Gabinete', 'email' => $email,
                     'password' => Hash::make(Str::random(80)),
-                    'role' => 'assessor', 'is_active' => true,
+                    'role' => 'assessor', 'is_active' => false,
                 ]);
                 DB::table('assessor_memberships')->insert([
                     'tenant_id' => $tenantId, 'user_id' => $user->id,
-                    'role' => 'admin', 'active' => true,
+                    'role' => 'admin', 'active' => false,
                     'created_at' => now(), 'updated_at' => now(),
                 ]);
                 return $user;
