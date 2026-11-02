@@ -1,0 +1,52 @@
+name: Social Hub Marketing status contract (isolated)
+on:
+  push:
+    branches:
+      - 'test/social-hub-marketing-status-contract-20261101'
+  pull_request:
+    paths:
+      - 'tests/Feature/SocialHubPublicationStatusContractTest.php'
+      - '.github/workflows/social-hub-status-contract.yml'
+      - 'docker-compose.social-hub-status-contract.yml'
+permissions:
+  contents: read
+jobs:
+  status-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: testing
+      MARKETING_NATIVE_PUBLISHING_ENABLED: 'false'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, sqlite3, pdo_sqlite
+          coverage: none
+      - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - run: docker compose -f docker-compose.social-hub-status-contract.yml config --quiet
+      - run: php -l tests/Feature/SocialHubPublicationStatusContractTest.php
+      - run: vendor/bin/phpunit tests/Feature/SocialHubPublicationStatusContractTest.php --colors=never
+      - name: Build and launch private HTTP sandbox
+        run: docker compose -f docker-compose.social-hub-status-contract.yml up -d --build
+      - name: Verify isolated HTTP endpoint without token
+        run: |
+          docker compose -f docker-compose.social-hub-status-contract.yml exec -T status_contract php artisan route:list --path=api/internal/marketing/publisher/meta/publication-status | grep publication-status
+          docker compose -f docker-compose.social-hub-status-contract.yml exec -T status_contract php -r '
+            $url = "http://127.0.0.1:8080/api/internal/marketing/publisher/meta/publication-status";
+            $ctx = stream_context_create(["http" => ["method" => "POST", "header" => "Content-Type: application/json\\r\\n", "content" => "{}", "ignore_errors" => true, "timeout" => 5]]);
+            $body = @file_get_contents($url, false, $ctx);
+            $status = $http_response_header[0] ?? "";
+            echo $status, PHP_EOL;
+            if (!str_contains($status, " 401 ")) { exit(1); }
+          '
+      - name: Remove isolated sandbox
+        if: always()
+        run: docker compose -f docker-compose.social-hub-status-contract.yml down --remove-orphans
