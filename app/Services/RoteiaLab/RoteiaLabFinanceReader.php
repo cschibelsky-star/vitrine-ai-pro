@@ -45,7 +45,7 @@ final class RoteiaLabFinanceReader
                 || !array_key_exists('saldo_disponivel', $summaryData)
                 || !array_key_exists('consumo_conciliado', $summaryData)
                 || !array_key_exists('reservas_pendentes', $summaryData)
-                || ($summaryData['balance_source'] ?? null) !== 'not_connected'
+                || !in_array(($summaryData['balance_source'] ?? null), ['not_connected', 'roteia_verified'], true)
                 || !is_array($projectsData['data'] ?? null)
                 || !array_is_list($projectsData['data'])
                 || !is_array($transactionsData['data'] ?? null)
