@@ -24,6 +24,12 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        'assessor' => [
+            'provider' => 'users',
+            'table' => 'assessor_password_reset_tokens',
+            'expire' => 15,
+            'throttle' => 60,
+        ],
     ],
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 ];
