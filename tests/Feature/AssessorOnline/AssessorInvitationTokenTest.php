@@ -36,6 +36,26 @@ final class AssessorInvitationTokenTest extends TestCase
         $this->assertFalse(Password::broker('assessor')->tokenExists($user, $token));
     }
 
+    public function test_revoked_membership_cannot_be_reactivated_by_valid_reset_token(): void
+    {
+        $user = User::factory()->create(['role' => 'assessor', 'is_active' => false]);
+        $tenantId = DB::table('assessor_tenants')->insertGetId([
+            'name' => 'Gabinete Revogado', 'slug' => 'gabinete-revogado',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('assessor_memberships')->insert([
+            'tenant_id' => $tenantId, 'user_id' => $user->id,
+            'role' => 'admin', 'active' => false, 'invitation_pending' => false,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $token = Password::broker('assessor')->createToken($user);
+        $this->post('/assessor/redefinir-senha', [
+            'email' => $user->email, 'token' => $token,
+            'password' => 'SenhaNovaDeTeste123!', 'password_confirmation' => 'SenhaNovaDeTeste123!',
+        ])->assertSessionHasErrors('email');
+        $this->assertFalse((bool) DB::table('assessor_memberships')->where('user_id', $user->id)->value('active'));
+    }
+
     public function test_revoked_token_cannot_be_replayed(): void
     {
         $user = User::factory()->create(['role' => 'assessor']);
