@@ -26,6 +26,20 @@ final class AssessorAdminAccessTest extends TestCase
         ]);
     }
 
+    public function test_invited_assessor_role_never_grants_core_admin(): void
+    {
+        $user = User::factory()->create(['role' => 'assessor', 'is_active' => true]);
+        $this->addMembership($user);
+        $this->assertFalse($user->fresh()->canAccessPanel(Panel::make()->id('admin')));
+    }
+
+    public function test_disabled_invitation_cannot_access_core_panel(): void
+    {
+        $user = User::factory()->create(['role' => 'assessor', 'is_active' => false]);
+        $this->addMembership($user);
+        $this->assertFalse($user->fresh()->canAccessPanel(Panel::make()->id('admin')));
+    }
+
     public function test_legacy_cabinet_member_cannot_access_core_panel(): void
     {
         $user = User::factory()->create();
