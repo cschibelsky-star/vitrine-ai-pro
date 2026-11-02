@@ -69,14 +69,14 @@ final class ProvisionAssessorHmlAdmin extends Command
                 return $user;
             });
 
-            $token = Password::broker('users')->createToken($user);
+            $token = Password::broker('assessor')->createToken($user);
             $link = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
             try {
                 Mail::raw("Você recebeu um convite para o Assessor Online. Defina sua senha pelo link: {$link}\nSe não solicitou este acesso, ignore a mensagem.", function ($message) use ($email): void {
                     $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
                 });
             } catch (\Throwable $exception) {
-                Password::broker('users')->deleteToken($user);
+                Password::broker('assessor')->deleteToken($user);
                 DB::table('assessor_memberships')->where('user_id', $user->id)->update(['active' => false]);
                 $user->forceFill(['is_active' => false])->save();
                 throw new RuntimeException('Delivery failed; invitation revoked.', 0, $exception);
