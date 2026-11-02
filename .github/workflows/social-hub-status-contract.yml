@@ -7,6 +7,7 @@ on:
     paths:
       - 'tests/Feature/SocialHubPublicationStatusContractTest.php'
       - '.github/workflows/social-hub-status-contract.yml'
+      - 'docker-compose.social-hub-status-contract.yml'
 permissions:
   contents: read
 jobs:
@@ -30,5 +31,6 @@ jobs:
           coverage: none
       - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
       - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - run: docker compose -f docker-compose.social-hub-status-contract.yml config --quiet
       - run: php -l tests/Feature/SocialHubPublicationStatusContractTest.php
       - run: vendor/bin/phpunit tests/Feature/SocialHubPublicationStatusContractTest.php --colors=never
