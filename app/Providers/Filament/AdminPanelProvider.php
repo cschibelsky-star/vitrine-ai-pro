@@ -9,6 +9,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FactoryStudioEnterprise;
 use App\Filament\Pages\GeneratedProjects;
 use App\Filament\Pages\MarketplaceEnterprise;
+use App\Filament\Pages\RoteiaLabFinance;
 use App\Filament\Resources\AiAlertResource;
 use App\Filament\Resources\AiConsumptionResource;
 use App\Filament\Resources\AiProviderResource;
@@ -85,6 +86,7 @@ class AdminPanelProvider extends PanelProvider
                 MarketplaceEnterprise::class,
                 ClientPortalEnterprise::class,
                 AiCenterEnterprise::class,
+                RoteiaLabFinance::class,
             ])
             ->resources([
                 CompanyResource::class,
