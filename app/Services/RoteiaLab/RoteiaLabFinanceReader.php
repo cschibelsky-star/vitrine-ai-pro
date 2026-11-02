@@ -41,7 +41,15 @@ final class RoteiaLabFinanceReader
             $summaryData = $summary->json();
             $projectsData = $projects->json();
             $transactionsData = $transactions->json();
-            if (!is_array($summaryData) || !is_array($projectsData) || !is_array($transactionsData)) {
+            if (!is_array($summaryData) || !is_array($projectsData) || !is_array($transactionsData)
+                || !array_key_exists('saldo_disponivel', $summaryData)
+                || !array_key_exists('consumo_conciliado', $summaryData)
+                || !array_key_exists('reservas_pendentes', $summaryData)
+                || ($summaryData['balance_source'] ?? null) !== 'not_connected'
+                || !is_array($projectsData['data'] ?? null)
+                || !array_is_list($projectsData['data'])
+                || !is_array($transactionsData['data'] ?? null)
+                || !array_is_list($transactionsData['data'])) {
                 return ['connected' => false, 'reason' => 'invalid_response', 'summary' => null, 'projects' => [], 'transactions' => []];
             }
 
@@ -50,8 +58,8 @@ final class RoteiaLabFinanceReader
                 'connected' => true,
                 'reason' => null,
                 'summary' => $summaryData,
-                'projects' => array_slice(array_values($projectsData['data'] ?? $projectsData['projects'] ?? []), 0, 20),
-                'transactions' => array_slice(array_values($transactionsData['data'] ?? $transactionsData['transactions'] ?? []), 0, 20),
+                'projects' => array_slice(array_filter($projectsData['data'], 'is_array'), 0, 20),
+                'transactions' => array_slice(array_filter($transactionsData['data'], 'is_array'), 0, 20),
             ];
         } catch (\Throwable $e) {
             report($e);
