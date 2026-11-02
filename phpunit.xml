@@ -16,6 +16,7 @@
             <file>tests/Feature/AssessorOnline/CitizenManagementTest.php</file>
             <file>tests/Feature/AssessorOnline/AssessorAuthenticationTest.php</file>
             <file>tests/Feature/AssessorOnline/AssessorAdminAccessTest.php</file>
+            <file>tests/Feature/AssessorOnline/AssessorInvitationTokenTest.php</file>
         </testsuite>
     </testsuites>
     <php>
