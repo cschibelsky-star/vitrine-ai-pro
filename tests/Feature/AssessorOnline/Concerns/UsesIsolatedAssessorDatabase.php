@@ -30,6 +30,7 @@ trait UsesIsolatedAssessorDatabase
         (require base_path('database/migrations/2026_11_02_000001_create_assessor_password_reset_tokens.php'))->up();
         (require base_path('database/migrations/2026_10_20_000001_create_assessor_core_tables.php'))->up();
         (require base_path('database/migrations/2026_10_22_000002_create_assessor_memberships_table.php'))->up();
+        (require base_path('database/migrations/2026_11_02_000002_add_assessor_invitation_pending.php'))->up();
     }
 
     protected function tearDown(): void
