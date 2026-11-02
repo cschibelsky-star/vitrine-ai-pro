@@ -10,6 +10,7 @@
         </testsuite>
         <testsuite name="Assessor Online Core">
             <file>tests/Unit/AssessorOnline/SubmissionPreflightTest.php</file>
+            <file>tests/Unit/AssessorOnline/OfficialSchemaRegistryTest.php</file>
             <file>tests/Feature/AssessorDemandIsolationTest.php</file>
             <file>tests/Feature/AssessorCaseWorkflowTest.php</file>
             <file>tests/Feature/AssessorOnline/DemandManagementTest.php</file>
