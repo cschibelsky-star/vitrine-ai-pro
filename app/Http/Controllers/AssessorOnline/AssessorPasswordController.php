@@ -70,9 +70,9 @@ final class AssessorPasswordController extends Controller
 
         $email = Str::lower(trim($data['email']));
         $user = User::where('email', $email)->first();
-        if (! $user || ! $user->is_active || ! DB::table('assessor_memberships')
-            ->where('user_id', $user->id)->where('active', true)
-            ->whereIn('role', ['admin', 'assessor'])->exists()) {
+        if (! $user || ! DB::table('assessor_memberships')
+            ->where('user_id', $user->id)
+            ->whereIn('role', ['admin', 'assessor'])->count() !== 1) {
             return back()->withErrors(['email' => 'Link inválido ou expirado.']);
         }
 
@@ -82,7 +82,10 @@ final class AssessorPasswordController extends Controller
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
+                    'is_active' => true,
                 ])->save();
+                DB::table('assessor_memberships')->where('user_id', $user->id)
+                    ->whereIn('role', ['admin', 'assessor'])->update(['active' => true]);
             }
         );
 
