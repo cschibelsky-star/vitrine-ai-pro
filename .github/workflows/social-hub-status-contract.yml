@@ -1,0 +1,34 @@
+name: Social Hub Marketing status contract (isolated)
+on:
+  push:
+    branches:
+      - 'test/social-hub-marketing-status-contract-20261101'
+  pull_request:
+    paths:
+      - 'tests/Feature/SocialHubPublicationStatusContractTest.php'
+      - '.github/workflows/social-hub-status-contract.yml'
+permissions:
+  contents: read
+jobs:
+  status-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: testing
+      MARKETING_NATIVE_PUBLISHING_ENABLED: 'false'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, sqlite3, pdo_sqlite
+          coverage: none
+      - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - run: php -l tests/Feature/SocialHubPublicationStatusContractTest.php
+      - run: vendor/bin/phpunit tests/Feature/SocialHubPublicationStatusContractTest.php --colors=never
