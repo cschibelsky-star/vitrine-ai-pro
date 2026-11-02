@@ -41,9 +41,9 @@ final class AssessorPasswordController extends Controller
             // Never log password-reset tokens to the default log mailer.
             if (config('mail.default') === 'smtp'
                 && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)) {
-                $token = Password::broker('users')->createToken($user);
+                $token = Password::broker('assessor')->createToken($user);
                 $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
-                Mail::raw("Para definir sua senha do Assessor Online, acesse: {$url}\nEste link expira em 60 minutos.", function ($message) use ($email): void {
+                Mail::raw("Para definir sua senha do Assessor Online, acesse: {$url}\nEste link expira em 15 minutos.", function ($message) use ($email): void {
                     $message->to($email)->subject('Assessor Online - Definir senha');
                 });
             }
@@ -76,7 +76,7 @@ final class AssessorPasswordController extends Controller
             return back()->withErrors(['email' => 'Link inválido ou expirado.']);
         }
 
-        $result = Password::broker('users')->reset(
+        $result = Password::broker('assessor')->reset(
             ['email' => $email, 'password' => $data['password'], 'token' => $data['token']],
             function (User $user, string $password): void {
                 $user->forceFill([
