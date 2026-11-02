@@ -72,7 +72,14 @@ final class AssessorPasswordController extends Controller
         $user = User::where('email', $email)->first();
         if (! $user || ! DB::table('assessor_memberships')
             ->where('user_id', $user->id)
-            ->whereIn('role', ['admin', 'assessor'])->count() !== 1) {
+            ->whereIn('role', ['admin', 'assessor'])
+            ->where(function ($query) use ($user): void {
+                $query->where('active', true)->where('invitation_pending', false)
+                    ->orWhere(function ($pending) use ($user): void {
+                        $pending->where('active', false)->where('invitation_pending', true)
+                            ->where('role', 'admin')->where('user_id', $user->id);
+                    });
+            })->count() !== 1) {
             return back()->withErrors(['email' => 'Link inválido ou expirado.']);
         }
 
@@ -85,7 +92,8 @@ final class AssessorPasswordController extends Controller
                     'is_active' => true,
                 ])->save();
                 DB::table('assessor_memberships')->where('user_id', $user->id)
-                    ->whereIn('role', ['admin', 'assessor'])->update(['active' => true]);
+                    ->where('invitation_pending', true)
+                    ->update(['active' => true, 'invitation_pending' => false]);
             }
         );
 
