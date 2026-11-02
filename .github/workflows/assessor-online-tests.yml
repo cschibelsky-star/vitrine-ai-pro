@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'app/AssessorOnline/**'
+      - 'app/Console/Commands/ProvisionAssessorHmlAdmin.php'
+      - 'config/auth.php'
+      - 'config/mail.php'
+      - 'database/migrations/2026_11_0*'
       - 'app/Http/Controllers/AssessorOnline/**'
       - 'resources/views/assessor-online/**'
       - 'routes/assessor_online.php'
