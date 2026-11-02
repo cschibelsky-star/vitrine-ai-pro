@@ -63,7 +63,7 @@ final class ProvisionAssessorHmlAdmin extends Command
                 ]);
                 DB::table('assessor_memberships')->insert([
                     'tenant_id' => $tenantId, 'user_id' => $user->id,
-                    'role' => 'admin', 'active' => false,
+                    'role' => 'admin', 'active' => false, 'invitation_pending' => true,
                     'created_at' => now(), 'updated_at' => now(),
                 ]);
                 return $user;
