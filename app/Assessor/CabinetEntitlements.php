@@ -9,8 +9,12 @@ final class CabinetEntitlements
 {
     public function status(int $cabinet, int $actor): array
     {
-        $member = DB::table('assessor_cabinet_members')->where('cabinet_id', $cabinet)
-            ->where('user_id', $actor)->exists();
+        $member = DB::table('assessor_cabinet_members as members')
+            ->join('assessor_cabinets as cabinets', 'cabinets.id', '=', 'members.cabinet_id')
+            ->join('users', 'users.id', '=', 'members.user_id')
+            ->where('members.cabinet_id', $cabinet)->where('members.user_id', $actor)
+            ->whereColumn('users.company_id', 'cabinets.company_id')
+            ->whereIn('members.role', ['admin', 'assessor'])->exists();
         if (!$member) {
             throw new DomainException('cabinet_access_denied');
         }
