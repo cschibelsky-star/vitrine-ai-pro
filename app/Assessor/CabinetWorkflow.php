@@ -78,10 +78,15 @@ final class CabinetWorkflow
         if (!in_array($status, ['open', 'in_progress', 'resolved'], true)) {
             throw new DomainException('invalid_demand_status');
         }
-        $updated = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
-            ->where('id', $demandId)->update(['status' => $status, 'updated_at' => now()]);
-        if (!$updated) { throw new DomainException('demand_not_found'); }
-        $this->recordEvent($cabinetId, $demandId, $actorId, 'status_changed', $status);
+        DB::transaction(function () use ($cabinetId, $actorId, $demandId, $status) {
+            $demand = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
+                ->where('id', $demandId)->lockForUpdate()->first();
+            if (!$demand) { throw new DomainException('demand_not_found'); }
+            if ($demand->status === $status) { return; }
+            DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
+                ->where('id', $demandId)->update(['status' => $status, 'updated_at' => now()]);
+            $this->recordEvent($cabinetId, $demandId, $actorId, 'status_changed', $status);
+        });
     }
 
     public function createDemand(int $cabinetId, int $actorId, string $subject, string $description): int
@@ -105,11 +110,16 @@ final class CabinetWorkflow
     {
         $this->requireMember($cabinetId, $actorId);
         $this->requireMember($cabinetId, $assessorId);
-        $updated = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
-            ->where('id', $demandId)->update(['assigned_to' => $assessorId,
-                'status' => 'in_progress', 'updated_at' => now()]);
-        if (!$updated) { throw new DomainException('demand_not_found'); }
-        $this->recordEvent($cabinetId, $demandId, $actorId, 'assigned', (string) $assessorId);
+        DB::transaction(function () use ($cabinetId, $actorId, $demandId, $assessorId) {
+            $demand = DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
+                ->where('id', $demandId)->lockForUpdate()->first();
+            if (!$demand) { throw new DomainException('demand_not_found'); }
+            if ((int) $demand->assigned_to === $assessorId && $demand->status === 'in_progress') { return; }
+            DB::table('assessor_demands')->where('cabinet_id', $cabinetId)
+                ->where('id', $demandId)->update(['assigned_to' => $assessorId,
+                    'status' => 'in_progress', 'updated_at' => now()]);
+            $this->recordEvent($cabinetId, $demandId, $actorId, 'assigned', (string) $assessorId);
+        });
     }
 
     public function listDemands(int $cabinetId, int $actorId): array
