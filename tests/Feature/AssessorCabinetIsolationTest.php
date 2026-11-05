@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Assessor\CabinetWorkflow;
 use App\Assessor\CabinetOperations;
 use App\Assessor\CabinetTasks;
+use App\Assessor\CabinetEntitlements;
 use DomainException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -124,6 +125,25 @@ final class AssessorCabinetIsolationTest extends TestCase
         $task = $tasks->create($cabinet, 11, ['title' => 'Tarefa interna']);
         $this->expectException(DomainException::class);
         $tasks->updateStatus($cabinet, 12, $task, 'completed');
+    }
+
+    public function test_trial_status_rejects_member_after_company_change(): void
+    {
+        $cabinet = app(CabinetWorkflow::class)->createCabinet(1, 11, 'Gabinete', 'vereador');
+        DB::table('users')->where('id', 11)->update(['company_id' => 2]);
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('cabinet_access_denied');
+        app(CabinetEntitlements::class)->status($cabinet, 11);
+    }
+
+    public function test_trial_status_rejects_invalid_member_role(): void
+    {
+        $cabinet = app(CabinetWorkflow::class)->createCabinet(1, 11, 'Gabinete', 'vereador');
+        DB::table('assessor_cabinet_members')->where('cabinet_id', $cabinet)
+            ->where('user_id', 11)->update(['role' => 'viewer']);
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('cabinet_access_denied');
+        app(CabinetEntitlements::class)->status($cabinet, 11);
     }
 
 }
