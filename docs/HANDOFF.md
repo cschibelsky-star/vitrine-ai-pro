@@ -49,3 +49,11 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - Commit `5e4be4d`: adicionado workflow `.github/workflows/assessor-cabinet-isolation.yml`, com PHP 8.3, SQLite em memória, credencial efêmera e execução direcionada de `AssessorCabinetIsolationTest.php`. Sem banco real e sem deploy.
 - Na consulta imediatamente após o commit, ainda **não havia execução associada** ao SHA; portanto, os testes de isolamento seguem **sem resultado comprovado**.
 - Próxima ação: consultar execução do novo workflow, ler logs e corrigir falhas caso existam. Não afirmar que testes passaram antes de evidência.
+
+## Ciclo 2026-11-05 — evidência CI confirmada
+- GitHub Actions `Assessor cabinet isolation` run #3: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42121331760
+- Commit testado: `e2a213257a5fe5e4d7fc468d371f90aa92fce458`.
+- Resultado: `completed/success`; job `isolation` e etapa `Run cabinet isolation regression tests` com `success`.
+- Também concluídos com sucesso nesse SHA: PHP Syntax, Assessor trial 15-day integration, Assessor Centro IA integration e Assessor trial HML contracts.
+- A suíte de isolamento do gabinete está **aprovada em CI** no commit acima. Isso não comprova homologação da interface, deploy ou funcionamento em produção.
+- Próxima etapa: revisão de ponta a ponta de rotas, controller, interface e fluxo de trial antes de homologação HML. Sem deploy, merge ou migrations em banco ativo.
