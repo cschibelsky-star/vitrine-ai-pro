@@ -36,3 +36,10 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - Rótulo de ação ajustado para recomendações locais, sem prometer inferência por IA externa.
 - Auditoria estática da view e rota: **realizada**. Testes HTTP/Blade e PHPUnit: **não executados**.
 - Pendência: validar renderização Blade e chamadas HTTP em checkout isolado; verificar contrato de retorno de controllers e integração de tarefas e histórico.
+
+## Ciclo 2026-11-05 — isolamento adicional
+- Commit `1bb326c`: testes de isolamento de cidadão na agenda, demanda vinculada à tarefa e permissão de edição de tarefa; fixture SQLite inclui migration de tarefas.
+- Revisados estaticamente `CabinetOperations`, `CabinetTasks`, controladores de operações e dashboard.
+- **Testes PHPUnit não executados:** o acesso disponível nesta etapa permite alterar arquivos no GitHub, mas não foi identificado executor isolado vinculado ao checkout desta branch; executar a suíte do container principal seria arriscado e poderia testar código diferente.
+- Próximo passo: obter execução isolada do checkout do PR #124; executar `php artisan test --filter=AssessorCabinetIsolationTest`; corrigir falhas reais antes de HML.
+- Sem deploy, merge, migrations em banco ativo ou uso de credenciais.
