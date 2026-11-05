@@ -108,7 +108,7 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 <div class="panel" style="margin-top:18px">
 <h2>Inteligência operacional</h2>
 <p>Recomendações locais baseadas nos indicadores do gabinete.</p>
-<button type="button" id="generate-insights">Gerar recomendações com IA</button>
+<button type="button" id="generate-insights">Atualizar recomendações</button>
 <p id="insights-source" role="status">Fonte: regras locais</p>
 <div id="generated-insights"></div>
 @forelse($insights['recommendations'] as $recommendation)
@@ -134,9 +134,9 @@ $progress = count(array_filter($demands, fn($d) => $d->status === 'in_progress')
 const base = @json(url('/assessor/gabinetes/'.$cabinet));
 document.querySelector('#generate-insights').addEventListener('click', async e => {
 const button=e.currentTarget, status=document.querySelector('#insights-source');
-button.disabled=true;status.textContent='Consultando o Centro IA...';
+button.disabled=true;status.textContent='Atualizando recomendações locais...';
 try {
-const response=await fetch(base+'/inteligencia',{method:'POST',headers:{'Accept':'application/json','X-CSRF-TOKEN':token}});
+const response=await fetch(base+'/inteligencia',{method:'GET',headers:{'Accept':'application/json'}});
 if(!response.ok)throw new Error('Consulta indisponível ('+response.status+').');
 const {data}=await response.json();
 status.textContent=data.source==='centro_ia'?'Fonte: Centro IA — revise as sugestões antes de agir.':'Fonte: regras locais — IA indisponível nesta consulta.';
