@@ -1,0 +1,52 @@
+name: Assessor cabinet isolation
+
+on:
+  push:
+    branches:
+      - feature/assessor-cabinet-workflow-20261024
+    paths:
+      - 'app/Assessor/**'
+      - 'tests/Feature/AssessorCabinetIsolationTest.php'
+      - 'database/migrations/2026_10_24_*'
+      - '.github/workflows/assessor-cabinet-isolation.yml'
+  pull_request:
+    paths:
+      - 'app/Assessor/**'
+      - 'tests/Feature/AssessorCabinetIsolationTest.php'
+      - 'database/migrations/2026_10_24_*'
+      - '.github/workflows/assessor-cabinet-isolation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP 8.3 and SQLite
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+      - name: Prepare writable paths
+        run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Generate ephemeral application key
+        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Validate Assessor PHP syntax
+        run: php -l app/Assessor/CabinetWorkflow.php && php -l tests/Feature/AssessorCabinetIsolationTest.php
+      - name: Run cabinet isolation regression tests
+        run: vendor/bin/phpunit tests/Feature/AssessorCabinetIsolationTest.php
