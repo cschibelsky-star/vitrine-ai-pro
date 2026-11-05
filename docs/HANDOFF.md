@@ -63,3 +63,9 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - Rotas conferidas: `GET /inteligencia` devolve recomendações locais; `POST /inteligencia` é geração opcional pelo adaptador Centro IA. A interface utiliza GET por padrão, sem custo externo.
 - Não há evidência de teste específico para a nova verificação de entitlement neste commit. Executar CI e adicionar cobertura de regressão antes de homologação.
 - Sem merge, deploy ou migrations em banco ativo.
+
+## Ciclo — testes da autorização comercial
+- Commit `d1a3337`: adicionados testes `test_trial_status_rejects_member_after_company_change` e `test_trial_status_rejects_invalid_member_role` à suíte `AssessorCabinetIsolationTest`.
+- A verificação usa o banco SQLite descartável da suíte, sem consultar trial real.
+- Consulta inicial ao GitHub Actions para o SHA ainda não retornou runs; **resultado pendente**, não aprovado por inferência.
+- Próximo passo: ler conclusão do workflow `Assessor cabinet isolation`, investigar falhas e confirmar compatibilidade do modelo de papéis.
