@@ -57,3 +57,9 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - Também concluídos com sucesso nesse SHA: PHP Syntax, Assessor trial 15-day integration, Assessor Centro IA integration e Assessor trial HML contracts.
 - A suíte de isolamento do gabinete está **aprovada em CI** no commit acima. Isso não comprova homologação da interface, deploy ou funcionamento em produção.
 - Próxima etapa: revisão de ponta a ponta de rotas, controller, interface e fluxo de trial antes de homologação HML. Sem deploy, merge ou migrations em banco ativo.
+
+## Ciclo — revisão de autorização e contratos HTTP
+- Commit `cfa932b`: `CabinetEntitlements::status` passa a exigir vínculo de usuário com a mesma empresa do gabinete e papel admin/assessor, alinhado ao contrato de `CabinetAiAssistant::context`.
+- Rotas conferidas: `GET /inteligencia` devolve recomendações locais; `POST /inteligencia` é geração opcional pelo adaptador Centro IA. A interface utiliza GET por padrão, sem custo externo.
+- Não há evidência de teste específico para a nova verificação de entitlement neste commit. Executar CI e adicionar cobertura de regressão antes de homologação.
+- Sem merge, deploy ou migrations em banco ativo.
