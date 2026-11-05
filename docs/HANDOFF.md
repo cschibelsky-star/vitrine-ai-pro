@@ -43,3 +43,9 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - **Testes PHPUnit não executados:** o acesso disponível nesta etapa permite alterar arquivos no GitHub, mas não foi identificado executor isolado vinculado ao checkout desta branch; executar a suíte do container principal seria arriscado e poderia testar código diferente.
 - Próximo passo: obter execução isolada do checkout do PR #124; executar `php artisan test --filter=AssessorCabinetIsolationTest`; corrigir falhas reais antes de HML.
 - Sem deploy, merge, migrations em banco ativo ou uso de credenciais.
+
+## Ciclo 2026-11-05 — CI isolado de gabinetes
+- Execuções GitHub Actions associadas ao commit `856497f`: PHP Syntax, Assessor trial HML contracts, Assessor trial 15-day integration e Assessor Centro IA integration, todas com conclusão success. Esses jobs não executam a suíte de isolamento dos gabinetes.
+- Commit `5e4be4d`: adicionado workflow `.github/workflows/assessor-cabinet-isolation.yml`, com PHP 8.3, SQLite em memória, credencial efêmera e execução direcionada de `AssessorCabinetIsolationTest.php`. Sem banco real e sem deploy.
+- Na consulta imediatamente após o commit, ainda **não havia execução associada** ao SHA; portanto, os testes de isolamento seguem **sem resultado comprovado**.
+- Próxima ação: consultar execução do novo workflow, ler logs e corrigir falhas caso existam. Não afirmar que testes passaram antes de evidência.
