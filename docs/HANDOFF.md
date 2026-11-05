@@ -30,3 +30,9 @@ Documentação criada por conector GitHub na branch indicada. Testes automatizad
 - Testes: **não executados** (conector GitHub grava arquivos, não executa PHPUnit).
 - Deploy, merge, migrations aplicadas: **não executados**.
 - Próximo passo: executar `php artisan test --filter=AssessorCabinetIsolationTest` em checkout descartável autorizado; corrigir falhas e revisar compatibilidade das views antes de homologar.
+
+## Ciclo 2026-11-05 — revisão de integração da interface
+- Commit `80a1a29`: painel passou a consultar `GET /assessor/gabinetes/{cabinet}/inteligencia`, conforme rota existente; antes enviava POST e resultaria em 405.
+- Rótulo de ação ajustado para recomendações locais, sem prometer inferência por IA externa.
+- Auditoria estática da view e rota: **realizada**. Testes HTTP/Blade e PHPUnit: **não executados**.
+- Pendência: validar renderização Blade e chamadas HTTP em checkout isolado; verificar contrato de retorno de controllers e integração de tarefas e histórico.
