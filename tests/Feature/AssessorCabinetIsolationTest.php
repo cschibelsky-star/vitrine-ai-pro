@@ -23,6 +23,8 @@ final class AssessorCabinetIsolationTest extends TestCase
         });
         $migration = require base_path('database/migrations/2026_10_24_090500_create_assessor_cabinet_workflow_tables.php');
         $migration->up();
+        $historyMigration = require base_path('database/migrations/2026_10_24_120000_create_assessor_citizens_appointments_and_history.php');
+        $historyMigration->up();
         DB::table('companies')->insert([['id' => 1], ['id' => 2]]);
         DB::table('users')->insert([
             ['id' => 11, 'company_id' => 1],
@@ -57,4 +59,30 @@ final class AssessorCabinetIsolationTest extends TestCase
         $this->expectException(DomainException::class);
         app(CabinetWorkflow::class)->createCabinet(1, 21, 'Gabinete', 'vereador');
     }
+    public function test_demand_history_records_only_real_transitions(): void
+    {
+        $workflow = app(CabinetWorkflow::class);
+        $cabinet = $workflow->createCabinet(1, 11, 'Gabinete', 'vereador');
+        $workflow->addAssessor($cabinet, 11, 12);
+        $demand = $workflow->createDemand($cabinet, 11, 'Saude', 'Atendimento');
+        $workflow->assignDemand($cabinet, 11, $demand, 12);
+        $workflow->assignDemand($cabinet, 11, $demand, 12);
+        $workflow->changeStatus($cabinet, 12, $demand, 'resolved');
+        $workflow->changeStatus($cabinet, 12, $demand, 'resolved');
+
+        $events = $workflow->history($cabinet, 11, $demand);
+        $this->assertSame(['created', 'assigned', 'status_changed'],
+            array_map(fn ($event) => $event->event, $events));
+        $this->assertSame('resolved', DB::table('assessor_demands')->where('id', $demand)->value('status'));
+    }
+
+    public function test_history_rejects_member_from_another_cabinet(): void
+    {
+        $workflow = app(CabinetWorkflow::class);
+        $cabinet = $workflow->createCabinet(1, 11, 'Gabinete', 'vereador');
+        $demand = $workflow->createDemand($cabinet, 11, 'Transporte', 'Solicitacao');
+        $this->expectException(DomainException::class);
+        $workflow->history($cabinet, 21, $demand);
+    }
+
 }
