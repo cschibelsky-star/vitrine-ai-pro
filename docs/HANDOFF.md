@@ -12,7 +12,7 @@ Atualizado em 2026-11-05. Estado: ESTRUTURA EM DESENVOLVIMENTO, NÃO HOMOLOGADA.
 Gabinetes, membros, cidadãos, demandas, agenda, tarefas, indicadores, histórico e anotações; recomendações locais baseadas em regras; consulta do status do trial de 15 dias.
 
 ## Riscos técnicos identificados
-1. `CabinetWorkflow::changeStatus` e `assignDemand` atualizam demanda e gravam evento em operações separadas; requerem transação.
+1. CORRIGIDO EM CÓDIGO: `CabinetWorkflow::changeStatus` e `assignDemand` agora usam transação, lock da demanda e evitam eventos duplicados quando não há alteração; execução dos testes ainda pendente.
 2. UI e rotas adicionadas em ciclos anteriores ainda precisam de revisão conjunta, especialmente seletores, nomes de campos e retorno JSON.
 3. Isolamento por gabinete, papéis e proteção de dados pessoais exigem testes específicos.
 4. Entitlement comercial é somente consulta; não representa assinatura paga nem bloqueio efetivo de acesso.
@@ -23,3 +23,10 @@ Auditar e corrigir integridade transacional das demandas; validar rotas e views;
 
 ## Evidências deste handoff
 Documentação criada por conector GitHub na branch indicada. Testes automatizados: NÃO EXECUTADOS. Deploy: NÃO EXECUTADO.
+
+## Ciclo 2026-11-05 — integridade e regressão
+- Commit `8a37ef7`: transação e lock nas transições de demandas; histórico somente para mudanças reais.
+- Commit `01befcd`: teste SQLite passa a criar schema de histórico e verifica sequência de eventos, idempotência e isolamento.
+- Testes: **não executados** (conector GitHub grava arquivos, não executa PHPUnit).
+- Deploy, merge, migrations aplicadas: **não executados**.
+- Próximo passo: executar `php artisan test --filter=AssessorCabinetIsolationTest` em checkout descartável autorizado; corrigir falhas e revisar compatibilidade das views antes de homologar.
