@@ -14,8 +14,9 @@ class RealCodeGenerator
     ) {
     }
 
-    public function generate(string $blueprintSlug): array
+    public function generate(string $blueprintSlug, ?string $runId = null): array
     {
+        $relative = RealBuildPath::relative($blueprintSlug, $runId);
         $blueprintPath = storage_path('app/factory/blueprints/' . $blueprintSlug . '.json');
 
         if (! File::exists($blueprintPath)) {
@@ -23,7 +24,7 @@ class RealCodeGenerator
         }
 
         $blueprint = json_decode((string) File::get($blueprintPath), true);
-        $base = storage_path('app/factory/real-builds/' . $blueprintSlug);
+        $base = storage_path('app/factory/real-builds/' . $relative);
 
         File::ensureDirectoryExists($base);
 
@@ -35,6 +36,7 @@ class RealCodeGenerator
 
         $report = [
             'blueprint' => $blueprintSlug,
+            'run_id' => $runId,
             'system' => $blueprint['name'] ?? $blueprintSlug,
             'status' => 'generated',
             'files_count' => count($generated),
