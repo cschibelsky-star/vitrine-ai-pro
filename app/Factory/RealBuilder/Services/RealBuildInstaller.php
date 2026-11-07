@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\File;
 
 class RealBuildInstaller
 {
-    public function install(string $blueprintSlug, bool $dryRun = true, bool $force = false): array
+    public function install(string $blueprintSlug, bool $dryRun = true, bool $force = false, ?string $runId = null): array
     {
-        $source = storage_path('app/factory/real-builds/' . $blueprintSlug);
+        $relativeBuild = RealBuildPath::relative($blueprintSlug, $runId);
+        $source = storage_path('app/factory/real-builds/' . $relativeBuild);
 
         if (! File::isDirectory($source)) {
             throw new \RuntimeException("Real build não encontrado: {$blueprintSlug}. Rode factory:real-build {$blueprintSlug} antes.");
@@ -18,7 +19,18 @@ class RealBuildInstaller
 
         $files = File::allFiles($source);
         $results = [];
-        $backupBase = storage_path('app/factory/backups/real-install/' . date('Ymd_His') . '_' . $blueprintSlug);
+
+        if ($runId !== null) {
+            foreach ($files as $candidate) {
+                if (is_link($candidate->getPathname()) || !str_starts_with(
+                    realpath($candidate->getPathname()) ?: '',
+                    (realpath($source) ?: '') . DIRECTORY_SEPARATOR
+                )) {
+                    throw new \RuntimeException('Unsafe staged file path.');
+                }
+            }
+        }
+        $backupBase = storage_path('app/factory/backups/real-install/' . date('Ymd_His') . '_' . $blueprintSlug . ($runId ? '_' . $runId : ''));
 
         foreach ($files as $file) {
             $relative = $file->getRelativePathname();
@@ -55,6 +67,7 @@ class RealBuildInstaller
 
         $summary = [
             'blueprint' => $blueprintSlug,
+            'run_id' => $runId,
             'mode' => $dryRun ? 'dry_run' : 'install',
             'force' => $force,
             'files' => count($results),
@@ -63,10 +76,10 @@ class RealBuildInstaller
             'created_at' => now()->toISOString(),
         ];
 
-        $reportDir = storage_path('app/factory/real-installs/' . $blueprintSlug);
+        $reportDir = storage_path('app/factory/real-installs/' . $relativeBuild);
         File::ensureDirectoryExists($reportDir);
 
-        $reportPath = $reportDir . '/REAL_INSTALL_REPORT_' . date('Ymd_His') . '.json';
+        $reportPath = $reportDir . '/REAL_INSTALL_REPORT_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::uuid() . '.json';
         File::put($reportPath, json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $summary['path'] = $reportPath;
 
