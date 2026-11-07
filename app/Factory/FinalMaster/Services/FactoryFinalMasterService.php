@@ -7,6 +7,7 @@ namespace App\Factory\FinalMaster\Services;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use App\Factory\RealBuilder\Services\RunArtifactEvidence;
 use RuntimeException;
 
 class FactoryFinalMasterService
@@ -49,8 +50,19 @@ class FactoryFinalMasterService
             $steps['03_real_build'] = $this->writeStep($stepsDir, '03_real_build', $realBuild);
 
             if ($realBuild['status'] !== 'passed') {
-                $status = 'failed';
+                throw new RuntimeException('Real build failed; refusing to install stale artifacts.');
             }
+
+            $evidence = (new RunArtifactEvidence())->collect(
+                $blueprint,
+                $runId,
+                storage_path('app/factory/real-builds')
+            );
+            $steps['03b_artifact_evidence'] = $this->writeStep(
+                $stepsDir,
+                '03b_artifact_evidence',
+                $evidence
+            );
 
             $enterpriseBuild = $this->call('factory:enterprise-build', ['blueprint' => $blueprint]);
             $steps['04_enterprise_build'] = $this->writeStep($stepsDir, '04_enterprise_build', $enterpriseBuild);
