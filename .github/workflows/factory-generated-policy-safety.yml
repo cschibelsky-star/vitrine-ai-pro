@@ -1,0 +1,17 @@
+name: Factory Generated Policy Safety
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/RealBuilder/Services/RealCodeGenerator.php'
+      - 'tests/safety/generated-policy-fail-closed.php'
+      - '.github/workflows/factory-generated-policy-safety.yml'
+permissions:
+  contents: read
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php -l app/Factory/RealBuilder/Services/RealCodeGenerator.php
+      - run: php -l tests/safety/generated-policy-fail-closed.php
+      - run: php tests/safety/generated-policy-fail-closed.php
