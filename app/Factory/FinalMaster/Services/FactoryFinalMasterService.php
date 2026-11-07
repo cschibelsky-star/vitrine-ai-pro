@@ -13,7 +13,8 @@ class FactoryFinalMasterService
 {
     public function buildAndInstall(string $request, bool $dryRun = true, bool $force = false, bool $migrate = false): array
     {
-        $base = storage_path('app/factory/final-master/' . date('Ymd_His') . '_' . Str::uuid());
+        $runId = (string) Str::uuid();
+        $base = storage_path('app/factory/final-master/' . date('Ymd_His') . '_' . $runId);
         $stepsDir = $base . '/steps';
         File::ensureDirectoryExists($stepsDir);
 
@@ -44,7 +45,7 @@ class FactoryFinalMasterService
         ]);
 
         if ($blueprint) {
-            $realBuild = $this->call('factory:real-build', ['blueprint' => $blueprint]);
+            $realBuild = $this->call('factory:real-build', ['blueprint' => $blueprint, '--run-id' => $runId]);
             $steps['03_real_build'] = $this->writeStep($stepsDir, '03_real_build', $realBuild);
 
             if ($realBuild['status'] !== 'passed') {
@@ -58,7 +59,7 @@ class FactoryFinalMasterService
                 $status = 'failed';
             }
 
-            $realInstallArgs = ['blueprint' => $blueprint];
+            $realInstallArgs = ['blueprint' => $blueprint, '--run-id' => $runId];
             $enterpriseInstallArgs = ['blueprint' => $blueprint];
 
             if ($dryRun) {
@@ -110,6 +111,7 @@ class FactoryFinalMasterService
             'force' => $force,
             'migrate' => $migrate,
             'blueprint' => $blueprint,
+            'run_id' => $runId,
             'steps' => $steps,
             'final_note' => $dryRun
                 ? 'Dry-run concluído. Para instalar de verdade, rode o mesmo comando com --force --migrate.'
