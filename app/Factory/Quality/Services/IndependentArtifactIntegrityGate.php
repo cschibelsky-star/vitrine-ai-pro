@@ -26,7 +26,11 @@ final class IndependentArtifactIntegrityGate
             throw new InvalidArgumentException('Blueprint and run ID are required.');
         }
 
-        $current = $this->collector->collect($blueprint, $runId, $buildRoot);
+        try {
+            $current = $this->collector->collect($blueprint, $runId, $buildRoot);
+        } catch (RuntimeException $exception) {
+            return $this->decision($blueprint, $runId, 'blocked_missing_or_unsafe_artifact');
+        }
         $expectedFiles = $expected['artifacts'] ?? null;
         if (!is_array($expectedFiles)
             || !$expectedFiles
