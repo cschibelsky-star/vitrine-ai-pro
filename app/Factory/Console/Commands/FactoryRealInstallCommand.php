@@ -10,7 +10,7 @@ use Throwable;
 
 class FactoryRealInstallCommand extends Command
 {
-    protected $signature = 'factory:real-install {blueprint : Slug do blueprint} {--dry-run : Simula a instalação} {--force : Sobrescreve arquivos existentes com backup}';
+    protected $signature = 'factory:real-install {blueprint : Slug do blueprint} {--dry-run : Simula a instalação} {--force : Sobrescreve arquivos existentes com backup} {--run-id= : ID único da execução}';
 
     protected $description = 'Instala código real gerado pela Factory.';
 
@@ -21,6 +21,7 @@ class FactoryRealInstallCommand extends Command
                 (string) $this->argument('blueprint'),
                 (bool) $this->option('dry-run'),
                 (bool) $this->option('force'),
+                $this->option('run-id') ?: null,
             );
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
