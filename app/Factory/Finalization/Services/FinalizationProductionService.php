@@ -6,6 +6,7 @@ namespace App\Factory\Finalization\Services;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class FinalizationProductionService
 {
@@ -19,7 +20,7 @@ class FinalizationProductionService
         $architecture = $this->architect->architect($request);
         $blueprint = $architecture['blueprint'];
 
-        $base = storage_path('app/factory/finalization/productions/' . date('Ymd_His') . '_' . $blueprint['slug']);
+        $base = storage_path('app/factory/finalization/productions/' . date('Ymd_His') . '_' . Str::uuid() . '_' . $blueprint['slug']);
         $stepsDir = $base . '/steps';
 
         File::ensureDirectoryExists($stepsDir);

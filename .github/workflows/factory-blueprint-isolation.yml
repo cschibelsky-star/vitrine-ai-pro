@@ -1,0 +1,25 @@
+name: Factory Blueprint Isolation Safety
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/FinalMaster/Services/**'
+      - 'app/Factory/Finalization/Services/FinalizationProductionService.php'
+      - 'app/Factory/Console/Commands/FactoryFinalizeRequestCommand.php'
+      - 'tests/safety/factory-blueprint-isolation.php'
+      - '.github/workflows/factory-blueprint-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l app/Factory/FinalMaster/Services/FinalizationReportLocator.php
+          php -l app/Factory/FinalMaster/Services/FactoryFinalMasterService.php
+          php -l app/Factory/Finalization/Services/FinalizationProductionService.php
+          php -l app/Factory/Console/Commands/FactoryFinalizeRequestCommand.php
+          php -l tests/safety/factory-blueprint-isolation.php
+      - name: Isolated report selection
+        run: php tests/safety/factory-blueprint-isolation.php
