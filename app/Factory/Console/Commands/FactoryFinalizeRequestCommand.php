@@ -29,6 +29,7 @@ class FactoryFinalizeRequestCommand extends Command
         $this->line('Domínio: ' . $report['domain']);
         $this->line('Blueprint: ' . $report['blueprint_slug']);
         $this->line('Relatório: ' . $report['path']);
+        $this->line('FACTORY_FINALIZATION_REPORT_PATH=' . $report['path']);
         $this->warn('Próximo comando: ' . $report['next_command']);
 
         $this->table(['Módulo'], array_map(fn ($module) => [$module], $report['modules']));
