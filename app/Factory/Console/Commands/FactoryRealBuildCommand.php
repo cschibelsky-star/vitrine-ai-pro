@@ -17,7 +17,7 @@ class FactoryRealBuildCommand extends Command
     public function handle(RealCodeGenerator $builder): int
     {
         try {
-            $report = $builder->generate((string) $this->argument('blueprint'));
+            $report = $builder->generate((string) $this->argument('blueprint'), $this->option('run-id') ?: null);
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
             return self::FAILURE;
