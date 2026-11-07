@@ -21,4 +21,11 @@ foreach ([['../wrong', $idA], ['good', '../wrong'], ['good', ''], ['good', 'not-
     } catch (InvalidArgumentException $expected) {
     }
 }
-echo "PASS: legacy compatibility, distinct runs and unsafe IDs rejected\n";
+$buildCommand = file_get_contents(dirname(__DIR__, 2) . '/app/Factory/Console/Commands/FactoryRealBuildCommand.php');
+$installCommand = file_get_contents(dirname(__DIR__, 2) . '/app/Factory/Console/Commands/FactoryRealInstallCommand.php');
+foreach ([$buildCommand, $installCommand] as $source) {
+    if (!str_contains($source, '{--run-id=')) {
+        throw new RuntimeException('Artisan command does not declare run-id option.');
+    }
+}
+echo "PASS: legacy compatibility, distinct runs, unsafe IDs rejected and CLI options declared\n";
