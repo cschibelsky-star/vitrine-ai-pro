@@ -379,23 +379,26 @@ PHP;
 
     protected function policyCode(string $model): string
     {
+        // Generated resources must not gain permissions merely by being generated.
+        // Explicit tenant/role authorization must be implemented and reviewed
+        // before installing or exposing the generated resource.
         return <<<PHP
 <?php
 
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\\{$model};
+use App\Models\{$model};
 
 class {$model}Policy
 {
-    public function viewAny(User \$user): bool { return true; }
-    public function view(User \$user, {$model} \$record): bool { return true; }
-    public function create(User \$user): bool { return true; }
-    public function update(User \$user, {$model} \$record): bool { return true; }
-    public function delete(User \$user, {$model} \$record): bool { return true; }
-    public function restore(User \$user, {$model} \$record): bool { return true; }
-    public function forceDelete(User \$user, {$model} \$record): bool { return true; }
+    public function viewAny(User \$user): bool { return false; }
+    public function view(User \$user, {$model} \$record): bool { return false; }
+    public function create(User \$user): bool { return false; }
+    public function update(User \$user, {$model} \$record): bool { return false; }
+    public function delete(User \$user, {$model} \$record): bool { return false; }
+    public function restore(User \$user, {$model} \$record): bool { return false; }
+    public function forceDelete(User \$user, {$model} \$record): bool { return false; }
 }
 
 PHP;
