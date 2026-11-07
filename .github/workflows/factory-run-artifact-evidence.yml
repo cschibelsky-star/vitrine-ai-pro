@@ -1,0 +1,22 @@
+name: Factory Run Artifact Evidence
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/RealBuilder/Services/RunArtifactEvidence.php'
+      - 'app/Factory/FinalMaster/Services/FactoryFinalMasterService.php'
+      - 'tests/safety/factory-run-artifact-evidence.php'
+      - '.github/workflows/factory-run-artifact-evidence.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP lint
+        run: |
+          php -l app/Factory/RealBuilder/Services/RunArtifactEvidence.php
+          php -l app/Factory/FinalMaster/Services/FactoryFinalMasterService.php
+          php -l tests/safety/factory-run-artifact-evidence.php
+      - name: Validate evidence without QA approval
+        run: php tests/safety/factory-run-artifact-evidence.php
