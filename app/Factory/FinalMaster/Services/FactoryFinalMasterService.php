@@ -6,12 +6,14 @@ namespace App\Factory\FinalMaster\Services;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 class FactoryFinalMasterService
 {
     public function buildAndInstall(string $request, bool $dryRun = true, bool $force = false, bool $migrate = false): array
     {
-        $base = storage_path('app/factory/final-master/' . date('Ymd_His'));
+        $base = storage_path('app/factory/final-master/' . date('Ymd_His') . '_' . Str::uuid());
         $stepsDir = $base . '/steps';
         File::ensureDirectoryExists($stepsDir);
 
@@ -25,15 +27,21 @@ class FactoryFinalMasterService
             $status = 'failed';
         }
 
-        $blueprint = $this->detectLatestBlueprint();
+        if ($finalize['status'] !== 'passed') {
+            throw new RuntimeException('Finalization failed; refusing to use a stale blueprint.');
+        }
+
+        $resolved = (new FinalizationReportLocator())->resolve(
+            $finalize['output'],
+            $request,
+            storage_path('app/factory/finalization/productions')
+        );
+        $blueprint = $resolved['blueprint'];
 
         $steps['02_detect_blueprint'] = $this->writeStep($stepsDir, '02_detect_blueprint', [
             'blueprint' => $blueprint,
+            'finalization_report_path' => $resolved['report_path'],
         ]);
-
-        if (! $blueprint) {
-            $status = 'failed';
-        }
 
         if ($blueprint) {
             $realBuild = $this->call('factory:real-build', ['blueprint' => $blueprint]);
@@ -142,28 +150,6 @@ class FactoryFinalMasterService
             'status' => $exitCode === 0 ? 'passed' : 'failed',
             'output' => implode("\n", $output),
         ];
-    }
-
-    protected function detectLatestBlueprint(): ?string
-    {
-        $dir = storage_path('app/factory/finalization/productions');
-
-        if (! File::isDirectory($dir)) {
-            return null;
-        }
-
-        $file = collect(File::allFiles($dir))
-            ->filter(fn ($item) => $item->getFilename() === 'finalization_report.json')
-            ->sortByDesc(fn ($item) => $item->getMTime())
-            ->first();
-
-        if (! $file) {
-            return null;
-        }
-
-        $report = json_decode((string) File::get($file->getPathname()), true);
-
-        return $report['blueprint_slug'] ?? null;
     }
 
     protected function writeStep(string $dir, string $name, array $payload): string
