@@ -17,7 +17,9 @@ class RealBuildInstaller
             throw new \RuntimeException("Real build não encontrado: {$blueprintSlug}. Rode factory:real-build {$blueprintSlug} antes.");
         }
 
-        $files = File::allFiles($source);
+        $files = array_values(array_filter(File::allFiles($source),
+            fn ($file) => $runId !== null || !str_starts_with($file->getRelativePathname(), 'runs' . DIRECTORY_SEPARATOR)
+        ));
         $results = [];
 
         if ($runId !== null) {
