@@ -1,0 +1,30 @@
+name: Factory Real Build Run Isolation
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/RealBuilder/Services/RealBuildPath.php'
+      - 'app/Factory/RealBuilder/Services/RealCodeGenerator.php'
+      - 'app/Factory/RealBuilder/Services/RealBuildInstaller.php'
+      - 'app/Factory/Console/Commands/FactoryRealBuildCommand.php'
+      - 'app/Factory/Console/Commands/FactoryRealInstallCommand.php'
+      - 'app/Factory/FinalMaster/Services/FactoryFinalMasterService.php'
+      - 'tests/safety/factory-real-build-run-isolation.php'
+      - '.github/workflows/factory-real-build-run-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l app/Factory/RealBuilder/Services/RealBuildPath.php
+          php -l app/Factory/RealBuilder/Services/RealCodeGenerator.php
+          php -l app/Factory/RealBuilder/Services/RealBuildInstaller.php
+          php -l app/Factory/Console/Commands/FactoryRealBuildCommand.php
+          php -l app/Factory/Console/Commands/FactoryRealInstallCommand.php
+          php -l app/Factory/FinalMaster/Services/FactoryFinalMasterService.php
+          php -l tests/safety/factory-real-build-run-isolation.php
+      - name: Path isolation invariants
+        run: php tests/safety/factory-real-build-run-isolation.php

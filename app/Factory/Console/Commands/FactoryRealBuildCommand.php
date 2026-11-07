@@ -10,14 +10,14 @@ use Throwable;
 
 class FactoryRealBuildCommand extends Command
 {
-    protected $signature = 'factory:real-build {blueprint : Slug do blueprint}';
+    protected $signature = 'factory:real-build {blueprint : Slug do blueprint} {--run-id= : ID único da execução}';
 
     protected $description = 'Gera código Laravel/Filament real a partir de um blueprint.';
 
     public function handle(RealCodeGenerator $builder): int
     {
         try {
-            $report = $builder->generate((string) $this->argument('blueprint'));
+            $report = $builder->generate((string) $this->argument('blueprint'), $this->option('run-id') ?: null);
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
             return self::FAILURE;
