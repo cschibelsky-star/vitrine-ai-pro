@@ -1,0 +1,22 @@
+name: Factory Legacy Installation Gates
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/Builder/Services/ModuleInstaller.php'
+      - 'app/Factory/Finalization/Services/SmartFinalInstallerService.php'
+      - 'app/Factory/FinalProducer/Services/SystemInstallPlanner.php'
+      - 'tests/safety/factory-legacy-install-gates.php'
+      - '.github/workflows/factory-legacy-install-gates.yml'
+permissions:
+  contents: read
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          php -l app/Factory/Builder/Services/ModuleInstaller.php
+          php -l app/Factory/Finalization/Services/SmartFinalInstallerService.php
+          php -l app/Factory/FinalProducer/Services/SystemInstallPlanner.php
+          php -l tests/safety/factory-legacy-install-gates.php
+      - run: php tests/safety/factory-legacy-install-gates.php
