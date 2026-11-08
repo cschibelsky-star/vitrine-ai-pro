@@ -1,0 +1,22 @@
+name: Factory Direct Installer Authorization Safety
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/RealBuilder/Services/RealBuildInstaller.php'
+      - 'app/Factory/EnterpriseMaturity/Services/EnterpriseBuildInstaller.php'
+      - 'tests/safety/factory-direct-installer-authorization.php'
+      - '.github/workflows/factory-direct-installer-authorization.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP lint
+        run: |
+          php -l app/Factory/RealBuilder/Services/RealBuildInstaller.php
+          php -l app/Factory/EnterpriseMaturity/Services/EnterpriseBuildInstaller.php
+          php -l tests/safety/factory-direct-installer-authorization.php
+      - name: Direct installer bypass checks
+        run: php tests/safety/factory-direct-installer-authorization.php

@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Factory\RealBuilder\Services;
 
 use Illuminate\Support\Facades\File;
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 
 class RealBuildInstaller
 {
     public function install(string $blueprintSlug, bool $dryRun = true, bool $force = false, ?string $runId = null): array
     {
+        // Direct CLI/service callers cannot bypass FinalMaster's approval gate.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
+
         $relativeBuild = RealBuildPath::relative($blueprintSlug, $runId);
         $source = storage_path('app/factory/real-builds/' . $relativeBuild);
 

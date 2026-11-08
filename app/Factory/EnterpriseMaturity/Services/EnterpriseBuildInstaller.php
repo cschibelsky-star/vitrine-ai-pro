@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Factory\EnterpriseMaturity\Services;
 
 use Illuminate\Support\Facades\File;
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 
 class EnterpriseBuildInstaller
 {
     public function install(string $blueprintSlug, bool $dryRun = true, bool $force = false): array
     {
+        // Direct CLI/service callers cannot bypass FinalMaster's approval gate.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
+
         $source = storage_path('app/factory/enterprise-builds/' . $blueprintSlug);
 
         if (! File::isDirectory($source)) {
