@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Factory\Builder\Services;
 
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 use RuntimeException;
 
 class ModuleInstaller
 {
     public function install(string $slug, bool $dryRun = false, bool $force = false): array
     {
+        // Reject real installation before reading or writing staging paths.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
         $sourceBase = storage_path('app/factory/builds/' . $slug);
 
         if (! is_dir($sourceBase)) {

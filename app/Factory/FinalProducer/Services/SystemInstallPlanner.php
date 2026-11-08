@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Factory\FinalProducer\Services;
 
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
@@ -12,6 +13,8 @@ class SystemInstallPlanner
 {
     public function plan(string $product, bool $dryRun = true, bool $force = false): array
     {
+        // Reject real installation before reading or writing staging paths.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
         $reportPath = storage_path('app/factory/production-enterprise/' . $product . '/production_report.json');
 
         if (! File::exists($reportPath)) {

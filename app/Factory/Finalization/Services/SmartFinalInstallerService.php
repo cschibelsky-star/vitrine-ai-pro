@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Factory\Finalization\Services;
 
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
@@ -12,6 +13,8 @@ class SmartFinalInstallerService
 {
     public function install(string $blueprintSlug, bool $dryRun = true, bool $force = false, bool $migrate = false): array
     {
+        // Reject real installation before reading or writing staging paths.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
         $blueprintPath = storage_path('app/factory/blueprints/' . $blueprintSlug . '.json');
 
         if (! File::exists($blueprintPath)) {
