@@ -1,0 +1,24 @@
+name: Factory Core Bootstrap Guard
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/Console/Commands/FactoryInstallCommand.php'
+      - 'app/Factory/Quality/Services/FactoryCoreBootstrapGuard.php'
+      - 'config/factory.php'
+      - 'tests/safety/factory-core-bootstrap-guard.php'
+      - '.github/workflows/factory-core-bootstrap-guard.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l app/Factory/Console/Commands/FactoryInstallCommand.php
+          php -l app/Factory/Quality/Services/FactoryCoreBootstrapGuard.php
+          php -l config/factory.php
+          php -l tests/safety/factory-core-bootstrap-guard.php
+      - name: Reject unauthorized bootstrap
+        run: php tests/safety/factory-core-bootstrap-guard.php
