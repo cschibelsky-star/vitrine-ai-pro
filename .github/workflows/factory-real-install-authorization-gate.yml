@@ -1,0 +1,22 @@
+name: Factory Real Install Authorization Gate
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/Quality/Services/FactoryInstallAuthorizationGate.php'
+      - 'app/Factory/FinalMaster/Services/FactoryFinalMasterService.php'
+      - 'tests/safety/factory-real-install-authorization-gate.php'
+      - '.github/workflows/factory-real-install-authorization-gate.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l app/Factory/Quality/Services/FactoryInstallAuthorizationGate.php
+          php -l app/Factory/FinalMaster/Services/FactoryFinalMasterService.php
+          php -l tests/safety/factory-real-install-authorization-gate.php
+      - name: Fail-closed preflight tests
+        run: php tests/safety/factory-real-install-authorization-gate.php
