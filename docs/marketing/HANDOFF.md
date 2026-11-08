@@ -19,7 +19,7 @@ Adoção inicial da metodologia Factory/VIA exclusivamente no desenvolvimento do
 
 ## Estado das evidências
 Validação inicial GitHub Actions do PR #162: Marketing Agents Core Tests PASS (26 testes, 81 assertions), PHP Syntax PASS e Architecture Inventory PASS em 2026-11-08. Links: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949232 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949383 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949363 .
-Testes adicionais do CLI (códigos 1/2/3) requerem novo CI nesta branch. A revisão independente ainda não foi obtida; não declarar aprovação final. O gate local nunca garante autenticidade de CI nem autorização de avanço na VIA.
+Validação no commit 9629dd84a282f75cbd9715625e1fd22fe2be84a5: Marketing Agents Core Tests PASS (29 testes, 91 assertions), PHP Syntax PASS e Architecture Inventory PASS. Evidências: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908992 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908990 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908987 . Novo CI no PR deve validar o handoff-piloto bloqueado em tests/Fixtures/Marketing/handoff_via_observer_blocked.json. A revisão independente ainda não foi obtida (consulta GitHub PR #162 sem reviews); o handoff-piloto permanece explicitamente blocked; não declarar aprovação final. O gate local nunca garante autenticidade de CI nem autorização de avanço na VIA.
 Não houve deploy HML, execução de APIs pagas, publicação social, migração ou merge nesta primeira entrega.
 
 ## Próximos responsáveis

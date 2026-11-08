@@ -10,6 +10,9 @@ on:
       - 'database/migrations/*_marketing_*_table.php'
       - 'resources/schemas/marketing/**'
       - 'tests/Unit/Marketing/**'
+      - 'tests/Fixtures/Marketing/**'
+      - 'tools/marketing/**'
+      - 'docs/marketing/**'
       - 'tests/TestCase.php'
       - 'phpunit.xml'
       - 'composer.json'
@@ -48,3 +51,14 @@ jobs:
 
       - name: Run Marketing Agents tests
         run: vendor/bin/phpunit tests/Unit/Marketing --colors=never
+
+    - name: Verify VIA OBSERVER pilot stays blocked without independent review
+      run: |
+        set +e
+        php tools/marketing/verify-autonomous-handoff.php tests/Fixtures/Marketing/handoff_via_observer_blocked.json > /tmp/marketing-handoff-observer.json
+        status=$?
+        set -e
+        test "$status" -eq 1
+        grep -q '"decision": "blocked"' /tmp/marketing-handoff-observer.json
+        grep -q '"can_advance": false' /tmp/marketing-handoff-observer.json
+        grep -q 'independent review missing or invalid' /tmp/marketing-handoff-observer.json

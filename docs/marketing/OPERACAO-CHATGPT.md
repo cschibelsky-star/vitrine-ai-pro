@@ -54,3 +54,10 @@ O último script somente valida metadados; não autentica provas nem autoriza pu
 - `0`: reservado para uma autorização final futura, não emitida neste piloto.
 
 CI deve testar as três situações, sempre sem chamadas ao provedor, sem postagem e sem tráfego para o runtime da VIA.
+
+
+## Piloto auditável — VIA OBSERVER
+O snapshot tests/Fixtures/Marketing/handoff_via_observer_blocked.json contém SHAs e URLs GitHub de CI verificados para o commit 9629dd84a282f75cbd9715625e1fd22fe2be84a5. Não é um certificado, e URLs/textos sozinhos não autenticam a evidência.
+O campo review permanece pending: o gate deve recusar o handoff (exit 1). Uma revisão independente real do commit específico e autenticação externa de checks/PR são pré-condições de qualquer decisão posterior.
+A workflow de Marketing agora observa mudanças isoladas em docs/marketing, tools/marketing e tests/Fixtures/Marketing, além dos arquivos de agentes.
+A VIA PR #37 permanece em modo OBSERVER. Não invocar a VIA como se tivesse autorização de escrita ou avanço automatizado.

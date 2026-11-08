@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "task_id": "MARKETING-AUTO-GOVERNANCE-PR162-20261108",
+  "repository": "cschibelsky-star/vitrine-ai-pro",
+  "branch": "feature/marketing-autonomous-governance-v1-20261108",
+  "agent_id": "chatgpt-engineering",
+  "specialty": "development",
+  "objective": "Prepare autonomous marketing governance and handoff for independent QA and VIA OBSERVER",
+  "authorization": {
+    "scope": "Implement governance, tests and documentation only, branch isolated, no deploy or publication",
+    "approved_for_branch_write": true,
+    "production_approved": false
+  },
+  "base_sha": "5632c6188cfe284566d91c87f1fc6aef83d8655e",
+  "result_sha": "9629dd84a282f75cbd9715625e1fd22fe2be84a5",
+  "changed_files": [
+    "app/Marketing/AGENTS.md",
+    "app/Marketing/Governance/AutonomousHandoffGate.php",
+    "docs/marketing/OPERACAO-CHATGPT.md",
+    "tests/Unit/Marketing/AutonomousHandoffGateTest.php",
+    "tools/marketing/verify-autonomous-handoff.php"
+  ],
+  "checks": [
+    {
+      "id": "marketing-tests",
+      "required": true,
+      "status": "passed",
+      "command": "vendor/bin/phpunit tests/Unit/Marketing --colors=never",
+      "evidence": "https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908992 (29 tests, 91 assertions; verified for referenced result_sha)"
+    },
+    {
+      "id": "lint",
+      "required": true,
+      "status": "passed",
+      "command": "PHP Syntax workflow",
+      "evidence": "https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908990 (success for referenced result_sha)"
+    },
+    {
+      "id": "inventory",
+      "required": true,
+      "status": "passed",
+      "command": "Architecture Inventory workflow",
+      "evidence": "https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908987 (success for referenced result_sha)"
+    }
+  ],
+  "review": {
+    "reviewer_agent_id": "",
+    "status": "pending",
+    "evidence": ""
+  },
+  "risks": [
+    "No independent GitHub reviewer as of initial audit",
+    "VIA PR #37 remains draft and OBSERVER does not authenticate evidence",
+    "PR #162 has not been merged/deployed; marketing runtime unchanged"
+  ],
+  "next_owner": "independent_qa",
+  "state": "blocked"
+}
