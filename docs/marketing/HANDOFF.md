@@ -32,3 +32,9 @@ Não houve deploy HML, execução de APIs pagas, publicação social, migração
 
 ## Continuidade autorizada em 08/11/2026
 Implementados testes adicionais em AutonomousHandoffReturnSafetyTest.php e contrato de devolução em CONTRATO-DEVOLUCAO-VIA.md. VIA #37 recebe correlação com política de workflows/identidades, adaptador do contrato PHP e plano puro needs_correction. Factory #20 alinha saída JSON/exit 3 para metadados conformes e bloqueio de branches principais. Verificações locais Node: 84 testes passaram; PHP/PHPUnit dependem do novo CI (runtime local sem PHP). Não há devolução persistida, integração a filas, homologação ou autorização de avanço. Preservados os nove agentes, config/marketing_agents.php e Core/Centro IA/Social. CI novo e revisão independente ainda devem ser verificados para os commits resultantes.
+
+
+## Continuidade: persistência e orquestração interna
+Factory #20 implementa MissionHandoffRepository na tabela existente de FactoryMission, com status/revisão, auditoria, recibo idempotente e outbox passiva. Os 16 testes PDO SQLite passaram no run 42504062933, além dos 16 casos do gate. VIA #37 integra o serviço ao argumento interno de runObserverMission, com bloqueio dos agentes posteriores e testes interprodutos usando o adapter Factory pinado.
+
+Bloqueio adicional: Factory Baseline CI run 42504062881 falhou ao validar compose, pois docker-compose.factory.yml não existe na branch nem na main consultada. Portanto o runtime Docker/Laravel não foi validado; não declarar todo o CI da Factory aprovado. A revisão independente segue ausente. Sem HML, merge, banco real ou implantação. A prova de persistência temporária não autoriza execução real de agentes nem substitui homologação MySQL/ACL.
