@@ -20,7 +20,13 @@ try {
     }
     $result = (new AutonomousHandoffGate())->evaluate($data);
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n";
-    exit($result['decision'] === 'blocked' ? 1 : 0);
+    // A structurally valid handoff is still NOT externally verified or authorized.
+    $exitCode = match ($result['decision']) {
+        'blocked' => 1,
+        'pending_external_verification' => 3,
+        default => 2,
+    };
+    exit($exitCode);
 } catch (Throwable $e) {
     fwrite(STDERR, "Invalid handoff: ".$e->getMessage()."\n");
     exit(2);

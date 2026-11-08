@@ -6,6 +6,7 @@ namespace Tests\Unit\Marketing;
 
 use App\Marketing\Governance\AutonomousHandoffGate;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Process\Process;
 
 final class AutonomousHandoffGateTest extends TestCase
 {
@@ -110,4 +111,52 @@ final class AutonomousHandoffGateTest extends TestCase
         $data['checks'][0]['evidence'] = ' ';
         self::assertSame('blocked', (new AutonomousHandoffGate())->evaluate($data)['decision']);
     }
+    private function runCli(array|string $payload): Process
+    {
+        $file = tempnam(sys_get_temp_dir(), 'marketing-handoff-');
+        self::assertIsString($file);
+
+        try {
+            $contents = is_array($payload)
+                ? json_encode($payload, JSON_THROW_ON_ERROR)
+                : $payload;
+            file_put_contents($file, $contents);
+
+            $process = new Process([
+                PHP_BINARY,
+                dirname(__DIR__, 3).'/tools/marketing/verify-autonomous-handoff.php',
+                $file,
+            ]);
+            $process->run();
+
+            return $process;
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    public function test_cli_returns_nonzero_on_pending_external_verification(): void
+    {
+        $process = $this->runCli($this->validHandoff());
+        self::assertSame(3, $process->getExitCode());
+        self::assertStringContainsString('pending_external_verification', $process->getOutput());
+        self::assertStringContainsString('"can_advance": false', $process->getOutput());
+    }
+
+    public function test_cli_returns_blocked_on_missing_independent_review(): void
+    {
+        $payload = $this->validHandoff();
+        $payload['review']['status'] = 'pending';
+        $process = $this->runCli($payload);
+        self::assertSame(1, $process->getExitCode());
+        self::assertStringContainsString('independent review missing or invalid', $process->getOutput());
+    }
+
+    public function test_cli_returns_invalid_for_malformed_json(): void
+    {
+        $process = $this->runCli('{malformed json');
+        self::assertSame(2, $process->getExitCode());
+        self::assertStringContainsString('Invalid handoff:', $process->getErrorOutput());
+    }
+
 }

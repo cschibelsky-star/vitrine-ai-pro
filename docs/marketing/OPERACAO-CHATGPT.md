@@ -46,3 +46,11 @@ Nenhum agente pode declarar aprovação humana substituída por revisão de IA.
 - Lint: php -l app/Marketing/Governance/AutonomousHandoffGate.php
 - Exemplo de verificador de handoff: php tools/marketing/verify-autonomous-handoff.php /caminho/handoff.json
 O último script somente valida metadados; não autentica provas nem autoriza publicação.
+
+### Códigos de saída do verificador
+- `1`: bloqueado por metadados/revisão/checks inválidos.
+- `2`: arquivo ou JSON inválido.
+- `3`: metadados estruturalmente conformes, **pendentes** de verificação externa. É deliberadamente diferente de zero; nenhum pipeline pode interpretar como aprovação da VIA.
+- `0`: reservado para uma autorização final futura, não emitida neste piloto.
+
+CI deve testar as três situações, sempre sem chamadas ao provedor, sem postagem e sem tráfego para o runtime da VIA.

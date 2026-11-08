@@ -12,13 +12,14 @@ Adoção inicial da metodologia Factory/VIA exclusivamente no desenvolvimento do
 
 ## Entregas propostas na branch
 - Regras escopadas em app/Marketing/AGENTS.md.
-- Critérios G0–G6 e política de correção em docs/marketing/OPERACO-CHATGPT.md.
+- Critérios G0–G6 e política de correção em docs/marketing/OPERACAO-CHATGPT.md.
 - Matriz de integração em docs/marketing/CONTRATOS-E-INTEGRACOES.md.
 - Classe pura AutonomousHandoffGate e testes de bloqueio/validade.
 - CLI de validação offline de JSON sem rede nem execução de serviço externo.
 
 ## Estado das evidências
-Os testes de CI e a revisão independente devem ser consultados no PR; não declarar aprovação até existirem resultados verificáveis. O gate local nunca garante autenticidade de CI nem autorização de avanço na VIA.
+Validação inicial GitHub Actions do PR #162: Marketing Agents Core Tests PASS (26 testes, 81 assertions), PHP Syntax PASS e Architecture Inventory PASS em 2026-11-08. Links: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949232 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949383 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949363 .
+Testes adicionais do CLI (códigos 1/2/3) requerem novo CI nesta branch. A revisão independente ainda não foi obtida; não declarar aprovação final. O gate local nunca garante autenticidade de CI nem autorização de avanço na VIA.
 Não houve deploy HML, execução de APIs pagas, publicação social, migração ou merge nesta primeira entrega.
 
 ## Próximos responsáveis
