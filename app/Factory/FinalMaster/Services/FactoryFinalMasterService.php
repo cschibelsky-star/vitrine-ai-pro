@@ -8,12 +8,16 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use App\Factory\RealBuilder\Services\RunArtifactEvidence;
+use App\Factory\Quality\Services\FactoryInstallAuthorizationGate;
 use RuntimeException;
 
 class FactoryFinalMasterService
 {
     public function buildAndInstall(string $request, bool $dryRun = true, bool $force = false, bool $migrate = false): array
     {
+        // No file, blueprint, agent or install side effects before this gate.
+        // The human review pipeline is not yet trusted, so real installs fail closed.
+        (new FactoryInstallAuthorizationGate())->assertAllowed($dryRun);
         $runId = (string) Str::uuid();
         $base = storage_path('app/factory/final-master/' . date('Ymd_His') . '_' . $runId);
         $stepsDir = $base . '/steps';
