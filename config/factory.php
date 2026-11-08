@@ -4,6 +4,7 @@ return [
     'name' => env('FACTORY_NAME', 'Factory Core'),
     'version' => '1.0.0',
     'enabled' => env('FACTORY_ENABLED', true),
+    'core_bootstrap_enabled' => env('FACTORY_CORE_BOOTSTRAP_ENABLED', false),
     'project_name' => env('FACTORY_PROJECT_NAME', 'Vitrine AI Pro Master'),
     'route_prefix' => env('FACTORY_ROUTE_PREFIX', 'factory'),
     'middleware' => ['web', 'auth'],
