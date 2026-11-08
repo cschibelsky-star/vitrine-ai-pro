@@ -28,3 +28,7 @@ Não houve deploy HML, execução de APIs pagas, publicação social, migração
 3. VIA: integrar verificação externa de evidências em HML, permanecendo OBSERVER até autorização específica.
 4. DevOps: projetar homologação isolada com backup e rollback antes de qualquer alteração de runtime.
 5. Proprietário: autorizar separadamente merge, deploy, publicação e custos quando cabíveis.
+
+
+## Continuidade autorizada em 08/11/2026
+Implementados testes adicionais em AutonomousHandoffReturnSafetyTest.php e contrato de devolução em CONTRATO-DEVOLUCAO-VIA.md. VIA #37 recebe correlação com política de workflows/identidades, adaptador do contrato PHP e plano puro needs_correction. Factory #20 alinha saída JSON/exit 3 para metadados conformes e bloqueio de branches principais. Verificações locais Node: 84 testes passaram; PHP/PHPUnit dependem do novo CI (runtime local sem PHP). Não há devolução persistida, integração a filas, homologação ou autorização de avanço. Preservados os nove agentes, config/marketing_agents.php e Core/Centro IA/Social. CI novo e revisão independente ainda devem ser verificados para os commits resultantes.
