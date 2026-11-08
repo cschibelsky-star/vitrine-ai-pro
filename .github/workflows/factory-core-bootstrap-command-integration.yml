@@ -1,0 +1,21 @@
+name: Factory Core Bootstrap Command Integration
+on:
+  pull_request:
+    paths:
+      - 'tests/safety/factory-core-bootstrap-command-integration.php'
+      - '.github/workflows/factory-core-bootstrap-command-integration.yml'
+      - 'app/Factory/Console/Commands/FactoryInstallCommand.php'
+      - 'app/Factory/Quality/Services/FactoryCoreBootstrapGuard.php'
+permissions:
+  contents: read
+jobs:
+  command-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: php -l tests/safety/factory-core-bootstrap-command-integration.php
+      - name: Exercise actual command with mock Artisan
+        run: php tests/safety/factory-core-bootstrap-command-integration.php
+      - name: Existing bootstrap guard regression
+        run: php tests/safety/factory-core-bootstrap-guard.php
