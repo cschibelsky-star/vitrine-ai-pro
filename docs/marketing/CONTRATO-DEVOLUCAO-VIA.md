@@ -1,6 +1,6 @@
 # Devolução de engenharia do Marketing IA para correção
 
-Status: implementação offline nos PRs Marketing #162, VIA #37 e Factory #20, sem homologação operacional. Os nove agentes de criação e seus contratos com Core/Centro IA/Vitrine Social Mídia permanecem preservados.
+Status: governança e integração de código nos PRs Marketing #162, VIA #37 e Factory #21, com origem no #20; sem homologação na VPS. Os nove agentes de criação e seus contratos com Core/Centro IA/Vitrine Social Mídia permanecem preservados.
 
 ## Regras interoperáveis
 
@@ -34,4 +34,9 @@ VIA #37 passa a oferecer supervisão interna por runObserverMission(mission, {su
 
 A reprovação é gravada atomicamente com revisão, responsável, auditoria, recibo e evento passivo correction_required. O próximo agente não é agendado. Retry/reinício não duplica a correção; submissão de novo SHA invalida o candidato anterior e exige nova prova/revisão. A identidade da missão e o escopo são conferidos antes da escrita, e gravação falha não produz relatório completed.
 
-A prova integrada executa VIA + adapter PDO Factory em SQLite temporário, incluindo concorrência e revisão antiga, com dependência pinada por commit no CI. Não habilita endpoint, worker, banco real ou produção. O bridge é exclusivo de testes. A integração com host autenticado/Laravel/MySQL, autorização Core e execução real da correção ainda depende de revisão independente e homologação específica. Os nove agentes, Core, Centro IA e Vitrine Social Mídia não foram alterados.
+A prova integrada executa VIA + adapter PDO Factory em SQLite temporário, incluindo concorrência e revisão antiga, com dependência pinada por commit no CI. Não habilita endpoint, worker, banco real ou produção. O bridge é exclusivo de testes. A integração com host autenticado e Laravel/MySQL da VPS, autorização Core e execução real da correção ainda depende de revisão independente e homologação específica. Os nove agentes, Core, Centro IA e Vitrine Social Mídia não foram alterados.
+
+
+## Base executável para validação do runtime
+
+A integração Factory corrente está no PR #21, criado sobre a branch do #19 e acrescido do delta de governança do #20. O #20 isolado parte de main, que não contém Compose/runtime; ele é fonte de governança, não a linha de implantação. #21 preserva modelos/migrations/APIs existentes e bloqueia o executor legado quando existe handoff_supervision. O CI da VIA usa commit fixo dessa linha integrada. Nenhum merge da cadeia #12/#17/#19/#21 ou inclusão implícita de #18 foi autorizado.

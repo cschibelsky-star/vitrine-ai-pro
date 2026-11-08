@@ -1,40 +1,41 @@
-# Marketing IA — checkpoint de governança autônoma (2026-11-08)
+# Marketing IA — handoff de governança supervisionada
 
-## Escopo desta entrega
-Adoção inicial da metodologia Factory/VIA exclusivamente no desenvolvimento do Marketing IA. Sem alteração do runtime, integração ou conteúdos de clientes.
+Atualização: 08/11/2026. Estado: drafts de integração; sem homologação VPS, merge ou produção. GitHub permanece a fonte de verdade e CI verde não concede avanço.
 
-## Origem e preservação
-- Repositório: cschibelsky-star/vitrine-ai-pro
-- Base escolhida: main em 5632c6188cfe284566d91c87f1fc6aef83d8655e
-- Branch candidata: feature/marketing-autonomous-governance-v1-20261108
-- Branch operacional Marketing HML existente: feature/marketing-agents-core-v1, não modificada.
-- Referências: Factory PR #20, VIA PR #37, Marketing PR #65 (mesclado), Marketing #102 e #150 (draft), Social Hub #9/#12/#16/#17 (candidatos).
+## Linha de trabalho e fonte canônica
 
-## Entregas propostas na branch
-- Regras escopadas em app/Marketing/AGENTS.md.
-- Critérios G0–G6 e política de correção em docs/marketing/OPERACAO-CHATGPT.md.
-- Matriz de integração em docs/marketing/CONTRATOS-E-INTEGRACOES.md.
-- Classe pura AutonomousHandoffGate e testes de bloqueio/validade.
-- CLI de validação offline de JSON sem rede nem execução de serviço externo.
+| Componente | Referência | Papel |
+| --- | --- | --- |
+| Marketing IA | vitrine-ai-pro #162 | contratos, gates estruturais e regressões; nove agentes preservados |
+| VIA | via #37 | evidência externa, plano, supervisão interna e testes interprodutos |
+| Factory governança | VitrineAI-Factory #20, f4766181cfad4bf024c890af8d7d7b2f65896742 | origem dos nove arquivos de governança/adapter |
+| Factory executável | #12 -> #17 -> #19, eb82fa4a9d523c3e21104498ee6a4e9c052c526f | Compose/runtime e modelos/etapas/API existentes |
+| Factory integrada | #21, base feat/via-stage-supervision-20261107 | runtime canônico com governança; evita promover #20 isoladamente |
 
-## Estado das evidências
-Validação inicial GitHub Actions do PR #162: Marketing Agents Core Tests PASS (26 testes, 81 assertions), PHP Syntax PASS e Architecture Inventory PASS em 2026-11-08. Links: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949232 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949383 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42493949363 .
-Validação no commit 9629dd84a282f75cbd9715625e1fd22fe2be84a5: Marketing Agents Core Tests PASS (29 testes, 91 assertions), PHP Syntax PASS e Architecture Inventory PASS. Evidências: https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908992 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908990 ; https://github.com/cschibelsky-star/vitrine-ai-pro/actions/runs/42494908987 . Novo CI no PR deve validar o handoff-piloto bloqueado em tests/Fixtures/Marketing/handoff_via_observer_blocked.json. A revisão independente ainda não foi obtida (consulta GitHub PR #162 sem reviews); o handoff-piloto permanece explicitamente blocked; não declarar aprovação final. O gate local nunca garante autenticidade de CI nem autorização de avanço na VIA.
-Não houve deploy HML, execução de APIs pagas, publicação social, migração ou merge nesta primeira entrega.
+A main da Factory não contém docker-compose.factory.yml. O erro do Baseline no #20 revelou a diferença entre a linha documental e a executável; o arquivo não foi recriado. #21 nasce de #19 e aplica a governança já existente, sem merge nem alteração das branches anteriores. EnginePolicy #18 é uma revisão independente pendente.
 
-## Próximos responsáveis
-1. QA: verificar o CI, executar testes unitários negativos e conferir segurança/compatibilidade.
-2. Arquiteto: aprovar fronteiras entre Marketing e Social e versões dos contratos.
-3. VIA: integrar verificação externa de evidências em HML, permanecendo OBSERVER até autorização específica.
-4. DevOps: projetar homologação isolada com backup e rollback antes de qualquer alteração de runtime.
-5. Proprietário: autorizar separadamente merge, deploy, publicação e custos quando cabíveis.
+## Comportamento implementado em branches
 
+- Marketing: AutonomousHandoffGate continua can_advance=false/evidence_verified=false. CLI retorna 1=bloqueado, 2=inválido, 3=pendência externa.
+- VIA: política de workflows/identidades fornecida pelo servidor; evidência imutável ligada ao handoff; SHA/review antigos ou origem fabricada bloqueiam.
+- Factory: MissionHandoffRepository grava no FactoryMission existente status/revisão, auditoria, recibo idempotente e outbox passiva. Correção exige responsável e novo SHA; limites escalam.
+- Orquestrador VIA: entrada interna persiste o parecer e consulta o bloqueio do próximo agente. O servidor HTTP padrão não ativa essa entrada.
+- #21: FactoryMissionRunner.run/requestCorrection recusam missões com handoff_supervision antes de executar/reabrir etapas ou sobrescrever o estado. Missões legadas sem marcador preservam seus gates.
 
-## Continuidade autorizada em 08/11/2026
-Implementados testes adicionais em AutonomousHandoffReturnSafetyTest.php e contrato de devolução em CONTRATO-DEVOLUCAO-VIA.md. VIA #37 recebe correlação com política de workflows/identidades, adaptador do contrato PHP e plano puro needs_correction. Factory #20 alinha saída JSON/exit 3 para metadados conformes e bloqueio de branches principais. Verificações locais Node: 84 testes passaram; PHP/PHPUnit dependem do novo CI (runtime local sem PHP). Não há devolução persistida, integração a filas, homologação ou autorização de avanço. Preservados os nove agentes, config/marketing_agents.php e Core/Centro IA/Social. CI novo e revisão independente ainda devem ser verificados para os commits resultantes.
+Os nove agentes criativos permanecem marketing_director, product_market_strategist, campaign_planner, copy_content, creative_director, video_producer, social_distribution, qa_brand_guardian e performance_analyst. O último continua condicionado a métricas. Engenharia não usa MarketingCampaignTask como missão. Core/Centro IA/Social, publicadores e credenciais não foram alterados.
 
+## Evidências e limites
 
-## Continuidade: persistência e orquestração interna
-Factory #20 implementa MissionHandoffRepository na tabela existente de FactoryMission, com status/revisão, auditoria, recibo idempotente e outbox passiva. Os 16 testes PDO SQLite passaram no run 42504062933, além dos 16 casos do gate. VIA #37 integra o serviço ao argumento interno de runObserverMission, com bloqueio dos agentes posteriores e testes interprodutos usando o adapter Factory pinado.
+Marketing #162 tinha 32 testes/100 assertions aprovados no run 42504287495. VIA #37 tinha 98 testes de handoff/PDO + 4 agent-hub, sem skips, no run 42504444112. Factory #20 tinha 16 casos do gate + 16 de PDO aprovados no run 42504062933; seu Baseline run 42504062881 falhou por ausência de Compose e permanece como evidência histórica.
 
-Bloqueio adicional: Factory Baseline CI run 42504062881 falhou ao validar compose, pois docker-compose.factory.yml não existe na branch nem na main consultada. Portanto o runtime Docker/Laravel não foi validado; não declarar todo o CI da Factory aprovado. A revisão independente segue ausente. Sem HML, merge, banco real ou implantação. A prova de persistência temporária não autoriza execução real de agentes nem substitui homologação MySQL/ACL.
+A linha #21 deve ser avaliada pelo head exato nos workflows Agent Excellence Gate Tests, Factory Baseline CI e Factory Application CI. Estes últimos executam build Docker, smoke Laravel, suíte real e preservação de dados/arquivo criptografado após restart/recriação no runner descartável. A VIA passa a usar o adapter da linha integrada em commit pinado. Resultados atuais e links por SHA constam nas descrições dos PRs; não reutilizar um CI antigo para um head novo.
+
+Provas em CI não são homologação VPS, Core ACL, MySQL/InnoDB, vínculo real a FactoryAgent ou correção automática de código. A outbox é passiva, e canAdvance/dispatchAllowed permanecem false. Não houve banco real/migration aplicada, publicação social, consumo de IA, deploy ou ativação de executor.
+
+## Próximos responsáveis e gates
+
+1. QA/revisor independente: conferir os heads, reproduzir aceite e revisar o bloqueio do runner e a fronteira de confiança.
+2. Arquiteto: aprovar a sequência explícita #12/#17/#19/#21 e a relação com #18, sem promover #20 isoladamente.
+3. Segurança/Core: verificar host, ACL, escopos e vínculo de responsáveis autenticados.
+4. DevOps: preparar roteiro HML isolado com MySQL, backup/rollback, domínio/TLS e Cockpit, para autorização específica antes de executar.
+5. Proprietário: autorizar separadamente homologação, merge, implantação e eventual execução de agentes.
