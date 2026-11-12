@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Tests\Feature\AssessorOnline\Concerns\UsesIsolatedAssessorDatabase;
 use Tests\TestCase;
 
@@ -46,6 +47,8 @@ final class ProvisionAssessorHmlAdminTest extends TestCase
             'auth.passwords.users.expire' => 30,
             'hashing.bcrypt.rounds' => 4,
         ]);
+        URL::forceRootUrl((string) config('app.url'));
+        URL::forceScheme('https');
         foreach (['ASSESSOR_HML_PROVISION_ENABLED' => 'true', 'ASSESSOR_HML_ADMIN_EMAIL' => self::EMAIL] as $key => $value) {
             $this->previousEnvironment[$key] = Env::getRepository()->get($key);
             Env::getRepository()->set($key, $value);
@@ -112,14 +115,15 @@ final class ProvisionAssessorHmlAdminTest extends TestCase
 
     public function test_invitation_uses_configured_expiration_and_broker_hash(): void
     {
-        $token = null;
-        Mail::shouldReceive('raw')->once()->andReturnUsing(function (string $body) use (&$token): void {
-            $this->assertStringContainsString('30 minutos', $body);
-            $this->assertStringContainsString('https://', $body);
-            $this->assertSame(1, preg_match('~/redefinir-senha/([^?\s]+)~', $body, $matches));
-            $token = $matches[1];
+        $body = null;
+        Mail::shouldReceive('raw')->once()->andReturnUsing(function (string $message) use (&$body): void {
+            $body = $message;
         });
         $this->artisan('assessor:provision-hml-admin', ['email' => self::EMAIL])->assertExitCode(0);
+        $this->assertStringContainsString('30 minutos', $body);
+        $this->assertStringContainsString('https://', $body);
+        $this->assertSame(1, preg_match('~/redefinir-senha/([^?\s]+)~', $body, $matches));
+        $token = $matches[1];
         $user = User::where('email', self::EMAIL)->firstOrFail();
         $this->assertSame('assessor', $user->role);
         $this->assertDatabaseHas('assessor_memberships', ['user_id' => $user->id, 'role' => 'admin']);
