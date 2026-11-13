@@ -1,0 +1,20 @@
+name: Factory Fail-Closed Permission Provider
+on:
+  pull_request:
+    paths:
+      - 'app/Factory/Policies/Concerns/ChecksFactoryPermissions.php'
+      - 'tests/safety/factory-permission-provider-fail-closed.php'
+      - '.github/workflows/factory-permission-provider-fail-closed.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l app/Factory/Policies/Concerns/ChecksFactoryPermissions.php
+          php -l tests/safety/factory-permission-provider-fail-closed.php
+      - name: Authorization regression
+        run: php tests/safety/factory-permission-provider-fail-closed.php
