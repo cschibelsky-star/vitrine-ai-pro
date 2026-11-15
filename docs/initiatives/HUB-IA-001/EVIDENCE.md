@@ -19,3 +19,11 @@ Requisitos de prova para Avello2: endpoint e catálogo autorizados, capacidade e
 - GitHub main app/Http/Controllers/Api/CentroIaBrokerController.php: https://github.com/cschibelsky-star/vitrine-ai-pro/blob/main/app/Http/Controllers/Api/CentroIaBrokerController.php
 - Busca GitHub 'invision' em três repositórios, branch padrão: zero resultados.
 - Nenhuma inferência executada, nenhuma chamada paga intencional, nenhum vídeo gerado, nenhuma alteração de runtime, nenhum deploy.
+
+## Evidencia de codigo local — 2026-11-14
+- Runtime local isolado: python -m unittest discover -s tests -v -> 5 testes, 0 falhas.
+- Comando python hub.py status --provider roteia -> URL base https://api.roteia.ai/v1; credential_present=false no runtime temporario.
+- Comando python hub.py status --provider invision -> URL base https://invision.dreamvision.com.br/v1; credential_present=false no runtime temporario.
+- Documentacao oficial URLs: https://roteia.ai/docs/ e https://invision.dreamvision.com.br/docs.
+- Artefato ZIP disponivel somente como anexo nesta conversa; nao afirmar que esta versionado, instalado ou publicado.
+- Sem requests autenticados, sem inferencia, sem teste real Codex, sem video, sem merge, sem deploy.
