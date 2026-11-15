@@ -57,3 +57,10 @@ Usuario concluiu teste do Codex Windows e informou 3/3 casos aprovados, dados.tx
 - Escopo para Codex Windows/Invision Coding: ler arquivos, rodar baseline, editar apenas order_service.py, rerodar testes, mostrar diff. Nenhum acesso a rede, projeto real, credenciais, PR, merge ou deploy.
 - Esta etapa valida somente a qualidade do fixture e seu protocolo; execucao pelo Codex Windows e supervisao automatica VIA NAO FORAM REALIZADAS, permanecem PENDENTES.
 - Resultado de aceite exige saida dos dois testes, diff limitado a order_service.py e evidencia de tool calls. Cobrança real do provedor desconhecida.
+
+## Protótipo de gate Factory -> VIA na HUB-IA-001 (2026-11-15)
+- Implementados na branch documental isolada os arquivos supervision/gate.py, test_gate.py e README.md. Commit final do README: 99d72a411b4afcdc9451215d624b2d2115efd1ae.
+- Gate avalia fixture TOOL-CODE-02 com política fail-closed, deny para evidência não verificada, reprovação de testes, arquivo inesperado, hash de diff malformado e ambiente não isolado.
+- Suite reproduzida localmente em container do assistente: 7 testes unittest, 7 PASS. Código gravado no GitHub contém semântica equivalente. CI do GitHub NÃO foi executado; testes não comprovam integração operacional.
+- AVISO CRÍTICO: campos JSON evidence_verified e supervisor_approved podem ser forjados; o protótipo não autentica emissor, hash nem decisão VIA. Portanto NÃO usar como autorização de avanço operacional. Integração real com Factory/VIA e enforcement externo permanecem PENDENTES.
+- Sem conexão ao runtime, sem PR, merge, HML/produção ou custos de API.
