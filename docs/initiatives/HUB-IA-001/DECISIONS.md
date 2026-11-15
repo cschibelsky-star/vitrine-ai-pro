@@ -10,3 +10,5 @@ PENDENTE: limites financeiros e autorização para chamadas pagas.
 
 ## Regra de conflito
 Se memória, conversa ou arquivo divergirem do GitHub/runtime consultados, registrar divergência, não consolidar como fato. GitHub é a fonte do código; logs/execução provam funcionamento, não um PR.
+
+2026-11-14 — D06 APROVADA PELO USUÁRIO: incluir Avello2 no Hub Multimodelo IA como provedor/conector para produção e utilização real, tanto na frente pessoal quanto, em etapa segregada, no ecossistema Vitrine. Isto define objetivo arquitetural, não libera deploy, alteração de credenciais, HML ou produção nesta missão.
