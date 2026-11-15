@@ -15,3 +15,8 @@ Próximo passo técnico: examinar os provedores/configurações locais por canal
 ## Entrega de cliente portatil nesta conversa
 Foi criado um pacote ZIP local HUB-IA-001-cliente-independente.zip contendo script Python 3.10+ e 5 testes locais aprovados. Ainda nao foi versionado no GitHub nem instalado no computador do usuario. O status tem chave ausente neste runtime efemero.
 Para continuar: obter o pacote da conversa, testar no Windows com as credenciais mantidas apenas no ambiente pessoal e consultar modelos. Nao realizar chat pago sem teto de gastos autorizado. Validar separadamente a configuracao ativa Codex e a API Responses/tool calling antes de configurar o seletor; evitar sobrescrever config.toml existente. Nao confundir app Invision ja instalado com nosso script. Avello2 segue disponivel nesta conversa para status/catalogo, nao e um provider Codex automaticamente.
+
+## Continuidade V2 — 2026-11-15
+Artefato local V2 foi anexado à conversa: HUB-IA-001-cliente-codex-v2.zip. Não é software instalado na máquina do usuário. O script codex_preview.py prepara apenas argumentos efêmeros para Codex/Invision, sem escrever config.toml e sem transmitir chave. Dez testes locais passam.
+Antes de integrar: consultar versão e configuração Codex ativa no computador real, preservando instalações Invision e configurações existentes. Validação Codex Responses/tool calling ainda não realizada. Se calls forem pagas, exige autorização de teto e controles na conta; --allow-paid do cliente HTTP NÃO impõe orçamento automático. Codex não é acionado automaticamente pelo pacote.
+O Roteia possui compatibilidade chat documentada, não foi assumida compatibilidade Codex Responses. Avello2 MCP segue separado e preservado.
