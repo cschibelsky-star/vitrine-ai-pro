@@ -27,3 +27,10 @@ Requisitos de prova para Avello2: endpoint e catálogo autorizados, capacidade e
 - Documentacao oficial URLs: https://roteia.ai/docs/ e https://invision.dreamvision.com.br/docs.
 - Artefato ZIP disponivel somente como anexo nesta conversa; nao afirmar que esta versionado, instalado ou publicado.
 - Sem requests autenticados, sem inferencia, sem teste real Codex, sem video, sem merge, sem deploy.
+
+## Evidência local V2 — 2026-11-15
+- Arquivos criados: hub_ia_001/codex_preview.py, tests/test_codex_preview.py e README atualizado, adicionados ao pacote ZIP V2 na conversa.
+- Comando: python -m unittest discover -s tests -v -> 10 testes aprovados, 0 falhas em runtime isolado.
+- Comando: python codex_preview.py --model qwen/qwen3.8-max --format json -> argumentos para model_provider=hub_invision, base_url=https://invision.dreamvision.com.br/v1, wire_api=responses, env_key=INVISION_API_KEY, sem valores secretos.
+- https://invision.dreamvision.com.br/docs confirma POST /v1/responses, GET /v1/models e opção aplicativo Codex; https://roteia.ai/docs confirma /v1/chat/completions. Endpoints documentados não comprovam disponibilidade/account compatibility.
+- Não houve alteração de config.toml, nenhuma inferência paga, nem implantação, merge ou vídeo.
