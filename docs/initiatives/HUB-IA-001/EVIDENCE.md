@@ -46,3 +46,6 @@ Fonte: saída textual do PowerShell/Codex fornecida pelo usuário nesta conversa
 - /status depois: invision / Qwen3.8 Max, 25.7K tokens totais (25.6K input + 76 output), contexto 950K, limits not available.
 - Interpretação: resposta pela sessão Invision comprovada por saída fornecida; modelo upstream, tokenização de cobrança, request_id e custo debitado NÃO VERIFICADOS. O utilitário local não foi comprovado como proxy da inferência.
 - Registro preserva resumo em vez de identificador de sessão do usuário, tokens de autenticação ou segredos.
+
+## Gate de orçamento R$ 2,00 — 2026-11-15
+Autorizações: gasto máximo R$ 2,00 condicionado a controle técnico comprovado antes de envio; caso ausente, preparar sem consumir saldo. Foram consultados contratos das ferramentas visíveis: Avello2.avello_ask / avello_smoke e V5.project_roteia_via_code_pilot_execute; não expõem argumento/garantia de teto monetário atômico. Protocolo Vitrine API Benchmark v1.0 exige bloqueio server-side e custo conciliável. CODE01-ROUND.md criado para congelar prompt, critérios e bloqueio. Não foi enviada inferência nesta rodada. Não é possível afirmar cobrança real igual a zero, apenas ausência de nova chamada intencional.
