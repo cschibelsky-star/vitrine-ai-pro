@@ -45,3 +45,9 @@ Próxima ação inclui inventário Avello2, com os demais gateways e conectores 
 - Busca de código GitHub 'invision' nos repositórios consultados não retornou arquivos na branch principal; ausência de resultado NÃO prova inexistência em branches ou no Codex local.
 - Workspaces vitrine-avello-private e vitrine-avello-oauth-source têm alterações locais significativas; PROIBIDO reset/overwrite sem preservação e escopo próprio.
 - Arquivos de documentação e branch não são conector operacional. Gate: PENDENTE quanto a uso real no Codex e vídeo.
+
+## Entrega local de codigo — 2026-11-14
+- Foi produzido pacote portatil HUB-IA-001-cliente-independente.zip em artefato da conversa (nao versionado neste repositorio). Contem hub.py, README.md e testes Python.
+- Implementado status local (sem rede), leitura GET /models para Roteia/Invision e chamada chat bloqueada por padrao ate flag --allow-paid. Credenciais via variaveis de ambiente; nao gravadas em arquivo. Nenhuma chamada paga nesta execucao.
+- Cinco testes unitarios locais passaram. Isto NAO comprova autenticacao real, compatibilidade do seletor Codex ou disponibilizacao em producao.
+- Proximo passo: validar com a instalacao local Codex e contas reais em contexto autorizado; checar custo antes de inferencia. Avello2 permanece MCP separado.
