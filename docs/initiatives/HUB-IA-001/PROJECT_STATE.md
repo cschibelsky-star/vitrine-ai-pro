@@ -65,3 +65,6 @@ Próxima ação inclui inventário Avello2, com os demais gateways e conectores 
 - Gate 1 (conectividade Codex -> Invision, sessão relatada): APROVADO apenas para o escopo de resposta textual. Gate código/ferramentas: PENDENTE. Gate Hub independente integrado: PENDENTE. Gate Roteia, Avello2 no Hub, multimídia, integração empresarial: PENDENTE.
 - Não foi feito benchmark de programação, nem conciliado consumo financeiro. Evitar nova inferência paga sem teto de gastos e conta/limite verificados.
 - Próximo passo único: validar custo e autorização de gasto para CODE01; executar teste de programação em workspace pessoal isolado (sem escrita) e registrar evidências, sem modificar configuração global.
+
+## Rodada CODE01 — autorização financeira restrita, 2026-11-15
+Usuário autorizou até R$ 2,00 SOMENTE com bloqueio técnico de gasto comprovado antes de envio. Ferramentas acessíveis de inferência não expõem controle monetário de reserva/teto por chamada e não foi possível confirmar débito efetivo. Decisão: NÃO executar inferência paga nem iniciar retries. CODE01 congelado em CODE01-ROUND.md, gate PENDENTE (financeiro). Nenhum saldo novo foi intencionalmente consumido nesta rodada. Próximo passo: identificar e comprovar enforcement server-side de limite ≤ R$ 2,00, seguido de execução única conforme protocolo.
