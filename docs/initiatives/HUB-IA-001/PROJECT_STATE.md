@@ -37,3 +37,11 @@ Prova reproduzível de tarefa Codex usando o gateway escolhido e modelo efetivo,
 O Avello2 é componente obrigatório do Hub, além de Roteia e Invision. O objetivo contempla uso operacional no ambiente pessoal e possibilidade de integração ao ecossistema Vitrine, com contextos, credenciais, permissões, limites e auditorias separados.
 Inclusão no escopo NÃO equivale a autorização de implantação em produção, habilitação de ferramentas mutáveis ou validação de disponibilidade. Auditar capacidades reais, autenticação, endpoints, compatibilidade com Codex/ChatGPT e contratos do Avello2 antes de usar.
 Próxima ação inclui inventário Avello2, com os demais gateways e conectores existentes.
+
+## Auditoria operacional confirmada — 2026-11-14
+- Avello2 conectado nesta conversa: avello_status retornou calls_enabled=true, gpt_key_present=true, claude_key_present=true, remote_execution=false, google_oauth_enabled=true. avello_models retornou catálogos GPT e Claude. Ainda NÃO foi feita chamada de inferência, nem demonstrada integração ao Codex.
+- V5 project_runtime_config_status: roteia-ai-lab possui ROTEIA_API_KEY configurada (somente presença), e vitrine-avello-private possui chaves e flags de Avello configuradas (somente presença). No vitrine-api-lab-hml, o status das runtime keys retornou runtime_keys_not_configured; isso não comprova falha do laboratório completo.
+- Código main app/Services/Ai/AiRoutingService.php prioriza Roteia para texto, mídia e revisão com fallback; app/Services/Ai/AiMediaGenerationService.php já possui adaptador Roteia por endpoint configurado; app/Http/Controllers/Api/CentroIaBrokerController.php possui fluxo separado de mídia dinâmica/vídeo. Preservar e reutilizar, não duplicar no Hub pessoal.
+- Busca de código GitHub 'invision' nos repositórios consultados não retornou arquivos na branch principal; ausência de resultado NÃO prova inexistência em branches ou no Codex local.
+- Workspaces vitrine-avello-private e vitrine-avello-oauth-source têm alterações locais significativas; PROIBIDO reset/overwrite sem preservação e escopo próprio.
+- Arquivos de documentação e branch não são conector operacional. Gate: PENDENTE quanto a uso real no Codex e vídeo.
