@@ -28,3 +28,10 @@ Próxima etapa: conciliar custo/limite no painel do fornecedor e solicitar teto 
 
 ## Rodada CODE01 autorizada até R$ 2,00, mas NÃO DISPARADA — 2026-11-15
 Condição expressa: teto técnico de gasto comprovado ANTES de envio. Ferramentas atuais não apresentam reserva ou aplicação atômica desse orçamento. CODE01-ROUND.md contém prompt congelado, rubrica e condição de desbloqueio. Próxima tarefa única: verificar e comprovar controle de gastos no gateway para esta conta; sem essa prova não fazer inferência, mesmo com consentimento genérico. Nenhum PR, deploy ou alteração de runtime nesta rodada.
+
+## Entrega local para expansão gradual do seletor Windows — 2026-11-15
+- Usuário informou resposta de programação correta com Qwen3.8 Max no aplicativo Codex Windows usando o catálogo mínimo; houve reconexão antes da resposta, portanto estabilidade ainda pendente. Custos/ID upstream desconhecidos.
+- Pacote gerado nesta conversa: HUB-IA-001-Codex-Windows-3-modelos.zip. Ele expande apenas o arquivo local hub-ia-001-invision-min.json usando entradas já presentes no invision-models.json, adicionando candidatos qwen/qwen3.8-flash-next e invision/coding ao qwen/qwen3.8-max validado. Modelo padrão não muda.
+- O pacote NÃO acessa a rede nem a credencial; NÃO altera config.toml, Avello, original da Invision, nem ambientes VPS. Possui backup de catálogo e desfazer-expansao.bat.
+- Teste isolado de expansão, bloqueio de reexecução e rollback passou com fixtures sintéticas. NÃO foi executado no Windows do usuário; nenhum dos dois novos modelos foi validado na API ou no app.
+- Próximo gate: usuário aplicar com Codex fechado, confirmar três entradas no seletor, sem inferência paga automática. Só depois validar suporte de cada candidato em sessões isoladas e com orçamento acompanhado.
