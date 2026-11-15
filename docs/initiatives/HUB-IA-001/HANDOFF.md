@@ -50,3 +50,10 @@ Nenhum conector nesta sessão opera a interface Codex Windows do usuário; etapa
 
 ## Resultado TOOL-CODE-01 relatado (2026-11-15)
 Usuario concluiu teste do Codex Windows e informou 3/3 casos aprovados, dados.txt preservado, uso de apply_patch para criar/corrigir solucao.py e exec_command para ler dados e executar verify.py. Essa e evidencia de usuario, sem logs brutos ou artefato de codigo disponiveis ao assistente nesta sessao. Gate aprovado provisoriamente somente para fixture isolado; nao generalizar para projetos reais, estabilidade ou producao. Proximo objetivo: validar em repositorio descartavel com evidencia de tool calls e diff, sob autorizacao especifica e sem merge/deploy.
+
+## TOOL-CODE-02 — tarefa real isolada preparada, 2026-11-15
+- Artefato gerado nesta conversa: HUB-IA-001-TOOL-CODE-02.zip com projeto Python descartavel (AGENTS.md, order_service.py, tests/test_order_service.py, PROMPT-CODEX.txt, README.txt).
+- Bug proposital: total_for soma precos sem multiplicar por quantidade. Baseline REAL executado em container isolado do assistente: 5 testes, 3 falhas; exit 1. Com referencia de correcao em copia efemera: 5 testes, 0 falhas; arquivo original do ZIP mantem bug.
+- Escopo para Codex Windows/Invision Coding: ler arquivos, rodar baseline, editar apenas order_service.py, rerodar testes, mostrar diff. Nenhum acesso a rede, projeto real, credenciais, PR, merge ou deploy.
+- Esta etapa valida somente a qualidade do fixture e seu protocolo; execucao pelo Codex Windows e supervisao automatica VIA NAO FORAM REALIZADAS, permanecem PENDENTES.
+- Resultado de aceite exige saida dos dois testes, diff limitado a order_service.py e evidencia de tool calls. Cobrança real do provedor desconhecida.
