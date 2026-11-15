@@ -49,3 +49,9 @@ Fonte: saída textual do PowerShell/Codex fornecida pelo usuário nesta conversa
 
 ## Gate de orçamento R$ 2,00 — 2026-11-15
 Autorizações: gasto máximo R$ 2,00 condicionado a controle técnico comprovado antes de envio; caso ausente, preparar sem consumir saldo. Foram consultados contratos das ferramentas visíveis: Avello2.avello_ask / avello_smoke e V5.project_roteia_via_code_pilot_execute; não expõem argumento/garantia de teto monetário atômico. Protocolo Vitrine API Benchmark v1.0 exige bloqueio server-side e custo conciliável. CODE01-ROUND.md criado para congelar prompt, critérios e bloqueio. Não foi enviada inferência nesta rodada. Não é possível afirmar cobrança real igual a zero, apenas ausência de nova chamada intencional.
+
+## CODE01 — Invision Coding, 2026-11-15
+- O usuário forneceu nesta conversa o código gerado no Codex Windows após selecionar Invision Coding; atribuição de provedor/modelo é baseada em relato, sem request_id upstream.
+- Código Python dedupe(items) com set seen e lista result; nenhuma operação de rede, disco ou projeto.
+- Assistente executou os três casos de aceitação do protocolo CODE01 em Python isolado: [] => [], [2,1,2,3,1] => [2,1,3], [-1,0,-1] => [-1,0]; resultado 3/3 PASS.
+- Gate de corretude CODE01 para estes casos: APROVADO. Estabilidade, tool calling, identificação upstream e faturamento: PENDENTES. Não inferir compatibilidade dos demais modelos nem ausência de gastos.
