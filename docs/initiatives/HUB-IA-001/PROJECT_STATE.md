@@ -51,3 +51,10 @@ Próxima ação inclui inventário Avello2, com os demais gateways e conectores 
 - Implementado status local (sem rede), leitura GET /models para Roteia/Invision e chamada chat bloqueada por padrao ate flag --allow-paid. Credenciais via variaveis de ambiente; nao gravadas em arquivo. Nenhuma chamada paga nesta execucao.
 - Cinco testes unitarios locais passaram. Isto NAO comprova autenticacao real, compatibilidade do seletor Codex ou disponibilizacao em producao.
 - Proximo passo: validar com a instalacao local Codex e contas reais em contexto autorizado; checar custo antes de inferencia. Avello2 permanece MCP separado.
+
+## Entrega local V2 — 2026-11-15
+- Criado pacote HUB-IA-001-cliente-codex-v2.zip nesta conversa, contendo hub.py, codex_preview.py, testes e README. Este artefato NÃO está instalado no computador do usuário nem versionado como código no GitHub.
+- codex_preview.py gera argumentos temporários -c para Codex sem editar config.toml; provedor Invision com wire_api=responses, baseada em contrato API público. A Roteia permanece apenas em consulta HTTP até comprovação de compatibilidade de Responses/tool calling no Codex.
+- 10 testes locais aprovados; nenhum teste de inferência autenticada, nenhuma execução do CLI Codex e nenhuma alteração do computador do usuário.
+- Estado: PARCIAL. Gate funcional Codex: PENDENTE.
+- Próximo passo único: executar diagnóstico da configuração efetiva do Codex no dispositivo do usuário por meio autorizado, preservar configuração, e validar uma tarefa real com orçamento específico antes de qualquer chamada paga.
