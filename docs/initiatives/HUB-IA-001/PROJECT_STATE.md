@@ -32,3 +32,8 @@ Acesso à configuração local ativa do Codex e aos contratos autenticados das c
 
 ## Critério de pronto
 Prova reproduzível de tarefa Codex usando o gateway escolhido e modelo efetivo, com isolamento pessoal/empresarial, custo verificável quando aplicável, modo de reinstalação e evidência sanitizada. Teste verde ou PR não satisfaz isoladamente este critério.
+
+## Inclusão de escopo — Avello2 (2026-11-14)
+O Avello2 é componente obrigatório do Hub, além de Roteia e Invision. O objetivo contempla uso operacional no ambiente pessoal e possibilidade de integração ao ecossistema Vitrine, com contextos, credenciais, permissões, limites e auditorias separados.
+Inclusão no escopo NÃO equivale a autorização de implantação em produção, habilitação de ferramentas mutáveis ou validação de disponibilidade. Auditar capacidades reais, autenticação, endpoints, compatibilidade com Codex/ChatGPT e contratos do Avello2 antes de usar.
+Próxima ação inclui inventário Avello2, com os demais gateways e conectores existentes.
