@@ -58,3 +58,10 @@ Próxima ação inclui inventário Avello2, com os demais gateways e conectores 
 - 10 testes locais aprovados; nenhum teste de inferência autenticada, nenhuma execução do CLI Codex e nenhuma alteração do computador do usuário.
 - Estado: PARCIAL. Gate funcional Codex: PENDENTE.
 - Próximo passo único: executar diagnóstico da configuração efetiva do Codex no dispositivo do usuário por meio autorizado, preservar configuração, e validar uma tarefa real com orçamento específico antes de qualquer chamada paga.
+
+## Validação no Windows informada pelo usuário — 2026-11-15
+- Usuário executou localmente 10 testes Python (10/10, OK), confirmou Codex CLI 0.169.0 e executou hub.py status: invision credential_present=true; roteia credential_present=false no processo local. Presença de variável não valida cobrança/autenticação isoladamente.
+- Configuração local consultada pelo usuário mostrou model_provider padrão Avello e model_providers.invision cadastrado. Sessão Codex com provider=invision e modelo exibido Qwen3.8 Max retornou texto OK. Status subsequente: 25.7K total (25.6K entrada, 76 saída), contexto exibido 950K, limites não disponíveis. Isto comprova resposta real pela rota selecionada, mas NÃO prova ID upstream, custo cobrado ou que o pacote Hub V2 intermediou a chamada (Codex usou provedor já configurado).
+- Gate 1 (conectividade Codex -> Invision, sessão relatada): APROVADO apenas para o escopo de resposta textual. Gate código/ferramentas: PENDENTE. Gate Hub independente integrado: PENDENTE. Gate Roteia, Avello2 no Hub, multimídia, integração empresarial: PENDENTE.
+- Não foi feito benchmark de programação, nem conciliado consumo financeiro. Evitar nova inferência paga sem teto de gastos e conta/limite verificados.
+- Próximo passo único: validar custo e autorização de gasto para CODE01; executar teste de programação em workspace pessoal isolado (sem escrita) e registrar evidências, sem modificar configuração global.
