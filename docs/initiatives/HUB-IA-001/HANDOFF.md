@@ -64,3 +64,13 @@ Usuario concluiu teste do Codex Windows e informou 3/3 casos aprovados, dados.tx
 - Suite reproduzida localmente em container do assistente: 7 testes unittest, 7 PASS. Código gravado no GitHub contém semântica equivalente. CI do GitHub NÃO foi executado; testes não comprovam integração operacional.
 - AVISO CRÍTICO: campos JSON evidence_verified e supervisor_approved podem ser forjados; o protótipo não autentica emissor, hash nem decisão VIA. Portanto NÃO usar como autorização de avanço operacional. Integração real com Factory/VIA e enforcement externo permanecem PENDENTES.
 - Sem conexão ao runtime, sem PR, merge, HML/produção ou custos de API.
+
+## HUB multiprovedor — roteador isolado (2026-11-15)
+- Escopo aprovado: Codex + ecossistema Vitrine IA Pro; **ChatGPT preservado sem qualquer mudança de configuração**.
+- Código versionado na branch isolada: `docs/initiatives/HUB-IA-001/router/router.py`, `test_router.py`, `README.md`. Commits dcb998c272a31dbb7426481238831098e4ce730a, 3f380ecad18e5b2df32442693652f76da7c0348e, 02e198e4c3a648fa4a78a5ebd615b2079d8a923b.
+- Contrato experimental: `invision::model`, `roteia::model`, `avello::model` selecionam upstreams separados sem fallback implícito; proxy local aceita `POST /v1/responses` em loopback.
+- Medidas de segurança no protótipo: chamadas externas BLOQUEADAS por padrão; `HUB_ALLOWED_MODELS` obrigatória; autenticação local via `HUB_LOCAL_TOKEN`; chaves/upstream via variáveis de ambiente; HTTPS obrigatório. Nenhum segredo versionado.
+- 11 testes offline de roteamento e bloqueio concluídos no ambiente isolado do assistente. Nenhuma inferência externa ou custo de API gerado intencionalmente; nenhuma verificação real de Responses/tool-calling com Roteia/Avello, integração Codex Windows, Centro IA, VIA ou HML.
+- Pacote local criado: HUB-IA-001-Roteador-Isolado.zip, não instalado no Windows do usuário.
+- P0 pendente: validar protocolo Responses e custos server-side, streaming, erros/retries, catálogo visual e controle de acesso robusto antes de habilitar chamadas. O proxy ainda não constitui integração de produção nem permite autorizar deploy.
+- Não houve merge, PR, deploy, mudança em config.toml, alteração no ChatGPT ou produção.
