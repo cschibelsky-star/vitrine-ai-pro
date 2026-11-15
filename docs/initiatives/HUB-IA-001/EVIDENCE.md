@@ -34,3 +34,15 @@ Requisitos de prova para Avello2: endpoint e catálogo autorizados, capacidade e
 - Comando: python codex_preview.py --model qwen/qwen3.8-max --format json -> argumentos para model_provider=hub_invision, base_url=https://invision.dreamvision.com.br/v1, wire_api=responses, env_key=INVISION_API_KEY, sem valores secretos.
 - https://invision.dreamvision.com.br/docs confirma POST /v1/responses, GET /v1/models e opção aplicativo Codex; https://roteia.ai/docs confirma /v1/chat/completions. Endpoints documentados não comprovam disponibilidade/account compatibility.
 - Não houve alteração de config.toml, nenhuma inferência paga, nem implantação, merge ou vídeo.
+
+## Evidência recebida do usuário — Codex Invision 2026-11-15
+Fonte: saída textual do PowerShell/Codex fornecida pelo usuário nesta conversa, não reproduzida por ferramenta remota do assistente.
+- Python 3.12.10, Codex CLI 0.169.0.
+- python -m unittest discover -s tests -v: 10 testes OK em 0.024s.
+- python hub.py status --provider invision: base_url https://invision.dreamvision.com.br/v1; credential_present=true; codex_provider_verified=false no próprio utilitário. Para roteia: credential_present=false.
+- Inspeção local config.toml pelo usuário: model_provider = Avello; seções model_providers.invision e model_providers.Avello presentes. Nenhuma alteração global comprovada.
+- /status antes da inferência: model provider invision, Qwen3.8 Max, token usage 0.
+- Resposta do Codex a 'Responda apenas com: OK': OK; interface exibiu Worked for 22s.
+- /status depois: invision / Qwen3.8 Max, 25.7K tokens totais (25.6K input + 76 output), contexto 950K, limits not available.
+- Interpretação: resposta pela sessão Invision comprovada por saída fornecida; modelo upstream, tokenização de cobrança, request_id e custo debitado NÃO VERIFICADOS. O utilitário local não foi comprovado como proxy da inferência.
+- Registro preserva resumo em vez de identificador de sessão do usuário, tokens de autenticação ou segredos.
