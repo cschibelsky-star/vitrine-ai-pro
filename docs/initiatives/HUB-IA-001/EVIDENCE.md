@@ -55,3 +55,10 @@ Autorizações: gasto máximo R$ 2,00 condicionado a controle técnico comprovad
 - Código Python dedupe(items) com set seen e lista result; nenhuma operação de rede, disco ou projeto.
 - Assistente executou os três casos de aceitação do protocolo CODE01 em Python isolado: [] => [], [2,1,2,3,1] => [2,1,3], [-1,0,-1] => [-1,0]; resultado 3/3 PASS.
 - Gate de corretude CODE01 para estes casos: APROVADO. Estabilidade, tool calling, identificação upstream e faturamento: PENDENTES. Não inferir compatibilidade dos demais modelos nem ausência de gastos.
+
+## TOOL-CODE-01 — resultado informado pelo usuario (2026-11-15)
+- Usuario relata resultado "APROVADO, 3 de 3 casos, dados.txt preservado" no teste isolado de ferramentas do Codex Windows.
+- Ferramentas informadas: apply_patch para criar e corrigir solucao.py; exec_command para ler os arquivos e executar verify.py.
+- Estado da evidencia: RELATADO PELO USUARIO; logs, diferenca de solucao.py e saida integral de verify.py NAO foram lidos independentemente nesta sessao.
+- Gate de uso de ferramentas: **APROVADO PROVISORIAMENTE por evidencia relatada**, limitado a este fixture isolado. Verificacao independente de artefatos/logs, estabilidade, custo real e identidade upstream permanecem pendentes.
+- Nao houve chamada de IA do assistente, modificacao de Codex Windows, nem implantacao/merge nesta verificacao.
