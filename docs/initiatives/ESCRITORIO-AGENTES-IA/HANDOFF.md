@@ -31,3 +31,11 @@ Realizar inventário somente leitura dos agentes, Skills, sistemas e modelos exi
 
 ## Limites e rollback
 Nenhum sistema externo modificado além destes arquivos de documentação na branch isolada. Rollback = desconsiderar/reverter branch; preservar branch HUB-IA-001, main, runtime e configuração do ChatGPT.
+
+## Rodada M1 — inventário e painel offline (2026-11-16)
+- Inventário de código criado em `INVENTORY-CODE.md` (commit c871a28c21af3d52b3e6179c76b5619a313e1514): fonte AiAgentSeeder registra 9 definições ECO; `AiAgent` shared, MarketingAgentDefinition, AiRoutingService e AiExecutionService identificados; funcionamento online não comprovado.
+- Artefato entregue **somente como ZIP da conversa**, não versionado ainda como frontend no GitHub: `Escritorio-Agentes-IA-M1-offline.zip`, contendo `escritorio_m1/index.html`, README, testes e previews. A branch apenas registra este estado e inventário; não existe app implantado.
+- Painel de leitura funcional e offline: HUB DEV (sem agentes reais inventados), HUB ECO (9 definições obtidas do seeder), mapa conceitual de 5/6 departamentos, habilidades candidatas, filtro, Kanban explicitamente sem missões reais, aviso de ausência de telemetria. Não realiza chamadas externas nem modifica dados.
+- Execução de testes no container do assistente: 7 testes Python de estrutura/conteúdo passaram; parse JS com Node passou; navegador Chromium via Playwright `page.set_content`: DEV=0, ECO=9, busca Marketing=1, retorno DEV=0, nenhum erro JS. Screenshots de QA foram produzidos dentro do ZIP. Acesso via URL/file em Chromium foi bloqueado pelo ambiente, então o teste usou `set_content` e não representa teste de hospedagem.
+- PENDENTE: inventário operacional dos demais repositórios e de agentes ativos em runtime; conexão backend segura, RBAC, tenancy, tarefas reais, VIA e modelos; integração HML; persistir frontend no repositório após definir diretório-alvo e evitar duplicação da UI existente.
+- NENHUM merge, deploy, chamada paga, alteração de produção ou ChatGPT.
