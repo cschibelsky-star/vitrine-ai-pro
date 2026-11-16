@@ -95,6 +95,17 @@ Route::post('/cockpit/login', function (Request $request) {
     return redirect()->route('cockpit.index');
 })->middleware('throttle:5,1')->name('cockpit.login.submit');
 
+// Escritório de Agentes IA M1: inventário estático, acesso exclusivamente administrativo em HML.
+// Nenhuma inferência, mutação, integração externa ou dado runtime nesta visualização.
+Route::get('/cockpit/escritorio-agentes', function () {
+    abort_unless(config('app.env') === 'homologation', 404);
+    abort_unless(Auth::check() && Auth::user()->isAdmin() && (Auth::user()->is_active ?? true), 403);
+    return response()->view('cockpit.escritorio-agentes')
+        ->header('Cache-Control', 'private, no-store, max-age=0')
+        ->header('X-Content-Type-Options', 'nosniff')
+        ->header('X-Frame-Options', 'DENY');
+})->middleware('throttle:60,1')->name('cockpit.escritorio-agentes.index');
+
 Route::get('/cockpit', function () {
     if (! Auth::check()) {
         return redirect()->route('cockpit.login');
