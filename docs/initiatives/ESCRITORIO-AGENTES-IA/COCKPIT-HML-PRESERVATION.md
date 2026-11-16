@@ -32,3 +32,11 @@ Branch: `feature/cockpit-escritorio-m1-preserved-hml-20261116`.
 
 ## Próxima ação
 Validar PHP lint da branch composta em runner isolado com acesso ao repositório, e obter rota autorizada para atualizar o Cockpit HML sem reset, migration ou alteração de outros projetos. Após implantação explícita, testar acesso admin e bloqueio para usuário não autorizado, e checar cartões anteriores.
+
+## Tentativa controlada de publicação M1 (2026-11-16)
+- A rota V5 de patch pontual foi testada somente para o arquivo **novo e ausente** `resources/views/cockpit/escritorio-agentes.blade.php`, utilizando o conteúdo da branch GitHub e `confirm=EXECUTAR`.
+- Leitura anterior do caminho retornou `project_file_not_found`; o patch também retornou **`project_file_not_found`**, indicando que a ferramenta só altera arquivos que já existem. A operação não criou nem modificou esse arquivo.
+- Por isso o catálogo de aplicações e as rotas HML **não foram modificados**: seria incorreto expor cartão cuja página não existe.
+- A branch consolidada continua com os três arquivos prontos; backup existente permanece intacto.
+- V5 não oferece ferramenta de criação de arquivo nesse namespace, o serviço `cockpit_web` retornou anteriormente `controlled_service_not_allowed`, e o deploy Git genérico dos conectores alternativos tem efeitos fora deste escopo (Composer/migrations) e depende de árvore Git limpa.
+- **Gate:** PENDENTE, nenhuma publicação/URL 200 comprovada. É necessária uma rota autorizada de criação de arquivo isolado e atualização controlada do Cockpit HML, sem migrations, reset ou alteração em produção.
