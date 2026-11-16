@@ -38,3 +38,11 @@ Os arquivos foram relidos no GitHub após gravação; alterações confirmadas. 
 5. Se falhar, rollback específico do novo cartão, rota e view, sem regressão dos itens anteriores.
 
 **Não abrir PR/merge/deploy automático até resolver esses gates.**
+
+## Revalidação na retomada — 2026-11-16
+- `project_git_status` do `cockpit-admin-v1-hml` confirma branch ativa `feature/cockpit-assessor-online-hml` e alterações locais em `config/cockpit-applications.php` e `routes/cockpit.php`. **Nada foi limpo ou modificado.**
+- `project_git_compare_origin` retornou dirty=true, relation=diverged, ahead=8, behind=3 para branch indicada pelo manifesto `feature/cockpit-admin-v1-hml`. As fontes relatam refs diferentes; reconciliar antes de publicar, sem inferir que a comparação corresponde ao checkout ativo.
+- `project_compose_service_status` para `cockpit_web` recusou `controlled_service_not_allowed`. **Bloqueio de política do conector**, não prova de serviço fora do ar; não tentar escalar permissões.
+- `mcp__GitHub__compare_commits` na branch de integração contra `feature/cockpit-assessor-online-hml`: 4 commits à frente, 0 atrás, 4 arquivos alterados (config +1 linha; routes +11 linhas; view +50 linhas; este handoff). Nenhum arquivo anterior removido.
+- `project_php_lint` retornou exit 0 para os DOIS arquivos PHP **atualmente presentes no workspace HML**, em contêiner efêmero. **Isto NÃO valida a sintaxe dos dois arquivos na branch de integração**, já que ela ainda não foi instalada no workspace.
+- Sem nova escrita no runtime; HML segue NÃO PUBLICADO, gate pendente; sem deploy/merge/migration ou modificação do ChatGPT.
