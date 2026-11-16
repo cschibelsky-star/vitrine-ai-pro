@@ -57,12 +57,52 @@ Route::get('/cockpit/open/{slug}', function (string $slug) {
     return redirect()->away($ssoUrl.'?token='.urlencode($token));
 })->middleware('throttle:10,1')->name('cockpit.open');
 
+// Endpoint exclusivo para integracao servidor-a-servidor com Assessor Online HML.
+// Nao reutiliza a rota legada de consumo de tickets por GET.
+Route::post('/cockpit/sso/assessor/consume', function (Request $request) {
+    $secret = (string) env('ASSESSOR_COCKPIT_SSO_SECRET', '');
+    abort_unless(config('app.env') === 'homologation' && strlen($secret) >= 32, 503);
+
+    $ticket = (string) $request->input('token', '');
+    $timestamp = (string) $request->header('X-Assessor-Timestamp', '');
+    $signature = (string) $request->header('X-Assessor-Signature', '');
+    abort_unless(preg_match('/^[A-Za-z0-9]{64}$/D', $ticket), 401);
+    abort_unless(ctype_digit($timestamp) && abs(time() - (int) $timestamp) <= 30, 401);
+    $expected = hash_hmac('sha256', "assessor-hml\n".$timestamp."\n".$ticket, $secret);
+    abort_unless(preg_match('/^[a-f0-9]{64}$/D', $signature)
+        && hash_equals($expected, $signature), 401);
+
+    $digest = hash('sha256', $ticket);
+    $key = 'cockpit_sso_ticket:'.$digest;
+    // Serialize ticket consumption to prevent concurrent replay.
+    $payload = Cache::lock('cockpit_sso_consume_lock:'.$digest, 10)->block(2, function () use ($key) {
+        $candidate = Cache::get($key);
+        if (! is_array($candidate) || ($candidate['target'] ?? '') !== 'assessor'
+            || ! isset($candidate['issued_at'])
+            || abs(time() - (int) $candidate['issued_at']) > 60) {
+            return null;
+        }
+        return Cache::pull($key);
+    });
+    abort_unless(is_array($payload) && ($payload['target'] ?? '') === 'assessor', 401);
+    return response()->json([
+        'email' => $payload['email'],
+        'target' => 'assessor',
+        'issued_at' => $payload['issued_at'],
+    ])->header('Cache-Control', 'no-store');
+})->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    ->middleware('throttle:10,1')->name('cockpit.sso.assessor.consume');
+
 Route::get('/cockpit/sso/consume', function (Request $request) {
     $token = (string) $request->query('token', '');
     abort_unless(strlen($token) === 64, 404);
 
-    $payload = Cache::pull('cockpit_sso_ticket:'.hash('sha256', $token));
-    abort_unless(is_array($payload), 404);
+    $key = 'cockpit_sso_ticket:'.hash('sha256', $token);
+    $candidate = Cache::get($key);
+    // Assessor tickets require authenticated service-to-service POST.
+    abort_unless(is_array($candidate) && ($candidate['target'] ?? '') !== 'assessor', 404);
+    $payload = Cache::pull($key);
+    abort_unless(is_array($payload) && ($payload['target'] ?? '') !== 'assessor', 404);
 
     return response()->json($payload);
 })->middleware('throttle:30,1')->name('cockpit.sso.consume');
