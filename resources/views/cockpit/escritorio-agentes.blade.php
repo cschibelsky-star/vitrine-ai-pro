@@ -20,11 +20,56 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 </head>
 <body><div class="shell">
 <header class="top"><div><h1 class="title">🏢 Escritório de Agentes IA <small class="muted">M1 · HML</small></h1><p class="sub">Vitrine IA Pro · Equipes, departamentos, agentes e habilidades</p></div><a class="back" href="{{ route('cockpit.index') }}">← Voltar ao Cockpit</a></header>
-<div class="warn"><strong>Visualização de homologação, somente leitura.</strong> Este painel usa inventário de código, não dados de agentes online. Missões, modelos, Factory e VIA ainda não estão conectados. Não representa agentes em operação.</div>
+<div class="warn"><strong>MVP HML.</strong> O painel registra missões e histórico real no banco. n8n, Avello e VIA ainda não estão conectados ao fluxo de execução.</div>
 <div class="tabs" role="tablist" aria-label="Ambiente"><button type="button" role="tab" id="tab-DEV" aria-selected="true" data-scope="DEV">HUB DEV</button><button type="button" role="tab" id="tab-ECO" aria-selected="false" data-scope="ECO">HUB ECO</button></div>
 <main>
 <section class="metrics"><div class="metric"><strong id="agent-count">0</strong><span>Definições identificadas</span></div><div class="metric"><strong id="dept-count">0</strong><span>Departamentos propostos</span></div><div class="metric"><strong id="skill-count">0</strong><span>Habilidades candidatas</span></div><div class="metric"><strong>0</strong><span>Execuções online verificadas</span></div></section>
 <div class="cols"><section class="panel"><h2>Planta conceitual · <span id="current-scope">DEV</span></h2><div class="rooms" id="rooms"></div></section><section class="panel"><h2>Agentes identificados em código</h2><input type="search" id="filter" aria-label="Buscar agente" placeholder="Pesquisar agente, produto ou função..." autocomplete="off"><div id="agents"></div></section></div>
+@if(session('status'))
+<div class="warn" role="status">{{ session('status') }}</div>
+@endif
+@if($errors->any())
+<div class="warn" role="alert">{{ $errors->first() }}</div>
+@endif
+<section class="panel" style="margin-top:15px">
+<h2>Nova missão</h2>
+<form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.store') }}" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+@csrf
+<input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
+<label>Hub
+<select name="domain" required><option value="DEV">DEV — Desenvolvimento</option><option value="ECO">ECO — Operação</option></select></label>
+<label>Prioridade
+<select name="priority" required><option value="normal">Normal</option><option value="high">Alta</option><option value="low">Baixa</option></select></label>
+<label style="grid-column:1/-1">Título
+<input name="title" minlength="4" maxlength="180" required value="{{ old('title') }}" placeholder="Ex.: Corrigir fluxo de cadastro"></label>
+<label style="grid-column:1/-1">Descrição e resultado esperado
+<textarea name="description" minlength="8" maxlength="5000" rows="3" required placeholder="Descreva o que precisa ser feito e como validar">{{ old('description') }}</textarea></label>
+<div style="grid-column:1/-1"><button type="submit">Registrar missão</button><small class="muted">Registra no histórico. Não dispara execução automática.</small></div>
+</form>
+</section>
+<section class="panel" style="margin-top:15px">
+<h2>Histórico de missões</h2>
+<div class="kanban">
+<div class="lane"><b>Planejamento</b><strong>{{ $counts['planned'] }}</strong><p>Registradas e aguardando integração do executor.</p></div>
+<div class="lane"><b>Em execução</b><strong>{{ $counts['executing'] }}</strong><p>Somente quando houver executor real.</p></div>
+<div class="lane"><b>Aguardando VIA</b><strong>{{ $counts['awaiting'] }}</strong><p>Dependem de evidência e supervisão.</p></div>
+</div>
+<div style="overflow-x:auto;margin-top:14px">
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+<thead><tr><th style="text-align:left;padding:9px">Missão</th><th>Hub</th><th>Status</th><th>Prioridade</th><th>Criada em</th></tr></thead>
+<tbody>
+@forelse($missions as $mission)
+<tr style="border-top:1px solid var(--line)">
+<td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small></td>
+<td>{{ $mission->domain }}</td><td>{{ $mission->status }}</td><td>{{ $mission->priority }}</td><td>{{ $mission->created_at?->format('d/m/Y H:i') }}</td>
+</tr>
+@empty
+<tr><td colspan="5" class="muted" style="padding:14px">Nenhuma missão registrada ainda.</td></tr>
+@endforelse
+</tbody></table>
+</div>
+</section>
+
 <div class="lower"><section class="panel"><h2>Missões e tarefas</h2><div class="kanban"><div class="lane"><b>Planejamento</b><p>Sem fonte operacional conectada.</p></div><div class="lane"><b>Em execução</b><p>Sem telemetria integrada.</p></div><div class="lane"><b>Aguardando VIA</b><p>Supervisão ainda não conectada.</p></div></div></section><section class="panel"><h2>Habilidades candidatas</h2><div id="skills" class="skills"></div></section></div>
 </main><p class="foot">Fonte: app/Models/AiAgent.php e database/seeders/AiAgentSeeder.php · Código consultado · Ambiente HML · Nenhuma chamada paga ou mutação.</p>
 </div>
