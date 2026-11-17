@@ -30,6 +30,15 @@ services:
       CENTRO_IA_COURSE_GENERATION_AGENT_SLUG: "cursos-ia"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      VERTEX_AI_ENABLED: "${VERTEX_AI_ENABLED:-false}"
+      GOOGLE_CLOUD_PROJECT: "${GOOGLE_CLOUD_PROJECT:-}"
+      GOOGLE_CLOUD_LOCATION: "${GOOGLE_CLOUD_LOCATION:-us-central1}"
+      GOOGLE_APPLICATION_CREDENTIALS: "${GOOGLE_APPLICATION_CREDENTIALS:-}"
+      GOOGLE_VERTEX_ACCESS_TOKEN: "${GOOGLE_VERTEX_ACCESS_TOKEN:-}"
+      VERTEX_AI_DAILY_REQUEST_LIMIT: "${VERTEX_AI_DAILY_REQUEST_LIMIT:-0}"
+      GOOGLE_VERTEX_IMAGE_MODEL: "${GOOGLE_VERTEX_IMAGE_MODEL:-imagen-4.0-generate-001}"
+      GOOGLE_VERTEX_VIDEO_MODEL: "${GOOGLE_VERTEX_VIDEO_MODEL:-veo-3.0-generate-001}"
+      GOOGLE_VERTEX_VIDEO_GCS_URI: "${GOOGLE_VERTEX_VIDEO_GCS_URI:-}"
       HEYGEN_API_KEY: "${HEYGEN_API_KEY:-}"
       HEYGEN_WEBHOOK_SECRET: "${HEYGEN_WEBHOOK_SECRET:-}"
       ROTEIA_API_KEY: "${ROTEIA_API_KEY:-}"
@@ -75,7 +84,8 @@ services:
       && php artisan migrate --path=database/migrations/2026_06_21_130005_create_ai_consumptions_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130006_create_ai_alerts_table.php --force
       && php artisan migrate --path=database/migrations/2026_06_21_130007_create_ai_memories_table.php --force
-      && php artisan migrate --path=database/migrations/2026_06_21_200000_master_2_0_operacional_tables.php --force"
+      && php artisan migrate --path=database/migrations/2026_06_21_200000_master_2_0_operacional_tables.php --force
+      && php artisan migrate --path=database/migrations/2026_10_03_160000_create_vertex_ai_daily_usage_table.php --force"
     environment:
       <<: *core-db-env
     depends_on:
