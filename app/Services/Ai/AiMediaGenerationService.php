@@ -151,7 +151,8 @@ class AiMediaGenerationService
             }
 
             if ($capability === 'image_generation') {
-                $base64 = data_get($payload, 'data.0.b64_json') ?? data_get($payload, 'output_image.data');
+                $base64 = data_get($payload, 'data.0.b64_json') ?? data_get($payload, 'output_image.data')
+                    ?? $payload['image_base64'] ?? $payload['asset_base64'] ?? null;
                 if (is_string($base64) && $base64 !== '') {
                     $result = array_merge($result, $this->persistImage($base64));
                     $result['status'] = 'Concluído';
