@@ -26,6 +26,8 @@ jobs:
           php-version: "8.3"
           extensions: mbstring, pdo_sqlite, sqlite3
           coverage: none
+      - name: Prepare Laravel writable runtime directories
+        run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache
       - uses: ramsey/composer-install@v3
         with:
           composer-options: "--no-interaction --prefer-dist"
