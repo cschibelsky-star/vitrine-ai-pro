@@ -43,6 +43,12 @@
     </section>
 
     <main class="wrap">
+        @if (session('status'))
+            <div class="success" role="status">{{ session('status') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="card" role="alert" style="border-color:#b91c1c;margin-bottom:16px;color:#991b1b;">{{ $errors->first() }}</div>
+        @endif
         @if (session('success'))
             <div class="success">{{ session('success') }}</div>
         @endif
@@ -82,6 +88,34 @@
                     <button type="submit">Abrir chamado</button>
                 </form>
                 <p class="muted">Esta área é consultiva. Alterações contratuais ou financeiras devem ser validadas pela equipe operacional.</p>
+            </div>
+
+            <div class="card span-4">
+                <h2>Avaliação gratuita</h2>
+                <p class="muted">A avaliação tem duração de 30 dias, sem cobrança automática. O acesso ao produto depende da liberação da instância e dos limites definidos pelo serviço.</p>
+                @foreach($licenses->where('status', 'Trial') as $license)
+                    <p><strong>{{ $license->product->nome ?? $license->plano ?? 'Produto' }}</strong>:
+                        @if($trialAccess->isTrialAccessAllowed($license))
+                            <span class="pill">Em avaliação até {{ optional($license->vencimento)->format('d/m/Y') }}</span>
+                        @else
+                            <span class="pill">Avaliação encerrada ou indisponível</span>
+                        @endif
+                    </p>
+                @endforeach
+                @if($trialPlans->isNotEmpty())
+                    <form method="POST" action="{{ route('client.trial.store') }}">
+                        @csrf
+                        <label for="trial-plan">Produto disponível para avaliação</label>
+                        <select name="plan_id" id="trial-plan" required>
+                            @foreach($trialPlans as $plan)
+                                <option value="{{ $plan->id }}">{{ $plan->product->nome ?? 'Produto' }} — {{ $plan->nome }} (30 dias)</option>
+                            @endforeach
+                        </select>
+                        <button type="submit">Ativar avaliação de 30 dias</button>
+                    </form>
+                @else
+                    <p class="muted">Não há novos produtos disponíveis para avaliação nesta conta.</p>
+                @endif
             </div>
 
             <div class="card span-4">

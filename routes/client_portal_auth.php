@@ -9,3 +9,6 @@ Route::middleware('web')->group(function () {
     Route::post('/cliente/logout', [ClientAuthController::class, 'logout'])->name('client.logout');
     Route::get('/cliente/logout', [ClientAuthController::class, 'logout']);
 });
+
+// Enrollment is available only to authenticated, verified client accounts.
+Route::middleware(['auth', 'throttle:5,1'])->post('/cliente/avaliacao-gratuita', [\App\Http\Controllers\ClientTrialController::class, 'store'])->name('client.trial.store');
