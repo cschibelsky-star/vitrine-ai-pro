@@ -1,0 +1,422 @@
+{
+  "schema_kind": "documentary_production_plan_not_runtime_import",
+  "version": 1,
+  "campaign_key": "conheca-sumare-descubra-20261013",
+  "brand": "Conheça Sumaré",
+  "concept": "Descubra Sumaré de um novo jeito",
+  "reviewed_on": "2026-10-13",
+  "timezone": "America/Sao_Paulo",
+  "source_commit": "2498186d564cfaf7a4ae4d15458c8da028080a8c",
+  "briefing_status": "NEEDS_INPUT",
+  "status": {
+    "copy": "REVISADO_PARA_PRODUCAO",
+    "final_media": "NAO_PRODUZIDA_NESTA_REVISAO",
+    "gallery": "NAO_IMPORTADO",
+    "approval": "PENDENTE",
+    "schedule": "NAO_EXECUTADO",
+    "publication": "NAO_EXECUTADA"
+  },
+  "preservation": {
+    "original_document": "conheca-sumare-avello-original-20261013.md",
+    "prior_media": "PRESERVAR_SEM_SUBSTITUIR",
+    "prior_media_inventory": "PENDENTE",
+    "versioning": "Novo arquivo/versão por ajuste; aprovação vinculada ao hash"
+  },
+  "approved_photographic_assets": [],
+  "selection_of_ai_provider": "CENTRO_IA",
+  "copy_source": "conheca-sumare-avello-hml.md",
+  "audit_source": "conheca-sumare-auditoria-20261013.md",
+  "expected_deliverables": {
+    "feed_png": 5,
+    "story_png": 15,
+    "reel_mp4": 3,
+    "reel_cover_png": 3,
+    "reel_srt": 3
+  },
+  "gate_requirements": [
+    "Identidade canônica validada",
+    "HTTP e visual atuais do destino",
+    "Origem, autoria, local e autorização vinculados ao hash",
+    "Arquivo final e QA",
+    "Aprovação editorial individual da versão"
+  ],
+  "groups": [
+    {
+      "id": "CS01",
+      "hook": "Apresentação",
+      "visual_key": "CS-01-Apresentação",
+      "hero": "panorama urbano documental",
+      "composition": "plano aberto vertical e domínio em faixa",
+      "assets_required": [
+        "foto de local real autorizada",
+        "Marca original validada"
+      ],
+      "destination": {
+        "url": "https://www.conhecasumare.com.br/",
+        "status": "PENDENTE_VALIDACAO_PUBLICA",
+        "basis": "URL fornecida ou rota no código HML; não prova runtime"
+      },
+      "files_planned": [
+        "feed/CS-F01.png",
+        "stories/CS-S01-01.png",
+        "stories/CS-S01-02.png",
+        "stories/CS-S01-03.png"
+      ],
+      "files_produced": [],
+      "feed_size": [
+        1080,
+        1080
+      ],
+      "story_size": [
+        1080,
+        1920
+      ],
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      },
+      "event_gate": null
+    },
+    {
+      "id": "CS02",
+      "hook": "Cultura e história",
+      "visual_key": "CS-02-Cultura e história",
+      "hero": "detalhe arquitetônico documental",
+      "composition": "título sobre respiro e identificação discreta",
+      "assets_required": [
+        "foto cultural real autorizada",
+        "Marca original validada"
+      ],
+      "destination": {
+        "url": "https://www.conhecasumare.com.br/#historia",
+        "status": "PENDENTE_VALIDACAO_PUBLICA",
+        "basis": "URL fornecida ou rota no código HML; não prova runtime"
+      },
+      "files_planned": [
+        "feed/CS-F02.png",
+        "stories/CS-S02-01.png",
+        "stories/CS-S02-02.png",
+        "stories/CS-S02-03.png"
+      ],
+      "files_produced": [],
+      "feed_size": [
+        1080,
+        1080
+      ],
+      "story_size": [
+        1080,
+        1920
+      ],
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      },
+      "event_gate": null
+    },
+    {
+      "id": "CS03",
+      "hook": "Passeio",
+      "visual_key": "CS-03-Passeio",
+      "hero": "natureza documental",
+      "composition": "paisagem ampla e orientação de visita",
+      "assets_required": [
+        "foto de natureza real autorizada",
+        "Marca original validada"
+      ],
+      "destination": {
+        "url": "https://www.conhecasumare.com.br/explorar",
+        "status": "PENDENTE_VALIDACAO_PUBLICA",
+        "basis": "URL fornecida ou rota no código HML; não prova runtime"
+      },
+      "files_planned": [
+        "feed/CS-F03.png",
+        "stories/CS-S03-01.png",
+        "stories/CS-S03-02.png",
+        "stories/CS-S03-03.png"
+      ],
+      "files_produced": [],
+      "feed_size": [
+        1080,
+        1080
+      ],
+      "story_size": [
+        1080,
+        1920
+      ],
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      },
+      "event_gate": null
+    },
+    {
+      "id": "CS04",
+      "hook": "Agenda",
+      "visual_key": "CS-04-Agenda",
+      "hero": "serviço editorial com evento vigente",
+      "composition": "hierarquia data/local/fonte",
+      "assets_required": [
+        "foto do evento autorizado e ocorrência confirmada",
+        "Marca original validada"
+      ],
+      "destination": {
+        "url": "https://www.conhecasumare.com.br/eventos",
+        "status": "PENDENTE_VALIDACAO_PUBLICA",
+        "basis": "URL fornecida ou rota no código HML; não prova runtime"
+      },
+      "files_planned": [
+        "feed/CS-F04.png",
+        "stories/CS-S04-01.png",
+        "stories/CS-S04-02.png",
+        "stories/CS-S04-03.png"
+      ],
+      "files_produced": [],
+      "feed_size": [
+        1080,
+        1080
+      ],
+      "story_size": [
+        1080,
+        1920
+      ],
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      },
+      "event_gate": {
+        "status": "AGUARDANDO_CONFIRMACAO",
+        "event_id": null,
+        "title": null,
+        "source_url": null,
+        "start_at": null,
+        "end_at": null,
+        "place": null,
+        "verified_at": null,
+        "portal_published": false
+      }
+    },
+    {
+      "id": "CS05",
+      "hook": "Negócios",
+      "visual_key": "CS-05-Negócios",
+      "hero": "atividade econômica local documental",
+      "composition": "composição editorial com comércio/indústria",
+      "assets_required": [
+        "foto empresarial local autorizada",
+        "Marca original validada"
+      ],
+      "destination": {
+        "url": "https://www.conhecasumare.com.br/empresas",
+        "status": "PENDENTE_VALIDACAO_PUBLICA",
+        "basis": "URL fornecida ou rota no código HML; não prova runtime"
+      },
+      "files_planned": [
+        "feed/CS-F05.png",
+        "stories/CS-S05-01.png",
+        "stories/CS-S05-02.png",
+        "stories/CS-S05-03.png"
+      ],
+      "files_produced": [],
+      "feed_size": [
+        1080,
+        1080
+      ],
+      "story_size": [
+        1080,
+        1920
+      ],
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      },
+      "event_gate": null
+    }
+  ],
+  "reels": [
+    {
+      "id": "R01",
+      "hook": "Descubra de novo",
+      "seconds": 30,
+      "visual_key": "CS-R01-urbano-cultura-natureza",
+      "scenes": 5,
+      "script_source": "conheca-sumare-avello-hml.md#reels",
+      "files_planned": [
+        "reels/CS-R01.mp4",
+        "capas/CS-R01.png",
+        "reels/CS-R01.srt"
+      ],
+      "files_produced": [],
+      "size": [
+        1080,
+        1920
+      ],
+      "voice": "pt-BR, leitura natural; direitos pendentes",
+      "music_license": null,
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "gallery_id": null,
+      "centro_ia_execution_id": null,
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      }
+    },
+    {
+      "id": "R02",
+      "hook": "Ideias para passear",
+      "seconds": 25,
+      "visual_key": "CS-R02-navegacao-dois-atrativos",
+      "scenes": 5,
+      "script_source": "conheca-sumare-avello-hml.md#reels",
+      "files_planned": [
+        "reels/CS-R02.mp4",
+        "capas/CS-R02.png",
+        "reels/CS-R02.srt"
+      ],
+      "files_produced": [],
+      "size": [
+        1080,
+        1920
+      ],
+      "voice": "pt-BR, leitura natural; direitos pendentes",
+      "music_license": null,
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "gallery_id": null,
+      "centro_ia_execution_id": null,
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      }
+    },
+    {
+      "id": "R03",
+      "hook": "Cidade em movimento",
+      "seconds": 30,
+      "visual_key": "CS-R03-atividade-economica",
+      "scenes": 5,
+      "script_source": "conheca-sumare-avello-hml.md#reels",
+      "files_planned": [
+        "reels/CS-R03.mp4",
+        "capas/CS-R03.png",
+        "reels/CS-R03.srt"
+      ],
+      "files_produced": [],
+      "size": [
+        1080,
+        1920
+      ],
+      "voice": "pt-BR, leitura natural; direitos pendentes",
+      "music_license": null,
+      "status": "AGUARDANDO_ASSETS_E_PORTAL",
+      "gallery_id": null,
+      "centro_ia_execution_id": null,
+      "editorial_approval": {
+        "approved": false,
+        "reviewer": null,
+        "approved_at": null,
+        "asset_sha256": null
+      }
+    }
+  ],
+  "relative_calendar": [
+    {
+      "day": 1,
+      "ids": [
+        "F01",
+        "S01"
+      ]
+    },
+    {
+      "day": 2,
+      "ids": [
+        "R01"
+      ]
+    },
+    {
+      "day": 3,
+      "ids": [
+        "F02",
+        "S02"
+      ]
+    },
+    {
+      "day": 4,
+      "ids": [
+        "F03",
+        "S03"
+      ]
+    },
+    {
+      "day": 5,
+      "ids": [
+        "F04",
+        "S04"
+      ],
+      "gate": "Evento vigente confirmado; sem confirmação, omitir veiculação preservando rascunho"
+    },
+    {
+      "day": 6,
+      "ids": [
+        "F05",
+        "S05"
+      ]
+    },
+    {
+      "day": 7,
+      "ids": [
+        "R02"
+      ]
+    }
+  ],
+  "reserve_editorial": [
+    "R03"
+  ],
+  "distribution": {
+    "platform": "Plataforma própria autorizada",
+    "scheduled_at": null,
+    "publisher_account_id": null,
+    "auto_publish": false
+  },
+  "gallery_handoff": {
+    "status": "PREPARACAO_DOCUMENTAL",
+    "actual_import_id": null,
+    "required_fields": [
+      "arquivo final",
+      "copy",
+      "CTA",
+      "destino verificado",
+      "texto alternativo ou SRT",
+      "licenças por hash",
+      "QA",
+      "aprovação da versão"
+    ]
+  },
+  "forbidden": [
+    "IA inventando ou reconstruindo locais reais",
+    "Uso de acervo imagem_autorizada=nao",
+    "Captura que contorne direitos de mídia",
+    "Endosso Prefeitura",
+    "Contatos coletados",
+    "Parceria não comprovada",
+    "Evento atual inferido de recorrência",
+    "Agendamento antes de aprovação"
+  ]
+}
