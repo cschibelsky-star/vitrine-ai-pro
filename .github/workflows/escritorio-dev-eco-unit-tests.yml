@@ -1,0 +1,21 @@
+name: Escritorio DEV ECO isolated unit tests
+
+# Explicit manual invocation only. No paid APIs, secrets or deployment.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mission-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run original repository unit tests
+        working-directory: docs/initiatives/ESCRITORIO-AGENTES-IA/mission_core
+        run: python -m unittest discover -p 'test_*.py' -v
