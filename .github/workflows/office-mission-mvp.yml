@@ -1,0 +1,33 @@
+name: Escritorio DEV ECO MVP tests
+
+on:
+  pull_request:
+    paths:
+      - "app/Models/OfficeMission*.php"
+      - "database/migrations/*office_missions*"
+      - "routes/cockpit.php"
+      - "resources/views/cockpit/escritorio-agentes.blade.php"
+      - "tests/Feature/OfficeMissionTest.php"
+      - ".github/workflows/office-mission-mvp.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  office-missions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          composer-options: "--no-interaction --prefer-dist"
+      - name: Run office mission feature tests
+        run: vendor/bin/phpunit tests/Feature/OfficeMissionTest.php

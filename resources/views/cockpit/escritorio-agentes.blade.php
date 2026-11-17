@@ -60,7 +60,11 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 <tbody>
 @forelse($missions as $mission)
 <tr style="border-top:1px solid var(--line)">
-<td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small></td>
+<td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small>
+<details style="margin-top:7px"><summary style="cursor:pointer;color:#72e7fd">Ver histórico ({{ $mission->events->count() }})</summary>
+<ul style="padding-left:18px">@foreach($mission->events as $event)<li>{{ $event->created_at?->format('d/m/Y H:i:s') }} — {{ $event->event_type }}: {{ $event->from_status ?? 'início' }} → {{ $event->to_status }} <small class="muted">por {{ $event->actor?->name ?? 'usuário' }}</small></li>@endforeach</ul>
+</details>
+</td>
 <td>{{ $mission->domain }}</td><td>{{ $mission->status }}</td><td>{{ $mission->priority }}</td><td>{{ $mission->created_at?->format('d/m/Y H:i') }}</td>
 </tr>
 @empty

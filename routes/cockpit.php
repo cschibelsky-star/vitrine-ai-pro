@@ -143,6 +143,7 @@ Route::middleware(['auth'])->group(function () {
         abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
         $missions = \App\Models\OfficeMission::query()
+            ->with(['events.actor'])
             ->where('created_by', $user->id)
             ->latest()
             ->limit(100)
@@ -188,6 +189,8 @@ Route::middleware(['auth'])->group(function () {
                     'metadata' => ['executor' => null, 'n8n_execution_id' => null, 'via_decision' => 'not_submitted'],
                 ]
             );
+
+            abort_unless((int) $mission->created_by === (int) $user->id, 409, 'Chave de idempotencia ja utilizada.');
 
             if ($mission->wasRecentlyCreated) {
                 $mission->events()->create([
