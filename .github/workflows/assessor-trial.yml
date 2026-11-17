@@ -1,0 +1,57 @@
+name: Assessor trial HML contracts
+on:
+  pull_request:
+    paths:
+      - 'docker/assessor/**'
+      - 'docker-compose.assessor-trial-hml.yml'
+      - 'app/Assessor/**'
+      - 'app/Http/**/AssessorTrial*'
+      - 'routes/assessor_trial.php'
+      - 'resources/views/assessor/**'
+      - 'config/assessor_trial.php'
+      - 'database/migrations/*assessor*'
+      - 'tests/Assessor/**'
+      - 'routes/console.php'
+      - '.github/workflows/assessor-trial.yml'
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, sqlite3, pdo_sqlite
+          coverage: none
+      - run: php tests/Assessor/contracts.php
+      - run: find app/Assessor app/Http/Middleware -name '*Trial*.php' -print0 | xargs -0 -n1 php -l
+      - run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/phpunit tests/Assessor/TrialIntegrationTest.php
+
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated runtime
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml build
+      - name: Smoke test disabled trial and preserved demo
+        run: |
+          docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml up -d
+          for i in {1..45}; do
+            if curl --max-time 5 -fsS http://127.0.0.1:18782/up >/dev/null; then break; fi
+            sleep 2
+          done
+          curl --max-time 5 -fsS http://127.0.0.1:18782/up >/dev/null
+          curl --max-time 5 -fsS http://127.0.0.1:18782/demo.html | grep -q 'Rafael Monteiro'
+          test "$(curl --max-time 5 -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/assessor/avaliacao)" = 404
+          test "$(curl --max-time 5 -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18782/admin)" = 404
+      - name: Diagnose failed synthetic runtime
+        if: failure()
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml logs --tail=60
+      - name: Cleanup synthetic CI runtime
+        if: always()
+        run: docker compose -p assessor-trial-ci -f docker-compose.assessor-trial-hml.yml down -v
