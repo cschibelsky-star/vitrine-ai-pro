@@ -218,4 +218,29 @@ class OfficeMissionTest extends TestCase
             'decision' => 'approve',
         ])->assertStatus(409);
     }
+
+    public function test_manager_can_review_again_after_requesting_changes(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião para ajustes',
+            'notes' => 'As anotações precisam ser revistas antes da aprovação final.',
+            'priority' => 'normal',
+            'idempotency_key' => $key,
+        ]);
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+            'decision' => 'request_changes',
+            'note' => 'Incluir o responsável pela decisão.',
+        ])->assertRedirect();
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+            'decision' => 'approve',
+            'note' => 'Ajuste conferido.',
+        ])->assertRedirect();
+
+        $this->assertSame('completed', $mission->refresh()->status);
+        $this->assertSame(3, $mission->events()->count());
+    }
 }
