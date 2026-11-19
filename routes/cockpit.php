@@ -137,6 +137,17 @@ Route::post('/cockpit/login', function (Request $request) {
 
 // Escritório Virtual DEV/ECO — registro e histórico persistentes (MVP).
 Route::middleware(['auth'])->group(function () {
+    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/revisao', function (\App\Models\OfficeMission $mission, \App\Http\Requests\ReviewAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $service->review($mission, $request, (int) $user->id);
+
+        return redirect()->route('cockpit.escritorio-agentes.index')
+            ->with('status', 'Revisão da ata registrada.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.review');
+
     Route::post('/cockpit/escritorio-agentes/atas', function (\App\Http\Requests\StoreAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
