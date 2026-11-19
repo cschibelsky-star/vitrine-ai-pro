@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * O QUE É: serviço do fluxo administrativo de atas.
+ * COMO FUNCIONA: registra pedidos e aplica revisões com eventos auditáveis.
+ * FUNÇÃO NO SISTEMA: concentra regras do processo fora das rotas HTTP.
+ */
+
 namespace App\Services\Office;
 
 use App\Http\Requests\StoreAdministrativeMinutesRequest;
@@ -56,20 +62,21 @@ class AdministrativeMinutesService
 
     public function review(OfficeMission $mission, ReviewAdministrativeMinutesRequest $request, int $userId): OfficeMission
     {
-        abort_unless((int) $mission->created_by === $userId, 404);
-        abort_unless(($mission->metadata['workflow'] ?? null) === 'meeting_minutes', 422, 'Missão não é uma ata administrativa.');
-        abort_unless(($mission->metadata['review_status'] ?? null) === 'awaiting_manager_review', 409, 'A ata já foi revisada.');
-
         $data = $request->validated();
-        $approved = $data['decision'] === 'approve';
-        $fromStatus = $mission->status;
-        $toStatus = $approved ? 'completed' : 'planned';
-        $metadata = $mission->metadata;
-        $metadata['review_status'] = $approved ? 'approved' : 'changes_requested';
-        $metadata['review_note'] = $data['note'] ?? null;
-        $metadata['reviewed_by'] = $userId;
 
-        return DB::transaction(function () use ($mission, $metadata, $toStatus, $fromStatus, $data, $userId): OfficeMission {
+        return DB::transaction(function () use ($mission, $data, $userId): OfficeMission {
+            $mission = OfficeMission::query()->lockForUpdate()->findOrFail($mission->getKey());
+            abort_unless(($mission->metadata['workflow'] ?? null) === 'meeting_minutes', 422, 'Missão não é uma ata administrativa.');
+            abort_unless(in_array($mission->metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true), 409, 'A ata já foi revisada.');
+
+            $approved = $data['decision'] === 'approve';
+            $fromStatus = $mission->status;
+            $toStatus = $approved ? 'completed' : 'planned';
+            $metadata = $mission->metadata;
+            $metadata['review_status'] = $approved ? 'approved' : 'changes_requested';
+            $metadata['review_note'] = $data['note'] ?? null;
+            $metadata['reviewed_by'] = $userId;
+
             $mission->update(['status' => $toStatus, 'metadata' => $metadata]);
             $mission->events()->create([
                 'actor_id' => $userId,
