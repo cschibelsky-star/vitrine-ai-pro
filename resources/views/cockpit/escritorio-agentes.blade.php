@@ -48,6 +48,25 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 </form>
 </section>
 <section class="panel" style="margin-top:15px">
+<h2>Solicitar ata administrativa</h2>
+<p class="muted">O pedido fica registrado para revisão do gestor. A geração automática ainda não está conectada.</p>
+<form method="POST" action="{{ route('cockpit.escritorio-agentes.atas.store') }}" style="display:grid;gap:10px">
+@csrf
+<input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
+<label>Título da reunião
+<input name="meeting_title" minlength="4" maxlength="180" required value="{{ old('meeting_title') }}" placeholder="Ex.: Reunião semanal da operação"></label>
+<label>Anotações
+<textarea name="notes" minlength="20" maxlength="20000" rows="5" required placeholder="Cole aqui as anotações da reunião">{{ old('notes') }}</textarea></label>
+<label>Decisões (uma por linha)
+<textarea name="decisions[]" rows="2" placeholder="Ex.: Publicar relatório até sexta-feira"></textarea></label>
+<label>Pendências (uma por linha)
+<textarea name="open_items[]" rows="2" placeholder="Ex.: Confirmar responsável pela revisão"></textarea></label>
+<label>Prioridade
+<select name="priority" required><option value="normal">Normal</option><option value="high">Alta</option><option value="low">Baixa</option></select></label>
+<div><button type="submit">Enviar para revisão</button></div>
+</form>
+</section>
+<section class="panel" style="margin-top:15px">
 <h2>Histórico de missões</h2>
 <div class="kanban">
 <div class="lane"><b>Planejamento</b><strong>{{ $counts['planned'] }}</strong><p>Registradas e aguardando integração do executor.</p></div>
@@ -61,6 +80,15 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 @forelse($missions as $mission)
 <tr style="border-top:1px solid var(--line)">
 <td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small>
+@if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && in_array($mission->metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true))
+<form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.review', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
+@csrf @method('PATCH')
+<input name="note" maxlength="5000" placeholder="Observação do gestor (opcional)">
+<div><button type="submit" name="decision" value="approve">Aprovar ata</button> <button type="submit" name="decision" value="request_changes">Solicitar ajustes</button></div>
+</form>
+@elseif(($mission->metadata['workflow'] ?? null) === 'meeting_minutes')
+<small class="muted">Revisão: {{ $mission->metadata['review_status'] }}</small>
+@endif
 <details style="margin-top:7px"><summary style="cursor:pointer;color:#72e7fd">Ver histórico ({{ $mission->events->count() }})</summary>
 <ul style="padding-left:18px">@foreach($mission->events as $event)<li>{{ $event->created_at?->format('d/m/Y H:i:s') }} — {{ $event->event_type }}: {{ $event->from_status ?? 'início' }} → {{ $event->to_status }} <small class="muted">por {{ $event->actor?->name ?? 'usuário' }}</small></li>@endforeach</ul>
 </details>
