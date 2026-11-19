@@ -163,4 +163,29 @@ class OfficeMissionTest extends TestCase
             ->assertOk()
             ->assertDontSee('Private mission');
     }
+
+    public function test_administrative_minutes_workflow_registers_structured_review_data(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião semanal da operação',
+            'notes' => 'A equipe revisou prioridades, riscos e próximos passos da operação.',
+            'decisions' => ['Publicar o relatório até sexta-feira.'],
+            'open_items' => ['Confirmar responsável pela revisão final.'],
+            'priority' => 'high',
+            'idempotency_key' => $key,
+        ])->assertRedirect(route('cockpit.escritorio-agentes.index'));
+
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+        $this->assertSame('administrativo', $mission->metadata['department']);
+        $this->assertSame('meeting_minutes', $mission->metadata['workflow']);
+        $this->assertSame('awaiting_manager_review', $mission->metadata['review_status']);
+        $this->assertDatabaseHas('office_mission_events', [
+            'mission_id' => $mission->id,
+            'event_type' => 'minutes_requested',
+            'request_id' => $key,
+        ]);
+    }
 }
