@@ -8,6 +8,9 @@ on:
       - "routes/cockpit.php"
       - "resources/views/cockpit/escritorio-agentes.blade.php"
       - "tests/Feature/OfficeMissionTest.php"
+      - "app/Http/Requests/StoreAdministrativeMinutesRequest.php"
+      - "app/Services/Office/AdministrativeMinutesService.php"
+      - "docs/initiatives/ESCRITORIO-AGENTES-IA/ADMINISTRATIVE-MINUTES.md"
       - ".github/workflows/office-mission-mvp.yml"
 
 permissions:
