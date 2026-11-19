@@ -188,4 +188,34 @@ class OfficeMissionTest extends TestCase
             'request_id' => $key,
         ]);
     }
+
+    public function test_manager_can_approve_administrative_minutes_once(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião para aprovação',
+            'notes' => 'As anotações da reunião têm conteúdo suficiente para a ata.',
+            'priority' => 'normal',
+            'idempotency_key' => $key,
+        ]);
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+            'decision' => 'approve',
+            'note' => 'Ata conferida pelo gestor.',
+        ])->assertRedirect(route('cockpit.escritorio-agentes.index'));
+
+        $mission->refresh();
+        $this->assertSame('completed', $mission->status);
+        $this->assertSame('approved', $mission->metadata['review_status']);
+        $this->assertDatabaseHas('office_mission_events', [
+            'mission_id' => $mission->id,
+            'event_type' => 'minutes_approved',
+            'to_status' => 'completed',
+        ]);
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+            'decision' => 'approve',
+        ])->assertStatus(409);
+    }
 }
