@@ -10,6 +10,9 @@ on:
       - 'tests/security/factory_observer_probe.php'
       - 'app/Factory/Observer/FactoryReadOnlyProvider.php'
       - 'tests/security/factory_read_only_provider_probe.php'
+      - 'app/Factory/Observer/AuthorizedMissionScope.php'
+      - 'app/Factory/Observer/MissionObserverGateway.php'
+      - 'tests/security/mission_observer_gateway_probe.php'
       - '.github/workflows/factory-permissions-security.yml'
   pull_request:
     paths:
@@ -37,8 +40,12 @@ jobs:
           php -l tests/security/factory_observer_probe.php
           php -l app/Factory/Observer/FactoryReadOnlyProvider.php
           php -l tests/security/factory_read_only_provider_probe.php
+          php -l app/Factory/Observer/AuthorizedMissionScope.php
+          php -l app/Factory/Observer/MissionObserverGateway.php
+          php -l tests/security/mission_observer_gateway_probe.php
       - name: Security regression
         run: |
           php tests/security/factory_permissions_probe.php
           php tests/security/factory_observer_probe.php
           php tests/security/factory_read_only_provider_probe.php
+          php tests/security/mission_observer_gateway_probe.php
