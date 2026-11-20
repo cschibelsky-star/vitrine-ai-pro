@@ -6,6 +6,8 @@ on:
     paths:
       - 'app/Factory/Policies/Concerns/ChecksFactoryPermissions.php'
       - 'tests/security/factory_permissions_probe.php'
+      - 'app/Factory/Observer/FactoryObserver.php'
+      - 'tests/security/factory_observer_probe.php'
       - '.github/workflows/factory-permissions-security.yml'
   pull_request:
     paths:
@@ -29,5 +31,9 @@ jobs:
         run: |
           php -l app/Factory/Policies/Concerns/ChecksFactoryPermissions.php
           php -l tests/security/factory_permissions_probe.php
+          php -l app/Factory/Observer/FactoryObserver.php
+          php -l tests/security/factory_observer_probe.php
       - name: Security regression
-        run: php tests/security/factory_permissions_probe.php
+        run: |
+          php tests/security/factory_permissions_probe.php
+          php tests/security/factory_observer_probe.php
