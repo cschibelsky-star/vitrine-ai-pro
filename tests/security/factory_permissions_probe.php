@@ -1,41 +1,21 @@
 <?php
 declare(strict_types=1);
-
-/**
- * Security regression probe for Factory policy fail-open.
- * Run: php tests/security/factory_permissions_probe.php
- * Exit 1 means a policy authorization gap was detected.
- * This script is standalone and does not mutate production data.
- */
 require dirname(__DIR__, 2) . '/app/Factory/Policies/Concerns/ChecksFactoryPermissions.php';
-
-final class FactoryPermissionProbe {
-    use \App\Factory\Policies\Concerns\ChecksFactoryPermissions;
-    public function check($user, string $permission): bool {
-        return $this->allowed($user, $permission);
-    }
-}
-final class UserWithoutPermissionApi {}
-final class UserWithPermissionApi {
-    public function __construct(private bool $granted) {}
-    public function hasPermissionTo(string $permission): bool { return $this->granted; }
-}
-
-$policy = new FactoryPermissionProbe();
+final class Probe { use \App\Factory\Policies\Concerns\ChecksFactoryPermissions; public function check($u, string $p): bool { return $this->allowed($u,$p); } }
+final class PermUser { public function __construct(private bool $grant, public string $role='client', public bool $is_active=true) {} public function hasPermissionTo(string $p): bool { return $this->grant; } }
+$p = new Probe();
 $cases = [
-    'guest denied' => [$policy->check(null, 'factory.manage'), false],
-    'explicit deny respected' => [$policy->check(new UserWithPermissionApi(false), 'factory.manage'), false],
-    'explicit grant respected' => [$policy->check(new UserWithPermissionApi(true), 'factory.manage'), true],
-    'missing permission API must deny' => [$policy->check(new UserWithoutPermissionApi(), 'factory.manage'), false],
+ 'anonymous denied'=>[null,'factory.manage',false],
+ 'missing API denied'=>[(object)[],'factory.manage',false],
+ 'client denied'=>[(object)['role'=>'client','is_active'=>true],'factory.manage',false],
+ 'blank legacy role denied'=>[(object)['role'=>'','is_active'=>true],'factory.manage',false],
+ 'explicit active admin compatible'=>[(object)['role'=>'admin','is_active'=>true],'factory.manage',true],
+ 'inactive admin denied'=>[(object)['role'=>'admin','is_active'=>false],'factory.manage',false],
+ 'explicit grant'=>[new PermUser(true),'factory.manage',true],
+ 'explicit deny overrides admin'=>[new PermUser(false,'admin'),'factory.manage',false],
+ 'inactive permission holder denied'=>[new PermUser(true,'client',false),'factory.manage',false],
+ 'non-factory permission denied'=>[(object)['role'=>'admin','is_active'=>true],'other.manage',false],
 ];
-$failures = 0;
-foreach ($cases as $label => [$actual, $expected]) {
-    $pass = $actual === $expected;
-    echo ($pass ? 'PASS' : 'FAIL') . ': ' . $label . PHP_EOL;
-    if (!$pass) $failures++;
-}
-if ($failures) {
-    fwrite(STDERR, "Security regression detected: {$failures} failure(s). No changes were applied.\n");
-    exit(1);
-}
-echo "All security checks passed.\n";
+$failures=0;
+foreach($cases as $name=>[$user,$perm,$expected]) { $actual=$p->check($user,$perm); $pass=$actual===$expected; echo ($pass?'PASS':'FAIL').": $name\n"; if(!$pass) $failures++; }
+exit($failures?1:0);
