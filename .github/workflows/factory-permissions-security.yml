@@ -13,6 +13,8 @@ on:
       - 'app/Factory/Observer/AuthorizedMissionScope.php'
       - 'app/Factory/Observer/MissionObserverGateway.php'
       - 'tests/security/mission_observer_gateway_probe.php'
+      - 'app/Factory/Observer/DatabaseMissionAudit.php'
+      - 'database/migrations/2026_11_19_230000_create_factory_observer_audit_events_table.php'
       - '.github/workflows/factory-permissions-security.yml'
   pull_request:
     paths:
@@ -43,6 +45,8 @@ jobs:
           php -l app/Factory/Observer/AuthorizedMissionScope.php
           php -l app/Factory/Observer/MissionObserverGateway.php
           php -l tests/security/mission_observer_gateway_probe.php
+          php -l app/Factory/Observer/DatabaseMissionAudit.php
+          php -l database/migrations/2026_11_19_230000_create_factory_observer_audit_events_table.php
       - name: Security regression
         run: |
           php tests/security/factory_permissions_probe.php
