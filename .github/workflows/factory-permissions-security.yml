@@ -1,0 +1,33 @@
+name: Factory permissions security regression
+on:
+  push:
+    branches:
+      - 'audit/via-agent-hub-escritorio-virtual-*'
+    paths:
+      - 'app/Factory/Policies/Concerns/ChecksFactoryPermissions.php'
+      - 'tests/security/factory_permissions_probe.php'
+      - '.github/workflows/factory-permissions-security.yml'
+  pull_request:
+    paths:
+      - 'app/Factory/Policies/Concerns/ChecksFactoryPermissions.php'
+      - 'tests/security/factory_permissions_probe.php'
+      - '.github/workflows/factory-permissions-security.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  permissions-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Syntax validation
+        run: |
+          php -l app/Factory/Policies/Concerns/ChecksFactoryPermissions.php
+          php -l tests/security/factory_permissions_probe.php
+      - name: Security regression
+        run: php tests/security/factory_permissions_probe.php
