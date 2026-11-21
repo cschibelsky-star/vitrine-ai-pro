@@ -80,7 +80,7 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 @forelse($missions as $mission)
 <tr style="border-top:1px solid var(--line)">
 <td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small>
-@if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && empty($mission->metadata['minutes_text']))
+@if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && (empty($mission->metadata['minutes_text']) || ($mission->metadata['review_status'] ?? null) === 'changes_requested'))
 <form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.result.store', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
 @csrf @method('PUT')
 <input name="agent_name" required maxlength="120" value="{{ old('agent_name', 'Assistente Administrativo IA') }}" placeholder="Funcionário IA responsável">
