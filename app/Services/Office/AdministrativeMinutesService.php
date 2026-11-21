@@ -10,6 +10,7 @@ namespace App\Services\Office;
 
 use App\Http\Requests\StoreAdministrativeMinutesRequest;
 use App\Http\Requests\ReviewAdministrativeMinutesRequest;
+use App\Http\Requests\StoreAdministrativeMinutesResultRequest;
 use App\Models\OfficeMission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -85,6 +86,38 @@ class AdministrativeMinutesService
                 'to_status' => $toStatus,
                 'request_id' => (string) Str::uuid(),
                 'payload' => ['note' => $data['note'] ?? null],
+            ]);
+
+            return $mission->refresh();
+        });
+    }
+
+    public function submitResult(OfficeMission $mission, StoreAdministrativeMinutesResultRequest $request, int $userId): OfficeMission
+    {
+        $data = $request->validated();
+
+        return DB::transaction(function () use ($mission, $data, $userId): OfficeMission {
+            $mission = OfficeMission::query()->lockForUpdate()->findOrFail($mission->getKey());
+            abort_unless(($mission->metadata['workflow'] ?? null) === 'meeting_minutes', 422, 'Missão não é uma ata administrativa.');
+            abort_unless(in_array($mission->metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true), 409, 'A ata não aceita novo resultado neste estado.');
+
+            $fromStatus = $mission->status;
+            $metadata = $mission->metadata;
+            $metadata['minutes_text'] = $data['minutes_text'];
+            $metadata['unresolved_items'] = array_values($data['unresolved_items'] ?? []);
+            $metadata['agent_name'] = $data['agent_name'];
+            $metadata['result_status'] = 'submitted';
+            $metadata['review_status'] = 'awaiting_manager_review';
+            $metadata['result_submitted_by'] = $userId;
+
+            $mission->update(['status' => 'planned', 'metadata' => $metadata]);
+            $mission->events()->create([
+                'actor_id' => $userId,
+                'event_type' => 'minutes_result_submitted',
+                'from_status' => $fromStatus,
+                'to_status' => 'planned',
+                'request_id' => (string) Str::uuid(),
+                'payload' => ['agent_name' => $data['agent_name']],
             ]);
 
             return $mission->refresh();
