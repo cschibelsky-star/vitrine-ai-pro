@@ -80,6 +80,15 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 @forelse($missions as $mission)
 <tr style="border-top:1px solid var(--line)">
 <td style="padding:10px"><strong>{{ $mission->title }}</strong><br><small class="muted">{{ \Illuminate\Support\Str::limit($mission->description, 100) }}</small>
+@if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && empty($mission->metadata['minutes_text']))
+<form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.result.store', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
+@csrf @method('PUT')
+<input name="agent_name" required maxlength="120" value="{{ old('agent_name', 'Assistente Administrativo IA') }}" placeholder="Funcionário IA responsável">
+<textarea name="minutes_text" required minlength="30" maxlength="50000" rows="4" placeholder="Registre o texto produzido para a ata"></textarea>
+<textarea name="unresolved_items[]" rows="2" placeholder="Pendência em aberto (opcional)"></textarea>
+<button type="submit">Enviar resultado para revisão</button>
+</form>
+@endif
 @if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && in_array($mission->metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true))
 <form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.review', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
 @csrf @method('PATCH')
