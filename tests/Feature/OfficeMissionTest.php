@@ -302,4 +302,25 @@ class OfficeMissionTest extends TestCase
         $this->assertCount(1, $mission->metadata['result_history']);
         $this->assertSame('Primeira versão da ata com a decisão inicial registrada.', $mission->metadata['result_history'][0]['minutes_text']);
     }
+
+    public function test_approval_records_the_result_version(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião versão aprovada',
+            'notes' => 'Anotações para validar a versão aprovada da ata.',
+            'priority' => 'normal',
+            'idempotency_key' => $key,
+        ]);
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+        $this->actingAs($admin)->put(route('cockpit.escritorio-agentes.missoes.result.store', $mission), [
+            'minutes_text' => 'Versão que será aprovada pelo gestor após conferência.',
+            'agent_name' => 'Assistente Administrativo IA',
+        ]);
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), ['decision' => 'approve']);
+
+        $this->assertSame(1, $mission->refresh()->metadata['approved_result_version']);
+        $this->assertSame(1, $mission->events()->where('event_type', 'minutes_approved')->first()->payload['approved_result_version']);
+    }
 }
