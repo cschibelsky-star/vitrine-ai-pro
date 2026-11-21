@@ -77,6 +77,9 @@ class AdministrativeMinutesService
             $metadata['review_status'] = $approved ? 'approved' : 'changes_requested';
             $metadata['review_note'] = $data['note'] ?? null;
             $metadata['reviewed_by'] = $userId;
+            if ($approved) {
+                $metadata['approved_result_version'] = (int) ($metadata['result_version'] ?? 0);
+            }
 
             $mission->update(['status' => $toStatus, 'metadata' => $metadata]);
             $mission->events()->create([
@@ -85,7 +88,10 @@ class AdministrativeMinutesService
                 'from_status' => $fromStatus,
                 'to_status' => $toStatus,
                 'request_id' => (string) Str::uuid(),
-                'payload' => ['note' => $data['note'] ?? null],
+                'payload' => [
+                    'note' => $data['note'] ?? null,
+                    'approved_result_version' => $metadata['approved_result_version'] ?? null,
+                ],
             ]);
 
             return $mission->refresh();
