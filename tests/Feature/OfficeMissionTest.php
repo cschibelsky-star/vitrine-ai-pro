@@ -243,4 +243,32 @@ class OfficeMissionTest extends TestCase
         $this->assertSame('completed', $mission->refresh()->status);
         $this->assertSame(3, $mission->events()->count());
     }
+
+    public function test_supervised_minutes_result_returns_mission_to_manager_review(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião com resultado',
+            'notes' => 'Anotações da reunião para produzir uma ata supervisionada.',
+            'priority' => 'normal',
+            'idempotency_key' => $key,
+        ]);
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+
+        $this->actingAs($admin)->put(route('cockpit.escritorio-agentes.missoes.result.store', $mission), [
+            'minutes_text' => 'A reunião decidiu manter o plano atual e revisar os indicadores na próxima semana.',
+            'unresolved_items' => ['Confirmar a pessoa responsável pelo indicador.'],
+            'agent_name' => 'Assistente Administrativo IA',
+        ])->assertRedirect();
+
+        $mission->refresh();
+        $this->assertSame('awaiting_manager_review', $mission->metadata['review_status']);
+        $this->assertSame('submitted', $mission->metadata['result_status']);
+        $this->assertSame('Assistente Administrativo IA', $mission->metadata['agent_name']);
+        $this->assertDatabaseHas('office_mission_events', [
+            'mission_id' => $mission->id,
+            'event_type' => 'minutes_result_submitted',
+        ]);
+    }
 }
