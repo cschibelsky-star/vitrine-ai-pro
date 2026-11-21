@@ -115,14 +115,24 @@ class AdministrativeMinutesService
                 $history[] = [
                     'version' => (int) ($metadata['result_version'] ?? 1),
                     'minutes_text' => $metadata['minutes_text'],
+                'summary' => $metadata['summary'] ?? null,
+                'decisions' => $metadata['decisions'] ?? [],
+                'action_items' => $metadata['action_items'] ?? [],
                     'unresolved_items' => $metadata['unresolved_items'] ?? [],
                     'agent_name' => $metadata['agent_name'] ?? null,
                     'submitted_by' => $metadata['result_submitted_by'] ?? null,
                 ];
             }
             $metadata['minutes_text'] = $data['minutes_text'];
+            $metadata['summary'] = $data['summary'] ?? null;
+            $metadata['decisions'] = array_values($data['decisions'] ?? []);
+            $metadata['action_items'] = array_values($data['action_items'] ?? []);
             $metadata['unresolved_items'] = array_values($data['unresolved_items'] ?? []);
             $metadata['agent_name'] = $data['agent_name'];
+            $metadata['source'] = $data['source'] ?? 'manual_supervised';
+            $metadata['confidence'] = $data['confidence'] ?? 'needs_review';
+            $metadata['generated_at'] = now()->toIso8601String();
+            $metadata['submitted_at'] = now()->toIso8601String();
             $metadata['result_version'] = $version;
             $metadata['result_history'] = $history;
             $metadata['result_status'] = 'submitted';

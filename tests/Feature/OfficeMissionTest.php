@@ -258,14 +258,22 @@ class OfficeMissionTest extends TestCase
 
         $this->actingAs($admin)->put(route('cockpit.escritorio-agentes.missoes.result.store', $mission), [
             'minutes_text' => 'A reunião decidiu manter o plano atual e revisar os indicadores na próxima semana.',
+            'summary' => 'Plano atual mantido.',
+            'decisions' => ['Manter o plano atual.'],
+            'action_items' => ['Revisar indicadores na próxima semana.'],
             'unresolved_items' => ['Confirmar a pessoa responsável pelo indicador.'],
             'agent_name' => 'Assistente Administrativo IA',
+            'source' => 'meeting_notes',
+            'confidence' => 'needs_review',
         ])->assertRedirect();
 
         $mission->refresh();
         $this->assertSame('awaiting_manager_review', $mission->metadata['review_status']);
         $this->assertSame('submitted', $mission->metadata['result_status']);
         $this->assertSame('Assistente Administrativo IA', $mission->metadata['agent_name']);
+        $this->assertSame('meeting_notes', $mission->metadata['source']);
+        $this->assertSame('needs_review', $mission->metadata['confidence']);
+        $this->assertNotEmpty($mission->metadata['submitted_at']);
         $this->assertDatabaseHas('office_mission_events', [
             'mission_id' => $mission->id,
             'event_type' => 'minutes_result_submitted',
