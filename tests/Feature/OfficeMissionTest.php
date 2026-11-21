@@ -271,4 +271,35 @@ class OfficeMissionTest extends TestCase
             'event_type' => 'minutes_result_submitted',
         ]);
     }
+
+    public function test_new_result_version_preserves_previous_minutes_after_requested_changes(): void
+    {
+        $admin = $this->admin();
+        $key = (string) Str::uuid();
+        $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
+            'meeting_title' => 'Reunião com versões',
+            'notes' => 'Anotações suficientes para gerar a primeira versão da ata.',
+            'priority' => 'normal',
+            'idempotency_key' => $key,
+        ]);
+        $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
+        $route = fn () => route('cockpit.escritorio-agentes.missoes.result.store', $mission);
+
+        $this->actingAs($admin)->put($route(), [
+            'minutes_text' => 'Primeira versão da ata com a decisão inicial registrada.',
+            'agent_name' => 'Assistente Administrativo IA',
+        ]);
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+            'decision' => 'request_changes',
+        ]);
+        $this->actingAs($admin)->put($route(), [
+            'minutes_text' => 'Segunda versão corrigida da ata com a pendência detalhada.',
+            'agent_name' => 'Assistente Administrativo IA',
+        ]);
+
+        $mission->refresh();
+        $this->assertSame(2, $mission->metadata['result_version']);
+        $this->assertCount(1, $mission->metadata['result_history']);
+        $this->assertSame('Primeira versão da ata com a decisão inicial registrada.', $mission->metadata['result_history'][0]['minutes_text']);
+    }
 }
