@@ -12,6 +12,7 @@ O gestor envia `meeting_title`, `notes`, listas opcionais de `decisions` e `open
 - O evento `minutes_requested` registra o pedido e a mesma chave impede duplicação.
 - O funcionário IA pode registrar um resultado supervisionado com texto, pendências e nome do agente; o evento `minutes_result_submitted` devolve a missão à revisão do gestor.
 - Cada novo resultado recebe uma versão; quando há pedido de ajustes, a versão anterior é preservada em `metadata.result_history`.
+- O resultado estruturado aceita resumo, decisões, ações, origem e confiança; `generated_at` e `submitted_at` registram o ciclo de produção.
 - O gestor continua responsável pela revisão; a tela HML permite aprovar ou solicitar ajustes. Nenhuma chamada para n8n, Avello, VIA ou Agent Hub é feita.
 
 ## Fora deste incremento
