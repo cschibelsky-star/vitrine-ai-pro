@@ -103,9 +103,22 @@ class AdministrativeMinutesService
 
             $fromStatus = $mission->status;
             $metadata = $mission->metadata;
+            $version = ((int) ($metadata['result_version'] ?? 0)) + 1;
+            $history = $metadata['result_history'] ?? [];
+            if (! empty($metadata['minutes_text'])) {
+                $history[] = [
+                    'version' => (int) ($metadata['result_version'] ?? 1),
+                    'minutes_text' => $metadata['minutes_text'],
+                    'unresolved_items' => $metadata['unresolved_items'] ?? [],
+                    'agent_name' => $metadata['agent_name'] ?? null,
+                    'submitted_by' => $metadata['result_submitted_by'] ?? null,
+                ];
+            }
             $metadata['minutes_text'] = $data['minutes_text'];
             $metadata['unresolved_items'] = array_values($data['unresolved_items'] ?? []);
             $metadata['agent_name'] = $data['agent_name'];
+            $metadata['result_version'] = $version;
+            $metadata['result_history'] = $history;
             $metadata['result_status'] = 'submitted';
             $metadata['review_status'] = 'awaiting_manager_review';
             $metadata['result_submitted_by'] = $userId;
