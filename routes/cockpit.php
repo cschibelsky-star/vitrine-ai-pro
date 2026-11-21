@@ -135,15 +135,112 @@ Route::post('/cockpit/login', function (Request $request) {
     return redirect()->route('cockpit.index');
 })->middleware('throttle:5,1')->name('cockpit.login.submit');
 
-// Escritorio de Agentes IA M1 — HML exclusivo, somente leitura, acesso admin.
-Route::get('/cockpit/escritorio-agentes', function () {
-    abort_unless(config('app.env') === 'homologation', 404);
-    abort_unless(Auth::check() && Auth::user()->isAdmin() && (Auth::user()->is_active ?? true), 403);
-    return response()->view('cockpit.escritorio-agentes')
-        ->header('Cache-Control', 'private, no-store, max-age=0')
-        ->header('X-Content-Type-Options', 'nosniff')
-        ->header('X-Frame-Options', 'DENY');
-})->middleware('throttle:60,1')->name('cockpit.escritorio-agentes.index');
+// Escritório Virtual DEV/ECO — registro e histórico persistentes (MVP).
+Route::middleware(['auth'])->group(function () {
+    Route::put('/cockpit/escritorio-agentes/missoes/{mission}/resultado', function (\App\Models\OfficeMission $mission, \App\Http\Requests\StoreAdministrativeMinutesResultRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $service->submitResult($mission, $request, (int) $user->id);
+
+        return redirect()->route('cockpit.escritorio-agentes.index')
+            ->with('status', 'Resultado da ata registrado para revisão do gestor.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.result.store');
+
+    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/revisao', function (\App\Models\OfficeMission $mission, \App\Http\Requests\ReviewAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $service->review($mission, $request, (int) $user->id);
+
+        return redirect()->route('cockpit.escritorio-agentes.index')
+            ->with('status', 'Revisão da ata registrada.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.review');
+
+    Route::post('/cockpit/escritorio-agentes/atas', function (\App\Http\Requests\StoreAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $service->create($request, (int) $user->id);
+
+        return redirect()->route('cockpit.escritorio-agentes.index')
+            ->with('status', 'Ata registrada para revisão do gestor. Nenhuma execução externa foi disparada.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.atas.store');
+
+    Route::get('/cockpit/escritorio-agentes', function () {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $missions = \App\Models\OfficeMission::query()
+            ->with(['events.actor'])
+            ->where('created_by', $user->id)
+            ->latest()
+            ->limit(100)
+            ->get();
+
+        $counts = [
+            'planned' => $missions->where('status', 'planned')->count(),
+            'executing' => $missions->where('status', 'executing')->count(),
+            'awaiting' => $missions->where('status', 'awaiting_independent_verification')->count(),
+            'completed' => $missions->where('status', 'completed')->count(),
+        ];
+
+        return response()->view('cockpit.escritorio-agentes', compact('missions', 'counts'))
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('X-Content-Type-Options', 'nosniff')
+            ->header('X-Frame-Options', 'DENY');
+    })->middleware('throttle:60,1')->name('cockpit.escritorio-agentes.index');
+
+    Route::post('/cockpit/escritorio-agentes/missoes', function (Request $request) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        $data = $request->validate([
+            'domain' => ['required', 'in:DEV,ECO'],
+            'title' => ['required', 'string', 'min:4', 'max:180'],
+            'description' => ['required', 'string', 'min:8', 'max:5000'],
+            'priority' => ['required', 'in:low,normal,high'],
+            'idempotency_key' => ['required', 'uuid'],
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $user) {
+            $mission = \App\Models\OfficeMission::firstOrCreate(
+                ['idempotency_key' => $data['idempotency_key']],
+                [
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'created_by' => $user->id,
+                    'domain' => $data['domain'],
+                    'title' => $data['title'],
+                    'description' => $data['description'],
+                    'priority' => $data['priority'],
+                    'status' => 'planned',
+                    'metadata' => ['executor' => null, 'n8n_execution_id' => null, 'via_decision' => 'not_submitted'],
+                ]
+            );
+
+            abort_unless((int) $mission->created_by === (int) $user->id, 409, 'Chave de idempotencia ja utilizada.');
+
+            if ($mission->wasRecentlyCreated) {
+                $mission->events()->create([
+                    'actor_id' => $user->id,
+                    'event_type' => 'mission_created',
+                    'from_status' => null,
+                    'to_status' => 'planned',
+                    'request_id' => $data['idempotency_key'],
+                    'payload' => ['source' => 'office_virtual_ui'],
+                ]);
+            }
+        });
+
+        return redirect()->route('cockpit.escritorio-agentes.index')
+            ->with('status', 'Missão registrada. Ela ainda não foi enviada ao n8n, Avello ou VIA.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.store');
+});
 
 Route::get('/cockpit', function () {
     if (! Auth::check()) {
