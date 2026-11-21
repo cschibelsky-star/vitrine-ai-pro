@@ -84,7 +84,10 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 <form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.result.store', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
 @csrf @method('PUT')
 <input name="agent_name" required maxlength="120" value="{{ old('agent_name', 'Assistente Administrativo IA') }}" placeholder="Funcionário IA responsável">
+<input name="summary" maxlength="5000" placeholder="Resumo executivo (opcional)">
 <textarea name="minutes_text" required minlength="30" maxlength="50000" rows="4" placeholder="Registre o texto produzido para a ata"></textarea>
+<textarea name="decisions[]" rows="2" placeholder="Decisão (opcional)"></textarea>
+<textarea name="action_items[]" rows="2" placeholder="Ação ou responsável a confirmar (opcional)"></textarea>
 <textarea name="unresolved_items[]" rows="2" placeholder="Pendência em aberto (opcional)"></textarea>
 <button type="submit">Enviar resultado para revisão</button>
 </form>
