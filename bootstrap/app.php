@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Middleware padrão do Laravel 12.
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('cockpit/*') ? route('cockpit.login') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Tratamento padrão de exceções.
