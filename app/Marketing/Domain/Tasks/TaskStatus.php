@@ -10,6 +10,8 @@ enum TaskStatus: string
     case Ready = 'ready';
     case Running = 'running';
     case Completed = 'completed';
+    case AwaitingViaReview = 'awaiting_via_review';
+    case ReadyForHandoff = 'ready_for_handoff';
     case NeedsRevision = 'needs_revision';
     case Blocked = 'blocked';
     case Failed = 'failed';
