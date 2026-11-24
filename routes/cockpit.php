@@ -137,6 +137,9 @@ Route::post('/cockpit/login', function (Request $request) {
 
 // Escritório Virtual DEV/ECO — registro e histórico persistentes (MVP).
 Route::middleware(['auth'])->group(function () {
+    Route::get('/cockpit/escritorio-agentes/estado', \\App\\Http\\Controllers\\Cockpit\\OfficeOperationalStateController::class)
+        ->middleware('throttle:60,1')
+        ->name('cockpit.escritorio-agentes.state');
     Route::put('/cockpit/escritorio-agentes/missoes/{mission}/resultado', function (\App\Models\OfficeMission $mission, \App\Http\Requests\StoreAdministrativeMinutesResultRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
