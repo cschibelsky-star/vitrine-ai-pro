@@ -140,6 +140,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cockpit/escritorio-agentes/estado', \App\Http\Controllers\Cockpit\OfficeOperationalStateController::class)
         ->middleware('throttle:60,1')
         ->name('cockpit.escritorio-agentes.state');
+
+    Route::get('/cockpit/escritorio-operacional', function () {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        return response()->view('cockpit.escritorio-operacional')
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('X-Content-Type-Options', 'nosniff')
+            ->header('X-Frame-Options', 'DENY');
+    })->middleware('throttle:60,1')->name('cockpit.escritorio-operacional');
     Route::put('/cockpit/escritorio-agentes/missoes/{mission}/resultado', function (\App\Models\OfficeMission $mission, \App\Http\Requests\StoreAdministrativeMinutesResultRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
