@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * O QUE É: snapshot operacional do Escritório Virtual para o Cockpit.
+ * COMO FUNCIONA: agrega agentes, tarefas, gate VIA e auditoria no escopo do produto.
+ * FUNÇÃO NO SISTEMA: alimentar a sala visual sem inventar estados de execução.
+ */
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Cockpit;
@@ -19,26 +25,35 @@ final class OfficeOperationalStateController
         $user = $request->user();
         abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
+        $productKey = $request->string('product', 'vitrine_social_midia')->toString();
+        $productNames = [
+            'vitrine_social_midia' => ['Vitrine Social Mídia', 'Vitrine Social Midia'],
+            'marketing_ia' => ['Marketing IA'],
+        ];
+        abort_unless(array_key_exists($productKey, $productNames), 422, 'Produto operacional inválido.');
+
         $companyId = $user->company_id ? (int) $user->company_id : null;
+        $allTasks = collect();
         $tasks = collect();
         $events = collect();
 
-        if (Schema::hasTable('marketing_campaign_tasks')) {
+        if ($companyId !== null && Schema::hasTable('marketing_campaign_tasks')) {
             $tasksQuery = MarketingCampaignTask::query()
-                ->with('agentDefinition')
+                ->with(['agentDefinition', 'campaign.product'])
+                ->whereHas('campaign.product', fn ($query) => $query->whereIn('nome', $productNames[$productKey]))
+                ->where('company_id', $companyId)
                 ->latest('updated_at');
-            if ($companyId !== null) {
-                $tasksQuery->where('company_id', $companyId);
-            }
-            $tasks = $tasksQuery->limit(100)->get()->unique('agent_definition_id')->values();
+            $allTasks = $tasksQuery->limit(100)->get();
+            $tasks = $allTasks->unique('agent_definition_id')->values();
         }
 
-        if (Schema::hasTable('marketing_audit_events')) {
+        if ($companyId !== null && Schema::hasTable('marketing_audit_events')) {
             $eventsQuery = MarketingAuditEvent::query()->latest('created_at');
-            if ($companyId !== null) {
-                $eventsQuery->where('company_id', $companyId);
-            }
-            $events = $eventsQuery->limit(20)->get();
+            $events = $eventsQuery
+                ->where('company_id', $companyId)
+                ->whereHas('campaign.product', fn ($query) => $query->whereIn('nome', $productNames[$productKey]))
+                ->limit(20)
+                ->get();
         }
 
         $taskByAgent = $tasks->keyBy(fn ($task): string => (string) ($task->agentDefinition?->agent_key ?? ''));
@@ -51,7 +66,9 @@ final class OfficeOperationalStateController
                     'needs_revision' => 'needs_revision',
                     'ready_for_handoff' => 'ready_for_handoff',
                     'failed' => 'failed',
-                    default => $task ? 'idle' : 'idle',
+                    'pending', 'ready' => 'queued',
+                    'blocked' => 'blocked',
+                    default => 'unknown',
                 };
 
                 return [
@@ -67,8 +84,8 @@ final class OfficeOperationalStateController
             }
         )->values();
 
-        $gateTask = $tasks->firstWhere('via_status', 'awaiting_review')
-            ?? $tasks->first(fn ($task): bool => in_array((string) $task->via_status, ['approved', 'changes_requested'], true));
+        $gateTask = $allTasks->firstWhere('via_status', 'awaiting_review')
+            ?? $allTasks->first(fn ($task): bool => in_array((string) $task->via_status, ['approved', 'changes_requested'], true));
 
         $gate = [
             'status' => (string) ($gateTask?->via_status ?? 'not_submitted'),
@@ -82,7 +99,7 @@ final class OfficeOperationalStateController
 
         return response()->json([
             'snapshot_at' => now()->toIso8601String(),
-            'product' => $request->string('product', 'vitrine_social_midia')->toString(),
+            'product' => $productKey,
             'campaign_id' => $gateTask?->campaign_id,
             'departments' => [
                 ['key' => 'strategy', 'name' => 'Estratégia', 'order' => 1],
