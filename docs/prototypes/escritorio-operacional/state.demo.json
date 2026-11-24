@@ -1,0 +1,37 @@
+{
+  "snapshot_at": "2026-11-24T12:00:00-03:00",
+  "product": "vitrine_social_midia",
+  "campaign_id": "demo-campanha-vitrine-social",
+  "departments": [
+    {"key": "strategy", "name": "Estratégia", "order": 1},
+    {"key": "intelligence", "name": "Inteligência", "order": 2},
+    {"key": "creation", "name": "Criação", "order": 3},
+    {"key": "distribution", "name": "Distribuição", "order": 4}
+  ],
+  "agents": [
+    {"id": "planner", "department": "strategy", "name": "Planner IA", "role": "pauta e briefing", "status": "working", "task_id": "task-planner-001", "heartbeat_at": "2026-11-24T11:59:40-03:00", "artifact_version": 1},
+    {"id": "trend-radar", "department": "strategy", "name": "Radar de tendências", "role": "dados e referências", "status": "idle", "task_id": null, "heartbeat_at": null, "artifact_version": null},
+    {"id": "copy", "department": "intelligence", "name": "Copy IA", "role": "gancho, legenda e CTA", "status": "awaiting_via_review", "task_id": "task-copy-001", "heartbeat_at": "2026-11-24T11:58:50-03:00", "artifact_version": 1},
+    {"id": "qa", "department": "intelligence", "name": "QA de marca", "role": "formato e riscos", "status": "idle", "task_id": null, "heartbeat_at": null, "artifact_version": null},
+    {"id": "creative", "department": "creation", "name": "Direção Criativa", "role": "visual e roteiro", "status": "idle", "task_id": null, "heartbeat_at": null, "artifact_version": null},
+    {"id": "video", "department": "creation", "name": "Produtor de vídeo", "role": "cenas e edição", "status": "idle", "task_id": null, "heartbeat_at": null, "artifact_version": null},
+    {"id": "social", "department": "distribution", "name": "Social Media IA", "role": "Meta e calendário", "status": "blocked", "task_id": null, "heartbeat_at": null, "artifact_version": null}
+  ],
+  "pipeline": [
+    {"key": "data", "label": "Dados", "status": "done", "order": 1},
+    {"key": "analysis", "label": "Análise", "status": "done", "order": 2},
+    {"key": "judge", "label": "VIA", "status": "active", "order": 3},
+    {"key": "meeting", "label": "Reunião", "status": "pending", "order": 4},
+    {"key": "script", "label": "Roteiro", "status": "pending", "order": 5},
+    {"key": "memory", "label": "Memória", "status": "pending", "order": 6},
+    {"key": "production", "label": "Produção", "status": "pending", "order": 7},
+    {"key": "publication", "label": "Publicação", "status": "blocked", "order": 8},
+    {"key": "approval", "label": "Aprovação", "status": "pending", "order": 9}
+  ],
+  "gate": {"status": "awaiting_review", "task_id": "task-copy-001", "agent_id": "copy", "version": 1, "reviewed_by": null, "reviewed_at": null, "note": null},
+  "activity": [
+    {"id": "event-001", "event_type": "campaign_created", "occurred_at": "2026-11-24T11:57:00-03:00", "message": "Ciclo criado para Vitrine Social Mídia", "actor_id": "marketing_director"},
+    {"id": "event-002", "event_type": "task_started", "occurred_at": "2026-11-24T11:58:00-03:00", "message": "Planner IA assumiu a pauta", "actor_id": "planner"},
+    {"id": "event-003", "event_type": "via_review_requested", "occurred_at": "2026-11-24T11:59:00-03:00", "message": "Copy IA enviou a versão 1 para revisão da VIA", "actor_id": "copy"}
+  ]
+}
