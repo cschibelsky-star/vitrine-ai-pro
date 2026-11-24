@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitrineiapro.com.br/contracts/escritorio-operacional-state.schema.json",
+  "title": "Estado operacional do Escritório Virtual",
+  "type": "object",
+  "required": ["snapshot_at", "product", "departments", "agents", "pipeline", "gate", "activity"],
+  "properties": {
+    "snapshot_at": {"type": "string", "format": "date-time"},
+    "product": {"type": "string", "enum": ["vitrine_social_midia", "marketing_ia"]},
+    "campaign_id": {"type": ["string", "null"]},
+    "departments": {"type": "array", "items": {"$ref": "#/$defs/department"}},
+    "agents": {"type": "array", "items": {"$ref": "#/$defs/agent"}},
+    "pipeline": {"type": "array", "items": {"$ref": "#/$defs/pipelineStep"}},
+    "gate": {"$ref": "#/$defs/gate"},
+    "activity": {"type": "array", "items": {"$ref": "#/$defs/activity"}}
+  },
+  "$defs": {
+    "department": {
+      "type": "object",
+      "required": ["key", "name", "order"],
+      "properties": {
+        "key": {"type": "string"},
+        "name": {"type": "string"},
+        "order": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "agent": {
+      "type": "object",
+      "required": ["id", "department", "name", "role", "status", "task_id"],
+      "properties": {
+        "id": {"type": "string"},
+        "department": {"type": "string"},
+        "name": {"type": "string"},
+        "role": {"type": "string"},
+        "status": {"type": "string", "enum": ["idle", "working", "awaiting_via_review", "blocked", "ready_for_handoff", "failed"]},
+        "task_id": {"type": ["string", "null"]},
+        "heartbeat_at": {"type": ["string", "null"], "format": "date-time"},
+        "artifact_version": {"type": ["integer", "null"], "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "pipelineStep": {
+      "type": "object",
+      "required": ["key", "label", "status", "order"],
+      "properties": {
+        "key": {"type": "string"},
+        "label": {"type": "string"},
+        "status": {"type": "string", "enum": ["pending", "active", "done", "blocked"]},
+        "order": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "gate": {
+      "type": "object",
+      "required": ["status", "task_id", "agent_id", "version"],
+      "properties": {
+        "status": {"type": "string", "enum": ["not_submitted", "awaiting_review", "approved", "changes_requested"]},
+        "task_id": {"type": ["string", "null"]},
+        "agent_id": {"type": ["string", "null"]},
+        "version": {"type": ["integer", "null"], "minimum": 1},
+        "reviewed_by": {"type": ["integer", "null"]},
+        "reviewed_at": {"type": ["string", "null"], "format": "date-time"},
+        "note": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "activity": {
+      "type": "object",
+      "required": ["id", "event_type", "occurred_at", "message"],
+      "properties": {
+        "id": {"type": "string"},
+        "event_type": {"type": "string"},
+        "occurred_at": {"type": "string", "format": "date-time"},
+        "message": {"type": "string"},
+        "actor_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
