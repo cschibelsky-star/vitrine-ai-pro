@@ -1,0 +1,22 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/vendor": true
+  },
+  "search.exclude": {
+    "**/vendor": true,
+    "**/storage/logs": true,
+    "**/backups": true
+  },
+  "editor.formatOnSave": true,
+  "editor.rulers": [100, 120],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "php.validate.enable": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false
+  }
+}
