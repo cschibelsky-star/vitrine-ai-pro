@@ -33,7 +33,7 @@
         "department": {"type": "string"},
         "name": {"type": "string"},
         "role": {"type": "string"},
-        "status": {"type": "string", "enum": ["idle", "working", "awaiting_via_review", "blocked", "ready_for_handoff", "failed"]},
+        "status": {"type": "string", "enum": ["idle", "queued", "working", "awaiting_via_review", "blocked", "ready_for_handoff", "failed", "unknown"]},
         "task_id": {"type": ["string", "null"]},
         "heartbeat_at": {"type": ["string", "null"], "format": "date-time"},
         "artifact_version": {"type": ["integer", "null"], "minimum": 1}
