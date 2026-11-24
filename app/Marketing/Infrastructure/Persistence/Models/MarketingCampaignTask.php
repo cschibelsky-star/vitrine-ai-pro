@@ -19,6 +19,7 @@ class MarketingCampaignTask extends Model
         'queued_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'via_reviewed_at' => 'datetime',
     ];
 
     public function campaign(): BelongsTo
@@ -39,5 +40,10 @@ class MarketingCampaignTask extends Model
     public function artifacts(): HasMany
     {
         return $this->hasMany(MarketingArtifactVersion::class, 'task_id');
+    }
+
+    public function viaReviewer(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'via_reviewed_by');
     }
 }
