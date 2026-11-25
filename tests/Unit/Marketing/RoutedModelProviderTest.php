@@ -297,8 +297,18 @@ class RoutedModelProviderTest extends TestCase
         $this->assertSame(42, (int) $registro->tokens_input);
         $this->assertSame(13, (int) $registro->tokens_output);
         $this->assertNotNull($registro->duration_seconds);
-        $this->assertSame('a entrega do agente', $registro->output['content'] ?? null);
-        $this->assertSame('Copy & Content Agent', $registro->metadata['agent_name'] ?? null);
+
+        // ⭐ O JSON é lido como TEXTO — porque foi gravado como texto (o Query
+        // Builder não tem os casts do Eloquent). ⭐ É este detalhe que fazia o
+        // registro "não existir" antes: um array PHP numa coluna json vira a
+        // string "Array", e a leitura não conseguia interpretá-lo.
+        $saida = json_decode((string) $registro->output, true);
+        $metadados = json_decode((string) $registro->metadata, true);
+
+        $this->assertIsArray($saida);
+        $this->assertSame('a entrega do agente', $saida['content'] ?? null);
+        $this->assertIsArray($metadados);
+        $this->assertSame('Copy & Content Agent', $metadados['agent_name'] ?? null);
     }
 
     // =========================================================================
@@ -426,13 +436,19 @@ class RoutedModelProviderTest extends TestCase
     {
         $this->criarProvedores(['roteia', 'openai'], comCredencial: false);
 
-        // ⭐ Só o Roteia tem credencial própria (no registro). O Claude Opus 5 e o
-        // OpenAI não têm nenhuma.
+        // ⭐ Só o Roteia tem credencial própria (no registro). O OpenAI não tem
+        // nenhuma — nem no registro, nem no ambiente.
         DB::table('ai_providers')->where('slug', 'roteia')->update(['api_key' => 'chave-do-roteia']);
 
         // ⭐ E a chave do Roteia ESTÁ no ambiente — que é exatamente a situação
         // perigosa: o fallback OLD usaria essa chave para qualquer provedor.
         putenv('ROTEIA_API_KEY=chave-do-roteia');
+
+        // ⭐ O OpenAI é o ÚLTIMO provedor, e não tem credencial. ⭐ Então ele é
+        // PULSADO — e a execução falha dizendo que não houve credencial.
+        unset($_ENV['OPENAI_API_KEY'], $_ENV['OPENAI_KEY']);
+        putenv('OPENAI_API_KEY');
+        putenv('OPENAI_KEY');
 
         Http::fake([
             '*' => Http::response([
@@ -444,30 +460,69 @@ class RoutedModelProviderTest extends TestCase
 
         $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia', 'openai']));
 
-        // ⭐ O OpenAI é tentado (é o próximo), e ele NÃO tem credencial — então
-        // deve ser PULSADO, e a execução deve falhar.
+        // ⭐ O Roteia responde (é o preferido e tem credencial), então a execução
+        // PASSA. O que importa é o que foi enviado para cada um.
+        $resultado = $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
+
+        $this->assertSame('conteudo', $resultado->text);
+
+        // ⭐⭐ A PROVA: a chave do Roteia não foi enviada para NENHUM fornecedor
+        // que não seja o Roteia.
+        Http::assertSent(function ($request): bool {
+            if (! str_contains($request->url(), 'roteia')) {
+                $this->assertStringNotContainsString(
+                    'chave-do-roteia',
+                    (string) ($request->header('Authorization')[0] ?? ''),
+                    'A credencial do Roteia vazou para outro provedor.',
+                );
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * ⭐⭐⭐ UM PROVEDOR SEM CREDENCIAL É PULSADO — E A EXECUÇÃO FALHA.
+     *
+     * ⭐ Este é o complemento do teste anterior: quando NENHUM provedor tem
+     * credencial, a execução tem que falhar dizendo isso — em vez de chamar
+     * alguém com a chave de outro.
+     */
+    public function test_sem_credencial_em_nenhum_provedor_a_execucao_falha(): void
+    {
+        $this->criarProvedores(['roteia', 'openai'], comCredencial: false);
+
+        // ⭐ A chave do Roteia está no ambiente, mas o ROTEIA também não tem
+        // credencial no registro... ⭐ e a variável de ambiente é a DELE.
+        putenv('ROTEIA_API_KEY');
+        unset($_ENV['OPENAI_API_KEY'], $_ENV['OPENAI_KEY']);
+        putenv('OPENAI_API_KEY');
+        putenv('OPENAI_KEY');
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'gpt-4o-mini',
+                'choices' => [['message' => ['content' => 'conteudo']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia', 'openai']));
+
         $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Todos os provedores falharam');
 
-        try {
-            $provedor->execute('modelo-de-teste', 'faça a tarefa', [
-                'agent_name' => 'Copy & Content Agent',
-                'capability' => 'copy',
-            ]);
-        } finally {
-            // ⭐⭐ A PROVA: a chave do Roteia não foi enviada para NENHUM
-            // fornecedor que não seja o Roteia.
-            Http::assertSent(function ($request): bool {
-                if (! str_contains($request->url(), 'roteia')) {
-                    $this->assertStringNotContainsString(
-                        'chave-do-roteia',
-                        (string) ($request->header('Authorization')[0] ?? ''),
-                        'A credencial do Roteia vazou para outro provedor.',
-                    );
-                }
+        $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
 
-                return true;
-            });
-        }
+        // ⭐ E NENHUMA CHAMADA FOI FEITA — porque nenhum provedor tinha
+        // credencial para chamá-lo.
+        Http::assertNothingSent();
     }
 
     /**

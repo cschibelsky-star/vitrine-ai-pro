@@ -373,8 +373,16 @@ final class RoutedModelProvider implements AgentModelProvider
     {
         $base = rtrim($baseUrl, '/');
 
+        // ⭐ A base pode já vir com o caminho completo.
         if (str_ends_with($base, '/chat/completions')) {
             return $base;
+        }
+
+        // ⭐⭐ E PODE JÁ VIR COM A VERSÃO (`/v1`). ⭐ Aí, concatenar `/v1` de novo
+        // produziria `/v1/v1/chat/completions` — chamada inválida, que o fallback
+        // trataria como "provedor fora do ar", escondendo um erro de URL.
+        if (str_ends_with($base, '/v1')) {
+            return $base.'/chat/completions';
         }
 
         return $base.'/v1/chat/completions';
