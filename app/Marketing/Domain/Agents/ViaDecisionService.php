@@ -67,12 +67,15 @@ final class ViaDecisionService
 
             // ⭐⭐ A VIA SÓ DECIDE O QUE ESTÁ EM REVISÃO.
             //
-            // ⭐ `RuntimeException` em vez de `abort_unless`: ⭐ o serviço é de
-            // DOMÍNIO, e não de HTTP. ⭐ A camada HTTP traduz a exceção em
-            // resposta — como já acontece com as demais regras deste repositório.
-            if (! in_array($metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true)) {
-                throw new RuntimeException('A entrega não está em revisão da VIA.');
-            }
+            // ⭐ `abort_unless` com 409 — o mesmo padrão que o
+            // `AdministrativeMinutesService` já usava neste fluxo. ⭐ 409 é
+            // "conflito com o estado atual": ⭐ a entrega já foi julgada, ou o
+            // supervisor não pode julgar.
+            abort_unless(
+                in_array($metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true),
+                409,
+                'A entrega não está em revisão da VIA.',
+            );
 
             // ⭐⭐⭐ A INDEPENDÊNCIA DO SUPERVISOR.
             //
@@ -86,17 +89,22 @@ final class ViaDecisionService
             // não pode ser o único a approve o próprio escopo.
             $produtor = $metadata['result_submitted_by'] ?? null;
 
+            // ⭐ 403 — "falta permissão". ⭐ É a recusa de AUTORIZAÇÃO, e não
+            // conflito de estado: ⭐ o supervisor existe e tem permissão geral,
+            // mas não pode julgar ESTE trabalho.
             if ($produtor !== null && (int) $produtor === $supervisorId) {
-                throw new RuntimeException(
-                    'A VIA não pode ser o supervisor de uma entrega que o próprio supervisor produziu.'
+                abort(
+                    403,
+                    'A VIA não pode ser o supervisor de uma entrega que o próprio supervisor produziu.',
                 );
             }
 
             $criador = $mission->created_by;
 
             if ($produtor === null && (int) $criador === $supervisorId) {
-                throw new RuntimeException(
-                    'A VIA não pode ser o supervisor da própria missão que criou.'
+                abort(
+                    403,
+                    'A VIA não pode ser o supervisor da própria missão que criou.',
                 );
             }
 

@@ -182,6 +182,15 @@ Route::middleware(['auth'])->group(function () {
 
         $aprovado = $request->validated('decision') === 'approve';
 
+        // ⭐⭐ A DECISÃO.
+        //
+        // ⭐⭐ O `ViaDecisionService` aplica a regra e recusa com `abort()`:
+        //   - 409 quando a entrega não está em revisão (conflito de estado);
+        //   - ⭐ 403 quando o supervisor produziu a entrega que ia julgar.
+        //
+        // ⭐⭐ São status codes HTTP porque ⭐ a resposta ao gestor precisa
+        // distinguir "já foi julgada" de "você não pode julgar isto" — e uma
+        // tela que mostra "erro" para os dois não ajuda ninguém.
         $via->decide(
             mission: $mission,
             aprovado: $aprovado,

@@ -26,7 +26,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use RuntimeException;
+use SymfonyComponentHttpKernelExceptionHttpException;
 use Tests\TestCase;
 
 class ViaDecisionTest extends TestCase
@@ -141,7 +141,7 @@ class ViaDecisionTest extends TestCase
         $supervisor = $this->usuario();
         $missao = $this->missaoEmRevisao($supervisor);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(HttpException::class);
         $this->expectExceptionMessage('não pode ser o supervisor de uma entrega que o próprio supervisor produziu');
 
         app(ViaDecisionService::class)->decide(
@@ -162,7 +162,7 @@ class ViaDecisionTest extends TestCase
         $supervisor = $this->usuario();
         $missao = $this->missaoEmRevisao($supervisor);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(HttpException::class);
         $this->expectExceptionMessage('não pode ser o supervisor');
 
         app(ViaDecisionService::class)->decide(
@@ -184,7 +184,7 @@ class ViaDecisionTest extends TestCase
         $criador = $this->usuario();
         $missao = $this->missaoEmRevisao($criador, ['result_submitted_by' => null]);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(HttpException::class);
         $this->expectExceptionMessage('não pode ser o supervisor da própria missão que criou');
 
         app(ViaDecisionService::class)->decide(
@@ -270,7 +270,7 @@ class ViaDecisionTest extends TestCase
         $supervisor = $this->usuario();
         $missao = $this->missaoEmRevisao($produtor, ['review_status' => 'approved']);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(HttpException::class);
         $this->expectExceptionMessage('não está em revisão da VIA');
 
         app(ViaDecisionService::class)->decide(
