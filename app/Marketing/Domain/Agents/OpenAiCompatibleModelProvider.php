@@ -4,12 +4,20 @@
  * O QUE É: o provedor de modelo para APIs no formato OpenAI.
  * COMO FUNCIONA: monta o corpo da requisição no formato `/chat/completions` e
  * traduz a resposta.
- * FUNÇÃO NO SISTEMA: ser o ponto onde o Escritório se conecta às IAs de verdade.
+ * FUNÇÃO NO SISTEMA: ⭐ ser o ponto onde o Escritório chama a IA — reaproveitando o
+ * endpoint e o formato que a plataforma JÁ usa.
  *
- * ⭐ POR QUE UM ÚNICO ADAPTADOR PARA TANTOS PROVEDORES: RoteirO, Invision,
- * OpenRouter, Together, Groq, vLLM local e Ollama (com compatibilidade) falam
- * todos o mesmo formato. Trocar de provedor é trocar a URL base, a chave e a
- * lista de modelos — NADA mais. Um adaptador atende todos.
+ * ⭐⭐ POR QUE O FORMATO OPENAI E POR QUE O MESMO ENDPOINT:
+ *
+ *   A plataforma já chama o RoteirO em `AiExecutionService` como
+ *   `{ROTEIA_BASE_URL}/v1/chat/completions`, no formato OpenAI. Este adaptador
+ *   fala o MESMO protocolo — então o Escritório não inventa um dialeto, não
+ *   precisa de um segundo cliente HTTP, e uma mudança no gateway vale para os
+ *   dois lados.
+ *
+ *   ⭐ E O ROTEIRÉ O PRIMEIRO PROVEDOR: `ROTEIA_BASE_URL` + `ROTEIA_API_KEY` são as
+ *   mesmas variáveis que o IA Center já usa. Um provedor novo é só mais uma
+ *   entrada — não uma integração nova.
  *
  * ⭐ E O QUE ESTE ARQUIVO NÃO FAZ: ele não conhece tarefa, não conhece status e
  * não conhece a VIA. Ele produz TEXTO. Quem decide o que acontece com esse texto
@@ -94,9 +102,13 @@ final class OpenAiCompatibleModelProvider implements AgentModelProvider
             modelUsed: (string) ($payload['model'] ?? $model),
             inputTokens: (int) ($payload['usage']['prompt_tokens'] ?? 0),
             outputTokens: (int) ($payload['usage']['completion_tokens'] ?? 0),
-            // ⭐ O custo é calculado pelo serviço, não aqui: o preço de cada modelo
-            // muda, e um valor fixo neste lugar viraria mentira. O provedor devolve
-            // os tokens; a precificação fica com quem conhece a tabela de preços.
+            // ⭐⭐ O CUSTO FICA EM ABERTO, DE PROPÓSITO.
+            //
+            // A tabela `ai_executions` (do IA Center) é onde o custo é medido, e
+            // ela é alimentada pelo `AiExecutionService`. Preencher custo aqui
+            // seria criar uma SEGUNDA medição — e duas medições de custo sempre
+            // divergem. ⭐ Para avaliar fluxo e custos (que é o que interessa
+            // agora), o caminho é usar o `ai_executions` que já existe.
             costCents: 0,
         );
     }

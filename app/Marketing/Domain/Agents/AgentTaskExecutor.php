@@ -90,9 +90,14 @@ final class AgentTaskExecutor
     /**
      * ⭐ O MODELO DO AGENTE.
      *
-     * Vem da definição do agente (campo `model`). Se o agente não declarar um
-     * modelo, cai no padrão da configuração — assim dá para rodar a fábrica com
-     * um modelo só e ir ajustando agente por agente.
+     * Ordem de resolução:
+     *   1. o modelo que o AGENTE declara (`marketing_agents.agents.<id>.model`);
+     *   2. `ESCRITORIO_MODEL_PADRAO` — o padrão do Escritório;
+     *   3. `ROTEIA_CHAT_MODEL` — o padrão do gateway, que a plataforma já usa.
+     *
+     * ⭐ A ordem importa: o agente é o mais específico, então ele vence. O padrão
+     * do gateway é o último recurso — assim o Escritório funciona mesmo sem
+     * configuração própria, sem criar uma segunda convenção.
      *
      * @param  array<string, mixed>  $agent
      */
@@ -104,16 +109,21 @@ final class AgentTaskExecutor
             return $model;
         }
 
-        $padrao = config('marketing_agents.default_model');
-
-        if (! is_string($padrao) || $padrao === '') {
-            throw new RuntimeException(sprintf(
-                'O agente [%s] não declara modelo e não há modelo padrão configurado.',
-                $agentId,
-            ));
+        foreach (
+            [
+                config('marketing_agents.default_model'),
+                config('marketing_agents.ai.model_default'),
+            ] as $padrao
+        ) {
+            if (is_string($padrao) && $padrao !== '') {
+                return $padrao;
+            }
         }
 
-        return $padrao;
+        throw new RuntimeException(sprintf(
+            'O agente [%s] não declara modelo e não há modelo padrão configurado.',
+            $agentId,
+        ));
     }
 
     /**

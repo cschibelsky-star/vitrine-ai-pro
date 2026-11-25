@@ -144,12 +144,32 @@ class AgentTaskExecutorTest extends TestCase
 
     public function test_executor_usa_o_modelo_padrao_quando_o_agente_nao_declara(): void
     {
-        config(['marketing_agents.default_model' => 'grok-4']);
+        config(['marketing_agents.default_model' => 'deepseek/deepseek-v4-flash']);
 
         $provedor = $this->provedorFalso();
         $this->executor($provedor)->execute($this->tarefa());
 
-        $this->assertSame('grok-4', $provedor->ultimoModelo);
+        $this->assertSame('deepseek/deepseek-v4-flash', $provedor->ultimoModelo);
+    }
+
+    /**
+     * ⭐⭐ O MODELO DO GATEWAY É O ÚLTIMO RECURSO.
+     *
+     * ⭐ Este é o teste que garante que o Escritório não cria uma segunda
+     * convenção: se o agente não declara modelo e o Escritório não tem padrão
+     * próprio, ele usa o `ROTEIA_CHAT_MODEL` — a mesma variável do IA Center.
+     */
+    public function test_executor_cai_no_modelo_do_gateway_quando_nao_ha_padrao_proprio(): void
+    {
+        config([
+            'marketing_agents.default_model' => '',
+            'marketing_agents.ai.model_default' => 'modelo-do-gateway',
+        ]);
+
+        $provedor = $this->provedorFalso();
+        $this->executor($provedor)->execute($this->tarefa());
+
+        $this->assertSame('modelo-do-gateway', $provedor->ultimoModelo);
     }
 
     public function test_executor_usa_o_modelo_do_agente_quando_declarado(): void
@@ -226,6 +246,44 @@ class AgentTaskExecutorTest extends TestCase
 
         $executor = new AgentTaskExecutor(app(AgentRegistry::class), null);
         $executor->execute($this->tarefa());
+    }
+
+    /**
+     * ⭐⭐ O PROVEDOR SÓ É REGISTRADO COM A CONFIGURAÇÃO COMPLETA.
+     *
+     * ⭐ Este é o estado em que o Escritório deve ficar enquanto se avalia fluxo
+     * e custo: SEM lista de modelos, o provedor não é registrado, o executor
+     * falha com mensagem clara, e o Escritório continua funcionando com a
+     * entrega digitada à mão.
+     *
+     * ⭐ E É POR ISSO QUE A LISTA DE MODELOS É O QUE SEGURA A CHAVE: sem ela,
+     * nenhuma chamada de IA é feita — mesmo com a chave no ambiente.
+     */
+    public function test_provedor_so_e_registrado_com_a_configuracao_completa(): void
+    {
+        // Sem base, sem chave e sem lista: não há provedor.
+        config([
+            'marketing_agents.ai.base_url' => '',
+            'marketing_agents.ai.api_key' => '',
+            'marketing_agents.ai.models' => [],
+        ]);
+        $this->assertNull(app(AgentModelProvider::class));
+
+        // Com a lista vazia, mesmo com base e chave: não há provedor.
+        config([
+            'marketing_agents.ai.base_url' => 'https://api.roteia.ai',
+            'marketing_agents.ai.api_key' => 'chave-de-teste',
+            'marketing_agents.ai.models' => [],
+        ]);
+        $this->assertNull(app(AgentModelProvider::class));
+
+        // Completo: o provedor existe.
+        config(['marketing_agents.ai.models' => ['deepseek/deepseek-v4-flash']]);
+        $provedor = app(AgentModelProvider::class);
+
+        $this->assertNotNull($provedor);
+        $this->assertTrue($provedor->supports('deepseek/deepseek-v4-flash'));
+        $this->assertFalse($provedor->supports('modelo-inexistente'));
     }
 
     // =========================================================================

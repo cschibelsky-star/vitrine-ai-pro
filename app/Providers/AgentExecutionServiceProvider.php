@@ -3,17 +3,21 @@
 /**
  * O QUE É: o provider que liga o executor de IA e o provedor de modelo.
  * COMO FUNCIONA: registra o `AgentTaskExecutor` no container, montando o
- * provedor a partir da configuração de ambiente.
+ * provedor a partir da MESMA configuração que o IA Center já usa.
  * FUNÇÃO NO SISTEMA: ⭐ ser o ÚNICO lugar onde se decide qual IA o Escritório usa.
  *
- * ⭐ POR QUE UM PROVIDER E NÃO UM `new` NO SERVIÇO: porque o teste precisa
- * trocar o provedor por uma implementação falsa, sem chamar IA nenhuma. Registrando
- * no container, o teste sobrescreve o binding e pronto — e o código de produção
- * continua sem saber que isso existe.
+ * ⭐⭐ E A REGRA MAIS IMPORTANTE DESTE ARQUIVO:
  *
- * ⭐ E A CONFIGURAÇÃO FICA NO AMBIENTE, E NÃO NO CÓDIGO: a chave da API é
- * segredo. E o provedor muda (RoteirO, Invision, OpenRouter, Ollama local) sem
- * que isso precise de deploy.
+ *   ⭐ NÃO EXISTE UMA SEGUNDA CONVENÇÃO DE VARIÁVEIS.
+ *
+ *   A plataforma já tem `ROTEIA_BASE_URL`, `ROTEIA_API_KEY` e `ROTEIA_CHAT_MODEL`,
+ *   usadas pelo `AiExecutionService`. Se o Escritório usasse `IA_URL_BASE` e
+ *   `IA_CHAVE`, teríamos DUAS chaves para o mesmo provedor, e o dia que uma
+ *   acabasse e a outra não, o produto quebraria de um jeito difícil de
+ *   diagnosticar.
+ *
+ *   ⭐ Então o Escritório LÊ AS MESMAS VARIÁVEIS. O que é novo são só as duas
+ *   que não existiam: a lista de modelos aceitos e o modelo padrão dos agentes.
  */
 
 declare(strict_types=1);
@@ -37,17 +41,17 @@ final class AgentExecutionServiceProvider extends ServiceProvider
         // mão), e é só quando alguém pede uma execução que o erro aparece, com
         // mensagem clara.
         $this->app->singleton(AgentModelProvider::class, function (): ?AgentModelProvider {
-            $name = (string) config('marketing_agents.ai.provider');
-            $baseUrl = (string) config('marketing_agents.ai.base_url');
-            $apiKey = (string) config('marketing_agents.ai.api_key');
+            // ⭐ As MESMAS variáveis do IA Center. Uma chave, um endpoint.
+            $baseUrl = trim((string) config('marketing_agents.ai.base_url'));
+            $apiKey = trim((string) config('marketing_agents.ai.api_key'));
             $models = (array) config('marketing_agents.ai.models', []);
 
-            if ($name === '' || $baseUrl === '' || $apiKey === '' || $models === []) {
+            if ($baseUrl === '' || $apiKey === '' || $models === []) {
                 return null;
             }
 
             return new OpenAiCompatibleModelProvider(
-                name: $name,
+                name: (string) config('marketing_agents.ai.provider'),
                 baseUrl: $baseUrl,
                 apiKey: $apiKey,
                 models: array_values(array_map('strval', $models)),
