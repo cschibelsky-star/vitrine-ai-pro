@@ -35,7 +35,7 @@ class AgentTaskExecutorTest extends TestCase
      * concreta do adaptador HTTP. É o mesmo mecanismo que o `AgentRegistry` já usa
      * — e o mesmo que a porta de repositório usa no resto do projeto.
      */
-    private function provedorFalso(string $texto = 'Conteudo produzido pelo agente.', array $modelos = ['grok-4']): AgentModelProvider
+    private function provedorFalso(string $texto = 'Conteudo produzido pelo agente.', array $modelos = ['modelo-de-teste']): AgentModelProvider
     {
         return new class($texto, $modelos) implements AgentModelProvider
         {
@@ -101,6 +101,24 @@ class AgentTaskExecutorTest extends TestCase
         return new AgentTaskExecutor(app(AgentRegistry::class), $provedor);
     }
 
+    /**
+     * ⭐ O ESTADO DE PARTIDA.
+     *
+     * ⭐ O executor precisa de um modelo para trabalhar, e o modelo vem da
+     * configuração. Como o CI não tem `.env`, o teste define um padrão explícito
+     * — assim cada teste parte de um estado CONHECIDO, e o teste do modelo padrão
+     * pode sobrescrever quando é o que está em prova.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'marketing_agents.default_model' => 'modelo-de-teste',
+            'marketing_agents.ai.model_default' => '',
+        ]);
+    }
+
     // =========================================================================
     // O EXECUTOR PRODUZ TEXTO
     // =========================================================================
@@ -146,7 +164,7 @@ class AgentTaskExecutorTest extends TestCase
     {
         config(['marketing_agents.default_model' => 'deepseek/deepseek-v4-flash']);
 
-        $provedor = $this->provedorFalso();
+        $provedor = $this->provedorFalso('ok', ['deepseek/deepseek-v4-flash']);
         $this->executor($provedor)->execute($this->tarefa());
 
         $this->assertSame('deepseek/deepseek-v4-flash', $provedor->ultimoModelo);
@@ -166,7 +184,7 @@ class AgentTaskExecutorTest extends TestCase
             'marketing_agents.ai.model_default' => 'modelo-do-gateway',
         ]);
 
-        $provedor = $this->provedorFalso();
+        $provedor = $this->provedorFalso('ok', ['modelo-do-gateway']);
         $this->executor($provedor)->execute($this->tarefa());
 
         $this->assertSame('modelo-do-gateway', $provedor->ultimoModelo);
@@ -209,6 +227,26 @@ class AgentTaskExecutorTest extends TestCase
         $this->executor($provedor)->execute($this->tarefa([
             'agent_definition_id' => null,
         ]));
+    }
+
+    /**
+     * ⭐⭐ A ORDEM DAS CHEKAGENS IMPORTA.
+     *
+     * ⭐ Sem provedor, a mensagem é sobre o PROVEDOR — e não sobre o modelo. A
+     * razão é a causa raiz: dizer "não há modelo padrão" levaria o usuário a
+     * caçar um modelo quando o que falta é a IA inteira.
+     *
+     * ⭐ Este teste trava essa ordem: se alguém inverter as checagens, ele quebra.
+     */
+    public function test_sem_provedor_a_mensagem_fala_do_provedor_e_nao_do_modelo(): void
+    {
+        config(['marketing_agents.default_model' => '']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Nenhum provedor de IA está configurado');
+
+        $executor = new AgentTaskExecutor(app(AgentRegistry::class), null);
+        $executor->execute($this->tarefa());
     }
 
     /**
@@ -261,13 +299,22 @@ class AgentTaskExecutorTest extends TestCase
      */
     public function test_provedor_so_e_registrado_com_a_configuracao_completa(): void
     {
+        // ⭐ O container MEMOIZA o singleton. Por isso cada cenário usa um
+        // container novo — senão o resultado do cenário anterior continuaria
+        // valendo e o teste passaria por acidente.
+        $resolver = function (): ?AgentModelProvider {
+            app()->forgetInstance(AgentModelProvider::class);
+
+            return app(AgentModelProvider::class);
+        };
+
         // Sem base, sem chave e sem lista: não há provedor.
         config([
             'marketing_agents.ai.base_url' => '',
             'marketing_agents.ai.api_key' => '',
             'marketing_agents.ai.models' => [],
         ]);
-        $this->assertNull(app(AgentModelProvider::class));
+        $this->assertNull($resolver());
 
         // Com a lista vazia, mesmo com base e chave: não há provedor.
         config([
@@ -275,11 +322,11 @@ class AgentTaskExecutorTest extends TestCase
             'marketing_agents.ai.api_key' => 'chave-de-teste',
             'marketing_agents.ai.models' => [],
         ]);
-        $this->assertNull(app(AgentModelProvider::class));
+        $this->assertNull($resolver());
 
         // Completo: o provedor existe.
         config(['marketing_agents.ai.models' => ['deepseek/deepseek-v4-flash']]);
-        $provedor = app(AgentModelProvider::class);
+        $provedor = $resolver();
 
         $this->assertNotNull($provedor);
         $this->assertTrue($provedor->supports('deepseek/deepseek-v4-flash'));
@@ -293,7 +340,7 @@ class AgentTaskExecutorTest extends TestCase
     public function test_adaptador_recusa_modelo_fora_da_lista_configurada(): void
     {
         $provedor = new OpenAiCompatibleModelProvider(
-            name: 'roteiro',
+            name: 'roteia',
             baseUrl: 'https://api.exemplo.test/v1',
             apiKey: 'chave-de-teste',
             models: ['grok-4'],

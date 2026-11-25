@@ -54,13 +54,27 @@ final class AgentTaskExecutor
         }
 
         $agent = $this->registry->get($agentId);
-        $model = $this->resolveModel($agentId, $agent);
 
+        // ⭐⭐ A ORDEM DAS CHEKAGENS IMPORTA.
+        //
+        // ⭐ O PROVEDOR É VERIFICADO PRIMEIRO, e não o modelo. A razão é a
+        // mensagem que o usuário recebe:
+        //
+        //   - Sem provedor: "Nenhum provedor de IA está configurado" — que é a
+        //     CAUSA RAIZ. Dizer "não há modelo padrão" seria levar o usuário a
+        //     caçar um modelo quando o que falta é a IA inteira.
+        //   - Com provedor, mas sem modelo: aí sim é o modelo que falta, e a
+        //     mensagem aponta o agente e o modelo pedido.
+        //
+        // ⭐ Todas as mensagens citam as variáveis do IA Center, porque são as
+        // que valem — e o Escritório não tem variáveis próprias.
         if ($this->provider === null) {
             throw new RuntimeException(
-                'Nenhum provedor de IA está configurado. Defina IA_PROVEDOR, IA_URL_BASE, IA_CHAVE e IA_MODELOS.'
+                'Nenhum provedor de IA está configurado. Defina ROTEIA_BASE_URL, ROTEIA_API_KEY e ESCRITORIO_IA_MODELOS.'
             );
         }
+
+        $model = $this->resolveModel($agentId, $agent);
 
         if (! $this->provider->supports($model)) {
             throw new RuntimeException(sprintf(
@@ -121,7 +135,7 @@ final class AgentTaskExecutor
         }
 
         throw new RuntimeException(sprintf(
-            'O agente [%s] não declara modelo e não há modelo padrão configurado.',
+            'O agente [%s] não declara modelo e não há modelo padrão configurado. Defina ESCRITORIO_MODEL_PADRAO ou ROTEIA_CHAT_MODEL.',
             $agentId,
         ));
     }
