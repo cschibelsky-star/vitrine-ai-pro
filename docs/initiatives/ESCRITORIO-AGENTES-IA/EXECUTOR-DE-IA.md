@@ -16,6 +16,26 @@ auditoria — mas ninguém produzia: a entrega era digitada à mão.
 - `AgentExecutionServiceProvider` — registra o executor no container. O teste
   sobrescreve o binding e passa um provedor falso.
 
+## ⭐⭐⭐ As correções que a auditoria exigiu
+
+Uma auditoria externa do PR #183 encontrou riscos reais. Todos foram corrigidos,
+e **cada um tem teste que o trava**:
+
+| Risco | Correção |
+|---|---|
+| **P0** — a credencial do Roteia servia de fallback genérico, e ia parar no endpoint de outro fornecedor | ⭐ Cada provedor tem a **sua** credencial (registro ou variável do fornecedor). A do Roteia só é usada pelo Roteia. Provedor sem credencial é **pulado**. |
+| **P0** — falha de persistência voltava como sucesso | ⭐ A falha **sobe**. E a execução só é considerada registrada se a tabela existir e o filtro de colunas não esvaziar o registro. |
+| **P1** — JSON em coluna `json` pelo Query Builder (que não tem casts do Eloquent) | ⭐ `json_encode` explícito. |
+| **P1** — URL duplicando `/v1` | ⭐ A base que já vem com `/v1` não recebe `/v1` de novo. |
+| **P1** — substituição automática de modelo | ⭐ O modelo pedido é usado, ou o provedor é **pulado**. Trocar o modelo é decisão do gestor, não do código. |
+| **P0** — Avello ausente do fluxo inicial | ⭐ `AvelloExecutionAdapter`, com o contrato do PR #172: transporte injetado, desligado por padrão, e **fail closed**. |
+
+⭐ E o mais importante de todos, que a auditoria деяfrontou: ⭐ **o fallback muda
+QUAL IA produz, nunca QUEM julga.** A entrega continua indo para
+`awaiting_via_review` pelo `MarketingTaskViaGate`. E o adaptador do Avello exige
+`evidence_ref` — ⭐ **entrega sem evidência não existe**, porque a VIA audita a
+evidência.
+
 ## ⭐⭐ O ponto que importa
 
 O executor **não tem acesso à porta de decisão da VIA**. Ele produz texto e
@@ -27,24 +47,11 @@ consegue se autoaprovar, por nenhum caminho.**
 
 Isso não é uma convenção — é estrutural. O executor não recebe a porta que
 grava a decisão, então mesmo que alguém alterasse o código dele, ele não teria
-como registrar uma aprovação. E há um teste que verifica isso pela própria
-assinatura da classe (`test_executor_nao_tem_acesso_a_porta_de_decisao_da_via`).
+como registrar uma aprovação. E há testes que verificam isso pela assinatura
+das três classes — o executor, o provedor roteado e o adaptador do Avello.
 
 As regras da VIA também vão para o modelo, em texto: o agente produz o trabalho,
 mas não aprova, não publica e não passa tarefa para outro.
-
-## ⭐⭐ O fallback não muda QUEM julga
-
-O provedor roteado (`RoutedModelProvider`) tenta o próximo provedor quando um
-falha — é o que dá resiliência: se o gateway RoteirO estiver fora do ar, o
-trabalho continua no provedor seguinte.
-
-⭐ **O fallback muda QUAL IA produz. Nunca muda QUEM julga.** A entrega continua
-indo para `awaiting_via_review` pelo `MarketingTaskViaGate`. ⭐ Nenhuma
-quantidade de provedores faz a IA se autoaprovar.
-
-E há testes que verificam isso pela assinatura das duas classes — o executor e
-o provedor roteado — para que ninguém introduza a porta de escrita por ali.
 
 ## ⭐⭐ Onde o fluxo e o custo são medidos
 
@@ -57,8 +64,9 @@ latência, modelo realmente usado, e o metadado com agente, departamento e
 tarefa.
 
 ⭐ **`estimated_cost` fica em 0** — como em todo o resto da plataforma — porque
-ainda não há tarifário de provedor no produto. ⭐ Quando o tarifário existir, ele
-é preenchido aqui e em lugar nenhum mais.
+ainda não há tarifário de provedor no produto. ⭐ Preencher com um palpite seria
+pior que zero: um número inventado no dashboard de custo é mais perigoso que um
+zero. ⭐ Quando o tarifário existir, ele é preenchido aqui e em lugar nenhum mais.
 
 ## ⭐⭐ O que é a CAPABILITY do agente
 
