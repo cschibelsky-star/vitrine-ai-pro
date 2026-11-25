@@ -40,6 +40,25 @@ class RoutedModelProviderTest extends TestCase
             'marketing_agents.default_model' => 'modelo-de-teste',
             'marketing_agents.ai.model_default' => '',
         ]);
+
+        // ⭐⭐ O GATEWAY PRECISA PARECER CONFIGURADO PARA ENTRAR NA FILA.
+        //
+        // ⭐ O roteamento pula o RoteirO quando o runtime não está configurado —
+        // é a mesma regra do `AiRoutingService`. ⭐ Então o teste precisa
+        // simular o runtime configurado, senão o provedor preferido nunca é
+        // tentado e o fallback não acontece.
+        //
+        // ⭐ `putenv` é o mesmo mecanismo usado em `RoteiaMediaDeliveryTest`.
+        putenv('ROTEIA_API_KEY=test-only-key');
+        putenv('ROTEIA_BASE_URL=https://api.roteia.ai');
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('ROTEIA_API_KEY');
+        putenv('ROTEIA_BASE_URL');
+
+        parent::tearDown();
     }
 
     /**
@@ -389,5 +408,53 @@ class RoutedModelProviderTest extends TestCase
                 "O agente [{$agentId}] tem capability desconhecida.",
             );
         }
+    }
+
+    /**
+     * ⭐⭐⭐ A CHAVE DO AGENTE VEM DO REGISTRO PERSISTIDO, NÃO DO ID.
+     *
+     * ⭐⭐ Este é o teste que trava o bug que existia: a tarefa guarda
+     * `agent_definition_id` (o ID do registro no banco), e o `AgentRegistry` é
+     * indexado pela CHAVE (`copy_content`).
+     *
+     * ⭐ Usar o ID como chave daria "Marketing agent [42] is not registered" —
+     * um erro que só apareceria com tarefa de verdade, nunca com chave fixa em
+     * teste. ⭐ Este teste usa o ID numérico e exige que o executor encontre o
+     * agente pela definição persistida.
+     */
+    public function test_o_executor_encontra_o_agente_pela_definicao_persistida(): void
+    {
+        $this->criarProvedores(['roteia']);
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'modelo-de-teste',
+                'choices' => [['message' => ['content' => 'ok']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        // ⭐ O registro persistido, com a CHAVE que o registry conhece.
+        $definicao = new \App\Marketing\Infrastructure\Persistence\Models\MarketingAgentDefinition();
+        $definicao->forceFill([
+            'id' => 42,
+            'company_id' => 1,
+            'agent_key' => 'copy_content',
+            'name' => 'Copy & Content Agent',
+            'type' => 'specialist',
+            'enabled' => true,
+        ]);
+
+        $tarefa = $this->tarefa(['agent_definition_id' => 42]);
+        $tarefa->setRelation('agentDefinition', $definicao);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia']));
+
+        $resultado = $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
+
+        $this->assertSame('ok', $resultado->text);
     }
 }

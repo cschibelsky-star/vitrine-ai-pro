@@ -47,13 +47,13 @@ final class AgentTaskExecutor
      */
     public function execute(MarketingCampaignTask $task, array $overrides = []): AgentModelResult
     {
-        $agentId = (string) ($task->agent_definition_id ?? '');
+        $agentKey = $this->agentKeyFor($task);
 
-        if ($agentId === '') {
+        if ($agentKey === '') {
             throw new RuntimeException('A tarefa não possui agente responsável.');
         }
 
-        $agent = $this->registry->get($agentId);
+        $agent = $this->registry->get($agentKey);
 
         // ⭐⭐ A ORDEM DAS CHEKAGENS IMPORTA.
         //
@@ -74,19 +74,19 @@ final class AgentTaskExecutor
             );
         }
 
-        $model = $this->resolveModel($agentId, $agent);
+        $model = $this->resolveModel($agentKey, $agent);
 
         if (! $this->provider->supports($model)) {
             throw new RuntimeException(sprintf(
                 'Provedor [%s] não possui o modelo [%s] configurado para o agente [%s].',
                 $this->provider->name(),
                 $model,
-                $agentId,
+                $agentKey,
             ));
         }
 
         $context = [
-            'agent_name' => (string) ($agent['name'] ?? $agentId),
+            'agent_name' => (string) ($agent['name'] ?? $agentKey),
             'department' => (string) ($overrides['department'] ?? 'operacional'),
             'step' => (string) ($overrides['step'] ?? (string) $task->status),
             'task_title' => (string) $task->task_key,
@@ -110,6 +110,40 @@ final class AgentTaskExecutor
     }
 
     /**
+     * ⭐⭐ A CHAVE DO AGENTE.
+     *
+     * ⭐⭐ ESTE É O PONTO QUE O EXECUTOR ESTAVA ERRADO.
+     *
+     * A tarefa guarda `agent_definition_id`, que é o **ID do registro no banco**
+     * (um inteiro). Mas o `AgentRegistry` é indexado pela **CHAVE** — `copy_content`,
+     * `creative_director` — que é o `agent_key` do registro.
+     *
+     * ⭐ São dois identificadores diferentes. Usar o ID como chave daria "Marketing
+     * agent [42] is not registered" — um erro que só apareceria com tarefa de
+     * verdade, nunca no teste com chave fixa.
+     *
+     * ⭐ E É POR ISSO QUE O `OfficeOperationalStateController` faz
+     * `$task->agentDefinition?->agent_key`: é a mesma travessia. ⭐ O Escritório
+     * usa o mesmo caminho, e não um atalho.
+     */
+    private function agentKeyFor(MarketingCampaignTask $task): string
+    {
+        // ⭐ A definição persistida é a fonte da verdade: ela sabe a chave.
+        // ⭐ `loadMissing` evita a consulta quando a relação já veio carregada.
+        $definicao = $task->relationLoaded('agentDefinition')
+            ? $task->getRelation('agentDefinition')
+            : $task->agentDefinition()->first();
+
+        if ($definicao && ! empty($definicao->agent_key)) {
+            return (string) $definicao->agent_key;
+        }
+
+        // ⭐ Sem o registro, o próprio ID pode ser a chave — acontece quando a
+        // tarefa é criada com o agent_key no lugar do id.
+        return (string) ($task->agent_definition_id ?? '');
+    }
+
+    /**
      * ⭐ O MODELO DO AGENTE.
      *
      * Ordem de resolução:
@@ -123,7 +157,7 @@ final class AgentTaskExecutor
      *
      * @param  array<string, mixed>  $agent
      */
-    private function resolveModel(string $agentId, array $agent): string
+    private function resolveModel(string $agentKey, array $agent): string
     {
         $model = $agent['model'] ?? null;
 
@@ -144,7 +178,7 @@ final class AgentTaskExecutor
 
         throw new RuntimeException(sprintf(
             'O agente [%s] não declara modelo e não há modelo padrão configurado. Defina ESCRITORIO_MODEL_PADRAO ou ROTEIA_CHAT_MODEL.',
-            $agentId,
+            $agentKey,
         ));
     }
 

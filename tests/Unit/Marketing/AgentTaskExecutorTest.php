@@ -93,6 +93,23 @@ class AgentTaskExecutorTest extends TestCase
             'via_status' => 'not_submitted',
         ], $atributos));
 
+        // ⭐⭐ A DEFINIÇÃO DO AGENTE.
+        //
+        // ⭐ A tarefa guarda o ID do registro do agente, e o `AgentRegistry` é
+        // indexado pela CHAVE (`copy_content`). ⭐ Então o teste carrega a
+        // definição com essa chave — é a mesma travessia que o banco faz.
+        $definicao = new \App\Marketing\Infrastructure\Persistence\Models\MarketingAgentDefinition();
+        $definicao->forceFill([
+            'id' => 1,
+            'company_id' => 1,
+            'agent_key' => 'copy_content',
+            'name' => 'Copy & Content Agent',
+            'type' => 'specialist',
+            'enabled' => true,
+        ]);
+
+        $tarefa->setRelation('agentDefinition', $definicao);
+
         return $tarefa;
     }
 
