@@ -295,6 +295,7 @@ class RoutedModelProviderTest extends TestCase
         $this->assertSame(13, (int) $registro->tokens_output);
         $this->assertNotNull($registro->duration_seconds);
         $this->assertSame('a entrega do agente', $registro->output['content'] ?? null);
+        $this->assertSame('Copy & Content Agent', $registro->metadata['agent_name'] ?? null);
     }
 
     // =========================================================================

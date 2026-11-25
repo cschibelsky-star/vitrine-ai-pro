@@ -320,13 +320,8 @@ final class RoutedModelProvider implements AgentModelProvider
         array $context,
     ): void {
         try {
-            if (! DB::getSchemaBuilder()->hasTable('ai_executions')) {
-                return;
-            }
-
             $cols = DB::getSchemaBuilder()->getColumnListing('ai_executions');
             $data = [
-                'name' => 'Escritório - '.((string) ($context['agent_name'] ?? 'Agente')),
                 'ai_provider_id' => $provedor->id,
                 'execution_type' => 'escritorio_virtual',
                 'status' => 'Concluído',
