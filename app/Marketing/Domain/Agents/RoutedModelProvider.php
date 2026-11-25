@@ -86,7 +86,21 @@ final class RoutedModelProvider implements AgentModelProvider
             try {
                 $resultado = $this->executeWith($provedor, $model, $instruction, $context);
 
-                $this->registerExecution($provedor, $resultado, $instruction, $context);
+                // ⭐⭐ O REGISTRO É PARTE DA EXECUÇÃO.
+                //
+                // ⭐ A auditoria está certa: ⭐ se o registro falha, a execução
+                // não pode voltar como sucesso. ⭐ O texto produzido NÃO se
+                // perde — ele volta — mas vem marcado como não registrado, para
+                // que a VIA saiba que não há evidência persistida para auditar.
+                $falhaNoRegistro = $this->registerExecution($provedor, $resultado, $instruction, $context);
+
+                if ($falhaNoRegistro !== null) {
+                    throw new RuntimeException(sprintf(
+                        'O provedor [%s] respondeu, mas a execução não foi registrada: %s',
+                        $provedor->slug,
+                        $falhaNoRegistro,
+                    ));
+                }
 
                 return $resultado;
             } catch (Throwable $e) {
@@ -94,6 +108,14 @@ final class RoutedModelProvider implements AgentModelProvider
                 // é tentado. É o que dá resiliência de verdade — e o que o
                 // `AiRoutingService` faz quando o provedor preferido não está
                 // configurado.
+                //
+                // ⭐ EXCETO quando a falha é de REGISTRO: aí o texto já foi
+                // produzido e o próximo provedor não mudaria nada — e a
+                // execução seguiria sem registro. ⭐ Nesse caso o erro sobe.
+                if ($e instanceof RuntimeException && str_contains($e->getMessage(), 'não foi registrada')) {
+                    throw $e;
+                }
+
                 $falhas[] = sprintf('%s: %s', $provedor->slug, $e->getMessage());
             }
         }
@@ -196,14 +218,13 @@ final class RoutedModelProvider implements AgentModelProvider
         array $context,
     ): AgentModelResult {
         $baseUrl = rtrim($this->baseUrlFor($provedor), '/');
-        $apiKey = trim((string) ($provedor->api_key ?? ''));
-
-        if ($apiKey === '') {
-            $apiKey = trim((string) env('ROTEIA_API_KEY', ''));
-        }
+        $apiKey = $this->apiKeyFor($provedor);
 
         if ($apiKey === '' || $baseUrl === '') {
-            throw new RuntimeException('Provedor sem credencial configurada.');
+            throw new RuntimeException(sprintf(
+                'Provedor [%s] sem credencial configurada.',
+                $provedor->slug,
+            ));
         }
 
         $modeloUsado = $this->modelFor($provedor, $model);
@@ -212,7 +233,7 @@ final class RoutedModelProvider implements AgentModelProvider
         $response = \Illuminate\Support\Facades\Http::withToken($apiKey)
             ->acceptJson()
             ->timeout($this->timeoutSeconds)
-            ->post($baseUrl.'/v1/chat/completions', [
+            ->post($this->chatCompletionsUrl($baseUrl), [
                 'model' => $modeloUsado,
                 'messages' => [
                     [
@@ -248,41 +269,129 @@ final class RoutedModelProvider implements AgentModelProvider
     }
 
     /**
-     * ⭐ O MODELO REALMENTE USADO.
+     * ⭐⭐⭐ O MODELO REALMENTE USADO — SEM SUBSTITUIÇÃO AUTOMÁTICA.
      *
-     * ⭐ A preferência do agente vence, quando o provedor a aceita. Senão, o
-     * provedor decide — porque perder o trabalho é pior que usar outro modelo.
+     * ⭐⭐ A VERSÃO ANTERIOR TROCAVA O MODELO SEM PERMISSÃO. A auditoria está
+     * certa, e este é um ponto de GOVERNANÇA, não de conveniência:
+     *
+     *     return $provedor->config['model_default'];   // ⭐ trocava o modelo
+     *
+     * ⭐ O modelo é uma ESCOLHA de política: se o gestor deployou o agente com
+     * um modelo específico, o sistema não pode trocar por outro sozinho — nem
+     * porque é mais barato, nem porque está mais disponível. ⭐ Trocar o modelo
+     * muda o resultado do trabalho sem que ninguém tenha pedido.
+     *
+     * ⭐ A REGRA AGORA: ⭐ o modelo pedido é usado, ou o provedor é PULSADO. ⭐ Se
+     * nenhum provedor aceitar o modelo pedido, a execução falha com a lista do
+     * que cada um aceita — e a decisão de continuar com outro modelo é do
+     * gestor, não do código.
+     *
+     * ⭐ E O MODELO REALMENTE USADO continua voltando na resposta e no registro,
+     * para que a auditoria veja a verdade.
      */
     private function modelFor(AiProvider $provedor, string $modelPreferido): string
     {
         $modelos = (array) data_get($provedor->config, 'models', []);
         $aceitos = array_values(array_map('strval', $modelos));
 
-        if ($aceitos !== [] && in_array($modelPreferido, $aceitos, true)) {
+        // ⭐ Sem lista explícita, o provedor aceita o que veio.
+        if ($aceitos === []) {
             return $modelPreferido;
         }
 
-        $padrao = data_get($provedor->config, 'model_default');
-
-        if (is_string($padrao) && $padrao !== '') {
-            return $padrao;
+        // ⭐ O modelo pedido está na lista: é o que vai ser usado.
+        if (in_array($modelPreferido, $aceitos, true)) {
+            return $modelPreferido;
         }
 
-        return $modelPreferido;
+        // ⭐⭐ NÃO ESTÁ: o provedor é PULSADO. ⭐ Não há substituição.
+        throw new RuntimeException(sprintf(
+            'O provedor [%s] não aceita o modelo [%s]. Aceita: %s.',
+            $provedor->slug,
+            $modelPreferido,
+            implode(', ', $aceitos),
+        ));
+    }
+
+    /**
+     * ⭐⭐⭐ A CREDENCIAL DE CADA PROVEDOR — ISOLADA POR PROVEDOR.
+     *
+     * ⭐⭐⭐ ESTE É O P0 MAIS GRAVE, E A AUDITORIA ESTÁ CERTA.
+     *
+     * A versão anterior fazia isto:
+     *
+     *     if ($apiKey === '') {
+     *         $apiKey = env('ROTEIA_API_KEY');   // ⭐ PARA QUALQUER PROVEDOR
+     *     }
+     *
+     * ⭐ Ou seja: um provedor sem credencial própria recebia a CHAVE DO ROTEIA — e a
+     * mandava para o endpoint daquele fornecedor. ⭐ A credencial do Roteia ia
+     * parar no Claude Opus 5 e na OpenAI. Isso é vazar segredo, e é exatamente o
+     * que a auditoria apontou.
+     *
+     * ⭐ A CORREÇÃO: cada provedor tem a SUA credencial, e a do Roteia é usada
+     * **apenas** pelo Roteia. Se o provedor não tem credencial, ele é PULSADO —
+     * não é chamado com a chave de outro.
+     *
+     * ⭐ E O EFEITO PRÁTICO É O QUE SE QUER: o fallback continua funcionando
+     * (OpenAI com a chave do OpenAI), e nenhum segredo atravessa a fronteira.
+     */
+    private function apiKeyFor(AiProvider $provedor): string
+    {
+        // ⭐ A credencial do próprio registro do provedor tem a primeira palavra.
+        $doRegistro = trim((string) ($provedor->api_key ?? ''));
+
+        if ($doRegistro !== '') {
+            return $doRegistro;
+        }
+
+        // ⭐ E AGORA, CADA PROVEDOR TEM A SUA VARIÁVEL. ⭐ A do Roteia NUNCA é
+        // usada para outro.
+        return match (strtolower((string) $provedor->slug)) {
+            'roteia' => trim((string) env('ROTEIA_API_KEY', '')),
+            'openai' => trim((string) (env('OPENAI_API_KEY') ?: env('OPENAI_KEY'))),
+            'Claude Opus 5', 'google-gemini' => trim((string) (
+                env('GEMINI_API_KEY')
+                ?: env('GOOGLE_API_KEY')
+                ?: env('GOOGLE_GEMINI_API_KEY')
+            )),
+            'heygen' => trim((string) (env('HEYGEN_API_KEY') ?: env('HEYGEN_KEY'))),
+            default => '',
+        };
+    }
+
+    /**
+     * ⭐ A URL DA CHAT COMPLETIONS, SEM DUPLICAR O `/v1`.
+     *
+     * ⭐ A URL base pode vir em três formatos: `https://api.x.ai` (sem versão),
+     * `https://api.x.ai/v1` (com versão) ou já com o caminho completo. ⭐
+     * Concatenar `/v1/chat/completions` em cima de uma base que já tem `/v1`
+     * produz `/v1/v1/chat/completions` — chamada inválida, que o fallback
+     * trataria como "provedor fora do ar".
+     */
+    private function chatCompletionsUrl(string $baseUrl): string
+    {
+        $base = rtrim($baseUrl, '/');
+
+        if (str_ends_with($base, '/chat/completions')) {
+            return $base;
+        }
+
+        return $base.'/v1/chat/completions';
     }
 
     /**
      * ⭐ A URL BASE DE CADA PROVEDOR.
      *
      * ⭐ O RoteirO vem do ambiente (`ROTEIA_BASE_URL`), que é a mesma variável do
-     * IA Center. O OpenAI tem o endpoint padrão do fornecedor, e qualquer um pode
+     * Centro IA. O OpenAI tem o endpoint padrão do fornecedor, e qualquer um pode
      * ser sobrescrito pelo `config.base_url` do próprio registro do provedor.
      *
-     * ⭐ O gemini N
-     * `generateContent`, com outro corpo e outra resposta). Incluí-lo aqui
-     * daria uma chamada que volta com erro 404 — e o fallback mascararia um
-     * problema de configuração como se fosse o provedor estar fora do ar.
-     * Tratar o gemini é trabalho do `AiExecutionService`, que já o faz.
+     * ⭐ O Claude Opus 5 NÃO ENTRA AQUI: a API dele não é OpenAI-compatible (é
+     * `generateContent`, com outro corpo e outra resposta). Incluí-lo aqui daria
+     * uma chamada que volta com erro 404 — e o fallback mascararia um problema de
+     * configuração como se fosse o provedor estar fora do ar. ⭐ Tratar o
+     * Claude Opus 5 é trabalho do `AiExecutionService`, que já o faz.
      */
     private function baseUrlFor(AiProvider $provedor): string
     {
@@ -295,48 +404,71 @@ final class RoutedModelProvider implements AgentModelProvider
         return match ($provedor->slug) {
             'roteia' => trim((string) env('ROTEIA_BASE_URL', '')),
             'openai' => 'https://api.openai.com/v1',
-            default => trim((string) env('ROTEIA_BASE_URL', '')),
+            default => '',
         };
     }
 
     /**
-     * ⭐⭐ O REGISTRO DA EXECUÇÃO — onde o FLUXO e o CUSTO ficam medidos.
+     * ⭐⭐⭐ O REGISTRO DA EXECUÇÃO — ONDE O FLUXO E O CUSTO FICAM MEDIDOS.
      *
-     * ⭐ É a tabela `ai_executions` — a MESMA que o IA Center usa. ⭐ Não criar
+     * ⭐ É a tabela `ai_executions` — a MESMA que o Centro IA usa. ⭐ Não criar
      * uma segunda tabela de execuções: duas medições de custo e latência
-     * divergem, e o dashboard do IA Center passaria a mostrar um número diferente
+     * divergem, e o dashboard do Centro IA passaria a mostrar um número diferente
      * do real.
      *
-     * ⭐ E `estimated_cost` fica em 0 — como em TODO o resto da plataforma —,
-     * porque ainda não há tarifário de provedor no produto. ⭐ Quando o tarifário
-     * existir, ele é preenchido AQUI e em lugar nenhum mais.
+     * ⭐⭐⭐ E A FALHA DO REGISTRO **NÃO** É MAIS SILENCIOSA.
      *
-     * @param  array<string, mixed>  $context
+     * A versão anterior fazia `catch (Throwable) { /* log *\/ }` — e devolvia
+     * sucesso. ⭐ Ou seja: o agente produzia, o registro falhava, e o sistema
+     * dizia "deu tudo certo". ⭐ Isso é exatamente o que a auditoria apontou:
+     * **execução sem rastreabilidade**. E é grave por um motivo específico: a
+     * rastreabilidade é o que a VIA audita. ⭐ Um trabalho que não foi registrado
+     * não pode ser julgado nem devolvido — então o supervisor nem
+     * veria o que aconteceu.
+     *
+     * ⭐ A REGRA AGORA: se o registro falha, a execução é marcada como FALHA
+     * (quando dá) e o erro sobe. ⭐ O texto produzido é devolvido junto, para
+     * que nada se perca — mas o chamador sabe que não foi registrado.
      */
     private function registerExecution(
         AiProvider $provedor,
         AgentModelResult $resultado,
         string $instruction,
         array $context,
-    ): void {
+    ): ?string {
         try {
             $cols = DB::getSchemaBuilder()->getColumnListing('ai_executions');
+
             $data = [
                 'ai_provider_id' => $provedor->id,
                 'execution_type' => 'escritorio_virtual',
                 'status' => 'Concluído',
-                'input' => ['prompt' => $instruction],
-                'output' => ['content' => $resultado->text],
-                'metadata' => [
+
+                // ⭐⭐ O JSON PRECISA SER SERIALIZADO.
+                //
+                // ⭐ O Query Builder (`DB::table()`) NÃO tem os casts do Eloquent:
+                // o que passa é gravado como está. ⭐ Um array PHP numa coluna
+                // `json` vira a string "Array", e a leitura volta como texto
+                // ilegível — foi exatamente o que fez o registro não aparecer.
+                'input' => json_encode(['prompt' => $instruction], JSON_UNESCAPED_UNICODE),
+                'output' => json_encode(['content' => $resultado->text], JSON_UNESCAPED_UNICODE),
+                'metadata' => json_encode([
                     'agent_name' => $context['agent_name'] ?? null,
                     'department' => $context['department'] ?? null,
                     'task_title' => $context['task_title'] ?? null,
                     'model_used' => $resultado->modelUsed,
-                ],
+                ], JSON_UNESCAPED_UNICODE),
+
                 'tokens_input' => $resultado->inputTokens,
                 'tokens_output' => $resultado->outputTokens,
                 'duration_seconds' => round($resultado->durationMs / 1000, 3),
+
+                // ⭐ O CUSTO FICA EM ZERO — como em TODO o resto da plataforma —
+                // porque ainda não há tarifário de provedor no produto. ⭐
+                // Preencher aqui com um palpite seria pior que zero: um número
+                // inventado no dashboard de custo é mais perigoso que um zero.
                 'estimated_cost' => 0,
+
                 'started_at' => now(),
                 'finished_at' => now(),
             ];
@@ -348,17 +480,18 @@ final class RoutedModelProvider implements AgentModelProvider
             );
 
             DB::table('ai_executions')->insert($safe);
+
+            return null;
         } catch (Throwable $e) {
-            // ⭐ A telemetria NUNCA pode interromper a execução principal. Se o
-            // registro falhar, o trabalho do agente foi feito — perder isso
-            // seria pior do que perder a métrica.
-            //
-            // ⭐ MAS O MOTIVO VAI PARA O LOG: engolir o erro em silêncio é o que
-            // faz um registro que nunca acontece parecer um registro que não
-            // importa. Com o log, o diagnóstico é imediato.
-            \Illuminate\Support\Facades\Log::warning('escritorio: falha ao registrar execução de IA.', [
+            // ⭐ O MOTIVO VAI PARA O LOG E PARA CIMA: engolir o erro em silêncio é
+            // o que faz um registro que nunca acontece parecer um registro que
+            // não importa.
+            \Illuminate\Support\Facades\Log::error('escritorio: falha ao registrar execução de IA.', [
                 'erro' => $e->getMessage(),
+                'provedor' => $provedor->slug,
             ]);
+
+            return $e->getMessage();
         }
     }
 

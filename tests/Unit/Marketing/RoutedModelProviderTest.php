@@ -75,7 +75,7 @@ class RoutedModelProviderTest extends TestCase
      * ⭐ E A TABELA `ai_executions` também é criada, porque o registro da
      * execução acontece nela — e é lá que o fluxo e o custo ficam medidos.
      */
-    private function criarProvedores(array $slugs, ?string $gatewayComCredencial = 'roteia'): void
+    private function criarProvedores(array $slugs, bool $comCredencial = true): void
     {
         Schema::create('ai_providers', function (Blueprint $table): void {
             $table->id();
@@ -114,7 +114,10 @@ class RoutedModelProviderTest extends TestCase
                 'name' => $slug,
                 'slug' => $slug,
                 'status' => 'ativo',
-                'api_key' => $slug === $gatewayComCredencial ? 'chave-de-teste' : 'chave-de-teste',
+
+                // ⭐ CADA PROVEDOR TEM A SUA CREDENCIAL. ⭐ O teste verifica que
+                // a chave de um nunca é usada para o outro.
+                'api_key' => $comCredencial ? 'chave-de-'.$slug : null,
                 'config' => json_encode([
                     'model_default' => $slug === 'openai' ? 'gpt-4o-mini' : 'modelo-de-teste',
                     'capabilities' => ['*'],
@@ -404,6 +407,186 @@ class RoutedModelProviderTest extends TestCase
                 "O agente [{$agentId}] tem capability desconhecida.",
             );
         }
+    }
+
+    /**
+     * ⭐⭐⭐ A CREDENCIAL DE UM PROVEDOR NUNCA VAI PARA O OUTRO.
+     *
+     * ⭐⭐⭐ ESTE TESTE TRAVA O P0 MAIS GRAVE QUE A AUDITORIA APONTOU.
+     *
+     * ⭐ A versão anterior fazia `if ($apiKey === '') { $apiKey = env('ROTEIA_API_KEY'); }`
+     * — sem filtro de provedor. ⭐ Resultado: um provedor sem credencial própria
+     * recebia a CHAVE DO ROTEIA e a mandava para o endpoint de outro fornecedor.
+     *
+     * ⭐ O teste abaixo põe a chave do Roteia no ambiente, deixa o Claude Opus 5
+     * SEM credencial, e exige que o Claude Opus 5 seja PULSADO — e que a chave do
+     * Roteia não apareça na requisição que foi feita.
+     */
+    public function test_a_credencial_de_um_provedor_nao_vai_para_o_outro(): void
+    {
+        $this->criarProvedores(['roteia', 'openai'], comCredencial: false);
+
+        // ⭐ Só o Roteia tem credencial própria (no registro). O Claude Opus 5 e o
+        // OpenAI não têm nenhuma.
+        DB::table('ai_providers')->where('slug', 'roteia')->update(['api_key' => 'chave-do-roteia']);
+
+        // ⭐ E a chave do Roteia ESTÁ no ambiente — que é exatamente a situação
+        // perigosa: o fallback OLD usaria essa chave para qualquer provedor.
+        putenv('ROTEIA_API_KEY=chave-do-roteia');
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'gpt-4o-mini',
+                'choices' => [['message' => ['content' => 'conteudo']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia', 'openai']));
+
+        // ⭐ O OpenAI é tentado (é o próximo), e ele NÃO tem credencial — então
+        // deve ser PULSADO, e a execução deve falhar.
+        $this->expectException(RuntimeException::class);
+
+        try {
+            $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+                'agent_name' => 'Copy & Content Agent',
+                'capability' => 'copy',
+            ]);
+        } finally {
+            // ⭐⭐ A PROVA: a chave do Roteia não foi enviada para NENHUM
+            // fornecedor que não seja o Roteia.
+            Http::assertSent(function ($request): bool {
+                if (! str_contains($request->url(), 'roteia')) {
+                    $this->assertStringNotContainsString(
+                        'chave-do-roteia',
+                        (string) ($request->header('Authorization')[0] ?? ''),
+                        'A credencial do Roteia vazou para outro provedor.',
+                    );
+                }
+
+                return true;
+            });
+        }
+    }
+
+    /**
+     * ⭐⭐⭐ A FALHA DE REGISTRO NÃO PODE VOLTAR COMO SUCESSO.
+     *
+     * ⭐⭐⭐ ESTE É O OUTRO P0 DA AUDITORIA.
+     *
+     * ⭐ A versão anterior fazia `catch (Throwable) { log }` e devolvia sucesso.
+     * ⭐ O agente produzia, o registro falhava, e o sistema dizia "deu tudo
+     * certo". ⭐ Execução sem rastreabilidade — e a rastreabilidade é justamente o
+     * que a VIA audita.
+     *
+     * ⭐ Este teste remove a tabela `ai_executions` e exige que a execução
+     * FALHE, em vez de fingir sucesso.
+     */
+    public function test_a_falha_de_registro_nao_volta_como_sucesso(): void
+    {
+        $this->criarProvedores(['roteia']);
+
+        // ⭐ O registro vai falhar: a tabela não existe.
+        Schema::drop('ai_executions');
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'modelo-de-teste',
+                'choices' => [['message' => ['content' => 'a entrega do agente']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia']));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('não foi registrada');
+
+        $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
+    }
+
+    /**
+     * ⭐⭐⭐ O MODELO NÃO É TROCADO SEM PERMISSÃO.
+     *
+     * ⭐⭐⭐ O TERCEIRO P1 DA AUDITORIA, e é de GOVERNANÇA.
+     *
+     * ⭐ A versão anterior trocava o modelo pedido pelo `model_default` do
+     * provedor, sem perguntar. ⭐ Trocar o modelo muda o resultado do trabalho
+     * sem que ninguém tenha pedido — então o modelo pedido é respeitado, ou o
+     * provedor é PULSADO.
+     */
+    public function test_o_modelo_pedido_nao_e_trocado_sem_permissao(): void
+    {
+        $this->criarProvedores(['roteia']);
+
+        // ⭐ O provedor aceita APENAS um modelo, e não é o pedido.
+        DB::table('ai_providers')->where('slug', 'roteia')->update([
+            'config' => json_encode([
+                'model_default' => 'outro-modelo',
+                'models' => ['outro-modelo'],
+                'capabilities' => ['*'],
+            ]),
+        ]);
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'outro-modelo',
+                'choices' => [['message' => ['content' => 'conteudo']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia']));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('não aceita o modelo');
+
+        $provedor->execute('modelo-pedido-pelo-agente', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
+    }
+
+    /**
+     * ⭐⭐ A URL DA CHAT COMPLETIONS NÃO DUPLICA O `/v1`.
+     */
+    public function test_a_url_nao_duplica_o_v1(): void
+    {
+        $this->criarProvedores(['roteia']);
+
+        // ⭐ A base JÁ vem com /v1 — como no `AiExecutionService`.
+        DB::table('ai_providers')->where('slug', 'roteia')->update([
+            'config' => json_encode([
+                'model_default' => 'modelo-de-teste',
+                'capabilities' => ['*'],
+                'base_url' => 'https://api.roteia.ai/v1',
+            ]),
+        ]);
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'modelo-de-teste',
+                'choices' => [['message' => ['content' => 'conteudo']]],
+                'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(routing: $this->roteadorFalso(['roteia']));
+
+        $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'capability' => 'copy',
+        ]);
+
+        Http::assertSent(function ($request): bool {
+            $this->assertStringNotContainsString('/v1/v1', $request->url());
+
+            return true;
+        });
     }
 
     /**
