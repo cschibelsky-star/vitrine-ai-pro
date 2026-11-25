@@ -74,6 +74,28 @@ class OfficeMissionTest extends TestCase
         ]);
     }
 
+    /**
+     * ⭐⭐ O SUPERVISOR DA VIA.
+     *
+     * ⭐⭐ A decisão da VIA exige um supervisor EXPLICITO, e ele não pode ser
+     * quem produziu a entrega. ⭐ Nos testes deste arquivo, o admin registra a
+     * missão e o resultado — então o supervisor é outra pessoa.
+     *
+     * ⭐ É por isso que o `ViaDecisionTest` tem usuários separados: ⭐ o produtor
+     * e o supervisor sãoPapéis distintos, e a regra só funciona porque isso é
+     * verificável.
+     */
+    private function supervisorVia(string $email = 'via@example.test'): User
+    {
+        return User::create([
+            'name' => 'Supervisor VIA',
+            'email' => $email,
+            'password' => 'test-password',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+    }
+
     public function test_admin_can_register_mission_and_read_persisted_history(): void
     {
         $admin = $this->admin();
@@ -192,6 +214,7 @@ class OfficeMissionTest extends TestCase
     public function test_manager_can_approve_administrative_minutes_once(): void
     {
         $admin = $this->admin();
+        $supervisor = $this->supervisorVia();
         $key = (string) Str::uuid();
         $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
             'meeting_title' => 'Reunião para aprovação',
@@ -201,9 +224,10 @@ class OfficeMissionTest extends TestCase
         ]);
         $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
 
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), [
             'decision' => 'approve',
             'note' => 'Ata conferida pelo gestor.',
+            'via_supervisor_id' => $supervisor->id,
         ])->assertRedirect(route('cockpit.escritorio-agentes.index'));
 
         $mission->refresh();
@@ -211,17 +235,19 @@ class OfficeMissionTest extends TestCase
         $this->assertSame('approved', $mission->metadata['review_status']);
         $this->assertDatabaseHas('office_mission_events', [
             'mission_id' => $mission->id,
-            'event_type' => 'minutes_approved',
+            'event_type' => 'via_approved',
             'to_status' => 'completed',
         ]);
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), [
             'decision' => 'approve',
+            'via_supervisor_id' => $supervisor->id,
         ])->assertStatus(409);
     }
 
     public function test_manager_can_review_again_after_requesting_changes(): void
     {
         $admin = $this->admin();
+        $supervisor = $this->supervisorVia();
         $key = (string) Str::uuid();
         $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
             'meeting_title' => 'Reunião para ajustes',
@@ -231,13 +257,15 @@ class OfficeMissionTest extends TestCase
         ]);
         $mission = OfficeMission::where('idempotency_key', $key)->firstOrFail();
 
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), [
             'decision' => 'request_changes',
             'note' => 'Incluir o responsável pela decisão.',
+            'via_supervisor_id' => $supervisor->id,
         ])->assertRedirect();
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), [
             'decision' => 'approve',
             'note' => 'Ajuste conferido.',
+            'via_supervisor_id' => $supervisor->id,
         ])->assertRedirect();
 
         $this->assertSame('completed', $mission->refresh()->status);
@@ -283,6 +311,7 @@ class OfficeMissionTest extends TestCase
     public function test_new_result_version_preserves_previous_minutes_after_requested_changes(): void
     {
         $admin = $this->admin();
+        $supervisor = $this->supervisorVia();
         $key = (string) Str::uuid();
         $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
             'meeting_title' => 'Reunião com versões',
@@ -297,8 +326,9 @@ class OfficeMissionTest extends TestCase
             'minutes_text' => 'Primeira versão da ata com a decisão inicial registrada.',
             'agent_name' => 'Assistente Administrativo IA',
         ]);
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), [
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), [
             'decision' => 'request_changes',
+            'via_supervisor_id' => $supervisor->id,
         ]);
         $this->actingAs($admin)->put($route(), [
             'minutes_text' => 'Segunda versão corrigida da ata com a pendência detalhada.',
@@ -314,6 +344,7 @@ class OfficeMissionTest extends TestCase
     public function test_approval_records_the_result_version(): void
     {
         $admin = $this->admin();
+        $supervisor = $this->supervisorVia();
         $key = (string) Str::uuid();
         $this->actingAs($admin)->post(route('cockpit.escritorio-agentes.atas.store'), [
             'meeting_title' => 'Reunião versão aprovada',
@@ -326,9 +357,9 @@ class OfficeMissionTest extends TestCase
             'minutes_text' => 'Versão que será aprovada pelo gestor após conferência.',
             'agent_name' => 'Assistente Administrativo IA',
         ]);
-        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.review', $mission), ['decision' => 'approve']);
+        $this->actingAs($admin)->patch(route('cockpit.escritorio-agentes.missoes.decisao-via', $mission), ['decision' => 'approve', 'via_supervisor_id' => $supervisor->id]);
 
         $this->assertSame(1, $mission->refresh()->metadata['approved_result_version']);
-        $this->assertSame(1, $mission->events()->where('event_type', 'minutes_approved')->first()->payload['approved_result_version']);
+        $this->assertSame(1, $mission->events()->where('event_type', 'via_approved')->first()->payload['approved_result_version']);
     }
 }
