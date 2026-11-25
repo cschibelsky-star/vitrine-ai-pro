@@ -92,6 +92,14 @@ final class AgentTaskExecutor
             'task_title' => (string) $task->task_key,
             'rules' => OpenAiCompatibleModelProvider::defaultRules(),
             'previous_via_note' => $this->previousViaNote($task),
+
+            // ⭐ A CAPACIDADE — o que decide QUAL provedor atende.
+            //
+            // ⭐ Vem do AGENTE (`marketing_agents.agents.<id>.capability`), e é a
+            // mesma chave que o `AiRoutingService` usa para escolher o provedor.
+            // ⭐ Sem ela, todo agente cairia na capability padrão (`copy`) — e o
+            // roteamento não teria como escolher um provedor adequado.
+            'capability' => (string) ($agent['capability'] ?? $overrides['capability'] ?? 'copy'),
         ];
 
         return $this->provider->execute(
