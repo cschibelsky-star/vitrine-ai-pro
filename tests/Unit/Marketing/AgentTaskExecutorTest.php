@@ -238,12 +238,14 @@ class AgentTaskExecutorTest extends TestCase
     {
         $provedor = $this->provedorFalso();
 
+        // ⭐ Tarefa SEM agente: nem a definição carregada, nem o id.
+        $tarefa = $this->tarefa(['agent_definition_id' => null]);
+        $tarefa->unsetRelation('agentDefinition');
+
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('agente responsável');
 
-        $this->executor($provedor)->execute($this->tarefa([
-            'agent_definition_id' => null,
-        ]));
+        $this->executor($provedor)->execute($tarefa);
     }
 
     /**
@@ -307,12 +309,12 @@ class AgentTaskExecutorTest extends TestCase
      * ⭐⭐ O PROVEDOR SÓ É REGISTRADO COM A CONFIGURAÇÃO COMPLETA.
      *
      * ⭐ Este é o estado em que o Escritório deve ficar enquanto se avalia fluxo
-     * e custo: SEM lista de modelos, o provedor não é registrado, o executor
-     * falha com mensagem clara, e o Escritório continua funcionando com a
-     * entrega digitada à mão.
+     * e custo: SEM credencial, o provedor não é registrado, o executor falha com
+     * mensagem clara, e o Escritório continua funcionando com a entrega digitada
+     * à mão.
      *
-     * ⭐ E É POR ISSO QUE A LISTA DE MODELOS É O QUE SEGURA A CHAVE: sem ela,
-     * nenhuma chamada de IA é feita — mesmo com a chave no ambiente.
+     * ⭐ E É POR ISSO QUE A CREDENCIAL É O QUE SEGURA O GASTO: sem ela, nenhuma
+     * chamada de IA é feita.
      */
     public function test_provedor_so_e_registrado_com_a_configuracao_completa(): void
     {
@@ -325,15 +327,42 @@ class AgentTaskExecutorTest extends TestCase
             return app(AgentModelProvider::class);
         };
 
-        // Sem base, sem chave e sem lista: não há provedor.
+        // Sem base e sem chave: não há provedor.
         config([
             'marketing_agents.ai.base_url' => '',
             'marketing_agents.ai.api_key' => '',
-            'marketing_agents.ai.models' => [],
         ]);
         $this->assertNull($resolver());
 
-        // Com a lista vazia, mesmo com base e chave: não há provedor.
+        // Com a chave mas sem o endpoint: também não há provedor.
+        config([
+            'marketing_agents.ai.base_url' => '',
+            'marketing_agents.ai.api_key' => 'chave-de-teste',
+        ]);
+        $this->assertNull($resolver());
+
+        // Completo: o provedor existe.
+        config([
+            'marketing_agents.ai.base_url' => 'https://api.roteia.ai',
+            'marketing_agents.ai.api_key' => 'chave-de-teste',
+        ]);
+        $this->assertNotNull($resolver());
+    }
+
+    /**
+     * ⭐⭐ O PROVEDOR DE URL FIXA É REGISTRADO SOB OUTRO ALIAS.
+     *
+     * ⭐ Ele exige a LISTA DE MODELOS — é a lista que segura a chave, porque
+     * sem ela nenhuma chamada é feita, mesmo com a credencial no ambiente.
+     */
+    public function test_o_provedor_de_url_fixa_exige_a_lista_de_modelos(): void
+    {
+        $resolver = function (): ?AgentModelProvider {
+            app()->forgetInstance(AgentModelProvider::class.'.simples');
+
+            return app(AgentModelProvider::class.'.simples');
+        };
+
         config([
             'marketing_agents.ai.base_url' => 'https://api.roteia.ai',
             'marketing_agents.ai.api_key' => 'chave-de-teste',
@@ -341,7 +370,6 @@ class AgentTaskExecutorTest extends TestCase
         ]);
         $this->assertNull($resolver());
 
-        // Completo: o provedor existe.
         config(['marketing_agents.ai.models' => ['deepseek/deepseek-v4-flash']]);
         $provedor = $resolver();
 

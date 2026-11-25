@@ -340,7 +340,7 @@ final class RoutedModelProvider implements AgentModelProvider
                 ],
                 'tokens_input' => $resultado->inputTokens,
                 'tokens_output' => $resultado->outputTokens,
-                'duration_seconds' => $resultado->durationMs / 1000,
+                'duration_seconds' => round($resultado->durationMs / 1000, 3),
                 'estimated_cost' => 0,
                 'started_at' => now(),
                 'finished_at' => now(),
@@ -353,10 +353,17 @@ final class RoutedModelProvider implements AgentModelProvider
             );
 
             DB::table('ai_executions')->insert($safe);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
             // ⭐ A telemetria NUNCA pode interromper a execução principal. Se o
             // registro falhar, o trabalho do agente foi feito — perder isso
             // seria pior do que perder a métrica.
+            //
+            // ⭐ MAS O MOTIVO VAI PARA O LOG: engolir o erro em silêncio é o que
+            // faz um registro que nunca acontece parecer um registro que não
+            // importa. Com o log, o diagnóstico é imediato.
+            \Illuminate\Support\Facades\Log::warning('escritorio: falha ao registrar execução de IA.', [
+                'erro' => $e->getMessage(),
+            ]);
         }
     }
 

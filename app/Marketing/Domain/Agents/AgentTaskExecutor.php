@@ -129,17 +129,21 @@ final class AgentTaskExecutor
     private function agentKeyFor(MarketingCampaignTask $task): string
     {
         // ⭐ A definição persistida é a fonte da verdade: ela sabe a chave.
-        // ⭐ `loadMissing` evita a consulta quando a relação já veio carregada.
-        $definicao = $task->relationLoaded('agentDefinition')
-            ? $task->getRelation('agentDefinition')
-            : $task->agentDefinition()->first();
+        //
+        // ⭐ A relação só é consultada se JÁ vier carregada. Consultar o banco
+        // aqui seria uma consulta a cada execução — e, num ambiente onde a
+        // tabela ainda não existe, um erro de banco no lugar de uma mensagem
+        // clara.
+        if ($task->relationLoaded('agentDefinition')) {
+            $definicao = $task->getRelation('agentDefinition');
 
-        if ($definicao && ! empty($definicao->agent_key)) {
-            return (string) $definicao->agent_key;
+            if ($definicao && ! empty($definicao->agent_key)) {
+                return (string) $definicao->agent_key;
+            }
         }
 
-        // ⭐ Sem o registro, o próprio ID pode ser a chave — acontece quando a
-        // tarefa é criada com o agent_key no lugar do id.
+        // ⭐ Sem o registro carregado, o próprio ID pode ser a chave — acontece
+        // quando a tarefa é criada com o agent_key no lugar do id.
         return (string) ($task->agent_definition_id ?? '');
     }
 
