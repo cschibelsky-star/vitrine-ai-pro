@@ -157,16 +157,44 @@ Route::middleware(['auth'])->group(function () {
             ->with('status', 'Resultado da ata registrado para revisão do gestor.');
     })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.result.store');
 
-    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/revisao', function (\App\Models\OfficeMission $mission, \App\Http\Requests\ReviewAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+    /*
+     * ⭐⭐⭐ A DECISÃO DA VIA.
+     *
+     * ⭐⭐⭐ AQUI ESTÁ A SEPARAÇÃO QUE A AUDITORIA EXIGIU.
+     *
+     * ⭐⭐ A rota antiga (`/revisao`) usava o MESMO usuário que podia registrar o
+     * resultado — ou seja, ⭐ quem produzia a entrega podia aprová-la. ⭐ A
+     * supervisão era decorativa: a regra do Escritório existiria no código, mas
+     * nada a impedia de contornada por um clique.
+     *
+     * ⭐⭐ AGORA a decisão exige um SUPERVISOR DA VIA explícito, que:
+     *   - precisa existir, estar ativo e ter permissão de supervisão;
+     *   - ⭐⭐ NÃO pode ser quem produziu a entrega;
+     *   - ⭐⭐ NÃO pode ser quem criou a missão (quando não há entrega registrada).
+     *
+     * ⭐⭐ E quem produz a entrega (`/resultado`) continua passando por outro
+     * caminho — então produz e julgar são, de fato, ações distintas.
+     */
+    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/decisao-via', function (\App\Models\OfficeMission $mission, \App\Http\Requests\DecideViaRequest $request, \App\Marketing\Domain\Agents\ViaDecisionService $via) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
         abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
-        $service->review($mission, $request, (int) $user->id);
+        $aprovado = $request->validated('decision') === 'approve';
+
+        $via->decide(
+            mission: $mission,
+            aprovado: $aprovado,
+            parecer: $request->validated('note'),
+            supervisorId: (int) $request->validated('via_supervisor_id'),
+            atorId: (int) $user->id,
+        );
 
         return redirect()->route('cockpit.escritorio-agentes.index')
-            ->with('status', 'Revisão da ata registrada.');
-    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.review');
+            ->with('status', $aprovado
+                ? 'Decisão da VIA registrada: entrega liberada.'
+                : 'Decisão da VIA registrada: a entrega voltou ao mesmo agente.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.decisao-via');
 
     Route::post('/cockpit/escritorio-agentes/atas', function (\App\Http\Requests\StoreAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
