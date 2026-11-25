@@ -58,6 +58,9 @@ class RoutedModelProviderTest extends TestCase
         putenv('ROTEIA_API_KEY');
         putenv('ROTEIA_BASE_URL');
 
+        Schema::dropIfExists('ai_executions');
+        Schema::dropIfExists('ai_providers');
+
         parent::tearDown();
     }
 
@@ -120,14 +123,6 @@ class RoutedModelProviderTest extends TestCase
                 'updated_at' => now(),
             ]);
         }
-    }
-
-    protected function tearDown(): void
-    {
-        Schema::dropIfExists('ai_executions');
-        Schema::dropIfExists('ai_providers');
-
-        parent::tearDown();
     }
 
     /**
