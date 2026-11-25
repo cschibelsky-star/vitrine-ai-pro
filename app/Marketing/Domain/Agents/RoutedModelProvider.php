@@ -445,6 +445,18 @@ final class RoutedModelProvider implements AgentModelProvider
         array $context,
     ): ?string {
         try {
+            // ⭐⭐ A TABELA PRECISA EXISTIR — E PRECISA TER AS COLUNAS.
+            //
+            // ⭐ Sem esta checagem, dois erros silenciosos acontecem: ⭐ numa
+            // tabela inexistente, `getColumnListing` devolve lista vazia, o
+            // filtro descarta tudo, e o `insert` de um array vazio... passa. ⭐
+            // Ou seja: a execução seria registrada como sucesso sem ter sido
+            // registrada. ⭐ E com colunas diferentes, parte do dado sumiria
+            // sem aviso.
+            if (! DB::getSchemaBuilder()->hasTable('ai_executions')) {
+                return 'a tabela ai_executions não existe';
+            }
+
             $cols = DB::getSchemaBuilder()->getColumnListing('ai_executions');
 
             $data = [
@@ -486,6 +498,15 @@ final class RoutedModelProvider implements AgentModelProvider
                 fn (string $key): bool => in_array($key, $cols, true),
                 ARRAY_FILTER_USE_KEY,
             );
+
+            // ⭐⭐ E O FILTRO NÃO PODE ESVAZIAR O REGISTRO EM SILÊNCIO.
+            //
+            // ⭐ Se nenhuma coluna sobreviveu, o `insert` receberia um array
+            // vazio — e isso PASSA. ⭐ A execução pareceria registrada sem ter
+            // sido. ⭐ Aqui isso é erro explícito.
+            if ($safe === []) {
+                return 'nenhuma coluna de ai_executions foi reconhecida';
+            }
 
             DB::table('ai_executions')->insert($safe);
 
