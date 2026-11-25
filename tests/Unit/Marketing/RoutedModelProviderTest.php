@@ -21,6 +21,9 @@ use App\Marketing\Domain\Agents\RoutedModelProvider;
 use App\Marketing\Domain\Agents\AgentRegistry;
 use App\Marketing\Infrastructure\Persistence\Models\MarketingCampaignTask;
 use App\Services\Ai\AiRoutingService;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
 use ReflectionParameter;
@@ -37,6 +40,75 @@ class RoutedModelProviderTest extends TestCase
             'marketing_agents.default_model' => 'modelo-de-teste',
             'marketing_agents.ai.model_default' => '',
         ]);
+    }
+
+    /**
+     * ⭐⭐ CRIA A TABELA DE PROVEDORES, COM OS PROVEDORES DO ROTEAMENTO.
+     *
+     * ⭐ O roteamento real busca os provedores na tabela `ai_providers` — a
+     * mesma do Centro IA. ⭐ O teste recria essa tabela, com os mesmos slugs,
+     * para que o fallback seja testado de verdade: com o gateway caindo, o
+     * trabalho precisa continuar no provedor seguinte.
+     *
+     * ⭐ E A TABELA `ai_executions` também é criada, porque o registro da
+     * execução acontece nela — e é lá que o fluxo e o custo ficam medidos.
+     */
+    private function criarProvedores(array $slugs, ?string $gatewayComCredencial = 'roteia'): void
+    {
+        Schema::create('ai_providers', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name', 120);
+            $table->string('slug', 120)->unique();
+            $table->string('provider_type', 80)->nullable();
+            $table->string('status', 30)->default('ativo');
+            $table->text('api_key')->nullable();
+            $table->json('config')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('ai_executions', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('ai_agent_id')->nullable();
+            $table->foreignId('ai_provider_id')->nullable();
+            $table->foreignId('company_id')->nullable();
+            $table->string('execution_type', 100)->nullable();
+            $table->string('status', 30)->default('sucesso');
+            $table->decimal('duration_seconds', 10, 3)->nullable();
+            $table->decimal('estimated_cost', 12, 4)->default(0);
+            $table->unsignedInteger('tokens_input')->nullable();
+            $table->unsignedInteger('tokens_output')->nullable();
+            $table->json('input')->nullable();
+            $table->json('output')->nullable();
+            $table->json('metadata')->nullable();
+            $table->text('error_message')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('finished_at')->nullable();
+            $table->timestamps();
+        });
+
+        foreach ($slugs as $slug) {
+            DB::table('ai_providers')->insert([
+                'name' => $slug,
+                'slug' => $slug,
+                'status' => 'ativo',
+                'api_key' => $slug === $gatewayComCredencial ? 'chave-de-teste' : 'chave-de-teste',
+                'config' => json_encode([
+                    'model_default' => $slug === 'openai' ? 'gpt-4o-mini' : 'modelo-de-teste',
+                    'capabilities' => ['*'],
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        Schema::dropIfExists('ai_executions');
+        Schema::dropIfExists('ai_providers');
+
+        parent::tearDown();
     }
 
     /**
@@ -95,10 +167,12 @@ class RoutedModelProviderTest extends TestCase
      */
     public function test_fallback_tenta_o_proximo_provedor_quando_o_preferido_falha(): void
     {
+        $this->criarProvedores(['roteia', 'openai']);
+
         // ⭐ O Http é facado: o primeiro provedor responde 500, o segundo 200.
-        \Illuminate\Support\Facades\Http::fake([
-            'api.roteia.ai/*' => \Illuminate\Support\Facades\Http::response('erro do gateway', 500),
-            'api.openai.com/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            'api.roteia.ai/*' => Http::response('erro do gateway', 500),
+            'api.openai.com/*' => Http::response([
                 'model' => 'gpt-4o-mini',
                 'choices' => [['message' => ['content' => 'produzido no provedor seguinte']]],
                 'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
@@ -126,8 +200,10 @@ class RoutedModelProviderTest extends TestCase
      */
     public function test_quando_todos_os_provedores_falham_a_mensagem_lista_cada_um(): void
     {
-        \Illuminate\Support\Facades\Http::fake([
-            '*' => \Illuminate\Support\Facades\Http::response('indisponivel', 503),
+        $this->criarProvedores(['roteia', 'openai']);
+
+        Http::fake([
+            '*' => Http::response('indisponivel', 503),
         ]);
 
         $provedor = new RoutedModelProvider(
@@ -145,10 +221,14 @@ class RoutedModelProviderTest extends TestCase
 
     /**
      * ⭐⭐ SEM PROVEDOR, A MENSAGEM É CLARA.
+     *
+     * ⭐ E o caso da tabela inexistente também cai aqui: num ambiente novo, o
+     * `ai_providers` ainda não existe — e a mensagem precisa ser a de
+     * "não configurado", não um erro de banco que não diz nada.
      */
     public function test_sem_provedor_ativo_a_mensagem_aponta_a_configuracao(): void
     {
-        // Sem tabela de provedores, a consulta não acha nenhum.
+        // ⭐ Sem tabela de provedores, a consulta não acha nenhum.
         $provedor = new RoutedModelProvider(
             routing: $this->roteadorFalso(['roteia']),
         );
@@ -160,6 +240,47 @@ class RoutedModelProviderTest extends TestCase
             'agent_name' => 'Copy & Content Agent',
             'capability' => 'copy',
         ]);
+    }
+
+    /**
+     * ⭐⭐ A EXECUÇÃO É REGISTRADA ONDE A PLATAFORMA MEDE.
+     *
+     * ⭐ Este é o teste que garante que o fluxo e o custo fiquem no mesmo lugar
+     * do Centro IA — e que uma segunda medição não nasça.
+     */
+    public function test_a_execucao_e_registrada_em_ai_executions(): void
+    {
+        $this->criarProvedores(['roteia']);
+
+        Http::fake([
+            '*' => Http::response([
+                'model' => 'modelo-de-teste',
+                'choices' => [['message' => ['content' => 'a entrega do agente']]],
+                'usage' => ['prompt_tokens' => 42, 'completion_tokens' => 13],
+            ], 200),
+        ]);
+
+        $provedor = new RoutedModelProvider(
+            routing: $this->roteadorFalso(['roteia']),
+        );
+
+        $provedor->execute('modelo-de-teste', 'faça a tarefa', [
+            'agent_name' => 'Copy & Content Agent',
+            'department' => 'intelligence',
+            'task_title' => 'copy_post_01',
+            'capability' => 'copy',
+        ]);
+
+        $registros = DB::table('ai_executions')->get();
+
+        $this->assertCount(1, $registros);
+        $registro = $registros->first();
+
+        $this->assertSame('escritorio_virtual', $registro->execution_type);
+        $this->assertSame(42, (int) $registro->tokens_input);
+        $this->assertSame(13, (int) $registro->tokens_output);
+        $this->assertNotNull($registro->duration_seconds);
+        $this->assertSame('a entrega do agente', $registro->output['content'] ?? null);
     }
 
     // =========================================================================

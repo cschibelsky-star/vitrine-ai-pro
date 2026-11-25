@@ -120,6 +120,18 @@ final class RoutedModelProvider implements AgentModelProvider
         $route = $this->routing->resolveRoute($capability);
         $slugs = (array) ($route['providers'] ?? []);
 
+        // ⭐⭐ A TABELA DE PROVEDORES PODE NÃO EXISTIR.
+        //
+        // ⭐ Num ambiente novo (ou no SQLite de teste), a tabela `ai_providers`
+        // ainda não foi criada — e a consulta estouraria um erro de banco, que é
+        // confuso e não diz nada sobre o que o usuário precisa fazer.
+        //
+        // ⭐ Com a tabela ausente, o certo é dizer que não há provedor
+        // configurado — que é a verdade, e é acionável.
+        if (! DB::getSchemaBuilder()->hasTable('ai_providers')) {
+            return [];
+        }
+
         $providers = [];
 
         foreach ($slugs as $slug) {

@@ -33,6 +33,51 @@ assinatura da classe (`test_executor_nao_tem_acesso_a_porta_de_decisao_da_via`).
 As regras da VIA também vão para o modelo, em texto: o agente produz o trabalho,
 mas não aprova, não publica e não passa tarefa para outro.
 
+## ⭐⭐ O fallback não muda QUEM julga
+
+O provedor roteado (`RoutedModelProvider`) tenta o próximo provedor quando um
+falha — é o que dá resiliência: se o gateway RoteirO estiver fora do ar, o
+trabalho continua no provedor seguinte.
+
+⭐ **O fallback muda QUAL IA produz. Nunca muda QUEM julga.** A entrega continua
+indo para `awaiting_via_review` pelo `MarketingTaskViaGate`. ⭐ Nenhuma
+quantidade de provedores faz a IA se autoaprovar.
+
+E há testes que verificam isso pela assinatura das duas classes — o executor e
+o provedor roteado — para que ninguém introduza a porta de escrita por ali.
+
+## ⭐⭐ Onde o fluxo e o custo são medidos
+
+Cada execução é registrada em **`ai_executions`** — a MESMA tabela que o Centro IA
+usa. ⭐ Não criar uma segunda tabela de execuções: duas medições de custo e
+latência divergem, e o dashboard passaria a mostrar um número diferente do real.
+
+O registro leva o que interessa para avaliar fluxo: tokens de entrada e saída,
+latência, modelo realmente usado, e o metadado com agente, departamento e
+tarefa.
+
+⭐ **`estimated_cost` fica em 0** — como em todo o resto da plataforma — porque
+ainda não há tarifário de provedor no produto. ⭐ Quando o tarifário existir, ele
+é preenchido aqui e em lugar nenhum mais.
+
+## ⭐⭐ O que é a CAPABILITY do agente
+
+Cada agente declara uma capability, e é ela que decide **qual provedor atende**:
+
+| Agente | Capability |
+|---|---|
+| Marketing Director, Product & Market Strategist, Campaign Planner | `marketing_strategy` |
+| Copy & Content, Creative Director, Video Producer, Social & Distribution | `copy` |
+| QA & Brand Guardian, Performance Analyst | `critical_review` |
+
+⭐ São as mesmas capabilities que o `AiRoutingService` já conhece — a ordem de
+preferência por capability é a do Centro IA, e não uma nova.
+
+⭐ E o modelo pedido é uma **preferência**, não uma exigência: se o agente pede um
+modelo que o provedor não tem, o roteamento escolhe o que tem — porque perder o
+trabalho é pior que usar outro modelo. O modelo realmente usado volta na
+resposta, para o registro mostrar a verdade.
+
 ## ⭐⭐ Não há uma segunda convenção de variáveis
 
 A plataforma **já tem** uma camada de IA de produção:
