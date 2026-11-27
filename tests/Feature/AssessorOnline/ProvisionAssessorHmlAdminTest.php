@@ -134,6 +134,43 @@ final class ProvisionAssessorHmlAdminTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_invited_admin_can_set_password_and_open_cabinet_dashboard(): void
+    {
+        $body = '';
+        Mail::shouldReceive('raw')->once()->andReturnUsing(function (string $message) use (&$body): void {
+            $body = $message;
+        });
+        $this->artisan('assessor:provision-hml-admin', ['email' => self::EMAIL])->assertExitCode(0);
+        $this->assertSame(1, preg_match('~https://[^\s]+~', $body, $matches));
+        $link = parse_url($matches[0]);
+        $this->assertSame('assessor.hml.vitrineiapro.com.br', $link['host']);
+        $this->get($matches[0])->assertOk()->assertSee(self::EMAIL);
+        parse_str($link['query'], $query);
+        $this->assertSame(self::EMAIL, $query['email']);
+        $token = basename($link['path']);
+        $password = 'FirstAccessOnly-TestPassword123!';
+        $form = [
+            'email' => self::EMAIL,
+            'token' => $token,
+            'password' => $password,
+            'password_confirmation' => $password,
+        ];
+
+        $this->post(route('assessor.password.update'), $form)
+            ->assertRedirect(route('assessor.login'));
+        $this->assertGuest();
+
+        $user = User::where('email', self::EMAIL)->firstOrFail();
+        $this->assertFalse(Password::broker('users')->tokenExists($user, $token));
+        $this->post(route('assessor.login.submit'), ['email' => self::EMAIL, 'password' => $password])
+            ->assertRedirect(route('assessor.dashboard'));
+        $this->assertAuthenticatedAs($user);
+        $this->get(route('assessor.dashboard'))->assertOk();
+        $this->post(route('assessor.logout'))->assertRedirect(route('assessor.login'));
+        $this->assertGuest();
+        $this->get(route('assessor.dashboard'))->assertRedirect(route('assessor.login'));
+    }
+
     public function test_duplicate_identity_is_not_deleted_on_failure(): void
     {
         $user = User::factory()->create(['email' => self::EMAIL]);
