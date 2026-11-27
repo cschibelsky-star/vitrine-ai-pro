@@ -12,6 +12,8 @@ on:
       - 'routes/web.php'
       - 'tests/Feature/AssessorOnline/**'
       - 'database/migrations/2026_10_2*'
+      - 'database/migrations/2026_11_01_000003_add_assessor_auth_columns_to_users.php'
+      - 'docker/assessor-laravel/**'
       - 'composer.*'
       - 'phpunit.xml'
       - '.github/workflows/assessor-online-tests.yml'
