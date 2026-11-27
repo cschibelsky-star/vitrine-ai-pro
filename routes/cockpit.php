@@ -146,6 +146,78 @@ Route::middleware(['auth'])->group(function () {
         return response()->view('cockpit.escritorio-operacional');
     })->middleware('throttle:60,1')->name('cockpit.escritorio-operacional');
 
+    /*
+     * ⭐⭐⭐ A EXECUÇÃO DO AGENTE — a primeira inferência real do Escritório.
+     *
+     * ⭐⭐⭐ E O QUE ESTA ROTA NÃO FAZ, QUE É O MAIS IMPORTANTE:
+     *
+     * ⭐⭐⭐ ELA NÃO REGISTRA A ENTREGA.
+     *
+     * ⭐⭐ A execução produz TEXTO e o devolve. ⭐⭐ Registrar a entrega — e,
+     * com isso, mover a missão para a revisão da VIA — é o trabalho do
+     * `/resultado`, que é um caminho SEPARADO e explícito.
+     *
+     * ⭐⭐⭐ POR QUE ESSA SEPARAÇÃO É O PONTO:
+     *
+     * ⭐ Se a execução registrasse a entrega, ⭐ o agente produziria E se
+     * autoentregaria — ⭐ e a supervisão da VIA perderia o sentido: ⭐ bastaria
+     * uma chamada de IA para um trabalho entrar na fila de julgamento, ⭐ sem
+     * ninguém decidir que ele deveria ser julgado.
+     *
+     * ⭐⭐ Na prática: ⭐ a IA produz, ⭐ o gestor revisa o que foi produzido, ⭐
+     * registra a entrega, ⭐ e AÍ a VIA julga. ⭐ Quatro mãos distintas.
+     *
+     * ⭐⭐ E A RESPOSTA TRAZ A EVIDÊNCIA — ⭐ porque é ela que liga o trabalho
+     * ao que a VIA vai auditar.
+     */
+    Route::post('/cockpit/escritorio-agentes/missoes/{mission}/executar', function (\App\Models\OfficeMission $mission, \App\Marketing\Domain\Agents\AgentTaskExecutor $executor, \App\Marketing\Domain\Agents\AvelloExecutionAdapter $avello) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        // ⭐⭐ A MISSÃO PRECISA ESTAR PRODUZIDA POR UM AGENTE.
+        abort_unless(
+            ($mission->metadata['result_submitted_by'] ?? null) !== null
+                || ($mission->metadata['agent_name'] ?? null) !== null,
+            422,
+            'A missão não tem agente responsável. Registre o resultado antes de executar.'
+        );
+
+        $contexto = [
+            'mission_id' => (string) $mission->id,
+            'request_id' => (string) Str::uuid(),
+            'domain' => (string) config('marketing_agents.avello.domain', 'ECO'),
+            'agent_name' => (string) ($mission->metadata['agent_name'] ?? 'Agente'),
+            'department' => (string) ($mission->metadata['department'] ?? 'operacional'),
+            'step' => (string) ($mission->metadata['review_status'] ?? 'executando'),
+            'task_title' => (string) $mission->title,
+            'previous_via_note' => $mission->metadata['review_note'] ?? null,
+        ];
+
+        // ⭐⭐ O AVELLO É O EXECUTOR INICIAL. ⭐ Se estiver desligado, o RoteirO
+        // assume — e é por isso que o `RoutedModelProvider` existe.
+        $provedor = $avello->supports((string) config('marketing_agents.avello.model_default'))
+            ? $avello
+            : $executor->provider();
+
+        $resultado = $provedor->execute(
+            (string) config('marketing_agents.avello.model_default'),
+            (string) $mission->description,
+            $contexto,
+        );
+
+        // ⭐⭐ O TEXTO VOLTA PARA O GESTOR — ⭐ e NÃO para a VIA.
+        return response()->json([
+            'texto' => $resultado->text,
+            'modelo' => $resultado->modelUsed,
+            'tokens_entrada' => $resultado->inputTokens,
+            'tokens_saida' => $resultado->outputTokens,
+            'custo_centavos' => $resultado->costCents,
+            'duracao_ms' => $resultado->durationMs,
+            'provedor' => $provedor->name(),
+        ]);
+    })->middleware('throttle:10,1')->name('cockpit.escritorio-agentes.missoes.execute');
+
     Route::put('/cockpit/escritorio-agentes/missoes/{mission}/resultado', function (\App\Models\OfficeMission $mission, \App\Http\Requests\StoreAdministrativeMinutesResultRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();

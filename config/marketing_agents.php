@@ -33,6 +33,38 @@ return [
      */
     'default_model' => env('ESCRITORIO_MODEL_PADRAO', ''),
 
+    /*
+     * ⭐⭐ O AVELLO — o EXECUTOR INICIAL, conforme o PR #172.
+     *
+     * ⭐⭐ "Avello is the initial inference executor for DEV/ECO mission calls."
+     *
+     * ⭐⭐ E O PR #172 é explícito sobre os limites:
+     *   - ⭐ o transporte é INJETADO e DESLIGADO por padrão;
+     *   - ⭐ nenhuma inferência real foi executada ainda (nenhuma chamada paga
+     *     autorizada);
+     *   - ⭐ uma ponte server-side autenticada ainda precisa ser implementada.
+     *
+     * ⭐⭐ POR ISSO `enabled` é uma variável PRÓPRIA do Avello, e não uma
+     * konfiguração compartilhada: ⭐ o Avello é uma decisão de arquitetura, com
+     * identidade, contrato e verificabilidade próprios.
+     */
+    'avello' => [
+        'enabled' => (bool) env('AVELLO_ENABLED', false),
+
+        // ⭐ O MODELO DO AVELLO — o catálogo do conector é gpt-6.1-sol, gpt-6-sol,
+        // gpt-6-luna, gpt-5.6-terra, gpt-5.6-sol, gpt-5.6-luna.
+        'model_default' => env('AVELLO_MODEL', 'gpt-6.1-sol'),
+
+        // ⭐ A LISTA DE MODELOS ACEITOS — explícita, como no resto do Escritório.
+        'models' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('AVELLO_MODELOS', 'gpt-6.1-sol,gpt-6-sol,gpt-6-luna,gpt-5.6-terra,gpt-5.6-sol,gpt-5.6-luna')),
+        ))),
+
+        // ⭐ O DOMÍNIO — ECO (marketing, administração, operações) ou DEV.
+        'domain' => env('AVELLO_DOMAIN', 'ECO'),
+    ],
+
     'ai' => [
         'provider' => env('ESCRITORIO_IA_PROVEDOR', 'roteia'),
 

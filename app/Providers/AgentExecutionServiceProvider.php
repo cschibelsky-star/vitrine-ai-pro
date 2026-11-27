@@ -27,6 +27,7 @@ namespace App\Providers;
 use App\Marketing\Domain\Agents\AgentModelProvider;
 use App\Marketing\Domain\Agents\AgentRegistry;
 use App\Marketing\Domain\Agents\AgentTaskExecutor;
+use App\Marketing\Domain\Agents\AvelloExecutionAdapter;
 use App\Marketing\Domain\Agents\OpenAiCompatibleModelProvider;
 use App\Marketing\Domain\Agents\RoutedModelProvider;
 use App\Services\Ai\AiRoutingService;
@@ -36,6 +37,26 @@ final class AgentExecutionServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // ⭐⭐ O AVELLO — o EXECUTOR INICIAL da arquitetura.
+        //
+        // ⭐⭐ O PR #172 estabelece: "Avello is the initial inference executor for
+        // DEV/ECO mission calls". ⭐ Ele vem PRIMEIRO na ordem, e só é usado com
+        // transporte autenticado explicitamente autorizado.
+        //
+        // ⭐⭐ E, como no contrato do PR #172, ⭐ o transporte é INJETADO e
+        // DESLIGADO por padrão: ⭐ sem `AVELLO_TRANSPORT` configurado, o Avello
+        // responde "desativado" — e ⭐ nenhuma chamada de inferência acontece.
+        //
+        // ⭐⭐ A ORDEM IMPORTA: ⭐ o Avello é o executor inicial, e o RoteirO é o
+        // fallback. ⭐ É a arquitetura aprovada, e não uma escolha minha.
+        $this->app->singleton(AvelloExecutionAdapter::class, function ($app): AvelloExecutionAdapter {
+            return new AvelloExecutionAdapter(
+                routing: $app->make(AiRoutingService::class),
+                transport: $this->transporteDoAvello(),
+                enabled: (bool) config('marketing_agents.avello.enabled'),
+            );
+        });
+
         // ⭐ O PROVEDOR DE MODELO — em DUAS variantes, porque elas servem a
         // momentos diferentes do produto:
         //
@@ -100,5 +121,34 @@ final class AgentExecutionServiceProvider extends ServiceProvider
                 provider: $app->make(AgentModelProvider::class),
             );
         });
+    }
+
+    /**
+     * ⭐⭐ O TRANSPORTE DO AVELLO.
+     *
+     * ⭐⭐ Devolve `null` quando o Avello não está configurado — e ⭐ `null` é
+     * exatamente o que o `AvelloExecutionAdapter` entende como "desligado".
+     * ⭐⭐ Assim, ⭐ sem `AVELLO_ENABLED`, ⭐ sem endpoint e ⭐ sem credencial, ⭐
+     * nenhuma inferência é feita — ⭐ e o motivo fica explícito na resposta.
+     *
+     * ⭐⭐ E A CREDENCIAL É DO AVELLO. ⭐ Nunca a de outro provedor: ⭐ o PR #172
+     * trata o Avello como conector com identidade própria, e ⭐ misturar
+     * credenciais é exatamente o risco P0 que a auditoria apontou.
+     *
+     * @return (callable(array<string, mixed>): array<string, mixed>)|null
+     */
+    private function transporteDoAvello(): ?callable
+    {
+        if (! (bool) config('marketing_agents.avello.enabled')) {
+            return null;
+        }
+
+        $bridge = new AvelloBridge(
+            baseUrl: trim((string) env('AVELLO_BASE_URL', '')),
+            apiKey: trim((string) env('AVELLO_API_KEY', '')),
+            timeoutSeconds: (int) config('marketing_agents.ai.timeout_seconds', 120),
+        );
+
+        return $bridge;
     }
 }

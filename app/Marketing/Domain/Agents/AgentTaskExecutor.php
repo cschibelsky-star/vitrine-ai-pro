@@ -110,6 +110,18 @@ final class AgentTaskExecutor
     }
 
     /**
+     * ⭐⭐ O PROVEDOR EM USO.
+     *
+     * ⭐⭐ A rota de execução precisa dele para saber a quem recorrer quando o
+     * Avello está desligado: ⭐ o Avello é o executor INICIAL, e o RoteirO é o
+     * FALLBACK — ⭐ e essa ordem é da arquitetura, não uma escolha da rota.
+     */
+    public function provider(): ?AgentModelProvider
+    {
+        return $this->provider;
+    }
+
+    /**
      * ⭐⭐ A CHAVE DO AGENTE.
      *
      * ⭐⭐ ESTE É O PONTO QUE O EXECUTOR ESTAVA ERRADO.
