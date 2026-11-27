@@ -57,6 +57,10 @@ Route::get('/cockpit/open/{slug}', function (string $slug) {
     return redirect()->away($ssoUrl.'?token='.urlencode($token));
 })->middleware('throttle:10,1')->name('cockpit.open');
 
+Route::post('/cockpit/internal/assessor-invite', \App\Http\Controllers\Cockpit\AssessorInviteController::class)
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    ->middleware('throttle:5,1')->name('cockpit.assessor.invite');
+
 // Endpoint exclusivo para integracao servidor-a-servidor com Assessor Online HML.
 // Nao reutiliza a rota legada de consumo de tickets por GET.
 Route::post('/cockpit/sso/assessor/consume', function (Request $request) {
