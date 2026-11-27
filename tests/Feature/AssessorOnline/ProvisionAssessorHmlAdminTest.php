@@ -227,4 +227,28 @@ final class ProvisionAssessorHmlAdminTest extends TestCase
         $this->invite();
         $this->assertDatabaseCount('users', 0);
     }
+
+    public function test_cockpit_gateway_delivers_without_local_smtp(): void
+    {
+        $secret = str_repeat('test-', 8);
+        config(['mail.default' => 'log', 'assessor-invite.via_cockpit' => true, 'assessor-invite.secret' => $secret]);
+        Mail::shouldReceive('raw')->never();
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
+        \Illuminate\Support\Facades\Http::fake([
+            'https://hml.vitrineiapro.com.br/cockpit/internal/assessor-invite' =>
+                \Illuminate\Support\Facades\Http::response(['ok' => true]),
+        ]);
+        $this->artisan('assessor:provision-hml-admin', ['email' => self::EMAIL])->assertExitCode(0);
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+        \Illuminate\Support\Facades\Http::assertSent(function ($request) use ($secret) {
+            $ts = $request->header('X-Assessor-Invite-Timestamp')[0];
+            $token = $request['token'];
+            $expected = hash_hmac('sha256', "assessor-invite-v1\n{$ts}\n".self::EMAIL."\n{$token}", $secret);
+            $user = User::where('email', self::EMAIL)->firstOrFail();
+
+            return $request['email'] === self::EMAIL
+                && $request->hasHeader('X-Assessor-Invite-Signature', $expected)
+                && Password::broker('users')->tokenExists($user, $token);
+        });
+    }
 }
