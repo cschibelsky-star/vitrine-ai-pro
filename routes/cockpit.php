@@ -146,6 +146,78 @@ Route::middleware(['auth'])->group(function () {
         return response()->view('cockpit.escritorio-operacional');
     })->middleware('throttle:60,1')->name('cockpit.escritorio-operacional');
 
+    /*
+     * ⭐⭐⭐ A EXECUÇÃO DO AGENTE — a primeira inferência real do Escritório.
+     *
+     * ⭐⭐⭐ E O QUE ESTA ROTA NÃO FAZ, QUE É O MAIS IMPORTANTE:
+     *
+     * ⭐⭐⭐ ELA NÃO REGISTRA A ENTREGA.
+     *
+     * ⭐⭐ A execução produz TEXTO e o devolve. ⭐⭐ Registrar a entrega — e,
+     * com isso, mover a missão para a revisão da VIA — é o trabalho do
+     * `/resultado`, que é um caminho SEPARADO e explícito.
+     *
+     * ⭐⭐⭐ POR QUE ESSA SEPARAÇÃO É O PONTO:
+     *
+     * ⭐ Se a execução registrasse a entrega, ⭐ o agente produziria E se
+     * autoentregaria — ⭐ e a supervisão da VIA perderia o sentido: ⭐ bastaria
+     * uma chamada de IA para um trabalho entrar na fila de julgamento, ⭐ sem
+     * ninguém decidir que ele deveria ser julgado.
+     *
+     * ⭐⭐ Na prática: ⭐ a IA produz, ⭐ o gestor revisa o que foi produzido, ⭐
+     * registra a entrega, ⭐ e AÍ a VIA julga. ⭐ Quatro mãos distintas.
+     *
+     * ⭐⭐ E A RESPOSTA TRAZ A EVIDÊNCIA — ⭐ porque é ela que liga o trabalho
+     * ao que a VIA vai auditar.
+     */
+    Route::post('/cockpit/escritorio-agentes/missoes/{mission}/executar', function (\App\Models\OfficeMission $mission, \App\Marketing\Domain\Agents\AgentTaskExecutor $executor, \App\Marketing\Domain\Agents\AvelloExecutionAdapter $avello) {
+        abort_unless(config('app.env') === 'homologation', 404);
+        $user = Auth::user();
+        abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
+
+        // ⭐⭐ A MISSÃO PRECISA ESTAR PRODUZIDA POR UM AGENTE.
+        abort_unless(
+            ($mission->metadata['result_submitted_by'] ?? null) !== null
+                || ($mission->metadata['agent_name'] ?? null) !== null,
+            422,
+            'A missão não tem agente responsável. Registre o resultado antes de executar.'
+        );
+
+        $contexto = [
+            'mission_id' => (string) $mission->id,
+            'request_id' => (string) Str::uuid(),
+            'domain' => (string) config('marketing_agents.avello.domain', 'ECO'),
+            'agent_name' => (string) ($mission->metadata['agent_name'] ?? 'Agente'),
+            'department' => (string) ($mission->metadata['department'] ?? 'operacional'),
+            'step' => (string) ($mission->metadata['review_status'] ?? 'executando'),
+            'task_title' => (string) $mission->title,
+            'previous_via_note' => $mission->metadata['review_note'] ?? null,
+        ];
+
+        // ⭐⭐ O AVELLO É O EXECUTOR INICIAL. ⭐ Se estiver desligado, o RoteirO
+        // assume — e é por isso que o `RoutedModelProvider` existe.
+        $provedor = $avello->supports((string) config('marketing_agents.avello.model_default'))
+            ? $avello
+            : $executor->provider();
+
+        $resultado = $provedor->execute(
+            (string) config('marketing_agents.avello.model_default'),
+            (string) $mission->description,
+            $contexto,
+        );
+
+        // ⭐⭐ O TEXTO VOLTA PARA O GESTOR — ⭐ e NÃO para a VIA.
+        return response()->json([
+            'texto' => $resultado->text,
+            'modelo' => $resultado->modelUsed,
+            'tokens_entrada' => $resultado->inputTokens,
+            'tokens_saida' => $resultado->outputTokens,
+            'custo_centavos' => $resultado->costCents,
+            'duracao_ms' => $resultado->durationMs,
+            'provedor' => $provedor->name(),
+        ]);
+    })->middleware('throttle:10,1')->name('cockpit.escritorio-agentes.missoes.execute');
+
     Route::put('/cockpit/escritorio-agentes/missoes/{mission}/resultado', function (\App\Models\OfficeMission $mission, \App\Http\Requests\StoreAdministrativeMinutesResultRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
@@ -157,16 +229,53 @@ Route::middleware(['auth'])->group(function () {
             ->with('status', 'Resultado da ata registrado para revisão do gestor.');
     })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.result.store');
 
-    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/revisao', function (\App\Models\OfficeMission $mission, \App\Http\Requests\ReviewAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
+    /*
+     * ⭐⭐⭐ A DECISÃO DA VIA.
+     *
+     * ⭐⭐⭐ AQUI ESTÁ A SEPARAÇÃO QUE A AUDITORIA EXIGIU.
+     *
+     * ⭐⭐ A rota antiga (`/revisao`) usava o MESMO usuário que podia registrar o
+     * resultado — ou seja, ⭐ quem produzia a entrega podia aprová-la. ⭐ A
+     * supervisão era decorativa: a regra do Escritório existiria no código, mas
+     * nada a impedia de contornada por um clique.
+     *
+     * ⭐⭐ AGORA a decisão exige um SUPERVISOR DA VIA explícito, que:
+     *   - precisa existir, estar ativo e ter permissão de supervisão;
+     *   - ⭐⭐ NÃO pode ser quem produziu a entrega;
+     *   - ⭐⭐ NÃO pode ser quem criou a missão (quando não há entrega registrada).
+     *
+     * ⭐⭐ E quem produz a entrega (`/resultado`) continua passando por outro
+     * caminho — então produz e julgar são, de fato, ações distintas.
+     */
+    Route::patch('/cockpit/escritorio-agentes/missoes/{mission}/decisao-via', function (\App\Models\OfficeMission $mission, \App\Http\Requests\DecideViaRequest $request, \App\Marketing\Domain\Agents\ViaDecisionService $via) {
         abort_unless(config('app.env') === 'homologation', 404);
         $user = Auth::user();
         abort_unless($user && ($user->is_active ?? true) && $user->isAdmin(), 403);
 
-        $service->review($mission, $request, (int) $user->id);
+        $aprovado = $request->validated('decision') === 'approve';
+
+        // ⭐⭐ A DECISÃO.
+        //
+        // ⭐⭐ O `ViaDecisionService` aplica a regra e recusa com `abort()`:
+        //   - 409 quando a entrega não está em revisão (conflito de estado);
+        //   - ⭐ 403 quando o supervisor produziu a entrega que ia julgar.
+        //
+        // ⭐⭐ São status codes HTTP porque ⭐ a resposta ao gestor precisa
+        // distinguir "já foi julgada" de "você não pode julgar isto" — e uma
+        // tela que mostra "erro" para os dois não ajuda ninguém.
+        $via->decide(
+            mission: $mission,
+            aprovado: $aprovado,
+            parecer: $request->validated('note'),
+            supervisorId: (int) $request->validated('via_supervisor_id'),
+            atorId: (int) $user->id,
+        );
 
         return redirect()->route('cockpit.escritorio-agentes.index')
-            ->with('status', 'Revisão da ata registrada.');
-    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.review');
+            ->with('status', $aprovado
+                ? 'Decisão da VIA registrada: entrega liberada.'
+                : 'Decisão da VIA registrada: a entrega voltou ao mesmo agente.');
+    })->middleware('throttle:20,1')->name('cockpit.escritorio-agentes.missoes.decisao-via');
 
     Route::post('/cockpit/escritorio-agentes/atas', function (\App\Http\Requests\StoreAdministrativeMinutesRequest $request, \App\Services\Office\AdministrativeMinutesService $service) {
         abort_unless(config('app.env') === 'homologation', 404);

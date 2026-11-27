@@ -93,9 +93,12 @@ input{width:100%;background:#0a1b29;border:1px solid var(--line);padding:11px;bo
 </form>
 @endif
 @if(($mission->metadata['workflow'] ?? null) === 'meeting_minutes' && in_array($mission->metadata['review_status'] ?? null, ['awaiting_manager_review', 'changes_requested'], true))
-<form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.review', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
+{{-- ⭐⭐ A DECISÃO DA VIA. ⭐ O supervisor é EXPLICITO: a supervisão tem identidade
+     própria, e quem produziu a entrega não pode julgá-la. --}}
+<form method="POST" action="{{ route('cockpit.escritorio-agentes.missoes.decisao-via', $mission) }}" style="margin-top:9px;display:grid;gap:6px">
 @csrf @method('PATCH')
-<input name="note" maxlength="5000" placeholder="Observação do gestor (opcional)">
+<input type="number" name="via_supervisor_id" required min="1" placeholder="ID do supervisor da VIA" style="max-width:220px">
+<input name="note" maxlength="5000" placeholder="Parecer da VIA (opcional)">
 <div><button type="submit" name="decision" value="approve">Aprovar ata</button> <button type="submit" name="decision" value="request_changes">Solicitar ajustes</button></div>
 </form>
 @elseif(($mission->metadata['workflow'] ?? null) === 'meeting_minutes')

@@ -1,0 +1,48 @@
+name: Escritório VIA — supervisão independente
+
+on:
+  pull_request:
+    paths:
+      - "app/Marketing/Domain/Agents/**"
+      - "app/Services/Office/**"
+      - "app/Http/Requests/DecideViaRequest.php"
+      - "app/Http/Requests/ReviewAdministrativeMinutesRequest.php"
+      - "routes/cockpit.php"
+      - "tests/Feature/ViaDecisionTest.php"
+      - "tests/Feature/OfficeMissionTest.php"
+      - ".github/workflows/escritorio-via-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  via-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Prepare Laravel cache paths
+        run: |
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # ⭐ Os testes da VIA rodam JUNTO com os de missões: a regra da supervisão
+      # atravessa os dois, e um green que não cobre o outro não prova nada.
+      - name: Run Escritório VIA and mission tests
+        run: vendor/bin/phpunit tests/Feature/ViaDecisionTest.php tests/Feature/OfficeMissionTest.php --colors=never
