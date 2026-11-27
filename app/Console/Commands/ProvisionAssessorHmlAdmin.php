@@ -20,9 +20,10 @@ final class ProvisionAssessorHmlAdmin extends Command
     public function handle(): int
     {
         $host = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
-        if (config('app.env') !== 'homologation'
+        if (parse_url((string) config('app.url'), PHP_URL_SCHEME) !== 'https'
+            || config('app.env') !== 'homologation'
             || ! str_ends_with($host, '.hml.vitrineiapro.com.br')
-            || env('ASSESSOR_HML_PROVISION_ENABLED') !== 'true') {
+            || ! filter_var(env('ASSESSOR_HML_PROVISION_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
             $this->error('Provisioning disabled outside explicitly enabled HML.');
             return self::FAILURE;
         }
@@ -48,8 +49,15 @@ final class ProvisionAssessorHmlAdmin extends Command
             return self::FAILURE;
         }
 
+        $expiryMinutes = filter_var(config('auth.passwords.users.expire'), FILTER_VALIDATE_INT);
+        if ($expiryMinutes === false || $expiryMinutes < 1) {
+            $this->error('Password broker expiration is invalid. No account was created.');
+            return self::FAILURE;
+        }
+
+        $createdTenantId = null;
         try {
-            $user = DB::transaction(function () use ($email, $slug): User {
+            $user = DB::transaction(function () use ($email, $slug, &$createdTenantId): User {
                 if (User::where('email', $email)->exists()) {
                     throw new RuntimeException('Existing user: refusing duplicate invitation.');
                 }
@@ -58,6 +66,9 @@ final class ProvisionAssessorHmlAdmin extends Command
                     'name' => 'Gabinete Demonstração', 'slug' => $slug,
                     'kind' => 'vereador', 'created_at' => now(), 'updated_at' => now(),
                 ]);
+                if ($tenant === null) {
+                    $createdTenantId = $tenantId;
+                }
                 $user = User::create([
                     'name' => 'Administrador do Gabinete',
                     'email' => $email,
@@ -75,16 +86,29 @@ final class ProvisionAssessorHmlAdmin extends Command
 
             $token = Password::broker('users')->createToken($user);
             $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
-            Mail::raw("Ative seu acesso ao Assessor Online definindo sua senha: {$url}\nLink válido por 60 minutos e de uso único.", function ($message) use ($email): void {
+            Mail::raw("Ative seu acesso ao Assessor Online definindo sua senha: {$url}\nLink válido por {$expiryMinutes} minutos e de uso único.", function ($message) use ($email): void {
                 $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
             });
         } catch (\Throwable $exception) {
             // Do not leave an unusable administrative account after delivery failure.
             if (isset($user) && $user instanceof User) {
-                DB::transaction(function () use ($user): void {
+                DB::transaction(function () use ($user, $createdTenantId): void {
                     DB::table('assessor_memberships')->where('user_id', $user->id)->delete();
-                    DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+                    Password::broker('users')->deleteToken($user);
                     $user->delete();
+                    if ($createdTenantId !== null) {
+                        // Lock the parent before checking dependent rows. Never delete
+                        // an existing cabinet or cascade data added by another operation.
+                        $tenant = DB::table('assessor_tenants')->where('id', $createdTenantId)
+                            ->lockForUpdate()->first();
+                        if ($tenant !== null
+                            && ! DB::table('assessor_memberships')->where('tenant_id', $createdTenantId)->exists()
+                            && ! DB::table('assessor_citizens')->where('tenant_id', $createdTenantId)->exists()
+                            && ! DB::table('assessor_cases')->where('tenant_id', $createdTenantId)->exists()
+                            && ! DB::table('assessor_case_events')->where('tenant_id', $createdTenantId)->exists()) {
+                            DB::table('assessor_tenants')->where('id', $createdTenantId)->delete();
+                        }
+                    }
                 });
             }
             // No sensitive details or activation token in console output.
