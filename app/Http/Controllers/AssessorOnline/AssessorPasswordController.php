@@ -66,6 +66,9 @@ final class AssessorPasswordController extends Controller
             'token' => ['required', 'string'],
             'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:16', 'confirmed'],
+        ], [
+            'password.confirmed' => 'A confirmação deve ser igual à nova senha.',
+            'password.min' => 'A nova senha deve ter pelo menos 16 caracteres.',
         ]);
 
         $email = Str::lower(trim($data['email']));
