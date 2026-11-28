@@ -15,7 +15,7 @@ use RuntimeException;
 
 final class ProvisionAssessorHmlAdmin extends Command
 {
-    protected $signature = 'assessor:provision-hml-admin {email} {--tenant=gabinete-demonstracao}';
+    protected $signature = 'assessor:provision-hml-admin {email} {--tenant=gabinete-demonstracao} {--via-cockpit : Send the invitation through the HML Cockpit gateway}';
     protected $description = 'Invite a cabinet administrator by email in isolated HML only';
 
     public function handle(CockpitInviteGateway $gateway): int
@@ -29,11 +29,14 @@ final class ProvisionAssessorHmlAdmin extends Command
             return self::FAILURE;
         }
 
-        // Never create an account when a real delivery channel is unavailable.
+        $useGateway = (bool) $this->option('via-cockpit');
+        $ssoMode = ! $useGateway && strlen((string) env('ASSESSOR_COCKPIT_SSO_SECRET', '')) >= 32;
+
+        // Email provisioning requires the selected transport to be configured.
         $smtpReady = config('mail.default') === 'smtp'
             && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)
             && filled(config('mail.mailers.smtp.host'));
-        if ($gateway->enabled() ? ! $gateway->configured() : ! $smtpReady) {
+        if ($useGateway ? (! $gateway->enabled() || ! $gateway->configured()) : (! $ssoMode && ! $smtpReady)) {
             $this->error('Invitation delivery is not configured. No account was created.');
             return self::FAILURE;
         }
@@ -52,7 +55,7 @@ final class ProvisionAssessorHmlAdmin extends Command
         }
 
         $expiryMinutes = filter_var(config('auth.passwords.users.expire'), FILTER_VALIDATE_INT);
-        if ($expiryMinutes === false || $expiryMinutes < 1) {
+        if (! $ssoMode && ($expiryMinutes === false || $expiryMinutes < 1)) {
             $this->error('Password broker expiration is invalid. No account was created.');
             return self::FAILURE;
         }
@@ -86,8 +89,13 @@ final class ProvisionAssessorHmlAdmin extends Command
                 return $user;
             });
 
+            if ($ssoMode) {
+                $this->info('HML account provisioned for Cockpit SSO only. No Core privileges or email invitation.');
+                return self::SUCCESS;
+            }
+
             $token = Password::broker('users')->createToken($user);
-            if ($gateway->enabled()) {
+            if ($useGateway) {
                 $gateway->send($email, $token);
             } else {
                 $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
