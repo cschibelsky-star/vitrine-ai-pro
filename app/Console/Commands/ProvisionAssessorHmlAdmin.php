@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\AssessorOnline\CockpitInviteGateway;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,10 +15,10 @@ use RuntimeException;
 
 final class ProvisionAssessorHmlAdmin extends Command
 {
-    protected $signature = 'assessor:provision-hml-admin {email} {--tenant=gabinete-demonstracao}';
+    protected $signature = 'assessor:provision-hml-admin {email} {--tenant=gabinete-demonstracao} {--via-cockpit : Send the invitation through the HML Cockpit gateway}';
     protected $description = 'Invite a cabinet administrator by email in isolated HML only';
 
-    public function handle(): int
+    public function handle(CockpitInviteGateway $gateway): int
     {
         $host = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
         if (parse_url((string) config('app.url'), PHP_URL_SCHEME) !== 'https'
@@ -28,11 +29,15 @@ final class ProvisionAssessorHmlAdmin extends Command
             return self::FAILURE;
         }
 
-        // Never create an account when a real delivery channel is unavailable.
-        if (config('mail.default') !== 'smtp'
-            || ! filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)
-            || ! filled(config('mail.mailers.smtp.host'))) {
-            $this->error('SMTP is not configured. No account was created.');
+        $useGateway = (bool) $this->option('via-cockpit');
+        $ssoMode = ! $useGateway && strlen((string) env('ASSESSOR_COCKPIT_SSO_SECRET', '')) >= 32;
+
+        // Email provisioning requires the selected transport to be configured.
+        $smtpReady = config('mail.default') === 'smtp'
+            && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)
+            && filled(config('mail.mailers.smtp.host'));
+        if ($useGateway ? (! $gateway->enabled() || ! $gateway->configured()) : (! $ssoMode && ! $smtpReady)) {
+            $this->error('Invitation delivery is not configured. No account was created.');
             return self::FAILURE;
         }
 
@@ -50,7 +55,7 @@ final class ProvisionAssessorHmlAdmin extends Command
         }
 
         $expiryMinutes = filter_var(config('auth.passwords.users.expire'), FILTER_VALIDATE_INT);
-        if ($expiryMinutes === false || $expiryMinutes < 1) {
+        if (! $ssoMode && ($expiryMinutes === false || $expiryMinutes < 1)) {
             $this->error('Password broker expiration is invalid. No account was created.');
             return self::FAILURE;
         }
@@ -84,11 +89,20 @@ final class ProvisionAssessorHmlAdmin extends Command
                 return $user;
             });
 
+            if ($ssoMode) {
+                $this->info('HML account provisioned for Cockpit SSO only. No Core privileges or email invitation.');
+                return self::SUCCESS;
+            }
+
             $token = Password::broker('users')->createToken($user);
-            $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
-            Mail::raw("Ative seu acesso ao Assessor Online definindo sua senha: {$url}\nLink válido por {$expiryMinutes} minutos e de uso único.", function ($message) use ($email): void {
-                $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
-            });
+            if ($useGateway) {
+                $gateway->send($email, $token);
+            } else {
+                $url = route('assessor.password.reset', ['token' => $token, 'email' => $email]);
+                Mail::raw("Ative seu acesso ao Assessor Online definindo sua senha: {$url}\nLink válido por {$expiryMinutes} minutos e de uso único.", function ($message) use ($email): void {
+                    $message->to($email)->subject('Assessor Online - Convite de primeiro acesso');
+                });
+            }
         } catch (\Throwable $exception) {
             // Do not leave an unusable administrative account after delivery failure.
             if (isset($user) && $user instanceof User) {
