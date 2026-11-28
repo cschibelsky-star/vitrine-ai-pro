@@ -156,11 +156,21 @@ final class ProvisionAssessorHmlAdminTest extends TestCase
             'password_confirmation' => $password,
         ];
 
+        $user = User::where('email', self::EMAIL)->firstOrFail();
+        $resetUrl = $matches[0];
+
+        $this->from($resetUrl)
+            ->post(route('assessor.password.update'), array_replace($form, [
+                'password_confirmation' => 'Different-TestPassword123!',
+            ]))
+            ->assertRedirect($resetUrl)
+            ->assertSessionHasErrors(['password' => 'A confirmação deve ser igual à nova senha.']);
+        $this->assertSame($user->password, $user->fresh()->password);
+        $this->assertTrue(Password::broker('users')->tokenExists($user, $token));
+
         $this->post(route('assessor.password.update'), $form)
             ->assertRedirect(route('assessor.login'));
         $this->assertGuest();
-
-        $user = User::where('email', self::EMAIL)->firstOrFail();
         $this->assertFalse(Password::broker('users')->tokenExists($user, $token));
         $this->post(route('assessor.login.submit'), ['email' => self::EMAIL, 'password' => $password])
             ->assertRedirect(route('assessor.dashboard'));
